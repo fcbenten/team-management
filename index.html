@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>FC Benten</title>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+
+  <!-- Apple iOS Standalone Settings -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="FC Benten">
+
+  <!-- Android / Chrome Standalone Settings -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#2563eb">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+    }
+    #app-frame {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      border: none;
+      display: block;
+      background: transparent;
+    }
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #1d4ed8 0%, #2563eb 50%, #0284c7 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      z-index: 99999;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+    #splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .splash-logo {
+      width: 88px;
+      height: 88px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+      margin-bottom: 16px;
+    }
+    .splash-title {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+    .splash-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.25);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- スプラッシュ画面（起動時の読み込みアニメーション） -->
+  <div id="splash-screen">
+    <img src="./icon-192.png" alt="FC Benten" class="splash-logo">
+    <div class="splash-title">FC Benten</div>
+    <div class="splash-spinner"></div>
+  </div>
+
+  <!-- GAS Webアプリの全画面埋め込み -->
+  <iframe
+    id="app-frame"
+    src="https://script.google.com/macros/s/AKfycbzSKXU3hKjSajELCvYS47kcMubel6Nd78-_Qct029QRrtKP5bjrwK_qCdQkgPjnuuqV/exec"
+    allow="clipboard-read; clipboard-write; geolocation"
+    onload="hideSplash()"
+  ></iframe>
+
+  <script>
+    function hideSplash() {
+      const splash = document.getElementById('splash-screen');
+      if (splash) splash.classList.add('hidden');
+    }
+    // 万が一GASのonloadが遅延した場合でも最大3.5秒で画面を表示
+    setTimeout(hideSplash, 3500);
+
+    // PWA Service Workerの登録
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('PWA ServiceWorker registered:', reg.scope))
+          .catch(err => console.warn('PWA ServiceWorker registration failed:', err));
+      });
+    }
+  </script>
+</body>
+</html>
