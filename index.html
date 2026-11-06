@@ -13303,9 +13303,11 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       return;
     }
 
-    if (!email.includes('@')) {
+    // メールアドレスの形式チェック（名簿管理画面と共通の正規表現チェック）
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email)) {
       if (errorMsg) {
-        errorMsg.textContent = '有効なGmailアドレスを入力してください。';
+        errorMsg.textContent = 'メールアドレスの形式が正しくありません。';
         errorMsg.style.display = 'block';
       }
       return;
