@@ -10628,13 +10628,15 @@ textarea.comment-textarea:active {
 
          <form id="loginForm" novalidate onsubmit="handleUserLogin(event)" autocomplete="off" class="login-text-left">
            <div class="form-group">
-             <label class="form-label">Gmailアドレス</label>
-             <input type="email" id="loginEmailInput" placeholder="example@gmail.com" autocomplete="off" required>
+             <label class="form-label" for="loginEmailInput">Gmailアドレス</label>
+             <input type="email" id="loginEmailInput" class="form-input" placeholder="example@gmail.com" autocomplete="off" required>
+             <div id="err-loginEmailInput" class="field-error-msg hidden"></div>
            </div>
 
            <div class="form-group">
-             <label class="form-label">パスワード</label>
-             <input type="password" id="loginPasswordInput" placeholder="パスワードを入力" autocomplete="current-password" required>
+             <label class="form-label" for="loginPasswordInput">パスワード</label>
+             <input type="password" id="loginPasswordInput" class="form-input" placeholder="パスワードを入力" autocomplete="current-password" required>
+             <div id="err-loginPasswordInput" class="field-error-msg hidden"></div>
            </div>
 
            <div class="form-group login-remember-row">
@@ -13179,6 +13181,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   window.addEventListener('DOMContentLoaded', function() {
     updateMobileHeaderHeight();
     updateNavScrollIndicators();
+    initLoginFormListeners();
     const navBar = document.querySelector('.sidebar-nav');
     if (navBar) {
       navBar.addEventListener('scroll', updateNavScrollIndicators, { passive: true });
@@ -13249,12 +13252,114 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   };
 
   /**
+   * ログイン画面用フィールドエラー表示（メンバー管理画面と統一）
+   */
+  function setLoginFieldError(fieldId, errorMsg) {
+    const inputEl = document.getElementById(fieldId);
+    const errEl = document.getElementById('err-' + fieldId);
+    if (inputEl) inputEl.classList.add('input-has-error');
+    if (errEl) {
+      errEl.textContent = errorMsg || '';
+      errEl.classList.remove('hidden');
+      errEl.style.display = 'block';
+    }
+  }
+
+  /**
+   * ログイン画面用フィールドエラー解除
+   */
+  function clearLoginFieldError(fieldId) {
+    const inputEl = document.getElementById(fieldId);
+    const errEl = document.getElementById('err-' + fieldId);
+    if (inputEl) inputEl.classList.remove('input-has-error');
+    if (errEl) {
+      errEl.textContent = '';
+      errEl.classList.add('hidden');
+      errEl.style.display = 'none';
+    }
+  }
+
+  /**
+   * ログイン画面の全フィールドエラー解除
+   */
+  function clearAllLoginFieldErrors() {
+    clearLoginFieldError('loginEmailInput');
+    clearLoginFieldError('loginPasswordInput');
+  }
+
+  /**
+   * ログインメールアドレスのバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateLoginEmailField() {
+    const input = document.getElementById('loginEmailInput');
+    if (!input) return true;
+    const val = input.value.trim().toLowerCase();
+    input.value = val;
+
+    if (!val) {
+      setLoginFieldError('loginEmailInput', 'メールアドレスを入力してください。');
+      return false;
+    }
+
+    // 名簿管理画面と共通の正規表現チェック
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(val)) {
+      setLoginFieldError('loginEmailInput', 'メールアドレスの形式が正しくありません。');
+      return false;
+    }
+
+    clearLoginFieldError('loginEmailInput');
+    return true;
+  }
+
+  /**
+   * ログインパスワードのバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateLoginPasswordField() {
+    const input = document.getElementById('loginPasswordInput');
+    if (!input) return true;
+    const val = input.value.trim();
+
+    if (!val) {
+      setLoginFieldError('loginPasswordInput', 'パスワードを入力してください。');
+      return false;
+    }
+
+    clearLoginFieldError('loginPasswordInput');
+    return true;
+  }
+
+  /**
+   * ログイン画面の入力イベントリスナー初期化（フォーカスアウト時バリデーション）
+   */
+  function initLoginFormListeners() {
+    const emailInput = document.getElementById('loginEmailInput');
+    if (emailInput && !emailInput.dataset.listenerAttached) {
+      emailInput.dataset.listenerAttached = 'true';
+      emailInput.addEventListener('blur', validateLoginEmailField);
+      emailInput.addEventListener('input', () => {
+        if (emailInput.classList.contains('input-has-error')) validateLoginEmailField();
+      });
+    }
+
+    const pwInput = document.getElementById('loginPasswordInput');
+    if (pwInput && !pwInput.dataset.listenerAttached) {
+      pwInput.dataset.listenerAttached = 'true';
+      pwInput.addEventListener('blur', validateLoginPasswordField);
+      pwInput.addEventListener('input', () => {
+        if (pwInput.classList.contains('input-has-error')) validateLoginPasswordField();
+      });
+    }
+  }
+
+  /**
    * ログイン画面を表示
    */
   function showLoginScreen() {
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'flex';
     switchToLoginCard();
+    initLoginFormListeners();
   }
 
   /**
@@ -13267,8 +13372,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (registerCard) registerCard.style.display = 'none';
     const err = document.getElementById('loginErrorMsg');
     if (err) err.style.display = 'none';
+    clearAllLoginFieldErrors();
   }
-
 
   /**
    * ログイン画面を非表示にする
@@ -13276,6 +13381,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   function hideLoginScreen() {
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'none';
+    clearAllLoginFieldErrors();
   }
 
   /**
@@ -13292,28 +13398,24 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     if (!emailInput || !pwInput) return;
 
+    if (errorMsg) errorMsg.style.display = 'none';
+
+    // 1. 各フィールドのバリデーション（フォーカスアウト時と同一ルール）
+    const isEmailValid = validateLoginEmailField();
+    const isPwValid = validateLoginPasswordField();
+
+    if (!isEmailValid || !isPwValid) {
+      if (!isEmailValid) {
+        emailInput.focus();
+      } else {
+        pwInput.focus();
+      }
+      return;
+    }
+
     const email = emailInput.value.trim().toLowerCase();
     const password = pwInput.value.trim();
 
-    if (!email || !password) {
-      if (errorMsg) {
-        errorMsg.textContent = 'メールアドレスとパスワードを入力してください。';
-        errorMsg.style.display = 'block';
-      }
-      return;
-    }
-
-    // メールアドレスの形式チェック（名簿管理画面と共通の正規表現チェック）
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(email)) {
-      if (errorMsg) {
-        errorMsg.textContent = 'メールアドレスの形式が正しくありません。';
-        errorMsg.style.display = 'block';
-      }
-      return;
-    }
-
-    if (errorMsg) errorMsg.style.display = 'none';
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.textContent = 'ログイン中...';
