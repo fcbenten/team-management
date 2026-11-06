@@ -10626,7 +10626,7 @@ textarea.comment-textarea:active {
 
          <div id="loginErrorMsg" class="alert-box alert-error login-text-left"></div>
 
-         <form id="loginForm" onsubmit="handleUserLogin(event)" autocomplete="off" class="login-text-left">
+         <form id="loginForm" novalidate onsubmit="handleUserLogin(event)" autocomplete="off" class="login-text-left">
            <div class="form-group">
              <label class="form-label">Gmailアドレス</label>
              <input type="email" id="loginEmailInput" placeholder="example@gmail.com" autocomplete="off" required>
@@ -13298,6 +13298,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!email || !password) {
       if (errorMsg) {
         errorMsg.textContent = 'メールアドレスとパスワードを入力してください。';
+        errorMsg.style.display = 'block';
+      }
+      return;
+    }
+
+    if (!email.includes('@')) {
+      if (errorMsg) {
+        errorMsg.textContent = '有効なGmailアドレスを入力してください。';
         errorMsg.style.display = 'block';
       }
       return;
