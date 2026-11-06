@@ -4754,21 +4754,20 @@ th.sort-active .sort-icon {
   }
 
 
-  /* スマホ版ではテキストを非表示にし、アイコンを等間隔で表示 */
+  /* スマホ版でもヘッダーは文字（テキスト）でわかりやすく表示 */
   .th-text {
-    display: none !important;
+    display: inline-block !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    color: var(--text-heading) !important;
+    letter-spacing: -0.02em !important;
   }
   .th-icon {
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.05rem !important;
-    vertical-align: middle;
-    line-height: 1;
-    color: var(--text-muted);
-    transition: color 0.15s;
+    display: none !important;
   }
-  th.sort-active .th-icon {
+  th.sort-active .th-text {
     color: var(--primary) !important;
   }
 
@@ -4895,22 +4894,36 @@ th.sort-active .sort-icon {
     text-align: center !important;
   }
 
-  /* 得点、アシスト、MVP（各13.5%の完全等間隔） */
+  /* 得点、アシスト、MVP（テキスト幅に応じた最適配分） */
   .stats-table th.th-stat {
-    width: 13% !important;
-    min-width: 13% !important;
-    max-width: 13% !important;
     text-align: center !important;
     padding: 10px 1px !important;
   }
   .stats-table td.col-stat {
-    width: 13% !important;
-    min-width: 13% !important;
-    max-width: 13% !important;
     text-align: center !important;
     padding: 6px 1px !important;
     font-size: 0.8rem !important;
     font-weight: 700 !important;
+  }
+  .stats-table th.th-rate, .stats-table td.col-rate-cell {
+    width: 16% !important;
+    min-width: 16% !important;
+    max-width: 16% !important;
+  }
+  .stats-table th.th-goals, .stats-table td:nth-child(4) {
+    width: 12% !important;
+    min-width: 12% !important;
+    max-width: 12% !important;
+  }
+  .stats-table th.th-assists, .stats-table td:nth-child(5) {
+    width: 16% !important;
+    min-width: 16% !important;
+    max-width: 16% !important;
+  }
+  .stats-table th.th-mom, .stats-table td:nth-child(6) {
+    width: 12% !important;
+    min-width: 12% !important;
+    max-width: 12% !important;
   }
 
   .stat-num-box {
@@ -10613,18 +10626,16 @@ textarea.comment-textarea:active {
      <!-- =========================================
        ログイン画面
        ========================================= -->
-          <!-- =========================================
+     <!-- =========================================
        ログイン画面（SPAカード切り替えオーバーレイ）
        Gmailアドレス・パスワード認証、ログイン状態保持、新規登録リンク
        ========================================= -->
-     <div id="loginScreen" class="auth-container login-overlay">
-       
-       <!-- ログインカード -->
-       <div id="loginCard" class="auth-card">
-         <div class="auth-title">FC Benten</div>
-         <div class="auth-subtitle">チーム管理システム ログイン</div>
+<div id="loginScreen" class="auth-container login-overlay">
 
-         <div id="loginErrorMsg" class="alert-box alert-error login-text-left"></div>
+  <!-- ログインカード -->
+  <div id="loginCard" class="auth-card">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle">チーム管理システム ログイン</div>
 
          <form id="loginForm" novalidate onsubmit="handleUserLogin(event)" autocomplete="off" class="login-text-left">
            <div class="form-group">
@@ -10639,22 +10650,27 @@ textarea.comment-textarea:active {
              <div id="err-loginPasswordInput" class="field-error-msg hidden"></div>
            </div>
 
-           <div class="form-group login-remember-row">
-             <input type="checkbox" id="rememberLoginCheck" checked class="login-remember-check">
-             <label for="rememberLoginCheck" class="login-remember-label">ログイン状態を保持する</label>
-           </div>
+      <div class="form-group">
+        <label class="form-label">パスワード</label>
+        <input type="password" id="loginPasswordInput" placeholder="パスワードを入力" autocomplete="current-password" required>
+      </div>
 
-           <button type="submit" id="loginSubmitBtn" class="btn">ログイン</button>
+      <div class="form-group login-remember-row">
+        <input type="checkbox" id="rememberLoginCheck" checked class="login-remember-check">
+        <label for="rememberLoginCheck" class="login-remember-label">ログイン状態を保持する</label>
+      </div>
 
-            <div class="login-register-wrap">
-              <a href="https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec?page=register" target="_blank" class="login-register-link">
-                初めての方はこちら（新規登録・連携）
-              </a>
-            </div>
-         </form>
-        </div>
-     </div>
+      <button type="submit" id="loginSubmitBtn" class="btn">ログイン</button>
 
+      <div class="login-register-wrap">
+        <a href="https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec?page=register"
+          target="_blank" class="login-register-link">
+          初めての方はこちら（新規登録・連携）
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
 
      <div id="appLayout" class="app-layout">
        <!-- =========================================
@@ -10686,13 +10702,13 @@ textarea.comment-textarea:active {
              <span class="material-symbols-outlined mr-3">home</span>
              ホーム
            </a>
-           <a class="nav-item" onclick="switchTab('results')">
-             <span class="material-symbols-outlined mr-3">sports_soccer</span>
-             スコア
-           </a>
            <a class="nav-item" onclick="switchTab('schedule')">
              <span class="material-symbols-outlined mr-3">calendar_today</span>
              スケジュール
+           </a>
+           <a class="nav-item" onclick="switchTab('results')">
+             <span class="material-symbols-outlined mr-3">sports_soccer</span>
+             スコア
            </a>
            <a class="nav-item" id="navItemBulletin" onclick="switchTab('bulletin')">
              <span class="material-symbols-outlined mr-3">article</span>
@@ -11434,10 +11450,10 @@ textarea.comment-textarea:active {
             <th onclick="sortPersonalStats('number')" data-sort="number" class="th-number">NO.<span class="sort-icon"></span></th>
             <th onclick="sortPersonalStats('name')" data-sort="name" class="text-left th-name">名前<span class="sort-icon"></span></th>
             <th onclick="sortPersonalStats('games')" data-sort="games" class="th-stat th-games col-pc-only" title="参加数"><span class="th-text">参加数</span><span class="sort-icon"></span></th>
-            <th onclick="sortPersonalStats('rate')" data-sort="rate" class="th-stat th-rate" title="参加率"><span class="th-text">参加率</span><span class="th-icon material-symbols-outlined">how_to_reg</span><span class="sort-icon"></span></th>
-            <th onclick="sortPersonalStats('goals')" data-sort="goals" class="th-stat th-goals" title="得点数"><span class="th-text">得点</span><span class="th-icon material-symbols-outlined">sports_soccer</span><span class="sort-icon"></span></th>
-            <th onclick="sortPersonalStats('assists')" data-sort="assists" class="th-stat th-assists" title="アシスト数"><span class="th-text">アシスト</span><span class="th-icon material-symbols-outlined">handshake</span><span class="sort-icon"></span></th>
-            <th onclick="sortPersonalStats('mom')" data-sort="mom" class="th-stat th-mom" title="MVP"><span class="th-text">MVP</span><span class="th-icon material-symbols-outlined">emoji_events</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('rate')" data-sort="rate" class="th-stat th-rate" title="参加率"><span class="th-text">参加率</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('goals')" data-sort="goals" class="th-stat th-goals" title="得点数"><span class="th-text">得点</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('assists')" data-sort="assists" class="th-stat th-assists" title="アシスト数"><span class="th-text">アシスト</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('mom')" data-sort="mom" class="th-stat th-mom" title="MVP"><span class="th-text">MVP</span><span class="sort-icon"></span></th>
           </tr>
         </thead>
         <tbody id="personalStatsBody">
@@ -14623,7 +14639,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    * @returns {string[]}
    */
   function getSwipeTabList() {
-    const tabs = ['home', 'results', 'schedule', 'bulletin', 'ranking', 'personal', 'equipment'];
+    const tabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment'];
     if (isCurrentUserAdmin()) {
       tabs.push('members');
     }
