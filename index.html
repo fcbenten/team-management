@@ -13591,6 +13591,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           if (typeof applyEquipmentPayload === 'function') {
             applyEquipmentPayload(data.equipmentData);
           }
+        } else {
+          // ⚡ 初期読み込み超高速化: 備品データはホーム画面描画完了後に裏で非同期取得（isBackground=true）
+          setTimeout(function() {
+            if (typeof refreshEquipmentData === 'function' && (!window.equipmentState || !window.equipmentState.isLoaded)) {
+              refreshEquipmentData(false, true);
+            }
+          }, 300);
         }
 
         // 活動記録データを初期化の直前に適用（ホーム画面やカレンダー表示と完全に同期させ、後追い遅延を排除）
@@ -21744,12 +21751,12 @@ function initEquipmentView(forceRefresh) {
 /**
  * サーバーから最新の備品データを再取得
  */
-function refreshEquipmentData(forceRefresh) {
+function refreshEquipmentData(forceRefresh, isBackground = false) {
   const container = document.getElementById('tab-equipment');
   const loadingPlaceholder = container ? container.querySelector('.tab-loading-placeholder') : null;
   const mainContent = container ? container.querySelector('.tab-main-content') : null;
 
-  if (!window.equipmentState.isLoaded) {
+  if (!isBackground && !window.equipmentState.isLoaded) {
     if (loadingPlaceholder) loadingPlaceholder.style.display = 'block';
     if (mainContent) mainContent.classList.add('hidden');
   }
