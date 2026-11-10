@@ -18317,7 +18317,7 @@ function filterAndRenderRankings() {
 }
 
 /**
- * カレンダー出欠バッチおよび試合結果から、指定された条件で全選手の参加数を抽出する
+ * カレンダー出欠バッチのデータから、指定された条件で全選手の参加数を抽出する
  *
  * @param {string} season - 対象年（例: "2026"）
  * @param {string} category - 対象カテゴリ ("all", "公式戦", "TRM")
@@ -18329,27 +18329,7 @@ function aggregateAttendanceFromBatch(season, category) {
     : window.calendarAttendanceData;
   const pMap = (attSource && attSource.players) ? attSource.players : {};
 
-  // 1. 試合結果からの出場数を集計 (フォールバック & マージ用)
-  const matchGamesMap = {};
-  if (window.allMatchResults && Array.isArray(window.allMatchResults)) {
-    const filteredMatches = window.allMatchResults.filter(m => {
-      const matchYear = m.year || (m.date ? m.date.substring(0, 4) : '');
-      if (season && matchYear !== season) return false;
-      if (category && category !== 'all' && m.category !== category) return false;
-      return true;
-    });
-    filteredMatches.forEach(m => {
-      if (m.attended) {
-        const attendees = m.attended.split(',').map(s => s.trim());
-        attendees.forEach(name => {
-          if (!name || name === 'OG' || name === '助っ人' || name === 'なし' || name === '-') return;
-          matchGamesMap[name] = (matchGamesMap[name] || 0) + 1;
-        });
-      }
-    });
-  }
-
-  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ、試合出場選手）
+  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ）
   const playerNames = new Set();
   if (window.playerNumberMap) {
     Object.keys(window.playerNumberMap).forEach(name => {
@@ -18372,9 +18352,6 @@ function aggregateAttendanceFromBatch(season, category) {
     if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人') {
       playerNames.add(trimmed);
     }
-  });
-  Object.keys(matchGamesMap).forEach(name => {
-    playerNames.add(name);
   });
 
   const resultList = [];
@@ -18400,13 +18377,9 @@ function aggregateAttendanceFromBatch(season, category) {
       attendedCount = (catStat && catStat.attended) ? catStat.attended : 0;
     }
 
-    // カレンダー出欠実績と試合出場数の大きい方を採用（カレンダー未招待・試合直接入力の両方を救済）
-    const matchGames = matchGamesMap[pName] || 0;
-    const finalAttended = Math.max(attendedCount, matchGames);
-
     resultList.push({
       name: pName,
-      attended: finalAttended
+      attended: attendedCount
     });
   });
 
@@ -18530,14 +18503,8 @@ function renderRankingsWithData(matchStats, attendanceStats) {
   const topMom = safeMatches.filter(p => p.mom > 0).sort((a, b) => b.mom - a.mom);
   renderSingleRanking('mom', topMom, 'mom', 'MVP');
   
-  // 参加数ランキング（カレンダー出欠バッチおよび試合参加実績より描画）
-  let topGames = safeAttendance.filter(p => (p.attended || 0) > 0).sort((a, b) => b.attended - a.attended);
-  if (topGames.length === 0) {
-    topGames = safeMatches.filter(p => (p.games || 0) > 0).sort((a, b) => b.games - a.games).map(p => ({
-      name: p.name,
-      attended: p.games
-    }));
-  }
+  // 参加数ランキング（カレンダー出欠バッチの参加実績より描画）
+  const topGames = safeAttendance.filter(p => (p.attended || 0) > 0).sort((a, b) => b.attended - a.attended);
   renderSingleRanking('games', topGames, 'attended', 'ATTEND');
 }
 
