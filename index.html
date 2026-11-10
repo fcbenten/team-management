@@ -13027,24 +13027,37 @@ textarea.comment-textarea:active {
 
       const items = rawItems.map(it => {
         const hMem = idToMember[it.member_id];
+        const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
+        const mNum = hMem ? hMem.number : null;
+        const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
         return {
           id: it.item_id,
+          itemId: it.item_id,
           code: it.equipment_code,
+          itemCode: it.equipment_code,
           equipmentCode: it.equipment_code,
           name: it.item_name,
           holderId: it.member_id,
-          holderName: hMem ? hMem.name : '',
-          holderNumber: hMem ? hMem.number : '',
+          memberId: it.member_id,
+          holderName: mName,
+          memberName: mName,
+          holderNumber: mNum,
+          memberNumber: mNum,
+          memberAvatarUrl: mAvatar,
           status: it.status || '保管中',
-          notes: it.notes || ''
+          notes: it.notes || '',
+          updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
         };
       });
 
       const equipmentData = {
+        success: true,
         masterList: masterList,
+        itemsList: items,
         items: items,
         logs: rawEqLogs,
-        upcomingEquipment: []
+        upcomingEquipment: [],
+        isAdmin: true
       };
 
       // 掲示板データの構造化
@@ -13398,6 +13411,73 @@ textarea.comment-textarea:active {
 
       if (error) throw error;
       return { success: true };
+    },
+
+    /**
+     * 備品データの最新取得 (Supabase Direct: 0.1秒)
+     */
+    async getEquipmentData() {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const [resMembers, resMaster, resItems, resEqLogs] = await Promise.all([
+        sb.from('members').select('member_id, name, number, avatar_url'),
+        sb.from('equipment_master').select('*').order('sort_order', { ascending: true }),
+        sb.from('equipment_items').select('*'),
+        sb.from('equipment_event_logs').select('*')
+      ]);
+
+      const idToMember = {};
+      (resMembers.data || []).forEach(m => {
+        idToMember[m.member_id] = { name: m.name, number: m.number, avatarUrl: m.avatar_url };
+      });
+
+      const masterList = (resMaster.data || []).map(m => ({
+        code: m.equipment_code,
+        equipmentCode: m.equipment_code,
+        name: m.name,
+        ruleType: m.rule_type,
+        reqTR: m.req_tr,
+        reqTRM: m.req_trm,
+        reqOfficial: m.req_official,
+        notes: m.notes || '',
+        sortOrder: m.sort_order
+      }));
+
+      const items = (resItems.data || []).map(it => {
+        const hMem = idToMember[it.member_id];
+        const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
+        const mNum = hMem ? hMem.number : null;
+        const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
+        return {
+          id: it.item_id,
+          itemId: it.item_id,
+          code: it.equipment_code,
+          itemCode: it.equipment_code,
+          equipmentCode: it.equipment_code,
+          name: it.item_name,
+          holderId: it.member_id,
+          memberId: it.member_id,
+          holderName: mName,
+          memberName: mName,
+          holderNumber: mNum,
+          memberNumber: mNum,
+          memberAvatarUrl: mAvatar,
+          status: it.status || '保管中',
+          notes: it.notes || '',
+          updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
+        };
+      });
+
+      return {
+        success: true,
+        masterList: masterList,
+        itemsList: items,
+        items: items,
+        logs: resEqLogs.data || [],
+        upcomingEquipment: [],
+        isAdmin: true
+      };
     }
   };
 
@@ -13471,6 +13551,14 @@ textarea.comment-textarea:active {
 
           if (prop === 'updateItemHolder') {
             SupabaseService.updateItemHolder(args[0], args[1])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'apiGetEquipmentData') {
+            console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
+            SupabaseService.getEquipmentData()
               .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
               .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
             return;
