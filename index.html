@@ -13182,7 +13182,7 @@ textarea.comment-textarea:active {
     },
 
     /**
-     * 試合結果・スコア記録の即時保存 (Supabase matches & score_logs)
+     * 試合結果・スコア記録の即時保存 (Supabase matches & score_logs, 非同期でGAS同期)
      */
     async saveScoreRecord(payload) {
       const sb = getClient();
@@ -13190,46 +13190,126 @@ textarea.comment-textarea:active {
 
       const matchId = payload.matchId || ('M' + Date.now());
       const dateStr = normalizeDateStr(payload.date);
+      const logs = Array.isArray(payload.logs) ? payload.logs : [];
 
-      // 1. matches テーブルの保存
+      // スコアと勝敗の再計算（安全策）
+      let myScore = (payload.myScore !== undefined && payload.myScore !== null) ? Number(payload.myScore) : 0;
+      let oppScore = (payload.oppScore !== undefined && payload.oppScore !== null) ? Number(payload.oppScore) : 0;
+      if (payload.myScore === undefined || payload.oppScore === undefined) {
+        myScore = 0;
+        oppScore = 0;
+        logs.forEach(l => {
+          if (l.type === '得点') myScore++;
+          else if (l.type === '相手得点' || l.type === '失点') oppScore++;
+        });
+      }
+
+      let resultText = payload.result || '引き分け';
+      if (!payload.result) {
+        if (myScore > oppScore) resultText = '勝利';
+        else if (myScore < oppScore) resultText = '敗北';
+      }
+
+      // 選手名から member_id を解決するためのマップ
+      const nameToId = {};
+      try {
+        const cachedRoster = localStorage.getItem('fcb_cached_roster');
+        if (cachedRoster) {
+          const rList = JSON.parse(cachedRoster);
+          if (Array.isArray(rList)) {
+            rList.forEach(m => {
+              if (m.name && m.id) nameToId[m.name.trim()] = m.id;
+            });
+          }
+        }
+      } catch (e) {}
+
+      // MOM memberId の解決
+      let momMemberId = payload.momMemberId || null;
+      if (!momMemberId && payload.mom && payload.mom !== 'なし') {
+        momMemberId = nameToId[payload.mom.trim()] || null;
+      }
+
+      // 1. matches テーブルの保存 (Supabase Direct: 0.1秒)
       const { error: matchErr } = await sb.from('matches').upsert({
         match_id: matchId,
         match_date: dateStr,
         category: payload.category || 'TRM',
         opponent: payload.opponent || '未設定',
-        my_score: Number(payload.myScore || 0),
-        opp_score: Number(payload.oppScore || 0),
-        result: payload.result || '引き分け',
+        my_score: myScore,
+        opp_score: oppScore,
+        result: resultText,
         attended_players: payload.attended || '',
         location: payload.location || '',
-        mom_member_id: payload.momMemberId || null,
+        mom_member_id: momMemberId,
         updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'match_id'
       });
 
       if (matchErr) throw matchErr;
 
       // 2. score_logs の再登録 (既存ログ削除後の一括挿入)
-      if (Array.isArray(payload.logs)) {
-        await sb.from('score_logs').delete().eq('match_id', matchId);
+      await sb.from('score_logs').delete().eq('match_id', matchId);
 
-        if (payload.logs.length > 0) {
-          const insertLogs = payload.logs.map((l, idx) => ({
+      if (logs.length > 0) {
+        const insertLogs = logs.map((l, idx) => {
+          let mId = l.memberId;
+          if (!mId) {
+            if (l.type === '相手得点' || l.type === '失点') {
+              mId = 'MBR-SPECIAL-NONE';
+            } else if (l.player === 'OG') {
+              mId = 'MBR-SPECIAL-OG';
+            } else if (l.player === '助っ人') {
+              mId = 'MBR-SPECIAL-GUEST';
+            } else if (l.player) {
+              mId = nameToId[l.player.trim()] || 'MBR-SPECIAL-GUEST';
+            } else {
+              mId = 'MBR-SPECIAL-NONE';
+            }
+          }
+
+          let aId = l.assistMemberId || null;
+          if (!aId && l.assist && l.assist !== '-' && l.assist !== 'なし') {
+            if (l.assist === '助っ人') {
+              aId = 'MBR-SPECIAL-GUEST';
+            } else {
+              aId = nameToId[l.assist.trim()] || null;
+            }
+          }
+
+          return {
             log_id: `L_${matchId}_${idx + 1}`,
             match_id: matchId,
             period: l.period || '',
             minute: Number(l.min || 0),
-            log_type: l.type,
-            member_id: l.memberId || 'MBR-SPECIAL-GUEST',
-            assist_member_id: l.assistMemberId || null
-          }));
+            log_type: (l.type === '失点') ? '相手得点' : l.type,
+            member_id: mId,
+            assist_member_id: aId
+          };
+        });
 
-          const { error: logErr } = await sb.from('score_logs').insert(insertLogs);
-          if (logErr) throw logErr;
-        }
+        const { error: logErr } = await sb.from('score_logs').insert(insertLogs);
+        if (logErr) throw logErr;
       }
 
-      console.log(`[Supabase] Score record saved: ${matchId}`);
-      return { success: true, matchId: matchId };
+      console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
+
+      // 3. バックグラウンドで GAS（スプレッドシート）にも同期（待たせない）
+      try {
+        fetch(GAS_ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            functionName: 'saveMatchData',
+            args: [payload]
+          })
+        }).catch(e => console.warn('[MatchSync] GAS sync warning:', e));
+      } catch (syncErr) {
+        console.warn('[MatchSync] Kick failed:', syncErr);
+      }
+
+      return "保存が完了しました！";
     },
 
     /**
@@ -13360,8 +13440,8 @@ textarea.comment-textarea:active {
             return;
           }
 
-          if (prop === 'saveScoreRecord') {
-            console.log('⚡ [Bypass] saveScoreRecord routed to Supabase Direct (0.2s)');
+          if (prop === 'saveMatchData' || prop === 'saveScoreRecord') {
+            console.log('⚡ [Bypass] saveMatchData routed to Supabase Direct (0.2s)');
             SupabaseService.saveScoreRecord(args[0])
               .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
               .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
@@ -17788,12 +17868,30 @@ function submitData() {
   
   const categoryValue = document.getElementById('matchCategory').textContent || '未設定';
   
+  // スコアと勝敗を自動集計
+  let myScore = 0;
+  let oppScore = 0;
+  matchLogs.forEach(l => {
+    if (l.type === '得点') {
+      myScore++;
+    } else if (l.type === '相手得点' || l.type === '失点') {
+      oppScore++;
+    }
+  });
+
+  let resultText = '引き分け';
+  if (myScore > oppScore) resultText = '勝利';
+  else if (myScore < oppScore) resultText = '敗北';
+
   // 送信用のデータオブジェクトを組み立てる
   const payload = {
     matchId: currentMatchId,
     date: date,
     category: categoryValue,
     opponent: document.getElementById('opponent').textContent,
+    myScore: myScore,
+    oppScore: oppScore,
+    result: resultText,
     attended: document.getElementById('attended').textContent,
     location: document.getElementById('matchLocation') ? document.getElementById('matchLocation').value.trim() : '',
     mom: document.getElementById('momSelect') ? document.getElementById('momSelect').value : 'なし',
@@ -17827,19 +17925,19 @@ function submitData() {
           if (l.type === '得点') {
             myScore++;
             if (l.period === '前半') halfScores.my1st++;
-            if (l.period === '後半') halfScores.my2nd++;
-            if (l.period === '延長') halfScores.myExt++;
-          } else if (l.type === '失点') {
+            else if (l.period === '後半') halfScores.my2nd++;
+            else if (l.period === '延長') halfScores.myExt++;
+          } else if (l.type === '相手得点' || l.type === '失点') {
             oppScore++;
             if (l.period === '前半') halfScores.opp1st++;
-            if (l.period === '後半') halfScores.opp2nd++;
-            if (l.period === '延長') halfScores.oppExt++;
+            else if (l.period === '後半') halfScores.opp2nd++;
+            else if (l.period === '延長') halfScores.oppExt++;
           }
         });
         
         let resultText = '引分';
         if (myScore > oppScore) resultText = '勝利';
-        if (myScore < oppScore) resultText = '敗北';
+        else if (myScore < oppScore) resultText = '敗北';
 
         const updatedMatch = {
           matchId: currentMatchId || 'M_TEMP_' + new Date().getTime(),
