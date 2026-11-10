@@ -5762,11 +5762,11 @@ th.sort-active .sort-icon {
   text-decoration: line-through !important;
 }
 
-/* 4. 未定 (maybe) - 今の色（薄グレー） */
+/* 4. 未定 (maybe) - 視認性を高めたスレートグレー */
 .cal-event-item.status-maybe {
-  background: #f1f5f9 !important;
-  border-color: #cbd5e1 !important;
-  color: #475569 !important;
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
 }
 
 .cal-event-text {
@@ -6993,16 +6993,20 @@ th.sort-active .sort-icon {
   text-decoration: line-through;
 }
 
-/* 未定 (Maybe) - 薄グレー */
+/* 未定 (Maybe) - スレートグレー（出席・欠席とトーンを統一） */
 .schedule-agenda-card.card-maybe {
-  background: #f1f5f9;
-  border-color: #e2e8f0;
+  background: #e2e8f0;
+  border-color: #cbd5e1;
 }
 .schedule-agenda-card.card-maybe:hover {
-  background: #e2e8f0;
+  background: #cbd5e1;
 }
 .schedule-agenda-card.card-maybe .schedule-agenda-accent {
-  background: #64748b;
+  background: #475569;
+}
+.schedule-agenda-card.card-maybe .schedule-agenda-title,
+.schedule-agenda-card.card-maybe .schedule-agenda-date {
+  color: #334155;
 }
 
 /* 未入力 (Unanswered) - 白 (デフォルトと同じ) */
