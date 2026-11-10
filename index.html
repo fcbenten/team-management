@@ -13400,23 +13400,96 @@ textarea.comment-textarea:active {
   // 5. 画面復帰検知 (Page Visibility API & window.focus)
   // =========================================
   // スマホのアプリ切り替えやPCの別タブ・ウィンドウからの復帰時に
-  // 0.05秒で直近の出欠・予定データをクイック照合
+  // Googleカレンダー側の最新出欠をフェッチし、Supabaseとアプリ画面へ即時反映
   // =========================================
+  let isResuming = false;
+  let lastResumeTime = 0;
+
   async function refreshOnResume() {
+    const now = Date.now();
+    if (isResuming || (now - lastResumeTime < 3000)) return;
+    isResuming = true;
+    lastResumeTime = now;
+
     try {
-      console.log('⚡ [Resume] Screen resumed. Checking Supabase for latest attendance & bulletin...');
+      console.log('⚡ [Resume] Screen resumed. Syncing latest Google Calendar & Supabase attendance...');
       const sb = getClient();
       if (!sb) return;
 
-      const { data: attData } = await sb.from('attendance').select('*');
-      if (attData && window.eventsData && typeof updateUnansweredBadges === 'function') {
-        // 出欠ステータスの反映とバッジ更新
-        updateUnansweredBadges();
+      // 1. Google カレンダーの最新イベントを取得
+      const resGCal = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`).then(r => r.json()).catch(() => null);
+      const rawEvents = (resGCal && resGCal.success && Array.isArray(resGCal.events)) ? resGCal.events : null;
+
+      // 2. Supabase の出欠テーブルから最新レコードを取得
+      const { data: rawAttendance } = await sb.from('attendance').select('*');
+
+      if (rawEvents) {
+        try { localStorage.setItem('fcb_cached_events', JSON.stringify(rawEvents)); } catch (e) {}
+
+        const myEmail = window.currentUser ? String(window.currentUser.email || '').toLowerCase().trim() : '';
+        const myName = window.currentUser ? String(window.currentUser.name || '').trim() : '';
+        const myId = window.currentUser ? (window.currentUser.memberId || window.currentUser.id || '') : '';
+
+        const attendanceByEvent = {};
+        (rawAttendance || []).forEach(att => {
+          const eid = String(att.event_id || '').trim();
+          if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
+          attendanceByEvent[eid].push(att);
+        });
+
+        // ログインユーザーがカレンダー側で変更した最新ステータスを Supabase に自動 UPSERT
+        if (myEmail && myId) {
+          for (const ev of rawEvents) {
+            const cleanEvId = String(ev.id || '').split('@')[0];
+            const detail = ev.attendeesDetail || {};
+            const yesEmails = (detail.yesEmails || []).map(e => String(e).toLowerCase().trim());
+            const noEmails = (detail.noEmails || []).map(e => String(e).toLowerCase().trim());
+            const maybeEmails = (detail.maybeEmails || []).map(e => String(e).toLowerCase().trim());
+
+            let calStatus = null;
+            if (yesEmails.includes(myEmail)) calStatus = 'yes';
+            else if (noEmails.includes(myEmail)) calStatus = 'no';
+            else if (maybeEmails.includes(myEmail)) calStatus = 'maybe';
+
+            if (calStatus) {
+              const existingAtt = (attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || []).find(a => a.member_id === myId);
+              if (!existingAtt || existingAtt.status !== calStatus) {
+                console.log(`⚡ [Resume] Syncing calendar change to Supabase: ${cleanEvId} -> ${calStatus}`);
+                await sb.from('attendance').upsert({
+                  event_id: cleanEvId,
+                  member_id: myId,
+                  event_date: ev.date || null,
+                  event_title: ev.title || null,
+                  status: calStatus,
+                  updated_at: new Date().toISOString()
+                }, { onConflict: 'event_id,member_id' });
+              }
+            }
+          }
+        }
+
+        // 最新イベントをアプリのメモリに適用
+        window.eventsData = rawEvents;
+
+        // 画面の即時再描画
+        if (typeof renderCalendar === 'function') {
+          renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
+        }
+        if (typeof renderAgendaList === 'function') {
+          renderAgendaList();
+        }
+        if (typeof updateUnansweredBadges === 'function') {
+          updateUnansweredBadges();
+        }
       }
     } catch (e) {
       console.warn('[Resume] Quick check error:', e);
+    } finally {
+      isResuming = false;
     }
   }
+
+  window.refreshOnResume = refreshOnResume;
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
