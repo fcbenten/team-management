@@ -12678,176 +12678,195 @@ textarea.comment-textarea:active {
      FC Benten Supabase REST API 直結サービスクライアント
      ========================================= -->
 <script>
-(function() {
-  'use strict';
+  (function () {
+    'use strict';
 
-  // 1. Supabase 設定
-  const SUPABASE_URL = 'https://pkufnywvnuicragvobaq.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_Ryi3mETQr8QfgwSGyAcD-A_fiQe_abr';
-  const GAS_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec';
+    // 1. Supabase 設定
+    const SUPABASE_URL = 'https://pkufnywvnuicragvobaq.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_Ryi3mETQr8QfgwSGyAcD-A_fiQe_abr';
+    const GAS_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec';
 
-  let client = null;
-  function getClient() {
-    if (!client) {
-      if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
-        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      } else {
-        console.error('Supabase JS library is not loaded.');
+    let client = null;
+    function getClient() {
+      if (!client) {
+        if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+          client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+          console.error('Supabase JS library is not loaded.');
+        }
       }
+      return client;
     }
-    return client;
-  }
 
-  // 2. ユーティリティ
-  function normalizeDateStr(d) {
-    if (!d) return '';
-    return String(d).replace(/-/g, '/').trim();
-  }
-
-  /**
-   * カレンダーイベントと Supabase 出欠データを高速マージ
-   */
-  function mergeEventsWithAttendance(events, rawAttendance, idToMember) {
-    idToMember = idToMember || {};
-    const attendanceByEvent = {};
-    (rawAttendance || []).forEach(att => {
-      const eid = String(att.event_id || '').trim();
-      if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
-      attendanceByEvent[eid].push(att);
-    });
-
-    return (events || []).map(ev => {
-      const cleanEvId = String(ev.id || '').split('@')[0];
-      const eventAtts = attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || [];
-
-      const yesNames = [];
-      const noNames = [];
-      const maybeNames = [];
-      const yesEmails = [];
-      const noEmails = [];
-      const maybeEmails = [];
-
-      eventAtts.forEach(att => {
-        const mem = idToMember[att.member_id];
-        const mName = mem ? mem.name : (att.member_id || '');
-        const mEmail = mem ? (mem.email || '').toLowerCase() : '';
-        const st = String(att.status || '').toLowerCase();
-
-        if (st === 'yes') {
-          yesNames.push(mName);
-          if (mEmail) yesEmails.push(mEmail);
-        } else if (st === 'no') {
-          noNames.push(mName);
-          if (mEmail) noEmails.push(mEmail);
-        } else if (st === 'maybe') {
-          maybeNames.push(mName);
-          if (mEmail) maybeEmails.push(mEmail);
-        }
-      });
-
-      const existingDetail = ev.attendeesDetail || { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
-
-      const finalYes = Array.from(new Set([...yesNames, ...(existingDetail.yes || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
-      const finalNo = Array.from(new Set([...noNames, ...(existingDetail.no || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
-      const finalMaybe = Array.from(new Set([...maybeNames, ...(existingDetail.maybe || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
-
-      return {
-        ...ev,
-        attendeesDetail: {
-          ...existingDetail,
-          yes: finalYes,
-          no: finalNo,
-          maybe: finalMaybe,
-          yesEmails: Array.from(new Set([...yesEmails, ...(existingDetail.yesEmails || [])])),
-          noEmails: Array.from(new Set([...noEmails, ...(existingDetail.noEmails || [])])),
-          maybeEmails: Array.from(new Set([...maybeEmails, ...(existingDetail.maybeEmails || [])]))
-        }
-      };
-    });
-  }
-
-  /**
-   * バックグラウンドで Google カレンダーの最新イベントを取得し、画面を更新 (初期描画を一切ブロックしない)
-   */
-  async function fetchLatestEventsInBackground(idToMember, rawAttendance) {
-    try {
-      const res = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`).then(r => r.json()).catch(() => null);
-      if (res && res.success && Array.isArray(res.events)) {
-        try { localStorage.setItem('fcb_cached_events', JSON.stringify(res.events)); } catch (e) {}
-        const merged = mergeEventsWithAttendance(res.events, rawAttendance, idToMember);
-        window.eventsData = merged;
-        if (typeof renderCalendar === 'function') {
-          renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
-        }
-        if (typeof renderAgendaList === 'function') {
-          renderAgendaList();
-        }
-        if (typeof updateUnansweredBadges === 'function') {
-          updateUnansweredBadges();
-        }
-        console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
-      }
-    } catch (e) {
-      console.warn('[CalendarBackground] Error in background fetch:', e);
+    // 2. ユーティリティ
+    function normalizeDateStr(d) {
+      if (!d) return '';
+      return String(d).replace(/-/g, '/').trim();
     }
-  }
-
-  // 3. SupabaseService 本体
-  const SupabaseService = {
-    getClient: getClient,
 
     /**
-     * アプリ初期データを Supabase から並列一括取得 (0.2〜0.4秒)
+     * カレンダーイベントと Supabase 出欠データを高速マージ
      */
-    async getInitialData(forceRefresh) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが初期化されていません。');
+    function mergeEventsWithAttendance(events, rawAttendance, idToMember) {
+      idToMember = idToMember || {};
+      const attendanceByEvent = {};
+      (rawAttendance || []).forEach(att => {
+        const eid = String(att.event_id || '').trim();
+        if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
+        attendanceByEvent[eid].push(att);
+      });
 
-      const t0 = performance.now();
+      return (events || []).map(ev => {
+        const cleanEvId = String(ev.id || '').split('@')[0];
+        const eventAtts = attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || [];
 
-      // カレンダーイベントはキャッシュから即座に同期展開（GASの3〜5秒ブロックを完全排除し0秒描画）
-      let initialEvents = [];
+        const yesNames = [];
+        const noNames = [];
+        const maybeNames = [];
+        const yesEmails = [];
+        const noEmails = [];
+        const maybeEmails = [];
+
+        eventAtts.forEach(att => {
+          const mem = idToMember[att.member_id];
+          const mName = mem ? mem.name : (att.member_id || '');
+          const mEmail = mem ? (mem.email || '').toLowerCase() : '';
+          const st = String(att.status || '').toLowerCase();
+
+          if (st === 'yes') {
+            yesNames.push(mName);
+            if (mEmail) yesEmails.push(mEmail);
+          } else if (st === 'no') {
+            noNames.push(mName);
+            if (mEmail) noEmails.push(mEmail);
+          } else if (st === 'maybe') {
+            maybeNames.push(mName);
+            if (mEmail) maybeEmails.push(mEmail);
+          }
+        });
+
+        const existingDetail = ev.attendeesDetail || { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
+
+        const finalYes = Array.from(new Set([...yesNames, ...(existingDetail.yes || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+        const finalNo = Array.from(new Set([...noNames, ...(existingDetail.no || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+        const finalMaybe = Array.from(new Set([...maybeNames, ...(existingDetail.maybe || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+
+        return {
+          ...ev,
+          attendeesDetail: {
+            ...existingDetail,
+            yes: finalYes,
+            no: finalNo,
+            maybe: finalMaybe,
+            yesEmails: Array.from(new Set([...yesEmails, ...(existingDetail.yesEmails || [])])),
+            noEmails: Array.from(new Set([...noEmails, ...(existingDetail.noEmails || [])])),
+            maybeEmails: Array.from(new Set([...maybeEmails, ...(existingDetail.maybeEmails || [])]))
+          }
+        };
+      });
+    }
+
+    /**
+     * バックグラウンドで Google カレンダーの最新イベントを取得し、画面を更新 (初期描画を一切ブロックしない)
+     */
+    async function fetchLatestEventsInBackground(idToMember, rawAttendance) {
       try {
-        const cached = localStorage.getItem('fcb_cached_events');
-        if (cached) initialEvents = JSON.parse(cached);
-      } catch (e) {}
+        const res = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`).then(r => r.json()).catch(() => null);
+        if (res && res.success && Array.isArray(res.events)) {
+          try { localStorage.setItem('fcb_cached_events', JSON.stringify(res.events)); } catch (e) { }
+          const merged = mergeEventsWithAttendance(res.events, rawAttendance, idToMember);
+          window.eventsData = merged;
+          if (typeof renderCalendar === 'function') {
+            renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
+          }
+          if (typeof renderAgendaList === 'function') {
+            renderAgendaList();
+          }
+          if (typeof updateUnansweredBadges === 'function') {
+            updateUnansweredBadges();
+          }
+          console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
+        }
 
-      // 10テーブル＋ビューを並列一括フェッチ (Supabase のみ: 0.15〜0.25秒で即時完了)
-      const [
-        resMembers,
-        resMatches,
-        resScoreLogs,
-        resAttendance,
-        resMaster,
-        resItems,
-        resEqLogs,
-        resBulletin,
-        resComments,
-        resAttStats
-      ] = await Promise.all([
-        sb.from('members').select('*').order('member_id'),
-        sb.from('matches').select('*').order('match_date', { ascending: false }),
-        sb.from('score_logs').select('*'),
-        sb.from('attendance').select('*'),
-        sb.from('equipment_master').select('*').order('sort_order'),
-        sb.from('equipment_items').select('*').order('item_id'),
-        sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false }),
-        sb.from('view_bulletin_summary').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
-        sb.from('bulletin_comments').select('*').eq('is_deleted', false).order('created_at', { ascending: true }),
-        sb.from('view_player_attendance_stats').select('*')
-      ]);
+        // バックグラウンドでカレンダー出欠バッチ集計（GAS）も非同期取得
+        fetch(GAS_ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            functionName: 'apiGetCalendarAttendance',
+            args: [String(new Date().getFullYear())]
+          })
+        }).then(r => r.json()).then(calRes => {
+          if (calRes && calRes.success && calRes.data) {
+            window.calendarAttendanceCache = window.calendarAttendanceCache || {};
+            window.calendarAttendanceCache[calRes.data.year || String(new Date().getFullYear())] = calRes.data;
+            if (typeof filterAndRenderRankings === 'function') {
+              filterAndRenderRankings();
+            }
+          }
+        }).catch(e => console.warn('[CalendarBackground] Attendance fetch warning:', e));
 
-      const t1 = performance.now();
-      console.log(`[Supabase] Parallel fetch completed in ${(t1 - t0).toFixed(1)} ms.`);
+      } catch (e) {
+        console.warn('[CalendarBackground] Error in background fetch:', e);
+      }
+    }
 
-      // メンバー辞書の作成
-      const rawMembers = resMembers.data || [];
-      const idToMember = {};
-      const nameToMember = {};
-      const memberMap = {}; // email -> name
-      const playerNumbers = {};
-      const playerPositions = {};
-      const playerAvatars = {};
+    // 3. SupabaseService 本体
+    const SupabaseService = {
+      getClient: getClient,
+
+      /**
+       * アプリ初期データを Supabase から並列一括取得 (0.2〜0.4秒)
+       */
+      async getInitialData(forceRefresh) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが初期化されていません。');
+
+        const t0 = performance.now();
+
+        // カレンダーイベントはキャッシュから即座に同期展開（GASの3〜5秒ブロックを完全排除し0秒描画）
+        let initialEvents = [];
+        try {
+          const cached = localStorage.getItem('fcb_cached_events');
+          if (cached) initialEvents = JSON.parse(cached);
+        } catch (e) { }
+
+        // 10テーブル＋ビューを並列一括フェッチ (Supabase のみ: 0.15〜0.25秒で即時完了)
+        const [
+          resMembers,
+          resMatches,
+          resScoreLogs,
+          resAttendance,
+          resMaster,
+          resItems,
+          resEqLogs,
+          resBulletin,
+          resComments,
+          resAttStats
+        ] = await Promise.all([
+          sb.from('members').select('*').order('member_id'),
+          sb.from('matches').select('*').order('match_date', { ascending: false }),
+          sb.from('score_logs').select('*'),
+          sb.from('attendance').select('*'),
+          sb.from('equipment_master').select('*').order('sort_order'),
+          sb.from('equipment_items').select('*').order('item_id'),
+          sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false }),
+          sb.from('view_bulletin_summary').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
+          sb.from('bulletin_comments').select('*').eq('is_deleted', false).order('created_at', { ascending: true }),
+          sb.from('view_player_attendance_stats').select('*')
+        ]);
+
+        const t1 = performance.now();
+        console.log(`[Supabase] Parallel fetch completed in ${(t1 - t0).toFixed(1)} ms.`);
+
+        // メンバー辞書の作成
+        const rawMembers = resMembers.data || [];
+        const idToMember = {};
+        const nameToMember = {};
+        const memberMap = {}; // email -> name
+        const playerNumbers = {};
+        const playerPositions = {};
+        const playerAvatars = {};
 
       const roster = [];
       rawMembers.forEach(m => {
@@ -12892,824 +12911,893 @@ textarea.comment-textarea:active {
         }
       });
 
-      // 試合記録 & 得点詳細の組み立て
-      const rawMatches = resMatches.data || [];
-      const rawScoreLogs = resScoreLogs.data || [];
+        // 試合記録 & 得点詳細の組み立て
+        const rawMatches = resMatches.data || [];
+        const rawScoreLogs = resScoreLogs.data || [];
 
-      // ログ辞書
-      const logMap = {};
-      rawScoreLogs.forEach(l => {
-        if (!logMap[l.match_id]) logMap[l.match_id] = [];
-        const pMem = idToMember[l.member_id];
-        const aMem = idToMember[l.assist_member_id];
-        logMap[l.match_id].push({
-          logId: l.log_id,
-          period: l.period || '',
-          min: l.minute || 0,
-          type: l.log_type,
-          player: pMem ? pMem.name : l.member_id,
-          memberId: l.member_id,
-          assist: aMem ? aMem.name : (l.assist_member_id ? l.assist_member_id : ''),
-          assistMemberId: l.assist_member_id
-        });
-      });
-
-      const seasonSet = new Set();
-      const matches = rawMatches.map(m => {
-        const dateStr = normalizeDateStr(m.match_date);
-        const matchYear = dateStr.match(/^(\d{4})/);
-        const yearStr = matchYear ? matchYear[1] : '';
-        if (yearStr) seasonSet.add(yearStr);
-
-        const mLogs = logMap[m.match_id] || [];
-        const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
-        mLogs.forEach(l => {
-          if (l.type === '得点') {
-            if (l.period === '前半') halfScores.my1st++;
-            else if (l.period === '後半') halfScores.my2nd++;
-            else if (l.period === '延長') halfScores.myExt++;
-          } else if (l.type === '相手得点') {
-            if (l.period === '前半') halfScores.opp1st++;
-            else if (l.period === '後半') halfScores.opp2nd++;
-            else if (l.period === '延長') halfScores.oppExt++;
-          }
-        });
-
-        const momMem = idToMember[m.mom_member_id];
-        return {
-          matchId: m.match_id,
-          date: dateStr,
-          year: yearStr,
-          category: m.category || 'TRM',
-          opponent: m.opponent || '未設定',
-          myScore: m.my_score || 0,
-          oppScore: m.opp_score || 0,
-          result: m.result || '引き分け',
-          attended: m.attended_players || '',
-          location: m.location || '',
-          mom: momMem ? momMem.name : 'なし',
-          momMemberId: m.mom_member_id,
-          halfScores: halfScores,
-          logs: mLogs
-        };
-      });
-
-      const seasons = Array.from(seasonSet).sort((a, b) => b - a);
-      const history = { matches: matches, seasons: seasons };
-
-      // スタッツ計算 (全選手対象)
-      const statsMap = {};
-      roster.forEach(mem => {
-        if (!mem.isPast && mem.memberType === 'REGULAR') {
-          statsMap[mem.name] = { name: mem.name, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
-        }
-      });
-
-      matches.forEach(m => {
-        const attendedArr = (m.attended || '').split(',').map(s => s.trim()).filter(Boolean);
-        attendedArr.forEach(pName => {
-          if (!statsMap[pName]) statsMap[pName] = { name: pName, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
-          statsMap[pName].games++;
-        });
-
-        if (m.mom && m.mom !== 'なし' && m.mom !== '-') {
-          if (!statsMap[m.mom]) statsMap[m.mom] = { name: m.mom, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
-          statsMap[m.mom].mom++;
-        }
-
-        (m.logs || []).forEach(l => {
-          if (l.type === '得点' && l.player) {
-            if (!statsMap[l.player]) statsMap[l.player] = { name: l.player, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
-            statsMap[l.player].goals++;
-          }
-          if (l.assist) {
-            if (!statsMap[l.assist]) statsMap[l.assist] = { name: l.assist, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
-            statsMap[l.assist].assists++;
-          }
-        });
-      });
-
-      const stats = Object.values(statsMap).map(s => {
-        s.points = s.goals + s.assists;
-        return s;
-      });
-
-      // 出欠データの構造化
-      const rawAttendance = resAttendance.data || [];
-      const attendanceByEvent = {};
-      rawAttendance.forEach(att => {
-        if (!attendanceByEvent[att.event_id]) {
-          attendanceByEvent[att.event_id] = { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
-        }
-        const mObj = idToMember[att.member_id];
-        const mName = mObj ? mObj.name : att.member_id;
-        const mEmail = mObj ? mObj.email : '';
-        const st = (att.status || '').toLowerCase();
-        if (st === 'yes') {
-          attendanceByEvent[att.event_id].yes.push(mName);
-          if (mEmail) attendanceByEvent[att.event_id].yesEmails.push(mEmail);
-        } else if (st === 'no') {
-          attendanceByEvent[att.event_id].no.push(mName);
-          if (mEmail) attendanceByEvent[att.event_id].noEmails.push(mEmail);
-        } else if (st === 'maybe') {
-          attendanceByEvent[att.event_id].maybe.push(mName);
-          if (mEmail) attendanceByEvent[att.event_id].maybeEmails.push(mEmail);
-        }
-      });
-
-      // 備品データの構造化
-      const rawMaster = resMaster.data || [];
-      const rawItems = resItems.data || [];
-      const rawEqLogs = resEqLogs.data || [];
-
-      const masterList = rawMaster.map(m => ({
-        code: m.equipment_code,
-        equipmentCode: m.equipment_code,
-        name: m.name,
-        ruleType: m.rule_type,
-        reqTR: m.req_tr,
-        reqTRM: m.req_trm,
-        reqOfficial: m.req_official,
-        notes: m.notes || '',
-        sortOrder: m.sort_order
-      }));
-
-      const items = rawItems.map(it => {
-        const hMem = idToMember[it.member_id];
-        const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
-        const mNum = hMem ? hMem.number : null;
-        const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
-        return {
-          id: it.item_id,
-          itemId: it.item_id,
-          code: it.equipment_code,
-          itemCode: it.equipment_code,
-          equipmentCode: it.equipment_code,
-          name: it.item_name,
-          holderId: it.member_id,
-          memberId: it.member_id,
-          holderName: mName,
-          memberName: mName,
-          holderNumber: mNum,
-          memberNumber: mNum,
-          memberAvatarUrl: mAvatar,
-          status: it.status || '保管中',
-          notes: it.notes || '',
-          updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
-        };
-      });
-
-      const equipmentData = {
-        success: true,
-        masterList: masterList,
-        itemsList: items,
-        items: items,
-        logs: rawEqLogs,
-        upcomingEquipment: [],
-        isAdmin: true
-      };
-
-      // 掲示板データの構造化
-      const rawBulletin = resBulletin.data || [];
-      const rawComments = resComments.data || [];
-
-      const commentsByPost = {};
-      rawComments.forEach(c => {
-        if (!commentsByPost[c.post_id]) commentsByPost[c.post_id] = [];
-        const cAuthor = idToMember[c.author_member_id];
-        commentsByPost[c.post_id].push({
-          id: c.comment_id,
-          postId: c.post_id,
-          authorId: c.author_member_id,
-          authorName: cAuthor ? cAuthor.name : '不明',
-          authorAvatar: cAuthor ? cAuthor.avatarUrl : '',
-          content: c.content,
-          createdAt: c.created_at
-        });
-      });
-
-      const bulletinPosts = rawBulletin.map(p => {
-        const pAuthor = idToMember[p.author_member_id];
-        return {
-          id: p.post_id,
-          category: p.category || '連絡',
-          title: p.title,
-          content: p.content,
-          eventId: p.event_id || '',
-          eventTitle: p.event_title || '',
-          eventDate: p.event_date || '',
-          isPinned: !!p.is_pinned,
-          authorId: p.author_member_id,
-          authorName: p.author_member_name || (pAuthor ? pAuthor.name : '不明'),
-          authorAvatar: p.author_avatar_url || (pAuthor ? pAuthor.avatarUrl : ''),
-          createdAt: p.created_at,
-          updatedById: p.updated_by_member_id,
-          updatedAt: p.updated_at,
-          readCount: Number(p.read_count || 0),
-          commentCount: Number(p.comment_count || 0),
-          comments: commentsByPost[p.post_id] || []
-        };
-      });
-
-      const pinnedPosts = bulletinPosts.filter(p => p.isPinned);
-      const bulletinData = {
-        success: true,
-        posts: bulletinPosts,
-        pinnedPosts: pinnedPosts,
-        totalUnreadCount: 0
-      };
-
-      // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
-      const mergedEvents = mergeEventsWithAttendance(initialEvents, resAttendance.data || [], idToMember);
-
-      // バックグラウンドで Google カレンダーの最新イベントを非同期取得 (初期描画を一切ブロックしない)
-      setTimeout(() => {
-        fetchLatestEventsInBackground(idToMember, resAttendance.data || []);
-      }, 50);
-
-      // 最終返却ペイロード (既存フロントエンドがそのまま受け取れる完全互換構造)
-      return {
-        success: true,
-        roster: roster,
-        memberMap: memberMap,
-        playerNumbers: playerNumbers,
-        playerPositions: playerPositions,
-        playerAvatars: playerAvatars,
-        history: history,
-        stats: stats,
-        equipmentData: equipmentData,
-        bulletinData: bulletinData,
-        calendarAttendance: { year: new Date().getFullYear().toString(), players: {} },
-        events: mergedEvents
-      };
-    },
-
-    /**
-     * 出欠ステータスの即時更新 (PWA -> Supabase, 非同期でカレンダー同期)
-     */
-    async updateEventAttendance(payload) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
-
-      const eventId = String(payload.eventId || '').trim();
-      let memberId = payload.memberId;
-
-      // memberId が未指定の場合、名前またはメールから解決
-      if (!memberId && window.currentUser) {
-        memberId = window.currentUser.memberId || window.currentUser.id;
-      }
-
-      if (!eventId || !memberId) {
-        throw new Error('予定IDまたはメンバーIDが不足しています。');
-      }
-
-      const status = String(payload.status || 'maybe').toLowerCase();
-      const comment = payload.comment || null;
-
-      // 1. Supabase attendance に即時 UPSERT (0.1秒)
-      const { data, error } = await sb.from('attendance').upsert({
-        event_id: eventId,
-        member_id: memberId,
-        event_date: payload.originalDate || null,
-        event_title: payload.originalTitle || null,
-        status: status,
-        comment: comment,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'event_id,member_id'
-      });
-
-      if (error) {
-        console.error('[Supabase] Attendance UPSERT error:', error);
-        throw error;
-      }
-
-      console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
-
-      // 2. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
-      try {
-        fetch(GAS_ENDPOINT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            functionName: 'updateEventAttendance',
-            args: [payload]
-          })
-        }).catch(e => console.warn('[CalendarSync] Non-blocking calendar sync warning:', e));
-      } catch (syncErr) {
-        console.warn('[CalendarSync] Kick failed:', syncErr);
-      }
-
-      return { success: true };
-    },
-
-    /**
-     * 試合結果・スコア記録の即時保存 (Supabase matches & score_logs, 非同期でGAS同期)
-     */
-    async saveScoreRecord(payload) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
-
-      const matchId = payload.matchId || ('M' + Date.now());
-      const dateStr = normalizeDateStr(payload.date);
-      const logs = Array.isArray(payload.logs) ? payload.logs : [];
-
-      // スコアと勝敗の再計算（安全策）
-      let myScore = (payload.myScore !== undefined && payload.myScore !== null) ? Number(payload.myScore) : 0;
-      let oppScore = (payload.oppScore !== undefined && payload.oppScore !== null) ? Number(payload.oppScore) : 0;
-      if (payload.myScore === undefined || payload.oppScore === undefined) {
-        myScore = 0;
-        oppScore = 0;
-        logs.forEach(l => {
-          if (l.type === '得点') myScore++;
-          else if (l.type === '相手得点' || l.type === '失点') oppScore++;
-        });
-      }
-
-      let resultText = payload.result || '引き分け';
-      if (!payload.result) {
-        if (myScore > oppScore) resultText = '勝利';
-        else if (myScore < oppScore) resultText = '敗北';
-      }
-
-      // 選手名から member_id を解決するためのマップ
-      const nameToId = {};
-      try {
-        const cachedRoster = localStorage.getItem('fcb_cached_roster');
-        if (cachedRoster) {
-          const rList = JSON.parse(cachedRoster);
-          if (Array.isArray(rList)) {
-            rList.forEach(m => {
-              if (m.name && m.id) nameToId[m.name.trim()] = m.id;
-            });
-          }
-        }
-      } catch (e) {}
-
-      // MOM memberId の解決
-      let momMemberId = payload.momMemberId || null;
-      if (!momMemberId && payload.mom && payload.mom !== 'なし') {
-        momMemberId = nameToId[payload.mom.trim()] || null;
-      }
-
-      // 1. matches テーブルの保存 (Supabase Direct: 0.1秒)
-      const { error: matchErr } = await sb.from('matches').upsert({
-        match_id: matchId,
-        match_date: dateStr,
-        category: payload.category || 'TRM',
-        opponent: payload.opponent || '未設定',
-        my_score: myScore,
-        opp_score: oppScore,
-        result: resultText,
-        attended_players: payload.attended || '',
-        location: payload.location || '',
-        mom_member_id: momMemberId,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'match_id'
-      });
-
-      if (matchErr) throw matchErr;
-
-      // 2. score_logs の再登録 (既存ログ削除後の一括挿入)
-      await sb.from('score_logs').delete().eq('match_id', matchId);
-
-      if (logs.length > 0) {
-        const insertLogs = logs.map((l, idx) => {
-          let mId = l.memberId;
-          if (!mId) {
-            if (l.type === '相手得点' || l.type === '失点') {
-              mId = 'MBR-SPECIAL-NONE';
-            } else if (l.player === 'OG') {
-              mId = 'MBR-SPECIAL-OG';
-            } else if (l.player === '助っ人') {
-              mId = 'MBR-SPECIAL-GUEST';
-            } else if (l.player) {
-              mId = nameToId[l.player.trim()] || 'MBR-SPECIAL-GUEST';
-            } else {
-              mId = 'MBR-SPECIAL-NONE';
-            }
-          }
-
-          let aId = l.assistMemberId || null;
-          if (!aId && l.assist && l.assist !== '-' && l.assist !== 'なし') {
-            if (l.assist === '助っ人') {
-              aId = 'MBR-SPECIAL-GUEST';
-            } else {
-              aId = nameToId[l.assist.trim()] || null;
-            }
-          }
-
-          return {
-            log_id: `L_${matchId}_${idx + 1}`,
-            match_id: matchId,
+        // ログ辞書
+        const logMap = {};
+        rawScoreLogs.forEach(l => {
+          if (!logMap[l.match_id]) logMap[l.match_id] = [];
+          const pMem = idToMember[l.member_id];
+          const aMem = idToMember[l.assist_member_id];
+          logMap[l.match_id].push({
+            logId: l.log_id,
             period: l.period || '',
-            minute: Number(l.min || 0),
-            log_type: (l.type === '失点') ? '相手得点' : l.type,
-            member_id: mId,
-            assist_member_id: aId
+            min: l.minute || 0,
+            type: l.log_type,
+            player: pMem ? pMem.name : l.member_id,
+            memberId: l.member_id,
+            assist: aMem ? aMem.name : (l.assist_member_id ? l.assist_member_id : ''),
+            assistMemberId: l.assist_member_id
+          });
+        });
+
+        const seasonSet = new Set();
+        const matches = rawMatches.map(m => {
+          const dateStr = normalizeDateStr(m.match_date);
+          const matchYear = dateStr.match(/^(\d{4})/);
+          const yearStr = matchYear ? matchYear[1] : '';
+          if (yearStr) seasonSet.add(yearStr);
+
+          const mLogs = logMap[m.match_id] || [];
+          const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
+          mLogs.forEach(l => {
+            if (l.type === '得点') {
+              if (l.period === '前半') halfScores.my1st++;
+              else if (l.period === '後半') halfScores.my2nd++;
+              else if (l.period === '延長') halfScores.myExt++;
+            } else if (l.type === '相手得点') {
+              if (l.period === '前半') halfScores.opp1st++;
+              else if (l.period === '後半') halfScores.opp2nd++;
+              else if (l.period === '延長') halfScores.oppExt++;
+            }
+          });
+
+          const momMem = idToMember[m.mom_member_id];
+          return {
+            matchId: m.match_id,
+            date: dateStr,
+            year: yearStr,
+            category: m.category || 'TRM',
+            opponent: m.opponent || '未設定',
+            myScore: m.my_score || 0,
+            oppScore: m.opp_score || 0,
+            result: m.result || '引き分け',
+            attended: m.attended_players || '',
+            location: m.location || '',
+            mom: momMem ? momMem.name : 'なし',
+            momMemberId: m.mom_member_id,
+            halfScores: halfScores,
+            logs: mLogs
           };
         });
 
-        const { error: logErr } = await sb.from('score_logs').insert(insertLogs);
-        if (logErr) throw logErr;
-      }
+        const seasons = Array.from(seasonSet).sort((a, b) => b - a);
+        const history = { matches: matches, seasons: seasons };
 
-      console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
+        // スタッツ計算 (全選手対象)
+        const statsMap = {};
+        roster.forEach(mem => {
+          if (!mem.isPast && mem.memberType === 'REGULAR') {
+            statsMap[mem.name] = { name: mem.name, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+          }
+        });
 
-      // 3. バックグラウンドで GAS（スプレッドシート）にも同期（待たせない）
-      try {
-        fetch(GAS_ENDPOINT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            functionName: 'saveMatchData',
-            args: [payload]
-          })
-        }).catch(e => console.warn('[MatchSync] GAS sync warning:', e));
-      } catch (syncErr) {
-        console.warn('[MatchSync] Kick failed:', syncErr);
-      }
+        matches.forEach(m => {
+          const attendedArr = (m.attended || '').split(',').map(s => s.trim()).filter(Boolean);
+          attendedArr.forEach(pName => {
+            if (!statsMap[pName]) statsMap[pName] = { name: pName, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+            statsMap[pName].games++;
+          });
 
-      return "保存が完了しました！";
-    },
+          if (m.mom && m.mom !== 'なし' && m.mom !== '-') {
+            if (!statsMap[m.mom]) statsMap[m.mom] = { name: m.mom, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+            statsMap[m.mom].mom++;
+          }
 
-    /**
-     * 掲示板投稿の保存
-     */
-    async saveBulletinPost(payload) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+          (m.logs || []).forEach(l => {
+            if (l.type === '得点' && l.player) {
+              if (!statsMap[l.player]) statsMap[l.player] = { name: l.player, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+              statsMap[l.player].goals++;
+            }
+            if (l.assist) {
+              if (!statsMap[l.assist]) statsMap[l.assist] = { name: l.assist, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+              statsMap[l.assist].assists++;
+            }
+          });
+        });
 
-      const postId = payload.id || ('BUL-' + Date.now());
-      const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+        const stats = Object.values(statsMap).map(s => {
+          s.points = s.goals + s.assists;
+          return s;
+        });
 
-      const record = {
-        post_id: postId,
-        category: payload.category || '連絡',
-        title: payload.title,
-        content: payload.content || '',
-        event_id: payload.eventId || null,
-        event_title: payload.eventTitle || null,
-        event_date: payload.eventDate || null,
-        is_pinned: !!payload.isPinned,
-        updated_at: new Date().toISOString()
-      };
+        // 出欠データの構造化
+        const rawAttendance = resAttendance.data || [];
+        const attendanceByEvent = {};
+        rawAttendance.forEach(att => {
+          if (!attendanceByEvent[att.event_id]) {
+            attendanceByEvent[att.event_id] = { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
+          }
+          const mObj = idToMember[att.member_id];
+          const mName = mObj ? mObj.name : att.member_id;
+          const mEmail = mObj ? mObj.email : '';
+          const st = (att.status || '').toLowerCase();
+          if (st === 'yes') {
+            attendanceByEvent[att.event_id].yes.push(mName);
+            if (mEmail) attendanceByEvent[att.event_id].yesEmails.push(mEmail);
+          } else if (st === 'no') {
+            attendanceByEvent[att.event_id].no.push(mName);
+            if (mEmail) attendanceByEvent[att.event_id].noEmails.push(mEmail);
+          } else if (st === 'maybe') {
+            attendanceByEvent[att.event_id].maybe.push(mName);
+            if (mEmail) attendanceByEvent[att.event_id].maybeEmails.push(mEmail);
+          }
+        });
 
-      if (!payload.id) {
-        record.author_member_id = currentMemberId;
-      } else {
-        record.updated_by_member_id = currentMemberId;
-      }
+        // 備品データの構造化
+        const rawMaster = resMaster.data || [];
+        const rawItems = resItems.data || [];
+        const rawEqLogs = resEqLogs.data || [];
 
-      const { data, error } = await sb.from('bulletin_posts').upsert(record);
-      if (error) throw error;
-      return { success: true, post: data };
-    },
+        const masterList = rawMaster.map(m => ({
+          code: m.equipment_code,
+          equipmentCode: m.equipment_code,
+          name: m.name,
+          ruleType: m.rule_type,
+          reqTR: m.req_tr,
+          reqTRM: m.req_trm,
+          reqOfficial: m.req_official,
+          notes: m.notes || '',
+          sortOrder: m.sort_order
+        }));
 
-    /**
-     * 掲示板既読の登録
-     */
-    async markBulletinAsRead(postId, memberId) {
-      const sb = getClient();
-      if (!sb) return;
-      if (!postId || !memberId) return;
+        const items = rawItems.map(it => {
+          const hMem = idToMember[it.member_id];
+          const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
+          const mNum = hMem ? hMem.number : null;
+          const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
+          return {
+            id: it.item_id,
+            itemId: it.item_id,
+            code: it.equipment_code,
+            itemCode: it.equipment_code,
+            equipmentCode: it.equipment_code,
+            name: it.item_name,
+            holderId: it.member_id,
+            memberId: it.member_id,
+            holderName: mName,
+            memberName: mName,
+            holderNumber: mNum,
+            memberNumber: mNum,
+            memberAvatarUrl: mAvatar,
+            status: it.status || '保管中',
+            notes: it.notes || '',
+            updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
+          };
+        });
 
-      const readId = `READ_${postId}_${memberId}`;
-      await sb.from('bulletin_reads').upsert({
-        read_id: readId,
-        post_id: postId,
-        member_id: memberId,
-        read_at: new Date().toISOString()
-      }, { onConflict: 'post_id,member_id' });
-    },
-
-    /**
-     * 掲示板コメントの保存
-     */
-    async saveBulletinComment(payload) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
-
-      const commentId = 'CMT-' + Date.now();
-      const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
-
-      const { data, error } = await sb.from('bulletin_comments').insert({
-        comment_id: commentId,
-        post_id: payload.postId,
-        author_member_id: currentMemberId,
-        content: payload.content,
-        created_at: new Date().toISOString()
-      });
-
-      if (error) throw error;
-      return { success: true };
-    },
-
-    /**
-     * 備品保管者の引き継ぎ更新
-     */
-    async updateItemHolder(itemId, newMemberId) {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
-
-      const { data, error } = await sb.from('equipment_items').update({
-        member_id: newMemberId,
-        updated_at: new Date().toISOString()
-      }).eq('item_id', itemId);
-
-      if (error) throw error;
-      return { success: true };
-    },
-
-    /**
-     * 備品データの最新取得 (Supabase Direct: 0.1秒)
-     */
-    async getEquipmentData() {
-      const sb = getClient();
-      if (!sb) throw new Error('Supabase クライアントが利用できません。');
-
-      const [resMembers, resMaster, resItems, resEqLogs] = await Promise.all([
-        sb.from('members').select('member_id, name, number, avatar_url'),
-        sb.from('equipment_master').select('*').order('sort_order', { ascending: true }),
-        sb.from('equipment_items').select('*'),
-        sb.from('equipment_event_logs').select('*')
-      ]);
-
-      const idToMember = {};
-      (resMembers.data || []).forEach(m => {
-        idToMember[m.member_id] = { name: m.name, number: m.number, avatarUrl: m.avatar_url };
-      });
-
-      const masterList = (resMaster.data || []).map(m => ({
-        code: m.equipment_code,
-        equipmentCode: m.equipment_code,
-        name: m.name,
-        ruleType: m.rule_type,
-        reqTR: m.req_tr,
-        reqTRM: m.req_trm,
-        reqOfficial: m.req_official,
-        notes: m.notes || '',
-        sortOrder: m.sort_order
-      }));
-
-      const items = (resItems.data || []).map(it => {
-        const hMem = idToMember[it.member_id];
-        const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
-        const mNum = hMem ? hMem.number : null;
-        const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
-        return {
-          id: it.item_id,
-          itemId: it.item_id,
-          code: it.equipment_code,
-          itemCode: it.equipment_code,
-          equipmentCode: it.equipment_code,
-          name: it.item_name,
-          holderId: it.member_id,
-          memberId: it.member_id,
-          holderName: mName,
-          memberName: mName,
-          holderNumber: mNum,
-          memberNumber: mNum,
-          memberAvatarUrl: mAvatar,
-          status: it.status || '保管中',
-          notes: it.notes || '',
-          updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
+        const equipmentData = {
+          success: true,
+          masterList: masterList,
+          itemsList: items,
+          items: items,
+          logs: rawEqLogs,
+          upcomingEquipment: [],
+          isAdmin: true
         };
-      });
 
-      return {
-        success: true,
-        masterList: masterList,
-        itemsList: items,
-        items: items,
-        logs: resEqLogs.data || [],
-        upcomingEquipment: [],
-        isAdmin: true
-      };
-    }
-  };
+        // 掲示板データの構造化
+        const rawBulletin = resBulletin.data || [];
+        const rawComments = resComments.data || [];
 
-  window.SupabaseService = SupabaseService;
+        const commentsByPost = {};
+        rawComments.forEach(c => {
+          if (!commentsByPost[c.post_id]) commentsByPost[c.post_id] = [];
+          const cAuthor = idToMember[c.author_member_id];
+          commentsByPost[c.post_id].push({
+            id: c.comment_id,
+            postId: c.post_id,
+            authorId: c.author_member_id,
+            authorName: cAuthor ? cAuthor.name : '不明',
+            authorAvatar: cAuthor ? cAuthor.avatarUrl : '',
+            content: c.content,
+            createdAt: c.created_at
+          });
+        });
 
-  // =========================================
-  // 4. google.script.run の透過的バイパスプロキシ
-  // =========================================
-  // 既存のフロントエンド呼び出しコードを変更することなく、
-  // Supabase で即時実行できる関数を自動的にバイパスして爆速化 (0.3秒)
-  // =========================================
-  function createSupabaseBypassProxy(successHandler, failureHandler, userObject) {
-    return new Proxy({}, {
-      get: function(target, prop) {
-        if (prop === 'withSuccessHandler') {
-          return function(h) { return createSupabaseBypassProxy(h, failureHandler, userObject); };
+        const bulletinPosts = rawBulletin.map(p => {
+          const pAuthor = idToMember[p.author_member_id];
+          return {
+            id: p.post_id,
+            category: p.category || '連絡',
+            title: p.title,
+            content: p.content,
+            eventId: p.event_id || '',
+            eventTitle: p.event_title || '',
+            eventDate: p.event_date || '',
+            isPinned: !!p.is_pinned,
+            authorId: p.author_member_id,
+            authorName: p.author_member_name || (pAuthor ? pAuthor.name : '不明'),
+            authorAvatar: p.author_avatar_url || (pAuthor ? pAuthor.avatarUrl : ''),
+            createdAt: p.created_at,
+            updatedById: p.updated_by_member_id,
+            updatedAt: p.updated_at,
+            readCount: Number(p.read_count || 0),
+            commentCount: Number(p.comment_count || 0),
+            comments: commentsByPost[p.post_id] || []
+          };
+        });
+
+        const pinnedPosts = bulletinPosts.filter(p => p.isPinned);
+        const bulletinData = {
+          success: true,
+          posts: bulletinPosts,
+          pinnedPosts: pinnedPosts,
+          totalUnreadCount: 0
+        };
+
+        // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
+        const mergedEvents = mergeEventsWithAttendance(initialEvents, resAttendance.data || [], idToMember);
+
+        // 8. カレンダー出欠の初期集計オブジェクトを構築 (0ms で画面即時描画)
+        const currentYearStr = new Date().getFullYear().toString();
+        const calPlayers = {};
+        roster.forEach(m => {
+          calPlayers[m.name] = {
+            name: m.name,
+            all: { invited: 0, attended: 0, rate: 0 },
+            '公式戦': { invited: 0, attended: 0, rate: 0 },
+            'TRM': { invited: 0, attended: 0, rate: 0 },
+            'TR': { invited: 0, attended: 0, rate: 0 },
+            'その他': { invited: 0, attended: 0, rate: 0 }
+          };
+        });
+
+        // イベントおよび出欠データから当年分の参加実績を集計
+        mergedEvents.forEach(ev => {
+          const evDateStr = ev.date || (ev.start ? ev.start.substring(0, 10) : '');
+          if (!evDateStr) return;
+          const evYear = evDateStr.substring(0, 4);
+          if (evYear !== currentYearStr) return;
+
+          let cat = ev.category || 'その他';
+          if (!['公式戦', 'TRM', 'TR'].includes(cat)) cat = 'その他';
+
+          const attDetail = ev.attendeesDetail || {};
+          const yesList = attDetail.yes || [];
+          const noList = attDetail.no || [];
+          const maybeList = attDetail.maybe || [];
+
+          const invitedList = new Set([...yesList, ...noList, ...maybeList]);
+          invitedList.forEach(name => {
+            if (!calPlayers[name]) {
+              calPlayers[name] = {
+                name: name,
+                all: { invited: 0, attended: 0, rate: 0 },
+                '公式戦': { invited: 0, attended: 0, rate: 0 },
+                'TRM': { invited: 0, attended: 0, rate: 0 },
+                'TR': { invited: 0, attended: 0, rate: 0 },
+                'その他': { invited: 0, attended: 0, rate: 0 }
+              };
+            }
+            calPlayers[name].all.invited++;
+            calPlayers[name][cat].invited++;
+          });
+
+          yesList.forEach(name => {
+            if (calPlayers[name]) {
+              calPlayers[name].all.attended++;
+              calPlayers[name][cat].attended++;
+            }
+          });
+        });
+
+        Object.keys(calPlayers).forEach(pName => {
+          const pRec = calPlayers[pName];
+          ['all', '公式戦', 'TRM', 'TR', 'その他'].forEach(cKey => {
+            const item = pRec[cKey];
+            if (item && item.invited > 0) {
+              item.rate = Math.round((item.attended / item.invited) * 100);
+            }
+          });
+        });
+
+        const calendarAttendancePayload = {
+          year: currentYearStr,
+          updatedAt: new Date().toISOString(),
+          players: calPlayers
+        };
+        window.calendarAttendanceCache = window.calendarAttendanceCache || {};
+        window.calendarAttendanceCache[currentYearStr] = calendarAttendancePayload;
+
+        // バックグラウンドで Google カレンダーの最新イベントを非同期取得 (初期描画を一切ブロックしない)
+        setTimeout(() => {
+          fetchLatestEventsInBackground(idToMember, resAttendance.data || []);
+        }, 50);
+
+        // 最終返却ペイロード (既存フロントエンドがそのまま受け取れる完全互換構造)
+        return {
+          success: true,
+          roster: roster,
+          memberMap: memberMap,
+          playerNumbers: playerNumbers,
+          playerPositions: playerPositions,
+          playerAvatars: playerAvatars,
+          history: history,
+          stats: stats,
+          equipmentData: equipmentData,
+          bulletinData: bulletinData,
+          calendarAttendance: calendarAttendancePayload,
+          events: mergedEvents
+        };
+      },
+
+      /**
+       * 出欠ステータスの即時更新 (PWA -> Supabase, 非同期でカレンダー同期)
+       */
+      async updateEventAttendance(payload) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const eventId = String(payload.eventId || '').trim();
+        let memberId = payload.memberId;
+
+        // memberId が未指定の場合、名前またはメールから解決
+        if (!memberId && window.currentUser) {
+          memberId = window.currentUser.memberId || window.currentUser.id;
         }
-        if (prop === 'withFailureHandler') {
-          return function(h) { return createSupabaseBypassProxy(successHandler, h, userObject); };
-        }
-        if (prop === 'withUserObject') {
-          return function(u) { return createSupabaseBypassProxy(successHandler, failureHandler, u); };
+
+        if (!eventId || !memberId) {
+          throw new Error('予定IDまたはメンバーIDが不足しています。');
         }
 
-        return function(...args) {
-          // Supabase 直接処理へのルーティング
-          if (prop === 'getInitialData') {
-            console.log('⚡ [Bypass] getInitialData routed to Supabase Direct REST API (0.3s)');
-            SupabaseService.getInitialData(args[0])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
+        const status = String(payload.status || 'maybe').toLowerCase();
+        const comment = payload.comment || null;
 
-          if (prop === 'updateEventAttendance') {
-            console.log('⚡ [Bypass] updateEventAttendance routed to Supabase Direct UPSERT (0.1s)');
-            SupabaseService.updateEventAttendance(args[0])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
+        // 1. Supabase attendance に即時 UPSERT (0.1秒)
+        const { data, error } = await sb.from('attendance').upsert({
+          event_id: eventId,
+          member_id: memberId,
+          event_date: payload.originalDate || null,
+          event_title: payload.originalTitle || null,
+          status: status,
+          comment: comment,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'event_id,member_id'
+        });
 
-          if (prop === 'saveMatchData' || prop === 'saveScoreRecord') {
-            console.log('⚡ [Bypass] saveMatchData routed to Supabase Direct (0.2s)');
-            SupabaseService.saveScoreRecord(args[0])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
+        if (error) {
+          console.error('[Supabase] Attendance UPSERT error:', error);
+          throw error;
+        }
 
-          if (prop === 'apiSaveBulletinPost') {
-            console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
-            SupabaseService.saveBulletinPost(args[0])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
+        console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
 
-          if (prop === 'apiMarkAsRead') {
-            SupabaseService.markBulletinAsRead(args[0], args[1]);
-            if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
-            return;
-          }
-
-          if (prop === 'apiSaveComment') {
-            SupabaseService.saveBulletinComment(args[0])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
-
-          if (prop === 'updateItemHolder') {
-            SupabaseService.updateItemHolder(args[0], args[1])
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
-
-          if (prop === 'apiGetEquipmentData') {
-            console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
-            SupabaseService.getEquipmentData()
-              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-            return;
-          }
-
-          // その他の関数は従来通り GAS へのフォールバック通信
+        // 2. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
+        try {
           fetch(GAS_ENDPOINT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({ functionName: prop, args: args })
-          })
-          .then(res => res.json())
-          .then(result => {
-            if (result && result.success) {
-              if (typeof successHandler === 'function') successHandler(result.data, userObject);
-            } else {
-              const err = new Error(result && result.error ? result.error : 'エラーが発生しました。');
-              if (typeof failureHandler === 'function') failureHandler(err, userObject);
-            }
-          })
-          .catch(err => {
-            if (typeof failureHandler === 'function') failureHandler(err, userObject);
+            body: JSON.stringify({
+              functionName: 'updateEventAttendance',
+              args: [payload]
+            })
+          }).catch(e => console.warn('[CalendarSync] Non-blocking calendar sync warning:', e));
+        } catch (syncErr) {
+          console.warn('[CalendarSync] Kick failed:', syncErr);
+        }
+
+        return { success: true };
+      },
+
+      /**
+       * 試合結果・スコア記録の即時保存 (Supabase matches & score_logs, 非同期でGAS同期)
+       */
+      async saveScoreRecord(payload) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const matchId = payload.matchId || ('M' + Date.now());
+        const dateStr = normalizeDateStr(payload.date);
+        const logs = Array.isArray(payload.logs) ? payload.logs : [];
+
+        // スコアと勝敗の再計算（安全策）
+        let myScore = (payload.myScore !== undefined && payload.myScore !== null) ? Number(payload.myScore) : 0;
+        let oppScore = (payload.oppScore !== undefined && payload.oppScore !== null) ? Number(payload.oppScore) : 0;
+        if (payload.myScore === undefined || payload.oppScore === undefined) {
+          myScore = 0;
+          oppScore = 0;
+          logs.forEach(l => {
+            if (l.type === '得点') myScore++;
+            else if (l.type === '相手得点' || l.type === '失点') oppScore++;
           });
-        };
-      }
-    });
-  }
+        }
 
-  // 既存の google.script.run を Supabase バイパスプロキシでオーバーライド
-  window.google = window.google || {};
-  window.google.script = window.google.script || {};
-  window.google.script.run = createSupabaseBypassProxy(null, null, null);
+        let resultText = payload.result || '引き分け';
+        if (!payload.result) {
+          if (myScore > oppScore) resultText = '勝利';
+          else if (myScore < oppScore) resultText = '敗北';
+        }
 
-  // =========================================
-  // 5. 画面復帰検知 (Page Visibility API & window.focus)
-  // =========================================
-  // スマホのアプリ切り替えやPCの別タブ・ウィンドウからの復帰時に
-  // Googleカレンダー側の最新出欠をフェッチし、Supabaseとアプリ画面へ即時反映
-  // =========================================
-  let isResuming = false;
-  let lastResumeTime = 0;
+        // 選手名から member_id を解決するためのマップ
+        const nameToId = {};
+        try {
+          const cachedRoster = localStorage.getItem('fcb_cached_roster');
+          if (cachedRoster) {
+            const rList = JSON.parse(cachedRoster);
+            if (Array.isArray(rList)) {
+              rList.forEach(m => {
+                if (m.name && m.id) nameToId[m.name.trim()] = m.id;
+              });
+            }
+          }
+        } catch (e) { }
 
-  async function refreshOnResume() {
-    const now = Date.now();
-    if (isResuming || (now - lastResumeTime < 3000)) return;
-    isResuming = true;
-    lastResumeTime = now;
+        // MOM memberId の解決
+        let momMemberId = payload.momMemberId || null;
+        if (!momMemberId && payload.mom && payload.mom !== 'なし') {
+          momMemberId = nameToId[payload.mom.trim()] || null;
+        }
 
-    try {
-      console.log('⚡ [Resume] Screen resumed. Syncing latest Google Calendar & Supabase attendance...');
-      const sb = getClient();
-      if (!sb) return;
-
-      // 1. Google カレンダーの最新イベントを取得
-      const resGCal = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`).then(r => r.json()).catch(() => null);
-      const rawEvents = (resGCal && resGCal.success && Array.isArray(resGCal.events)) ? resGCal.events : null;
-
-      // 2. Supabase の出欠テーブルから最新レコードを取得
-      const { data: rawAttendance } = await sb.from('attendance').select('*');
-
-      if (rawEvents) {
-        try { localStorage.setItem('fcb_cached_events', JSON.stringify(rawEvents)); } catch (e) {}
-
-        const myEmail = window.currentUser ? String(window.currentUser.email || '').toLowerCase().trim() : '';
-        const myName = window.currentUser ? String(window.currentUser.name || '').trim() : '';
-        const myId = window.currentUser ? (window.currentUser.memberId || window.currentUser.id || '') : '';
-
-        const attendanceByEvent = {};
-        (rawAttendance || []).forEach(att => {
-          const eid = String(att.event_id || '').trim();
-          if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
-          attendanceByEvent[eid].push(att);
+        // 1. matches テーブルの保存 (Supabase Direct: 0.1秒)
+        const { error: matchErr } = await sb.from('matches').upsert({
+          match_id: matchId,
+          match_date: dateStr,
+          category: payload.category || 'TRM',
+          opponent: payload.opponent || '未設定',
+          my_score: myScore,
+          opp_score: oppScore,
+          result: resultText,
+          attended_players: payload.attended || '',
+          location: payload.location || '',
+          mom_member_id: momMemberId,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'match_id'
         });
 
-        // ログインユーザーがカレンダー側で変更した最新ステータスを Supabase に自動 UPSERT
-        if (myEmail && myId) {
-          for (const ev of rawEvents) {
-            const cleanEvId = String(ev.id || '').split('@')[0];
-            const detail = ev.attendeesDetail || {};
-            const yesEmails = (detail.yesEmails || []).map(e => String(e).toLowerCase().trim());
-            const noEmails = (detail.noEmails || []).map(e => String(e).toLowerCase().trim());
-            const maybeEmails = (detail.maybeEmails || []).map(e => String(e).toLowerCase().trim());
+        if (matchErr) throw matchErr;
 
-            let calStatus = null;
-            if (yesEmails.includes(myEmail)) calStatus = 'yes';
-            else if (noEmails.includes(myEmail)) calStatus = 'no';
-            else if (maybeEmails.includes(myEmail)) calStatus = 'maybe';
+        // 2. score_logs の再登録 (既存ログ削除後の一括挿入)
+        await sb.from('score_logs').delete().eq('match_id', matchId);
 
-            if (calStatus) {
-              const existingAtt = (attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || []).find(a => a.member_id === myId);
-              if (!existingAtt || existingAtt.status !== calStatus) {
-                console.log(`⚡ [Resume] Syncing calendar change to Supabase: ${cleanEvId} -> ${calStatus}`);
-                await sb.from('attendance').upsert({
-                  event_id: cleanEvId,
-                  member_id: myId,
-                  event_date: ev.date || null,
-                  event_title: ev.title || null,
-                  status: calStatus,
-                  updated_at: new Date().toISOString()
-                }, { onConflict: 'event_id,member_id' });
+        if (logs.length > 0) {
+          const insertLogs = logs.map((l, idx) => {
+            let mId = l.memberId;
+            if (!mId) {
+              if (l.type === '相手得点' || l.type === '失点') {
+                mId = 'MBR-SPECIAL-NONE';
+              } else if (l.player === 'OG') {
+                mId = 'MBR-SPECIAL-OG';
+              } else if (l.player === '助っ人') {
+                mId = 'MBR-SPECIAL-GUEST';
+              } else if (l.player) {
+                mId = nameToId[l.player.trim()] || 'MBR-SPECIAL-GUEST';
+              } else {
+                mId = 'MBR-SPECIAL-NONE';
+              }
+            }
+
+            let aId = l.assistMemberId || null;
+            if (!aId && l.assist && l.assist !== '-' && l.assist !== 'なし') {
+              if (l.assist === '助っ人') {
+                aId = 'MBR-SPECIAL-GUEST';
+              } else {
+                aId = nameToId[l.assist.trim()] || null;
+              }
+            }
+
+            return {
+              log_id: `L_${matchId}_${idx + 1}`,
+              match_id: matchId,
+              period: l.period || '',
+              minute: Number(l.min || 0),
+              log_type: (l.type === '失点') ? '相手得点' : l.type,
+              member_id: mId,
+              assist_member_id: aId
+            };
+          });
+
+          const { error: logErr } = await sb.from('score_logs').insert(insertLogs);
+          if (logErr) throw logErr;
+        }
+
+        console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
+
+        // 3. バックグラウンドで GAS（スプレッドシート）にも同期（待たせない）
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'saveMatchData',
+              args: [payload]
+            })
+          }).catch(e => console.warn('[MatchSync] GAS sync warning:', e));
+        } catch (syncErr) {
+          console.warn('[MatchSync] Kick failed:', syncErr);
+        }
+
+        return "保存が完了しました！";
+      },
+
+      /**
+       * 掲示板投稿の保存
+       */
+      async saveBulletinPost(payload) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const postId = payload.id || ('BUL-' + Date.now());
+        const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+
+        const record = {
+          post_id: postId,
+          category: payload.category || '連絡',
+          title: payload.title,
+          content: payload.content || '',
+          event_id: payload.eventId || null,
+          event_title: payload.eventTitle || null,
+          event_date: payload.eventDate || null,
+          is_pinned: !!payload.isPinned,
+          updated_at: new Date().toISOString()
+        };
+
+        if (!payload.id) {
+          record.author_member_id = currentMemberId;
+        } else {
+          record.updated_by_member_id = currentMemberId;
+        }
+
+        const { data, error } = await sb.from('bulletin_posts').upsert(record);
+        if (error) throw error;
+        return { success: true, post: data };
+      },
+
+      /**
+       * 掲示板既読の登録
+       */
+      async markBulletinAsRead(postId, memberId) {
+        const sb = getClient();
+        if (!sb) return;
+        if (!postId || !memberId) return;
+
+        const readId = `READ_${postId}_${memberId}`;
+        await sb.from('bulletin_reads').upsert({
+          read_id: readId,
+          post_id: postId,
+          member_id: memberId,
+          read_at: new Date().toISOString()
+        }, { onConflict: 'post_id,member_id' });
+      },
+
+      /**
+       * 掲示板コメントの保存
+       */
+      async saveBulletinComment(payload) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const commentId = 'CMT-' + Date.now();
+        const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+
+        const { data, error } = await sb.from('bulletin_comments').insert({
+          comment_id: commentId,
+          post_id: payload.postId,
+          author_member_id: currentMemberId,
+          content: payload.content,
+          created_at: new Date().toISOString()
+        });
+
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
+       * 備品保管者の引き継ぎ更新
+       */
+      async updateItemHolder(itemId, newMemberId) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const { data, error } = await sb.from('equipment_items').update({
+          member_id: newMemberId,
+          updated_at: new Date().toISOString()
+        }).eq('item_id', itemId);
+
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
+       * 備品データの最新取得 (Supabase Direct: 0.1秒)
+       */
+      async getEquipmentData() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resMembers, resMaster, resItems, resEqLogs] = await Promise.all([
+          sb.from('members').select('member_id, name, number, avatar_url'),
+          sb.from('equipment_master').select('*').order('sort_order', { ascending: true }),
+          sb.from('equipment_items').select('*'),
+          sb.from('equipment_event_logs').select('*')
+        ]);
+
+        const idToMember = {};
+        (resMembers.data || []).forEach(m => {
+          idToMember[m.member_id] = { name: m.name, number: m.number, avatarUrl: m.avatar_url };
+        });
+
+        const masterList = (resMaster.data || []).map(m => ({
+          code: m.equipment_code,
+          equipmentCode: m.equipment_code,
+          name: m.name,
+          ruleType: m.rule_type,
+          reqTR: m.req_tr,
+          reqTRM: m.req_trm,
+          reqOfficial: m.req_official,
+          notes: m.notes || '',
+          sortOrder: m.sort_order
+        }));
+
+        const items = (resItems.data || []).map(it => {
+          const hMem = idToMember[it.member_id];
+          const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
+          const mNum = hMem ? hMem.number : null;
+          const mAvatar = hMem ? (hMem.avatarUrl || '') : '';
+          return {
+            id: it.item_id,
+            itemId: it.item_id,
+            code: it.equipment_code,
+            itemCode: it.equipment_code,
+            equipmentCode: it.equipment_code,
+            name: it.item_name,
+            holderId: it.member_id,
+            memberId: it.member_id,
+            holderName: mName,
+            memberName: mName,
+            holderNumber: mNum,
+            memberNumber: mNum,
+            memberAvatarUrl: mAvatar,
+            status: it.status || '保管中',
+            notes: it.notes || '',
+            updatedAt: it.updated_at ? normalizeDateStr(it.updated_at) : ''
+          };
+        });
+
+        return {
+          success: true,
+          masterList: masterList,
+          itemsList: items,
+          items: items,
+          logs: resEqLogs.data || [],
+          upcomingEquipment: [],
+          isAdmin: true
+        };
+      }
+    };
+
+    window.SupabaseService = SupabaseService;
+
+    // =========================================
+    // 4. google.script.run の透過的バイパスプロキシ
+    // =========================================
+    // 既存のフロントエンド呼び出しコードを変更することなく、
+    // Supabase で即時実行できる関数を自動的にバイパスして爆速化 (0.3秒)
+    // =========================================
+    function createSupabaseBypassProxy(successHandler, failureHandler, userObject) {
+      return new Proxy({}, {
+        get: function (target, prop) {
+          if (prop === 'withSuccessHandler') {
+            return function (h) { return createSupabaseBypassProxy(h, failureHandler, userObject); };
+          }
+          if (prop === 'withFailureHandler') {
+            return function (h) { return createSupabaseBypassProxy(successHandler, h, userObject); };
+          }
+          if (prop === 'withUserObject') {
+            return function (u) { return createSupabaseBypassProxy(successHandler, failureHandler, u); };
+          }
+
+          return function (...args) {
+            // Supabase 直接処理へのルーティング
+            if (prop === 'getInitialData') {
+              console.log('⚡ [Bypass] getInitialData routed to Supabase Direct REST API (0.3s)');
+              SupabaseService.getInitialData(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'updateEventAttendance') {
+              console.log('⚡ [Bypass] updateEventAttendance routed to Supabase Direct UPSERT (0.1s)');
+              SupabaseService.updateEventAttendance(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'saveMatchData' || prop === 'saveScoreRecord') {
+              console.log('⚡ [Bypass] saveMatchData routed to Supabase Direct (0.2s)');
+              SupabaseService.saveScoreRecord(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiSaveBulletinPost') {
+              console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
+              SupabaseService.saveBulletinPost(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiMarkAsRead') {
+              SupabaseService.markBulletinAsRead(args[0], args[1]);
+              if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
+              return;
+            }
+
+            if (prop === 'apiSaveComment') {
+              SupabaseService.saveBulletinComment(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'updateItemHolder') {
+              SupabaseService.updateItemHolder(args[0], args[1])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiGetEquipmentData') {
+              console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
+              SupabaseService.getEquipmentData()
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            // その他の関数は従来通り GAS へのフォールバック通信
+            fetch(GAS_ENDPOINT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ functionName: prop, args: args })
+            })
+              .then(res => res.json())
+              .then(result => {
+                if (result && result.success) {
+                  if (typeof successHandler === 'function') successHandler(result.data, userObject);
+                } else {
+                  const err = new Error(result && result.error ? result.error : 'エラーが発生しました。');
+                  if (typeof failureHandler === 'function') failureHandler(err, userObject);
+                }
+              })
+              .catch(err => {
+                if (typeof failureHandler === 'function') failureHandler(err, userObject);
+              });
+          };
+        }
+      });
+    }
+
+    // 既存の google.script.run を Supabase バイパスプロキシでオーバーライド
+    window.google = window.google || {};
+    window.google.script = window.google.script || {};
+    window.google.script.run = createSupabaseBypassProxy(null, null, null);
+
+    // =========================================
+    // 5. 画面復帰検知 (Page Visibility API & window.focus)
+    // =========================================
+    // スマホのアプリ切り替えやPCの別タブ・ウィンドウからの復帰時に
+    // Googleカレンダー側の最新出欠をフェッチし、Supabaseとアプリ画面へ即時反映
+    // =========================================
+    let isResuming = false;
+    let lastResumeTime = 0;
+
+    async function refreshOnResume() {
+      const now = Date.now();
+      if (isResuming || (now - lastResumeTime < 3000)) return;
+      isResuming = true;
+      lastResumeTime = now;
+
+      try {
+        console.log('⚡ [Resume] Screen resumed. Syncing latest Google Calendar & Supabase attendance...');
+        const sb = getClient();
+        if (!sb) return;
+
+        // 1. Google カレンダーの最新イベントを取得
+        const resGCal = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`).then(r => r.json()).catch(() => null);
+        const rawEvents = (resGCal && resGCal.success && Array.isArray(resGCal.events)) ? resGCal.events : null;
+
+        // 2. Supabase の出欠テーブルから最新レコードを取得
+        const { data: rawAttendance } = await sb.from('attendance').select('*');
+
+        if (rawEvents) {
+          try { localStorage.setItem('fcb_cached_events', JSON.stringify(rawEvents)); } catch (e) { }
+
+          const myEmail = window.currentUser ? String(window.currentUser.email || '').toLowerCase().trim() : '';
+          const myName = window.currentUser ? String(window.currentUser.name || '').trim() : '';
+          const myId = window.currentUser ? (window.currentUser.memberId || window.currentUser.id || '') : '';
+
+          const attendanceByEvent = {};
+          (rawAttendance || []).forEach(att => {
+            const eid = String(att.event_id || '').trim();
+            if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
+            attendanceByEvent[eid].push(att);
+          });
+
+          // ログインユーザーがカレンダー側で変更した最新ステータスを Supabase に自動 UPSERT
+          if (myEmail && myId) {
+            for (const ev of rawEvents) {
+              const cleanEvId = String(ev.id || '').split('@')[0];
+              const detail = ev.attendeesDetail || {};
+              const yesEmails = (detail.yesEmails || []).map(e => String(e).toLowerCase().trim());
+              const noEmails = (detail.noEmails || []).map(e => String(e).toLowerCase().trim());
+              const maybeEmails = (detail.maybeEmails || []).map(e => String(e).toLowerCase().trim());
+
+              let calStatus = null;
+              if (yesEmails.includes(myEmail)) calStatus = 'yes';
+              else if (noEmails.includes(myEmail)) calStatus = 'no';
+              else if (maybeEmails.includes(myEmail)) calStatus = 'maybe';
+
+              if (calStatus) {
+                const existingAtt = (attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || []).find(a => a.member_id === myId);
+                if (!existingAtt || existingAtt.status !== calStatus) {
+                  console.log(`⚡ [Resume] Syncing calendar change to Supabase: ${cleanEvId} -> ${calStatus}`);
+                  await sb.from('attendance').upsert({
+                    event_id: cleanEvId,
+                    member_id: myId,
+                    event_date: ev.date || null,
+                    event_title: ev.title || null,
+                    status: calStatus,
+                    updated_at: new Date().toISOString()
+                  }, { onConflict: 'event_id,member_id' });
+                }
               }
             }
           }
-        }
 
-        // 最新イベントをアプリのメモリに適用
-        window.eventsData = rawEvents;
+          // 最新イベントをアプリのメモリに適用
+          window.eventsData = rawEvents;
 
-        // 画面の即時再描画
-        if (typeof renderCalendar === 'function') {
-          renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
+          // 画面の即時再描画
+          if (typeof renderCalendar === 'function') {
+            renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
+          }
+          if (typeof renderAgendaList === 'function') {
+            renderAgendaList();
+          }
+          if (typeof updateUnansweredBadges === 'function') {
+            updateUnansweredBadges();
+          }
         }
-        if (typeof renderAgendaList === 'function') {
-          renderAgendaList();
-        }
-        if (typeof updateUnansweredBadges === 'function') {
-          updateUnansweredBadges();
-        }
+      } catch (e) {
+        console.warn('[Resume] Quick check error:', e);
+      } finally {
+        isResuming = false;
       }
-    } catch (e) {
-      console.warn('[Resume] Quick check error:', e);
-    } finally {
-      isResuming = false;
     }
-  }
 
-  window.refreshOnResume = refreshOnResume;
+    window.refreshOnResume = refreshOnResume;
 
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        refreshOnResume();
+      }
+    });
+
+    window.addEventListener('focus', () => {
       refreshOnResume();
-    }
-  });
+    });
 
-  window.addEventListener('focus', () => {
-    refreshOnResume();
-  });
-
-})();
+  })();
 </script>
-
-
      <!-- 共通スクリプトの読み込み -->
      <script>
 // ==========================================
@@ -18229,7 +18317,7 @@ function filterAndRenderRankings() {
 }
 
 /**
- * カレンダー出欠バッチのデータから、指定された条件で全選手の参加数を抽出する
+ * カレンダー出欠バッチおよび試合結果から、指定された条件で全選手の参加数を抽出する
  *
  * @param {string} season - 対象年（例: "2026"）
  * @param {string} category - 対象カテゴリ ("all", "公式戦", "TRM")
@@ -18241,7 +18329,27 @@ function aggregateAttendanceFromBatch(season, category) {
     : window.calendarAttendanceData;
   const pMap = (attSource && attSource.players) ? attSource.players : {};
 
-  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ）
+  // 1. 試合結果からの出場数を集計 (フォールバック & マージ用)
+  const matchGamesMap = {};
+  if (window.allMatchResults && Array.isArray(window.allMatchResults)) {
+    const filteredMatches = window.allMatchResults.filter(m => {
+      const matchYear = m.year || (m.date ? m.date.substring(0, 4) : '');
+      if (season && matchYear !== season) return false;
+      if (category && category !== 'all' && m.category !== category) return false;
+      return true;
+    });
+    filteredMatches.forEach(m => {
+      if (m.attended) {
+        const attendees = m.attended.split(',').map(s => s.trim());
+        attendees.forEach(name => {
+          if (!name || name === 'OG' || name === '助っ人' || name === 'なし' || name === '-') return;
+          matchGamesMap[name] = (matchGamesMap[name] || 0) + 1;
+        });
+      }
+    });
+  }
+
+  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ、試合出場選手）
   const playerNames = new Set();
   if (window.playerNumberMap) {
     Object.keys(window.playerNumberMap).forEach(name => {
@@ -18264,6 +18372,9 @@ function aggregateAttendanceFromBatch(season, category) {
     if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人') {
       playerNames.add(trimmed);
     }
+  });
+  Object.keys(matchGamesMap).forEach(name => {
+    playerNames.add(name);
   });
 
   const resultList = [];
@@ -18289,9 +18400,13 @@ function aggregateAttendanceFromBatch(season, category) {
       attendedCount = (catStat && catStat.attended) ? catStat.attended : 0;
     }
 
+    // カレンダー出欠実績と試合出場数の大きい方を採用（カレンダー未招待・試合直接入力の両方を救済）
+    const matchGames = matchGamesMap[pName] || 0;
+    const finalAttended = Math.max(attendedCount, matchGames);
+
     resultList.push({
       name: pName,
-      attended: attendedCount
+      attended: finalAttended
     });
   });
 
@@ -18415,8 +18530,14 @@ function renderRankingsWithData(matchStats, attendanceStats) {
   const topMom = safeMatches.filter(p => p.mom > 0).sort((a, b) => b.mom - a.mom);
   renderSingleRanking('mom', topMom, 'mom', 'MVP');
   
-  // 参加数ランキング（カレンダー出欠バッチの参加実績より描画）
-  const topGames = safeAttendance.filter(p => (p.attended || 0) > 0).sort((a, b) => b.attended - a.attended);
+  // 参加数ランキング（カレンダー出欠バッチおよび試合参加実績より描画）
+  let topGames = safeAttendance.filter(p => (p.attended || 0) > 0).sort((a, b) => b.attended - a.attended);
+  if (topGames.length === 0) {
+    topGames = safeMatches.filter(p => (p.games || 0) > 0).sort((a, b) => b.games - a.games).map(p => ({
+      name: p.name,
+      attended: p.games
+    }));
+  }
   renderSingleRanking('games', topGames, 'attended', 'ATTEND');
 }
 
