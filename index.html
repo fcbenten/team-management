@@ -12849,13 +12849,17 @@ textarea.comment-textarea:active {
       const playerPositions = {};
       const playerAvatars = {};
 
-      const roster = rawMembers.map(m => {
-        const numVal = (m.number !== null && m.number !== '') ? Number(m.number) : 999;
+      const roster = [];
+      rawMembers.forEach(m => {
+        const isSpecial = (m.member_type === 'SPECIAL' || ['MBR-SPECIAL-GUEST', 'MBR-SPECIAL-OG', 'MBR-SPECIAL-NONE'].includes(m.member_id) || ['助っ人', 'OG', 'なし'].includes(m.name));
+        const isPast = !!m.is_past || m.member_type === 'PAST';
+
+        const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
         const formatted = {
           memberId: m.member_id,
           id: m.member_id,
           name: m.name,
-          number: numVal,
+          number: numVal !== null ? numVal : 999,
           role: m.role || '選手',
           position: m.position || 'FP',
           email: m.email || '',
@@ -12868,19 +12872,24 @@ textarea.comment-textarea:active {
           lineUserId: m.line_user_id || '',
           pushSubscription: m.push_subscription || '',
           notifySettings: m.notify_settings ? (typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings) : { emergency: true, attendance: true, bulletin: true },
-          isPast: !!m.is_past,
-          memberType: m.member_type || 'REGULAR'
+          isPast: isPast,
+          memberType: m.member_type || (isSpecial ? 'SPECIAL' : (isPast ? 'PAST' : 'REGULAR'))
         };
 
+        // 全レコードを逆引き用辞書には登録（試合ログや過去スタッツの選手名解決用）
         idToMember[m.member_id] = formatted;
         if (m.name) nameToMember[m.name] = formatted;
         if (m.email) memberMap[m.email.toLowerCase()] = m.name;
-        if (m.name) {
+        if (m.name && numVal !== null) {
           playerNumbers[m.name] = numVal;
           playerPositions[m.name] = m.position || 'FP';
           playerAvatars[m.name] = m.avatar_url || '';
         }
-        return formatted;
+
+        // メンバー管理一覧（roster）には正規の現役メンバーのみを追加
+        if (!isSpecial && !isPast) {
+          roster.push(formatted);
+        }
       });
 
       // 試合記録 & 得点詳細の組み立て
@@ -21339,12 +21348,13 @@ function renderMembersList(members) {
  * 統計サマリーの更新
  */
 function updateMemberSummaryStats(list) {
-  const total = list.length;
+  const cleanList = (list || []).filter(m => !m.isPast && m.memberType !== 'SPECIAL' && m.memberType !== 'PAST' && !['助っ人', 'OG', 'なし'].includes(m.name));
+  const total = cleanList.length;
   let adminCount = 0;
   let fpCount = 0;
   let gkCount = 0;
 
-  list.forEach(m => {
+  cleanList.forEach(m => {
     let r = String(m.role || 'メンバー').trim();
     if (r === '部員') r = 'メンバー';
     if (r === '代表' || r === '副代表') adminCount++;
@@ -21387,6 +21397,11 @@ function filterMembersList() {
   const all = window.adminMemberList || [];
 
   const filtered = all.filter(m => {
+    // 特殊枠（助っ人、OG、なし）および過去モック選手は一覧から除外
+    if (m.isPast || m.memberType === 'SPECIAL' || m.memberType === 'PAST' || ['助っ人', 'OG', 'なし'].includes(m.name)) {
+      return false;
+    }
+
     // 検索クエリマッチ（名前、背番号、役割、生年月日、電話番号、メール）
     if (cleanQuery) {
       const name = String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase();
