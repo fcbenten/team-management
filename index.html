@@ -10653,10 +10653,6 @@ textarea.comment-textarea:active {
              <div id="err-loginPasswordInput" class="field-error-msg hidden"></div>
            </div>
 
-      <div class="form-group">
-        <label class="form-label">パスワード</label>
-        <input type="password" id="loginPasswordInput" placeholder="パスワードを入力" autocomplete="current-password" required>
-      </div>
 
       <div class="form-group login-remember-row">
         <input type="checkbox" id="rememberLoginCheck" checked class="login-remember-check">
@@ -12767,8 +12763,8 @@ textarea.comment-textarea:active {
           phone: m.phone || '',
           birthday: m.birthday || '',
           avatarUrl: m.avatar_url || '',
-          hasCalendarLink: !!m.token,
-          hasToken: !!m.token,
+          hasCalendarLink: !!(m.email || m.token),
+          hasToken: !!(m.email || m.token),
           notificationType: m.notification_type || 'none',
           lineUserId: m.line_user_id || '',
           pushSubscription: m.push_subscription || '',
@@ -13355,6 +13351,7 @@ textarea.comment-textarea:active {
 
 })();
 </script>
+
 
      <!-- 共通スクリプトの読み込み -->
      <script>
@@ -15089,28 +15086,19 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
   /**
    * Googleアカウント強制連携モーダルの表示・非表示判定
+   * ※ Supabase 2.0 移行に伴い、出欠はDB（attendanceテーブル）へ即時保存され、
+   *   カレンダー同期はバックグラウンドのシステム連携で行われるため、ユーザー個別のOAuth強制は廃止。
    */
   function checkForceGoogleAuth() {
     const modal = document.getElementById('forceGoogleAuthModal');
     if (!modal) return;
 
-    // メールアドレスが登録されているが、Googleアカウントが未連携（hasCalendarLinkがfalse）の場合
-    if (window.currentUser && window.currentUser.email && !window.currentUser.hasCalendarLink) {
-      const emailEl = document.getElementById('forceAuthEmailDisplay');
-      if (emailEl) emailEl.textContent = window.currentUser.email;
-      modal.classList.add('active');
-      if (typeof lockBodyScroll === 'function') {
-        lockBodyScroll();
-      } else {
-        document.body.classList.add('no-scroll');
-      }
+    // 常に非表示として解除
+    modal.classList.remove('active');
+    if (typeof unlockBodyScroll === 'function') {
+      unlockBodyScroll();
     } else {
-      modal.classList.remove('active');
-      if (typeof unlockBodyScroll === 'function') {
-        unlockBodyScroll();
-      } else {
-        document.body.classList.remove('no-scroll');
-      }
+      document.body.classList.remove('no-scroll');
     }
   }
 
