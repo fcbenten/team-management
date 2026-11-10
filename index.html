@@ -12713,7 +12713,26 @@ textarea.comment-textarea:active {
 
       const t0 = performance.now();
 
-      // 10テーブル＋ビューを並列一括フェッチ (ネットワーク往復1回)
+      // カレンダーイベントの取得（GAS経由、キャッシュフォールバック対応）
+      const fetchEventsPromise = (async () => {
+        try {
+          const r = await fetch(`${GAS_ENDPOINT_URL}?action=getEvents`);
+          const j = await r.json();
+          if (j && j.success && Array.isArray(j.events)) {
+            try { localStorage.setItem('fcb_cached_events', JSON.stringify(j.events)); } catch (e) {}
+            return j.events;
+          }
+        } catch (e) {
+          console.warn('[CalendarEvents] Fetch warning:', e);
+        }
+        try {
+          const cached = localStorage.getItem('fcb_cached_events');
+          if (cached) return JSON.parse(cached);
+        } catch (e) {}
+        return [];
+      })();
+
+      // 10テーブル＋ビュー＋カレンダーイベントを並列一括フェッチ (ネットワーク往復1回)
       const [
         resMembers,
         resMatches,
@@ -12724,7 +12743,8 @@ textarea.comment-textarea:active {
         resEqLogs,
         resBulletin,
         resComments,
-        resAttStats
+        resAttStats,
+        fetchedEvents
       ] = await Promise.all([
         sb.from('members').select('*').order('member_id'),
         sb.from('matches').select('*').order('match_date', { ascending: false }),
@@ -12735,7 +12755,8 @@ textarea.comment-textarea:active {
         sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false }),
         sb.from('view_bulletin_summary').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
         sb.from('bulletin_comments').select('*').eq('is_deleted', false).order('created_at', { ascending: true }),
-        sb.from('view_player_attendance_stats').select('*')
+        sb.from('view_player_attendance_stats').select('*'),
+        fetchEventsPromise
       ]);
 
       const t1 = performance.now();
@@ -12998,6 +13019,64 @@ textarea.comment-textarea:active {
         totalUnreadCount: 0
       };
 
+      // 7. Supabase の出欠データ（resAttendance.data）を各イベントに動的マージ
+      const rawAttendance = resAttendance.data || [];
+      const attendanceByEvent = {};
+      rawAttendance.forEach(att => {
+        const eid = String(att.event_id || '').trim();
+        if (!attendanceByEvent[eid]) attendanceByEvent[eid] = [];
+        attendanceByEvent[eid].push(att);
+      });
+
+      const mergedEvents = (fetchedEvents || []).map(ev => {
+        const cleanEvId = String(ev.id || '').split('@')[0];
+        const eventAtts = attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || [];
+
+        const yesNames = [];
+        const noNames = [];
+        const maybeNames = [];
+        const yesEmails = [];
+        const noEmails = [];
+        const maybeEmails = [];
+
+        eventAtts.forEach(att => {
+          const mem = idToMember[att.member_id];
+          const mName = mem ? mem.name : (att.member_id || '');
+          const mEmail = mem ? (mem.email || '').toLowerCase() : '';
+          const st = String(att.status || '').toLowerCase();
+
+          if (st === 'yes') {
+            yesNames.push(mName);
+            if (mEmail) yesEmails.push(mEmail);
+          } else if (st === 'no') {
+            noNames.push(mName);
+            if (mEmail) noEmails.push(mEmail);
+          } else if (st === 'maybe') {
+            maybeNames.push(mName);
+            if (mEmail) maybeEmails.push(mEmail);
+          }
+        });
+
+        const existingDetail = ev.attendeesDetail || { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
+
+        const finalYes = Array.from(new Set([...yesNames, ...(existingDetail.yes || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+        const finalNo = Array.from(new Set([...noNames, ...(existingDetail.no || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+        const finalMaybe = Array.from(new Set([...maybeNames, ...(existingDetail.maybe || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
+
+        return {
+          ...ev,
+          attendeesDetail: {
+            ...existingDetail,
+            yes: finalYes,
+            no: finalNo,
+            maybe: finalMaybe,
+            yesEmails: Array.from(new Set([...yesEmails, ...(existingDetail.yesEmails || [])])),
+            noEmails: Array.from(new Set([...noEmails, ...(existingDetail.noEmails || [])])),
+            maybeEmails: Array.from(new Set([...maybeEmails, ...(existingDetail.maybeEmails || [])]))
+          }
+        };
+      });
+
       // 最終返却ペイロード (既存フロントエンドがそのまま受け取れる完全互換構造)
       return {
         success: true,
@@ -13011,7 +13090,7 @@ textarea.comment-textarea:active {
         equipmentData: equipmentData,
         bulletinData: bulletinData,
         calendarAttendance: { year: new Date().getFullYear().toString(), players: {} },
-        events: [] // イベントは後ほどキャッシュまたはカレンダー同期から連携
+        events: mergedEvents
       };
     },
 
