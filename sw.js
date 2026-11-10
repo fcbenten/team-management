@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fc-benten-pwa-v24';
+const CACHE_NAME = 'fc-benten-pwa-v25';
 const ASSETS = [
   './manifest.json',
   './icon-192.png',
