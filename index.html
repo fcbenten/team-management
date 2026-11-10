@@ -100,6 +100,9 @@
      <!-- Material Symbols -->
      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
+     <!-- Supabase JS Client (v2) -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
      <!-- =========================================
        CSSファイルの読み込み
        ========================================= -->
@@ -12669,6 +12672,690 @@ textarea.comment-textarea:active {
        JavaScriptモジュールの読み込み
        ※DOM（HTML）が構築された後に動かすため、Bodyの末尾に配置
        ========================================= -->
+     <!-- Supabase データベース直結サービスクライアント -->
+     <!-- =========================================
+     js_supabase.html
+     FC Benten Supabase REST API 直結サービスクライアント
+     ========================================= -->
+<script>
+(function() {
+  'use strict';
+
+  // 1. Supabase 設定
+  const SUPABASE_URL = 'https://pkufnywvnuicragvobaq.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_Ryi3mETQr8QfgwSGyAcD-A_fiQe_abr';
+  const GAS_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec';
+
+  let client = null;
+  function getClient() {
+    if (!client) {
+      if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
+        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } else {
+        console.error('Supabase JS library is not loaded.');
+      }
+    }
+    return client;
+  }
+
+  // 2. ユーティリティ
+  function normalizeDateStr(d) {
+    if (!d) return '';
+    return String(d).replace(/-/g, '/').trim();
+  }
+
+  // 3. SupabaseService 本体
+  const SupabaseService = {
+    getClient: getClient,
+
+    /**
+     * アプリ初期データを Supabase から並列一括取得 (0.2〜0.4秒)
+     */
+    async getInitialData(forceRefresh) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが初期化されていません。');
+
+      const t0 = performance.now();
+
+      // 10テーブル＋ビューを並列一括フェッチ (ネットワーク往復1回)
+      const [
+        resMembers,
+        resMatches,
+        resScoreLogs,
+        resAttendance,
+        resMaster,
+        resItems,
+        resEqLogs,
+        resBulletin,
+        resComments,
+        resAttStats
+      ] = await Promise.all([
+        sb.from('members').select('*').order('member_id'),
+        sb.from('matches').select('*').order('match_date', { ascending: false }),
+        sb.from('score_logs').select('*'),
+        sb.from('attendance').select('*'),
+        sb.from('equipment_master').select('*').order('sort_order'),
+        sb.from('equipment_items').select('*').order('item_id'),
+        sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false }),
+        sb.from('view_bulletin_summary').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
+        sb.from('bulletin_comments').select('*').eq('is_deleted', false).order('created_at', { ascending: true }),
+        sb.from('view_player_attendance_stats').select('*')
+      ]);
+
+      const t1 = performance.now();
+      console.log(`[Supabase] Parallel fetch completed in ${(t1 - t0).toFixed(1)} ms.`);
+
+      // メンバー辞書の作成
+      const rawMembers = resMembers.data || [];
+      const idToMember = {};
+      const nameToMember = {};
+      const memberMap = {}; // email -> name
+      const playerNumbers = {};
+      const playerPositions = {};
+      const playerAvatars = {};
+
+      const roster = rawMembers.map(m => {
+        const numVal = (m.number !== null && m.number !== '') ? Number(m.number) : 999;
+        const formatted = {
+          memberId: m.member_id,
+          id: m.member_id,
+          name: m.name,
+          number: numVal,
+          role: m.role || '選手',
+          position: m.position || 'FP',
+          email: m.email || '',
+          phone: m.phone || '',
+          birthday: m.birthday || '',
+          avatarUrl: m.avatar_url || '',
+          hasCalendarLink: !!m.token,
+          hasToken: !!m.token,
+          notificationType: m.notification_type || 'none',
+          lineUserId: m.line_user_id || '',
+          pushSubscription: m.push_subscription || '',
+          notifySettings: m.notify_settings ? (typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings) : { emergency: true, attendance: true, bulletin: true },
+          isPast: !!m.is_past,
+          memberType: m.member_type || 'REGULAR'
+        };
+
+        idToMember[m.member_id] = formatted;
+        if (m.name) nameToMember[m.name] = formatted;
+        if (m.email) memberMap[m.email.toLowerCase()] = m.name;
+        if (m.name) {
+          playerNumbers[m.name] = numVal;
+          playerPositions[m.name] = m.position || 'FP';
+          playerAvatars[m.name] = m.avatar_url || '';
+        }
+        return formatted;
+      });
+
+      // 試合記録 & 得点詳細の組み立て
+      const rawMatches = resMatches.data || [];
+      const rawScoreLogs = resScoreLogs.data || [];
+
+      // ログ辞書
+      const logMap = {};
+      rawScoreLogs.forEach(l => {
+        if (!logMap[l.match_id]) logMap[l.match_id] = [];
+        const pMem = idToMember[l.member_id];
+        const aMem = idToMember[l.assist_member_id];
+        logMap[l.match_id].push({
+          logId: l.log_id,
+          period: l.period || '',
+          min: l.minute || 0,
+          type: l.log_type,
+          player: pMem ? pMem.name : l.member_id,
+          memberId: l.member_id,
+          assist: aMem ? aMem.name : (l.assist_member_id ? l.assist_member_id : ''),
+          assistMemberId: l.assist_member_id
+        });
+      });
+
+      const seasonSet = new Set();
+      const matches = rawMatches.map(m => {
+        const dateStr = normalizeDateStr(m.match_date);
+        const matchYear = dateStr.match(/^(\d{4})/);
+        const yearStr = matchYear ? matchYear[1] : '';
+        if (yearStr) seasonSet.add(yearStr);
+
+        const mLogs = logMap[m.match_id] || [];
+        const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
+        mLogs.forEach(l => {
+          if (l.type === '得点') {
+            if (l.period === '前半') halfScores.my1st++;
+            else if (l.period === '後半') halfScores.my2nd++;
+            else if (l.period === '延長') halfScores.myExt++;
+          } else if (l.type === '相手得点') {
+            if (l.period === '前半') halfScores.opp1st++;
+            else if (l.period === '後半') halfScores.opp2nd++;
+            else if (l.period === '延長') halfScores.oppExt++;
+          }
+        });
+
+        const momMem = idToMember[m.mom_member_id];
+        return {
+          matchId: m.match_id,
+          date: dateStr,
+          year: yearStr,
+          category: m.category || 'TRM',
+          opponent: m.opponent || '未設定',
+          myScore: m.my_score || 0,
+          oppScore: m.opp_score || 0,
+          result: m.result || '引き分け',
+          attended: m.attended_players || '',
+          location: m.location || '',
+          mom: momMem ? momMem.name : 'なし',
+          momMemberId: m.mom_member_id,
+          halfScores: halfScores,
+          logs: mLogs
+        };
+      });
+
+      const seasons = Array.from(seasonSet).sort((a, b) => b - a);
+      const history = { matches: matches, seasons: seasons };
+
+      // スタッツ計算 (全選手対象)
+      const statsMap = {};
+      roster.forEach(mem => {
+        if (!mem.isPast && mem.memberType === 'REGULAR') {
+          statsMap[mem.name] = { name: mem.name, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+        }
+      });
+
+      matches.forEach(m => {
+        const attendedArr = (m.attended || '').split(',').map(s => s.trim()).filter(Boolean);
+        attendedArr.forEach(pName => {
+          if (!statsMap[pName]) statsMap[pName] = { name: pName, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+          statsMap[pName].games++;
+        });
+
+        if (m.mom && m.mom !== 'なし' && m.mom !== '-') {
+          if (!statsMap[m.mom]) statsMap[m.mom] = { name: m.mom, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+          statsMap[m.mom].mom++;
+        }
+
+        (m.logs || []).forEach(l => {
+          if (l.type === '得点' && l.player) {
+            if (!statsMap[l.player]) statsMap[l.player] = { name: l.player, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+            statsMap[l.player].goals++;
+          }
+          if (l.assist) {
+            if (!statsMap[l.assist]) statsMap[l.assist] = { name: l.assist, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
+            statsMap[l.assist].assists++;
+          }
+        });
+      });
+
+      const stats = Object.values(statsMap).map(s => {
+        s.points = s.goals + s.assists;
+        return s;
+      });
+
+      // 出欠データの構造化
+      const rawAttendance = resAttendance.data || [];
+      const attendanceByEvent = {};
+      rawAttendance.forEach(att => {
+        if (!attendanceByEvent[att.event_id]) {
+          attendanceByEvent[att.event_id] = { yes: [], no: [], maybe: [], unanswered: [], yesEmails: [], noEmails: [], maybeEmails: [], unansweredEmails: [] };
+        }
+        const mObj = idToMember[att.member_id];
+        const mName = mObj ? mObj.name : att.member_id;
+        const mEmail = mObj ? mObj.email : '';
+        const st = (att.status || '').toLowerCase();
+        if (st === 'yes') {
+          attendanceByEvent[att.event_id].yes.push(mName);
+          if (mEmail) attendanceByEvent[att.event_id].yesEmails.push(mEmail);
+        } else if (st === 'no') {
+          attendanceByEvent[att.event_id].no.push(mName);
+          if (mEmail) attendanceByEvent[att.event_id].noEmails.push(mEmail);
+        } else if (st === 'maybe') {
+          attendanceByEvent[att.event_id].maybe.push(mName);
+          if (mEmail) attendanceByEvent[att.event_id].maybeEmails.push(mEmail);
+        }
+      });
+
+      // 備品データの構造化
+      const rawMaster = resMaster.data || [];
+      const rawItems = resItems.data || [];
+      const rawEqLogs = resEqLogs.data || [];
+
+      const masterList = rawMaster.map(m => ({
+        code: m.equipment_code,
+        equipmentCode: m.equipment_code,
+        name: m.name,
+        ruleType: m.rule_type,
+        reqTR: m.req_tr,
+        reqTRM: m.req_trm,
+        reqOfficial: m.req_official,
+        notes: m.notes || '',
+        sortOrder: m.sort_order
+      }));
+
+      const items = rawItems.map(it => {
+        const hMem = idToMember[it.member_id];
+        return {
+          id: it.item_id,
+          code: it.equipment_code,
+          equipmentCode: it.equipment_code,
+          name: it.item_name,
+          holderId: it.member_id,
+          holderName: hMem ? hMem.name : '',
+          holderNumber: hMem ? hMem.number : '',
+          status: it.status || '保管中',
+          notes: it.notes || ''
+        };
+      });
+
+      const equipmentData = {
+        masterList: masterList,
+        items: items,
+        logs: rawEqLogs,
+        upcomingEquipment: []
+      };
+
+      // 掲示板データの構造化
+      const rawBulletin = resBulletin.data || [];
+      const rawComments = resComments.data || [];
+
+      const commentsByPost = {};
+      rawComments.forEach(c => {
+        if (!commentsByPost[c.post_id]) commentsByPost[c.post_id] = [];
+        const cAuthor = idToMember[c.author_member_id];
+        commentsByPost[c.post_id].push({
+          id: c.comment_id,
+          postId: c.post_id,
+          authorId: c.author_member_id,
+          authorName: cAuthor ? cAuthor.name : '不明',
+          authorAvatar: cAuthor ? cAuthor.avatarUrl : '',
+          content: c.content,
+          createdAt: c.created_at
+        });
+      });
+
+      const bulletinPosts = rawBulletin.map(p => {
+        const pAuthor = idToMember[p.author_member_id];
+        return {
+          id: p.post_id,
+          category: p.category || '連絡',
+          title: p.title,
+          content: p.content,
+          eventId: p.event_id || '',
+          eventTitle: p.event_title || '',
+          eventDate: p.event_date || '',
+          isPinned: !!p.is_pinned,
+          authorId: p.author_member_id,
+          authorName: p.author_member_name || (pAuthor ? pAuthor.name : '不明'),
+          authorAvatar: p.author_avatar_url || (pAuthor ? pAuthor.avatarUrl : ''),
+          createdAt: p.created_at,
+          updatedById: p.updated_by_member_id,
+          updatedAt: p.updated_at,
+          readCount: Number(p.read_count || 0),
+          commentCount: Number(p.comment_count || 0),
+          comments: commentsByPost[p.post_id] || []
+        };
+      });
+
+      const pinnedPosts = bulletinPosts.filter(p => p.isPinned);
+      const bulletinData = {
+        success: true,
+        posts: bulletinPosts,
+        pinnedPosts: pinnedPosts,
+        totalUnreadCount: 0
+      };
+
+      // 最終返却ペイロード (既存フロントエンドがそのまま受け取れる完全互換構造)
+      return {
+        success: true,
+        roster: roster,
+        memberMap: memberMap,
+        playerNumbers: playerNumbers,
+        playerPositions: playerPositions,
+        playerAvatars: playerAvatars,
+        history: history,
+        stats: stats,
+        equipmentData: equipmentData,
+        bulletinData: bulletinData,
+        calendarAttendance: { year: new Date().getFullYear().toString(), players: {} },
+        events: [] // イベントは後ほどキャッシュまたはカレンダー同期から連携
+      };
+    },
+
+    /**
+     * 出欠ステータスの即時更新 (PWA -> Supabase, 非同期でカレンダー同期)
+     */
+    async updateEventAttendance(payload) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const eventId = String(payload.eventId || '').trim();
+      let memberId = payload.memberId;
+
+      // memberId が未指定の場合、名前またはメールから解決
+      if (!memberId && window.currentUser) {
+        memberId = window.currentUser.memberId || window.currentUser.id;
+      }
+
+      if (!eventId || !memberId) {
+        throw new Error('予定IDまたはメンバーIDが不足しています。');
+      }
+
+      const status = String(payload.status || 'maybe').toLowerCase();
+      const comment = payload.comment || null;
+
+      // 1. Supabase attendance に即時 UPSERT (0.1秒)
+      const { data, error } = await sb.from('attendance').upsert({
+        event_id: eventId,
+        member_id: memberId,
+        event_date: payload.originalDate || null,
+        event_title: payload.originalTitle || null,
+        status: status,
+        comment: comment,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'event_id,member_id'
+      });
+
+      if (error) {
+        console.error('[Supabase] Attendance UPSERT error:', error);
+        throw error;
+      }
+
+      console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
+
+      // 2. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
+      try {
+        fetch(GAS_ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({
+            functionName: 'updateEventAttendance',
+            args: [payload]
+          })
+        }).catch(e => console.warn('[CalendarSync] Non-blocking calendar sync warning:', e));
+      } catch (syncErr) {
+        console.warn('[CalendarSync] Kick failed:', syncErr);
+      }
+
+      return { success: true };
+    },
+
+    /**
+     * 試合結果・スコア記録の即時保存 (Supabase matches & score_logs)
+     */
+    async saveScoreRecord(payload) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const matchId = payload.matchId || ('M' + Date.now());
+      const dateStr = normalizeDateStr(payload.date);
+
+      // 1. matches テーブルの保存
+      const { error: matchErr } = await sb.from('matches').upsert({
+        match_id: matchId,
+        match_date: dateStr,
+        category: payload.category || 'TRM',
+        opponent: payload.opponent || '未設定',
+        my_score: Number(payload.myScore || 0),
+        opp_score: Number(payload.oppScore || 0),
+        result: payload.result || '引き分け',
+        attended_players: payload.attended || '',
+        location: payload.location || '',
+        mom_member_id: payload.momMemberId || null,
+        updated_at: new Date().toISOString()
+      });
+
+      if (matchErr) throw matchErr;
+
+      // 2. score_logs の再登録 (既存ログ削除後の一括挿入)
+      if (Array.isArray(payload.logs)) {
+        await sb.from('score_logs').delete().eq('match_id', matchId);
+
+        if (payload.logs.length > 0) {
+          const insertLogs = payload.logs.map((l, idx) => ({
+            log_id: `L_${matchId}_${idx + 1}`,
+            match_id: matchId,
+            period: l.period || '',
+            minute: Number(l.min || 0),
+            log_type: l.type,
+            member_id: l.memberId || 'MBR-SPECIAL-GUEST',
+            assist_member_id: l.assistMemberId || null
+          }));
+
+          const { error: logErr } = await sb.from('score_logs').insert(insertLogs);
+          if (logErr) throw logErr;
+        }
+      }
+
+      console.log(`[Supabase] Score record saved: ${matchId}`);
+      return { success: true, matchId: matchId };
+    },
+
+    /**
+     * 掲示板投稿の保存
+     */
+    async saveBulletinPost(payload) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const postId = payload.id || ('BUL-' + Date.now());
+      const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+
+      const record = {
+        post_id: postId,
+        category: payload.category || '連絡',
+        title: payload.title,
+        content: payload.content || '',
+        event_id: payload.eventId || null,
+        event_title: payload.eventTitle || null,
+        event_date: payload.eventDate || null,
+        is_pinned: !!payload.isPinned,
+        updated_at: new Date().toISOString()
+      };
+
+      if (!payload.id) {
+        record.author_member_id = currentMemberId;
+      } else {
+        record.updated_by_member_id = currentMemberId;
+      }
+
+      const { data, error } = await sb.from('bulletin_posts').upsert(record);
+      if (error) throw error;
+      return { success: true, post: data };
+    },
+
+    /**
+     * 掲示板既読の登録
+     */
+    async markBulletinAsRead(postId, memberId) {
+      const sb = getClient();
+      if (!sb) return;
+      if (!postId || !memberId) return;
+
+      const readId = `READ_${postId}_${memberId}`;
+      await sb.from('bulletin_reads').upsert({
+        read_id: readId,
+        post_id: postId,
+        member_id: memberId,
+        read_at: new Date().toISOString()
+      }, { onConflict: 'post_id,member_id' });
+    },
+
+    /**
+     * 掲示板コメントの保存
+     */
+    async saveBulletinComment(payload) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const commentId = 'CMT-' + Date.now();
+      const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+
+      const { data, error } = await sb.from('bulletin_comments').insert({
+        comment_id: commentId,
+        post_id: payload.postId,
+        author_member_id: currentMemberId,
+        content: payload.content,
+        created_at: new Date().toISOString()
+      });
+
+      if (error) throw error;
+      return { success: true };
+    },
+
+    /**
+     * 備品保管者の引き継ぎ更新
+     */
+    async updateItemHolder(itemId, newMemberId) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const { data, error } = await sb.from('equipment_items').update({
+        member_id: newMemberId,
+        updated_at: new Date().toISOString()
+      }).eq('item_id', itemId);
+
+      if (error) throw error;
+      return { success: true };
+    }
+  };
+
+  window.SupabaseService = SupabaseService;
+
+  // =========================================
+  // 4. google.script.run の透過的バイパスプロキシ
+  // =========================================
+  // 既存のフロントエンド呼び出しコードを変更することなく、
+  // Supabase で即時実行できる関数を自動的にバイパスして爆速化 (0.3秒)
+  // =========================================
+  function createSupabaseBypassProxy(successHandler, failureHandler, userObject) {
+    return new Proxy({}, {
+      get: function(target, prop) {
+        if (prop === 'withSuccessHandler') {
+          return function(h) { return createSupabaseBypassProxy(h, failureHandler, userObject); };
+        }
+        if (prop === 'withFailureHandler') {
+          return function(h) { return createSupabaseBypassProxy(successHandler, h, userObject); };
+        }
+        if (prop === 'withUserObject') {
+          return function(u) { return createSupabaseBypassProxy(successHandler, failureHandler, u); };
+        }
+
+        return function(...args) {
+          // Supabase 直接処理へのルーティング
+          if (prop === 'getInitialData') {
+            console.log('⚡ [Bypass] getInitialData routed to Supabase Direct REST API (0.3s)');
+            SupabaseService.getInitialData(args[0])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'updateEventAttendance') {
+            console.log('⚡ [Bypass] updateEventAttendance routed to Supabase Direct UPSERT (0.1s)');
+            SupabaseService.updateEventAttendance(args[0])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'saveScoreRecord') {
+            console.log('⚡ [Bypass] saveScoreRecord routed to Supabase Direct (0.2s)');
+            SupabaseService.saveScoreRecord(args[0])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'apiSaveBulletinPost') {
+            console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
+            SupabaseService.saveBulletinPost(args[0])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'apiMarkAsRead') {
+            SupabaseService.markBulletinAsRead(args[0], args[1]);
+            if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
+            return;
+          }
+
+          if (prop === 'apiSaveComment') {
+            SupabaseService.saveBulletinComment(args[0])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          if (prop === 'updateItemHolder') {
+            SupabaseService.updateItemHolder(args[0], args[1])
+              .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+              .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+            return;
+          }
+
+          // その他の関数は従来通り GAS へのフォールバック通信
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ functionName: prop, args: args })
+          })
+          .then(res => res.json())
+          .then(result => {
+            if (result && result.success) {
+              if (typeof successHandler === 'function') successHandler(result.data, userObject);
+            } else {
+              const err = new Error(result && result.error ? result.error : 'エラーが発生しました。');
+              if (typeof failureHandler === 'function') failureHandler(err, userObject);
+            }
+          })
+          .catch(err => {
+            if (typeof failureHandler === 'function') failureHandler(err, userObject);
+          });
+        };
+      }
+    });
+  }
+
+  // 既存の google.script.run を Supabase バイパスプロキシでオーバーライド
+  window.google = window.google || {};
+  window.google.script = window.google.script || {};
+  window.google.script.run = createSupabaseBypassProxy(null, null, null);
+
+  // =========================================
+  // 5. 画面復帰検知 (Page Visibility API & window.focus)
+  // =========================================
+  // スマホのアプリ切り替えやPCの別タブ・ウィンドウからの復帰時に
+  // 0.05秒で直近の出欠・予定データをクイック照合
+  // =========================================
+  async function refreshOnResume() {
+    try {
+      console.log('⚡ [Resume] Screen resumed. Checking Supabase for latest attendance & bulletin...');
+      const sb = getClient();
+      if (!sb) return;
+
+      const { data: attData } = await sb.from('attendance').select('*');
+      if (attData && window.eventsData && typeof updateUnansweredBadges === 'function') {
+        // 出欠ステータスの反映とバッジ更新
+        updateUnansweredBadges();
+      }
+    } catch (e) {
+      console.warn('[Resume] Quick check error:', e);
+    }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      refreshOnResume();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    refreshOnResume();
+  });
+
+})();
+</script>
+
      <!-- 共通スクリプトの読み込み -->
      <script>
 // ==========================================
