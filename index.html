@@ -12493,26 +12493,26 @@ textarea.comment-textarea:active {
           </div>
 
           <div id="memberEditStatus" class="form-status-msg hidden"></div>
-
-          <div class="modal-footer member-modal-footer">
-            <div class="member-modal-footer-left">
-              <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
-                <span class="material-symbols-outlined text-sm">delete</span>メンバーを完全削除
-              </button>
-            </div>
-            <div class="member-modal-footer-right">
-              <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
-              <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
-            </div>
-          </div>
         </form>
+      </div>
+
+      <div class="modal-footer member-modal-footer">
+        <div class="member-modal-footer-left">
+          <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link hidden" onclick="openMemberDeleteConfirmFromModal()">
+            <span class="material-symbols-outlined text-sm">delete</span>誤登録を取り消す
+          </button>
+        </div>
+        <div class="member-modal-footer-right">
+          <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
+          <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- =========================================
-       メンバー完全削除確認モーダル（誤登録取り消し用）
-       対象選手名表示・過去データ存在時の安全ガード
+       メンバー登録取り消し確認モーダル（誤登録取り消し専用）
+       ※過去の活動記録（出欠・試合・備品等）があるメンバーは削除不可
        ========================================= -->
   <div id="memberDeleteModal" class="modal-overlay" onclick="closeMemberDeleteModal(event)">
     <div class="modal-content member-modal-content delete-confirm-content" onclick="event.stopPropagation()">
@@ -12523,24 +12523,24 @@ textarea.comment-textarea:active {
             <span class="material-symbols-outlined">person</span>
           </div>
         </div>
-        <div class="delete-confirm-title" id="memberDeleteNameTitle">選手を完全削除</div>
+        <div class="delete-confirm-title" id="memberDeleteNameTitle">登録を取り消しますか？</div>
         <div class="delete-confirm-desc" id="memberDeleteDesc">
-          このメンバー情報をデータベースから完全に削除しますか？<br>
-          <span class="text-xs text-danger" style="display:block;margin-top:6px;line-height:1.4;">
-            ※誤って新規追加した場合の取り消し用です。削除すると元に戻せません。<br>
-            ※引退・退団の場合は削除せず、在籍ステータスを「OB」に変更してください。
+          このメンバーの登録をチームから削除します。<br>
+          <span class="text-xs text-muted" style="display:block;margin-top:8px;line-height:1.5;">
+            ※誤って新規追加した場合の取り消し用です。<br>
+            ※退団や引退の場合は削除せず、在籍ステータスを「OB」に変更してください。
           </span>
         </div>
         <!-- 過去記録が存在して削除できない場合の安全警告領域 -->
         <div id="memberDeleteGuardAlert" class="delete-guard-alert hidden mt-12">
           <span class="material-symbols-outlined text-sm">block</span>
-          <span id="memberDeleteGuardAlertText">この選手には過去の試合出場記録やスタッツが存在するため完全削除できません。退団される場合は在籍ステータスを「OB」に変更してください。</span>
+          <span id="memberDeleteGuardAlertText">過去の活動記録（出欠・試合・備品等）があるため削除できません。退団の場合は在籍ステータスを「OB」に変更してください。</span>
         </div>
         <div id="memberDeleteStatus" class="form-status-msg hidden mt-12"></div>
       </div>
       <div class="modal-footer delete-modal-footer">
         <button type="button" class="btn-member-modal-cancel" onclick="closeMemberDeleteModal(event)">キャンセル</button>
-        <button type="button" id="btnConfirmDeleteMember" class="btn-member-modal-delete-danger" onclick="executeMemberDeletePermanently()">完全に削除</button>
+        <button type="button" id="btnConfirmDeleteMember" class="btn-member-modal-delete-danger" onclick="executeMemberDeletePermanently()">登録を取り消す</button>
       </div>
     </div>
   </div>
@@ -14368,7 +14368,8 @@ textarea.comment-textarea:active {
       },
 
       /**
-       * メンバー完全物理削除 (誤登録の完全消去) (Supabase Direct: 0.1秒)
+       * メンバー登録取り消し (誤登録の完全消去専用) (Supabase Direct: 0.1秒)
+       * ※過去の活動記録（出欠・試合・備品等）があるメンバーは整合性保護のため削除を拒絶
        */
       async deleteMemberPermanently(target, actorEmail, actorName) {
         const sb = getClient();
@@ -14377,6 +14378,30 @@ textarea.comment-textarea:active {
         const targetName = String(target.name || '').trim();
         const targetEmail = String(target.email || '').trim().toLowerCase();
         let targetId = target.memberId || target.id || null;
+
+        if (!targetId && targetName) {
+          const { data: mRows } = await sb.from('members').select('member_id').eq('name', targetName).limit(1);
+          if (mRows && mRows.length > 0) targetId = mRows[0].member_id;
+        }
+
+        // リレーショナル整合性保護チェック（出欠・試合・備品・掲示板への紐づき確認）
+        if (targetId) {
+          const [resAtt, resScore, resMatches, resEq, resBulletin] = await Promise.all([
+            sb.from('attendance').select('event_id', { count: 'exact', head: true }).eq('member_id', targetId),
+            sb.from('score_logs').select('log_id', { count: 'exact', head: true }).or(`member_id.eq.${targetId},assist_member_id.eq.${targetId}`),
+            sb.from('matches').select('match_id', { count: 'exact', head: true }).eq('mom_member_id', targetId),
+            sb.from('equipment_items').select('item_id', { count: 'exact', head: true }).eq('member_id', targetId),
+            sb.from('bulletin_posts').select('post_id', { count: 'exact', head: true }).eq('author_member_id', targetId)
+          ]);
+
+          if ((resAtt && resAtt.count && resAtt.count > 0) ||
+              (resScore && resScore.count && resScore.count > 0) ||
+              (resMatches && resMatches.count && resMatches.count > 0) ||
+              (resEq && resEq.count && resEq.count > 0) ||
+              (resBulletin && resBulletin.count && resBulletin.count > 0)) {
+            throw new Error('過去の活動記録（出欠・試合・備品・掲示板等）が存在するため、このメンバーを削除することはできません。退団の場合は在籍ステータスを「OB」に変更してください。');
+          }
+        }
 
         if (targetId) {
           const { error } = await sb.from('members').delete().eq('member_id', targetId);
@@ -23331,8 +23356,23 @@ function openMemberEditModalByName(memberName) {
   }
   handleMemberStatusSelectChange();
 
+  // 誤登録取り消しボタン: 過去記録（出欠・試合・備品等）がある正規部員には表示せず、初期状態は必ず非表示
   const delTrigger = document.getElementById('btnDeleteMemberTrigger');
-  if (delTrigger) delTrigger.classList.remove('hidden'); // 既存メンバーは完全削除トリガーを表示
+  if (delTrigger) {
+    delTrigger.classList.add('hidden');
+    checkMemberHasRelatedRecords(member).then(hasRecords => {
+      // モーダルが現在も同じメンバーを表示している場合のみ反映
+      if (window.currentEditingMember && (window.currentEditingMember.memberId === member.memberId || window.currentEditingMember.name === member.name)) {
+        if (!hasRecords) {
+          delTrigger.classList.remove('hidden'); // 過去記録が0件の誤登録メンバーのみ表示
+        } else {
+          delTrigger.classList.add('hidden'); // 過去記録があるメンバーには絶対に表示しない
+        }
+      }
+    }).catch(() => {
+      if (delTrigger) delTrigger.classList.add('hidden');
+    });
+  }
 
   const birthdayInput = document.getElementById('memberEditBirthday');
   if (birthdayInput) birthdayInput.value = member.birthday || '';
@@ -23611,41 +23651,93 @@ function handleRestoreMember(memberName) {
 }
 
 /**
- * 対象メンバーに過去の試合記録（出席、得点、MOM等）が存在するか判定
+ * 対象メンバーに過去の活動記録（試合、得点、出欠、備品、掲示板等）が存在するか厳密に判定
+ * ※リレーショナル整合性を保護するため、過去データが1件でもあるメンバーは物理削除不可（OB変更のみ可）
  * @param {Object} member 
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
-function hasMemberPastRecords(member) {
-  if (!member) return false;
+async function checkMemberHasRelatedRecords(member) {
+  if (!member) return true; // 安全側に倒す
   const name = String(member.name || '').trim();
   const mId = String(member.memberId || member.id || '').trim();
+  if (!name && !mId) return true;
 
-  // 1. Supabase/ローカルキャッシュの試合記録からチェック
-  const matches = (window.supabaseState && window.supabaseState.history && window.supabaseState.history.matches) || [];
+  // 1. 同期チェック (メモリ内キャッシュ)
+  // 試合データ
+  const matches = window.allHistoryMatches || (window.initialFullData && window.initialFullData.history && window.initialFullData.history.matches) || [];
   for (const m of matches) {
-    if (m.momMemberId === mId || (m.mom && m.mom === name)) return true;
+    if (mId && m.momMemberId === mId) return true;
+    if (name && m.mom && m.mom === name) return true;
     const attended = String(m.attended || '').split(',').map(s => s.trim());
-    if (attended.includes(name)) return true;
+    if (name && attended.includes(name)) return true;
+    if (mId && attended.includes(mId)) return true;
     if (m.logs && Array.isArray(m.logs)) {
       for (const l of m.logs) {
-        if (l.player === name || l.assist === name) return true;
+        if (name && (l.player === name || l.assist === name)) return true;
+        if (mId && (l.memberId === mId || l.assistMemberId === mId)) return true;
       }
     }
   }
 
-  // 2. 出欠データからチェック
-  const attendance = (window.supabaseState && window.supabaseState.attendance) || [];
-  for (const att of attendance) {
-    if (att.member_id === mId || att.member_name === name) return true;
+  // 備品データ
+  const eqItems = (window.equipmentState && window.equipmentState.itemsList) || (window.initialFullData && window.initialFullData.equipmentData && window.initialFullData.equipmentData.itemsList) || [];
+  for (const it of eqItems) {
+    if (mId && (it.memberId === mId || it.holderId === mId)) return true;
+    if (name && (it.memberName === name || it.holderName === name)) return true;
+  }
+
+  // 出欠統計データ
+  const calPlayers = (window.calendarAttendanceData && window.calendarAttendanceData.players) || {};
+  if (name && calPlayers[name]) {
+    const p = calPlayers[name];
+    if (p.all && (p.all.invited > 0 || p.all.attended > 0)) return true;
+  }
+
+  // 2. Supabase 直接・厳密チェック
+  if (window.supabaseClient && mId) {
+    try {
+      const sb = window.supabaseClient;
+      const [
+        resAtt,
+        resScore,
+        resMatches,
+        resEqItems,
+        resEqLogs,
+        resPosts,
+        resComments,
+        resReads
+      ] = await Promise.all([
+        sb.from('attendance').select('event_id', { count: 'exact', head: true }).eq('member_id', mId),
+        sb.from('score_logs').select('log_id', { count: 'exact', head: true }).or(`member_id.eq.${mId},assist_member_id.eq.${mId}`),
+        sb.from('matches').select('match_id', { count: 'exact', head: true }).eq('mom_member_id', mId),
+        sb.from('equipment_items').select('item_id', { count: 'exact', head: true }).eq('member_id', mId),
+        sb.from('equipment_event_logs').select('log_id', { count: 'exact', head: true }).eq('member_id', mId),
+        sb.from('bulletin_posts').select('post_id', { count: 'exact', head: true }).eq('author_member_id', mId),
+        sb.from('bulletin_comments').select('comment_id', { count: 'exact', head: true }).eq('author_member_id', mId),
+        sb.from('bulletin_reads').select('post_id', { count: 'exact', head: true }).eq('member_id', mId)
+      ]);
+
+      if (resAtt && resAtt.count && resAtt.count > 0) return true;
+      if (resScore && resScore.count && resScore.count > 0) return true;
+      if (resMatches && resMatches.count && resMatches.count > 0) return true;
+      if (resEqItems && resEqItems.count && resEqItems.count > 0) return true;
+      if (resEqLogs && resEqLogs.count && resEqLogs.count > 0) return true;
+      if (resPosts && resPosts.count && resPosts.count > 0) return true;
+      if (resComments && resComments.count && resComments.count > 0) return true;
+      if (resReads && resReads.count && resReads.count > 0) return true;
+    } catch (e) {
+      console.warn('[checkMemberHasRelatedRecords] Safety fallback triggered:', e);
+      return true; // エラー時は安全側に倒して削除不可とする
+    }
   }
 
   return false;
 }
 
 /**
- * 編集モーダル内の「メンバーを完全削除」ボタンから削除確認モーダルを開く
+ * 編集モーダル内の「誤登録を取り消す」ボタンから確認モーダルを開く
  */
-function openMemberDeleteConfirmFromModal() {
+async function openMemberDeleteConfirmFromModal() {
   const member = window.currentEditingMember;
   if (!member) return;
 
@@ -23660,7 +23752,7 @@ function openMemberDeleteConfirmFromModal() {
 
   const titleEl = document.getElementById('memberDeleteNameTitle');
   if (titleEl) {
-    titleEl.textContent = `「${member.name}」選手を完全削除`;
+    titleEl.textContent = `「${member.name}」さんの登録を取り消しますか？`;
   }
 
   // アバター表示
@@ -23681,10 +23773,13 @@ function openMemberDeleteConfirmFromModal() {
   }
 
   // 過去記録が存在するか安全チェック
-  const hasRecords = hasMemberPastRecords(member);
   const guardAlert = document.getElementById('memberDeleteGuardAlert');
   const deleteDesc = document.getElementById('memberDeleteDesc');
   const deleteBtn = document.getElementById('btnConfirmDeleteMember');
+
+  if (deleteBtn) deleteBtn.disabled = true;
+
+  const hasRecords = await checkMemberHasRelatedRecords(member);
 
   if (hasRecords) {
     // 過去記録があるため完全削除不可（OB変更を案内）
@@ -23695,7 +23790,7 @@ function openMemberDeleteConfirmFromModal() {
       deleteBtn.classList.add('hidden');
     }
   } else {
-    // 誤登録のため完全削除可能
+    // 誤登録のため取り消し可能
     if (guardAlert) guardAlert.classList.add('hidden');
     if (deleteDesc) deleteDesc.classList.remove('hidden');
     if (deleteBtn) {
@@ -23719,11 +23814,19 @@ function closeMemberDeleteModal(e) {
 }
 
 /**
- * 誤登録メンバーの完全物理削除を実行
+ * 誤登録メンバーの登録取り消しを実行
  */
-function executeMemberDeletePermanently() {
+async function executeMemberDeletePermanently() {
   const member = window.currentDeletingMember;
   if (!member) return;
+
+  // 実行直前の安全ガード
+  const hasRecords = await checkMemberHasRelatedRecords(member);
+  if (hasRecords) {
+    alert('過去の活動記録（出欠・試合・備品等）が存在するため、このメンバーを削除することはできません。\n退団の場合は在籍ステータスを「OB」に変更してください。');
+    closeModalById('memberDeleteModal');
+    return;
+  }
 
   const u = window.currentUser || {};
   const actorEmail = u.email || '';
@@ -23732,14 +23835,14 @@ function executeMemberDeletePermanently() {
   const deleteBtn = document.getElementById('btnConfirmDeleteMember');
   if (deleteBtn) deleteBtn.disabled = true;
 
-  setDeleteFormStatus('完全削除を実行中...', 'loading');
+  setDeleteFormStatus('登録の取り消しを実行中...', 'loading');
 
   google.script.run
     .withSuccessHandler(res => {
       if (deleteBtn) deleteBtn.disabled = false;
 
       if (res && res.success) {
-        setDeleteFormStatus('削除が完了しました。', 'success');
+        setDeleteFormStatus('登録を取り消しました。', 'success');
         if (res.roster) {
           window.adminMemberList = res.roster;
           window.scheduleRoster = res.roster;
@@ -23755,7 +23858,7 @@ function executeMemberDeletePermanently() {
           window.currentEditingMember = null;
         }, 500);
       } else {
-        setDeleteFormStatus(res && res.error ? res.error : '削除処理に失敗しました。', 'error');
+        setDeleteFormStatus(res && res.error ? res.error : '取り消し処理に失敗しました。', 'error');
       }
     })
     .withFailureHandler(err => {
