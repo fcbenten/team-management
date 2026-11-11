@@ -9466,18 +9466,24 @@ a.btn-member-modal-save:hover {
 .bulletin-detail-header-badges .category-badge,
 .bulletin-pinned-pill,
 .bulletin-card-event-pill {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  height: 24px !important;
-  box-sizing: border-box !important;
-  padding: 0 8px !important;
-  font-size: 0.75rem !important;
-  font-weight: 700 !important;
-  line-height: 1 !important;
-  border-radius: 4px !important;
-  white-space: nowrap !important;
-  vertical-align: middle !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 4px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.bulletin-pinned-pill.hidden,
+.bulletin-card-event-pill.hidden,
+#bdmPinnedBadge.hidden {
+  display: none !important;
 }
 
 .bulletin-pinned-pill {
@@ -12532,7 +12538,7 @@ textarea.comment-textarea:active {
     <div class="modal-header">
       <div class="bulletin-detail-header-badges">
         <span id="bdmCategoryBadge" class="category-badge"></span>
-        <span id="bdmPinnedBadge" class="bulletin-pinned-pill hidden">
+        <span id="bdmPinnedBadge" class="bulletin-pinned-pill hidden" style="display: none;">
           <span class="material-symbols-outlined" style="font-size:14px;">push_pin</span>
           ホーム固定中
         </span>
@@ -13527,6 +13533,38 @@ textarea.comment-textarea:active {
       },
 
       /**
+       * 掲示板ピン留め状態の更新 (0.1s Direct)
+       */
+      async togglePinBulletinPost(postId, isPinned) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        const { error } = await sb.from('bulletin_posts')
+          .update({
+            is_pinned: !!isPinned,
+            updated_at: new Date().toISOString()
+          })
+          .eq('post_id', postId);
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
+       * 掲示板投稿の論理削除 (0.1s Direct)
+       */
+      async deleteBulletinPost(postId) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        const { error } = await sb.from('bulletin_posts')
+          .update({
+            is_deleted: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('post_id', postId);
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
        * 掲示板既読の登録
        */
       async markBulletinAsRead(postId, memberId) {
@@ -13699,6 +13737,22 @@ textarea.comment-textarea:active {
             if (prop === 'apiSaveBulletinPost') {
               console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
               SupabaseService.saveBulletinPost(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiTogglePinBulletinPost') {
+              console.log('⚡ [Bypass] apiTogglePinBulletinPost routed to Supabase Direct (0.1s)');
+              SupabaseService.togglePinBulletinPost(args[0], args[1])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiDeleteBulletinPost') {
+              console.log('⚡ [Bypass] apiDeleteBulletinPost routed to Supabase Direct (0.1s)');
+              SupabaseService.deleteBulletinPost(args[0])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;
@@ -24634,9 +24688,11 @@ function openBulletinDetailModal(post, openReaders = false) {
   }
 
   // ピン留めバッジ
+  const isPinned = Boolean(post.isPinned);
   const pinBadge = document.getElementById('bdmPinnedBadge');
   if (pinBadge) {
-    pinBadge.classList.toggle('hidden', !post.isPinned);
+    pinBadge.classList.toggle('hidden', !isPinned);
+    pinBadge.style.display = isPinned ? 'inline-flex' : 'none';
   }
 
   // タイトル
@@ -25228,6 +25284,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
   const pinnedBadge = document.getElementById('bdmPinnedBadge');
   if (pinnedBadge) {
     pinnedBadge.classList.toggle('hidden', !nextPinned);
+    pinnedBadge.style.display = nextPinned ? 'inline-flex' : 'none';
   }
 
   // タイムライン一覧・ホーム画面ピン留めカードを即時再描画（モーダル裏の投稿が0秒で最上部に移動）
@@ -25248,7 +25305,10 @@ function handleBdmTogglePinCheckbox(isChecked) {
         }
         const pinCheckbox = document.getElementById('bdmPinCheckbox');
         if (pinCheckbox) pinCheckbox.checked = !nextPinned;
-        if (pinnedBadge) pinnedBadge.classList.toggle('hidden', nextPinned);
+        if (pinnedBadge) {
+          pinnedBadge.classList.toggle('hidden', nextPinned);
+          pinnedBadge.style.display = (!nextPinned) ? 'inline-flex' : 'none';
+        }
         sortBulletinPosts(allPosts);
         renderBulletinTimeline();
         renderHomePinnedAnnouncements();
