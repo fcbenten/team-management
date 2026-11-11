@@ -2989,9 +2989,9 @@ html.no-scroll {
    🔑 ログイン画面専用 (view_login.html)
    ========================================= */
 
-/* ログイン画面の全画面オーバーレイ */
+/* ログイン画面の全画面オーバーレイ（初期状態は非表示にして画面更新時のFOUCチラ見えを防止） */
 .login-overlay {
-  display: flex;
+  display: none;
   position: fixed;
   inset: 0;
   z-index: 99999;
@@ -11020,7 +11020,7 @@ textarea.comment-textarea:active {
        ログイン画面（SPAカード切り替えオーバーレイ）
        Gmailアドレス・パスワード認証、ログイン状態保持、新規登録リンク
        ========================================= -->
-<div id="loginScreen" class="auth-container login-overlay">
+<div id="loginScreen" class="auth-container login-overlay" style="display: none;">
 
   <!-- ログインカード -->
   <div id="loginCard" class="auth-card">
@@ -16165,13 +16165,25 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   window.applyInitialActiveTab = applyInitialActiveTab;
 
   window.addEventListener('DOMContentLoaded', function() {
+    let savedUser = null;
     try {
       const raw = localStorage.getItem('fcb_auth_user');
       if (raw) {
-        window.currentUser = JSON.parse(raw);
-        if (typeof updateAdminNavVisibility === 'function') updateAdminNavVisibility();
+        savedUser = JSON.parse(raw);
+        if (savedUser && savedUser.name) {
+          window.currentUser = savedUser;
+          if (typeof updateAdminNavVisibility === 'function') updateAdminNavVisibility();
+        }
       }
     } catch (e) {}
+
+    // ログイン判定を DOMContentLoaded で即座に行い、画面更新時のチラ見え（FOUC）を完全防止
+    if (savedUser && savedUser.name) {
+      hideLoginScreen();
+    } else {
+      showLoginScreen();
+    }
+
     applyInitialActiveTab();
     updateMobileHeaderHeight();
     updateNavScrollIndicators();
