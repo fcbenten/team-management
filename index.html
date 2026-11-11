@@ -9867,21 +9867,54 @@ a.btn-member-modal-save:hover {
 .bulletin-detail-author-box {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.bulletin-detail-author-box .author-icon {
+.bulletin-author-avatar-wrap {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.bulletin-author-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.bulletin-author-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bulletin-author-avatar-placeholder .material-symbols-outlined {
   font-size: 16px;
-  color: var(--primary);
+  color: #94a3b8;
 }
 
 .bulletin-detail-author-box .author-name {
   font-weight: 700;
+  font-size: 0.88rem;
   color: var(--text-heading);
 }
 
 .bulletin-detail-author-box .created-at {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
 }
 
@@ -10435,11 +10468,41 @@ a.btn-member-modal-save:hover {
   gap: 6px;
 }
 
-.comment-avatar-img {
+.comment-avatar-wrap {
   width: 22px;
   height: 22px;
   border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.comment-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   object-fit: cover;
+  display: block;
+}
+
+.comment-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-avatar-placeholder .material-symbols-outlined {
+  font-size: 14px;
+  color: #94a3b8;
 }
 
 .comment-avatar-icon {
@@ -13002,7 +13065,12 @@ textarea.comment-textarea:active {
       <!-- 投稿者メタ情報 -->
       <div class="bulletin-detail-meta-row">
         <div class="bulletin-detail-author-box">
-          <span class="material-symbols-outlined author-icon">person</span>
+          <div class="bulletin-author-avatar-wrap">
+            <img id="bdmAuthorAvatarImg" class="bulletin-author-avatar-img hidden" alt="">
+            <div id="bdmAuthorAvatarPlaceholder" class="bulletin-author-avatar-placeholder">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+          </div>
           <span id="bdmAuthorName" class="author-name"></span>
           <span id="bdmCreatedAt" class="created-at text-muted"></span>
         </div>
@@ -26152,6 +26220,22 @@ function openBulletinDetailModal(post, openReaders = false) {
   const authorEl = document.getElementById('bdmAuthorName');
   if (authorEl) authorEl.textContent = post.authorName || 'メンバー';
 
+  // 投稿者アバター表示（他画面のアバターデザインと完全統一）
+  const avatarImg = document.getElementById('bdmAuthorAvatarImg');
+  const avatarPlaceholder = document.getElementById('bdmAuthorAvatarPlaceholder');
+  const authorAvatarUrl = post.authorAvatar || post.authorAvatarUrl || (window.playerAvatarMap && post.authorName && window.playerAvatarMap[post.authorName]) || '';
+  if (avatarImg && avatarPlaceholder) {
+    if (authorAvatarUrl && !authorAvatarUrl.startsWith('data:image/svg+xml')) {
+      avatarImg.src = authorAvatarUrl;
+      avatarImg.classList.remove('hidden');
+      avatarPlaceholder.classList.add('hidden');
+    } else {
+      avatarImg.src = '';
+      avatarImg.classList.add('hidden');
+      avatarPlaceholder.classList.remove('hidden');
+    }
+  }
+
   // 作成日時（曜日・時分付きフォーマット: YYYY/MM/DD (曜) HH:mm）
   const createdEl = document.getElementById('bdmCreatedAt');
   if (createdEl) {
@@ -26536,19 +26620,23 @@ function renderBulletinComments(comments) {
     const authorInfo = document.createElement('div');
     authorInfo.className = 'comment-author-info';
 
-    // アバター
-    if (c.authorAvatarUrl) {
+    // アバター（他画面と統一された円形アバターラップ）
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'comment-avatar-wrap';
+    const cAvatarUrl = c.authorAvatarUrl || (window.playerAvatarMap && c.authorName && window.playerAvatarMap[c.authorName]) || '';
+    if (cAvatarUrl && !cAvatarUrl.startsWith('data:image/svg+xml')) {
       const img = document.createElement('img');
-      img.src = c.authorAvatarUrl;
+      img.src = cAvatarUrl;
       img.className = 'comment-avatar-img';
       img.alt = '';
-      authorInfo.appendChild(img);
+      avatarWrap.appendChild(img);
     } else {
-      const icon = document.createElement('span');
-      icon.className = 'material-symbols-outlined comment-avatar-icon';
-      icon.textContent = 'account_circle';
-      authorInfo.appendChild(icon);
+      const placeholder = document.createElement('div');
+      placeholder.className = 'comment-avatar-placeholder';
+      placeholder.innerHTML = '<span class="material-symbols-outlined">person</span>';
+      avatarWrap.appendChild(placeholder);
     }
+    authorInfo.appendChild(avatarWrap);
 
     const nameSpan = document.createElement('span');
     nameSpan.className = 'comment-author-name';
