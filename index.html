@@ -10498,7 +10498,7 @@ textarea.comment-textarea:active {
         </div>
 
         <button type="button" id="btnSaveNotificationSettings" class="btn btn-primary-action w-full mb-8" onclick="handleSaveNotificationSettings()">
-          通知設定を保存する
+          通知設定を保存
         </button>
         <div id="notifSaveMsg" class="notif-status-msg hidden"></div>
       </div>
@@ -10520,7 +10520,7 @@ textarea.comment-textarea:active {
           <div class="pw-input-group-last">
             <input type="password" id="confirmNewPwInput" placeholder="新しいパスワード（確認用）" class="pw-input">
           </div>
-          <button type="button" class="btn btn-primary-action w-full pw-submit-btn" onclick="handlePasswordChange()">パスワードを更新する</button>
+          <button type="button" class="btn btn-primary-action w-full pw-submit-btn" onclick="handlePasswordChange()">パスワードを更新</button>
         </div>
       </div>
     </div>
@@ -10630,7 +10630,7 @@ textarea.comment-textarea:active {
     <!-- モーダルフッター -->
     <div class="modal-footer modal-match-footer">
       <button type="button" class="btn-primary btn-match-edit" onclick="goToEditMatch()">
-        <span class="material-symbols-outlined">edit_square</span>この試合を編集する
+        <span class="material-symbols-outlined">edit_square</span>この試合を編集
       </button>
     </div>
   </div>
@@ -10676,7 +10676,7 @@ textarea.comment-textarea:active {
 
       <button type="button" id="btnForceGoogleAuth" class="btn-primary-action btn-force-auth" onclick="handleForceGoogleAuthClick()">
         <span class="material-symbols-outlined">sync_lock</span>
-        <span>Googleアカウントで連携する</span>
+        <span>Googleアカウント連携</span>
       </button>
 
       <p class="force-auth-note">
@@ -11307,7 +11307,7 @@ textarea.comment-textarea:active {
       <div id="inputNoLogs" class="empty-state">まだ記録はありません</div>
       <div id="logList" class="timeline-log-container mb-16"></div>
       
-      <button id="submitBtn" class="btn" onclick="submitData()">保存する</button>
+      <button id="submitBtn" class="btn" onclick="submitData()">保存</button>
     </div>
     
   </div>
@@ -11986,7 +11986,7 @@ textarea.comment-textarea:active {
       </div>
       <div class="event-modal-footer flex-end gap-8">
         <button type="button" class="btn-cancel-action" onclick="closeDeleteConfirmModal(event)">キャンセル</button>
-        <button type="button" id="deleteConfirmExecuteBtn" class="btn-danger-execute" onclick="executeConfirmedDelete()">削除する</button>
+        <button type="button" id="deleteConfirmExecuteBtn" class="btn-danger-execute" onclick="executeConfirmedDelete()">削除</button>
       </div>
     </div>
   </div>
@@ -12180,7 +12180,7 @@ textarea.comment-textarea:active {
 
           <div class="modal-footer member-modal-footer">
             <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
-            <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新する</button>
+            <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
           </div>
         </form>
       </div>
@@ -12476,7 +12476,7 @@ textarea.comment-textarea:active {
       <button type="button" id="btnDeleteEquipment" class="btn-equipment-modal-delete hidden" onclick="handleDeleteEquipmentClick()">削除</button>
       <div class="equipment-footer-right">
         <button type="button" class="btn-equipment-modal-cancel" onclick="closeEquipmentEditModal(event)">キャンセル</button>
-        <button type="button" id="btnSaveEquipment" class="btn-equipment-modal-save" onclick="handleSaveEquipmentSubmit(event)">保存する</button>
+        <button type="button" id="btnSaveEquipment" class="btn-equipment-modal-save" onclick="handleSaveEquipmentSubmit(event)">保存</button>
       </div>
     </div>
   </div>
@@ -12586,7 +12586,7 @@ textarea.comment-textarea:active {
         </div>
         <div class="bulletin-edit-actions-right">
           <button type="button" class="btn-cancel-action" onclick="closeBulletinEditModalForce()">キャンセル</button>
-          <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿する</button>
+          <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿</button>
         </div>
       </div>
     </form>
@@ -12663,7 +12663,7 @@ textarea.comment-textarea:active {
           <div class="comment-input-actions">
             <span class="comment-char-counter"><span id="bdmCommentCharCount">0</span>/500</span>
             <button type="button" id="btnSubmitComment" class="btn-comment-submit" onclick="handleSubmitBulletinComment()">
-              <span class="material-symbols-outlined text-sm mr-1">send</span>投稿する
+              <span class="material-symbols-outlined text-sm mr-1">send</span>投稿
             </button>
           </div>
           <div id="bdmCommentStatusMsg" class="comment-status-msg hidden"></div>
@@ -12727,7 +12727,7 @@ textarea.comment-textarea:active {
       <div class="bulletin-detail-actions-right">
         <button type="button" id="btnBdmEdit" class="bdm-action-btn btn-edit-action" onclick="openBulletinEditModalFromCurrent()">
           <span class="material-symbols-outlined text-sm">edit</span>
-          <span>編集する</span>
+          <span>編集</span>
         </button>
       </div>
     </div>
@@ -15333,7 +15333,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const onComplete = (success, msg) => {
       if (btn) {
         btn.disabled = false;
-        btn.textContent = '通知設定を保存する';
+        btn.textContent = '通知設定を保存';
       }
       if (msgEl) {
         msgEl.textContent = msg;
@@ -15849,7 +15849,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       icon.textContent = 'sync_lock';
       btn.appendChild(icon);
       const textSpan = document.createElement('span');
-      textSpan.textContent = 'Googleアカウントで連携する';
+      textSpan.textContent = 'Googleアカウント連携';
       btn.appendChild(textSpan);
     }
 
@@ -21052,7 +21052,7 @@ function executeConfirmedDelete() {
     .withSuccessHandler(res => {
       if (execBtn) {
         execBtn.disabled = false;
-        execBtn.textContent = '削除する';
+        execBtn.textContent = '削除';
       }
 
       if (res && res.success) {
@@ -21094,7 +21094,7 @@ function executeConfirmedDelete() {
     .withFailureHandler(err => {
       if (execBtn) {
         execBtn.disabled = false;
-        execBtn.textContent = '削除する';
+        execBtn.textContent = '削除';
       }
       closeDeleteConfirmModal();
       alert('エラーが発生しました: ' + (err.message || ''));
@@ -22444,7 +22444,7 @@ function openMemberAddModal() {
 
   const submitBtn = document.getElementById('btnSaveMemberSubmit');
   if (submitBtn) {
-    submitBtn.textContent = '追加する';
+    submitBtn.textContent = '追加';
     submitBtn.disabled = false;
   }
 
@@ -22521,7 +22521,7 @@ function openMemberEditModalByName(memberName) {
 
   const submitBtn = document.getElementById('btnSaveMemberSubmit');
   if (submitBtn) {
-    submitBtn.textContent = '更新する';
+    submitBtn.textContent = '更新';
     submitBtn.disabled = false;
   }
 
@@ -22618,7 +22618,7 @@ function handleSaveMemberSubmit(e) {
   const actorName = u.name || '';
 
   const submitBtn = document.getElementById('btnSaveMemberSubmit');
-  const origBtnText = submitBtn ? submitBtn.textContent : (isNew ? '追加する' : '更新する');
+  const origBtnText = submitBtn ? submitBtn.textContent : (isNew ? '追加' : '更新');
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.textContent = isNew ? '追加中...' : '更新中...';
@@ -24337,7 +24337,7 @@ function renderBulletinTimeline() {
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
     editBtn.className = 'btn-event-icon-action';
-    editBtn.title = '編集する';
+    editBtn.title = '編集';
     editBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">edit</span>';
     editBtn.onclick = (e) => {
       e.stopPropagation();
@@ -24470,7 +24470,7 @@ function openBulletinCreateModal(linkedEvent = null) {
   const delBtn = document.getElementById('btnBulletinEditDelete');
   if (delBtn) delBtn.classList.add('hidden');
   const saveBtn = document.getElementById('btnSaveBulletinPost');
-  if (saveBtn) saveBtn.textContent = '投稿する';
+  if (saveBtn) saveBtn.textContent = '投稿';
 
   populateBulletinEventSelect(linkedEvent ? linkedEvent.id : '');
 
@@ -24501,7 +24501,7 @@ function openBulletinEditModal(post) {
   const delBtn = document.getElementById('btnBulletinEditDelete');
   if (delBtn) delBtn.classList.remove('hidden');
   const saveBtn = document.getElementById('btnSaveBulletinPost');
-  if (saveBtn) saveBtn.textContent = '更新する';
+  if (saveBtn) saveBtn.textContent = '更新';
 
   populateBulletinEventSelect(post.eventId || '');
 
@@ -24653,7 +24653,7 @@ function handleBulletinPostSubmit(e) {
     isBulletinSubmitting = false;
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '投稿する';
+      btn.innerHTML = payload.id ? '更新' : '投稿';
     }
     if (form) {
       form.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = false);
@@ -25298,7 +25298,7 @@ function handleSubmitBulletinComment() {
   const enableBtn = () => {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<span class="material-symbols-outlined text-sm mr-1">send</span>投稿する';
+      btn.innerHTML = '<span class="material-symbols-outlined text-sm mr-1">send</span>投稿';
     }
   };
 
