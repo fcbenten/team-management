@@ -14147,6 +14147,174 @@ textarea.comment-textarea:active {
       },
 
       /**
+       * 備品現物アイテム保存・保管者変更 (Supabase Direct: 0.1秒)
+       */
+      async saveEquipmentItem(payload, actorEmail, actorName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const itCode = String(payload.itemCode || '').trim();
+        const mId = String(payload.memberId || '').trim();
+        const notes = String(payload.notes || '').trim();
+        let itemId = String(payload.itemId || '').trim();
+
+        if (itemId) {
+          // 既存更新
+          const updateData = {
+            member_id: mId || null,
+            notes: notes,
+            updated_at: new Date().toISOString()
+          };
+          if (itCode) updateData.equipment_code = itCode;
+
+          const { error } = await sb.from('equipment_items').update(updateData).eq('item_id', itemId);
+          if (error) throw error;
+        } else {
+          // 新規追加 (EQ-XXX の自動連番採番)
+          const { data: allItems, error: fetchErr } = await sb.from('equipment_items').select('item_id');
+          if (fetchErr) throw fetchErr;
+
+          let maxNum = 0;
+          (allItems || []).forEach(it => {
+            const m = String(it.item_id || '').match(/^EQ-(\d+)$/i);
+            if (m) {
+              const n = parseInt(m[1], 10);
+              if (n > maxNum) maxNum = n;
+            }
+          });
+          itemId = 'EQ-' + ('000' + (maxNum + 1)).slice(-3);
+
+          // equipment_master から item_name を取得
+          let itemName = '備品';
+          if (itCode) {
+            const { data: mRows } = await sb.from('equipment_master').select('name').eq('equipment_code', itCode).limit(1);
+            if (mRows && mRows.length > 0) itemName = mRows[0].name;
+          }
+
+          const insertData = {
+            item_id: itemId,
+            equipment_code: itCode,
+            item_name: itemName,
+            member_id: mId || null,
+            status: '保管中',
+            notes: notes,
+            updated_at: new Date().toISOString()
+          };
+          const { error: insErr } = await sb.from('equipment_items').insert(insertData);
+          if (insErr) throw insErr;
+        }
+
+        // バックグラウンドで GAS (03.備品管理SS) にも非同期同期（待たせない）
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiSaveEquipmentItem',
+              args: [payload, actorEmail, actorName]
+            })
+          }).catch(e => console.warn('[SaveEquipmentSync] GAS sync warning:', e));
+        } catch (syncErr) {}
+
+        const now = new Date();
+        const updatedAtStr = `${now.getFullYear()}/${('0' + (now.getMonth() + 1)).slice(-2)}/${('0' + now.getDate()).slice(-2)} ${('0' + now.getHours()).slice(-2)}:${('0' + now.getMinutes()).slice(-2)}`;
+
+        return {
+          success: true,
+          message: '備品情報を保存しました。',
+          itemId: itemId,
+          itemCode: itCode,
+          memberId: mId,
+          notes: notes,
+          updatedAt: updatedAtStr
+        };
+      },
+
+      /**
+       * 備品現物アイテム削除 (Supabase Direct: 0.1秒)
+       */
+      async deleteEquipmentItem(itemId, actorEmail, actorName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const cleanId = String(itemId || '').trim();
+        if (!cleanId) throw new Error('削除対象の備品IDが指定されていません。');
+
+        const { error } = await sb.from('equipment_items').delete().eq('item_id', cleanId);
+        if (error) throw error;
+
+        // バックグラウンドで GAS にも非同期同期
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiDeleteEquipmentItem',
+              args: [cleanId, actorEmail, actorName]
+            })
+          }).catch(e => console.warn('[DeleteEquipmentSync] GAS sync warning:', e));
+        } catch (syncErr) {}
+
+        return { success: true, message: '備品を削除しました。' };
+      },
+
+      /**
+       * 不在アラート解決 (Supabase Direct: 0.1秒)
+       */
+      async resolveEquipmentAlert(payload, actorEmail, actorName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const evId = String(payload.eventId || '').trim();
+        let evDate = String(payload.eventDate || '').replace(/-/g, '/').trim();
+        const match = evDate.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        if (match) {
+          evDate = `${match[1]}/${('0' + match[2]).slice(-2)}/${('0' + match[3]).slice(-2)}`;
+        }
+        const itCode = String(payload.itemCode || '').trim();
+        const mId = String(payload.proxyMemberId || '代理').trim() || '代理';
+
+        if (!itCode) {
+          return { success: false, error: 'イベント・品目情報が不足しています。' };
+        }
+
+        // item_id を検索（itemCode から取得）
+        let targetItemId = null;
+        if (itCode) {
+          const { data: itRows } = await sb.from('equipment_items').select('item_id').eq('equipment_code', itCode).limit(1);
+          if (itRows && itRows.length > 0) targetItemId = itRows[0].item_id;
+        }
+
+        const logId = `EQL_${Date.now()}`;
+        const logData = {
+          log_id: logId,
+          event_id: evId,
+          event_date: evDate,
+          item_id: targetItemId,
+          assigned_member_id: mId,
+          status: '割当済',
+          created_at: new Date().toISOString()
+        };
+
+        const { error } = await sb.from('equipment_event_logs').upsert(logData);
+        if (error) throw error;
+
+        // バックグラウンドで GAS にも非同期同期
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiResolveEquipmentAlert',
+              args: [payload, actorEmail, actorName]
+            })
+          }).catch(e => console.warn('[ResolveEquipmentSync] GAS sync warning:', e));
+        } catch (syncErr) {}
+
+        return { success: true, message: '持参担当の解決を記録しました。' };
+      },
+
+      /**
        * 管理者用メンバー一覧の取得 (Supabase Direct: 0.1秒)
        */
       async getAdminMemberList() {
@@ -14514,6 +14682,30 @@ textarea.comment-textarea:active {
             if (prop === 'apiGetEquipmentData') {
               console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
               SupabaseService.getEquipmentData()
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiSaveEquipmentItem') {
+              console.log('⚡ [Bypass] apiSaveEquipmentItem routed to Supabase Direct (0.1s)');
+              SupabaseService.saveEquipmentItem(args[0], args[1], args[2])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiDeleteEquipmentItem') {
+              console.log('⚡ [Bypass] apiDeleteEquipmentItem routed to Supabase Direct (0.1s)');
+              SupabaseService.deleteEquipmentItem(args[0], args[1], args[2])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiResolveEquipmentAlert') {
+              console.log('⚡ [Bypass] apiResolveEquipmentAlert routed to Supabase Direct (0.1s)');
+              SupabaseService.resolveEquipmentAlert(args[0], args[1], args[2])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;
