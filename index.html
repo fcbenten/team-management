@@ -7700,9 +7700,9 @@ th.sort-active .sort-icon {
   border: 1px solid #fde68a;
 }
 
-/* 休部カードスタイル */
+/* 休部カードスタイル（現役・OBと統一したフラットデザイン） */
 .member-card.is-suspended {
-  border-left: 3px solid #f59e0b;
+  border-left: none;
 }
 
 /* OBカードスタイル (控えめなグレー表示) */
@@ -13563,14 +13563,16 @@ textarea.comment-textarea:active {
         const rawComments = resComments.data || [];
         const rawReads = resReads ? (resReads.data || []) : [];
 
-        // 既読データの投稿別マッピング
+        // 既読データの投稿別マッピング（実在する登録メンバーのみを対象とし、空IDや不正データを完全除外）
         const readersByPost = {};
         rawReads.forEach(r => {
-          if (!readersByPost[r.post_id]) readersByPost[r.post_id] = [];
+          if (!r.member_id) return;
           const rMember = idToMember[r.member_id];
+          if (!rMember || !rMember.name) return;
+          if (!readersByPost[r.post_id]) readersByPost[r.post_id] = [];
           readersByPost[r.post_id].push({
             memberId: r.member_id,
-            memberName: rMember ? rMember.name : (r.member_name || 'メンバー'),
+            memberName: rMember.name,
             readAt: r.read_at
           });
         });
@@ -25409,7 +25411,7 @@ function applyBulletinPayload(res) {
   posts.forEach(post => {
     const isSpecial = name => {
       const n = String(name || '').trim();
-      return ['助っ人', 'OG', 'なし', '未定'].includes(n) || n.includes('SPECIAL');
+      return ['助っ人', 'OG', 'なし', '未定', 'メンバー', ''].includes(n) || n.includes('SPECIAL');
     };
 
     // 既読リストの同一メンバー重複・特殊枠を完全排除
@@ -26412,7 +26414,7 @@ function renderReadersChips() {
 
   const isSpecialName = name => {
     const n = String(name || '').trim();
-    return ['助っ人', 'OG', 'なし', '未定'].includes(n) || n.includes('SPECIAL');
+    return ['助っ人', 'OG', 'なし', '未定', 'メンバー', ''].includes(n) || n.includes('SPECIAL');
   };
   const readers = (data.readers || []).filter(r => !isSpecialName(r.memberName));
   const unreadMembers = (data.unreadMembers || []).filter(m => !isSpecialName(m.memberName || m.name));
