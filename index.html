@@ -9540,7 +9540,7 @@ a.btn-member-modal-save:hover {
   flex-shrink: 0;
 }
 
-/* 既読状態バッジボタン */
+/* 既読状態バッジボタン（落ち着いたグレー・青強調なし） */
 .btn-card-read-summary {
   display: inline-flex;
   align-items: center;
@@ -9560,18 +9560,19 @@ a.btn-member-modal-save:hover {
   font-size: 13px !important;
   line-height: 1 !important;
   vertical-align: middle !important;
+  color: #475569 !important;
 }
 
 .btn-card-read-summary:hover {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: var(--primary);
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 .btn-card-read-summary.unread-alert {
-  background: #eff6ff;
-  border-color: #bfdbfe;
-  color: #1d4ed8;
+  background: #f8fafc;
+  border-color: var(--border-color);
+  color: #475569;
 }
 
 /* 詳細モーダル */
@@ -9820,10 +9821,60 @@ a.btn-member-modal-save:hover {
   justify-content: space-between !important;
 }
 
-.bulletin-detail-actions-left {
+.bulletin-detail-actions-left,
+.bulletin-edit-actions-left {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.bulletin-edit-actions-right {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント・角丸・行揃え） */
+.bulletin-modal-footer .btn-cancel-action,
+.bulletin-modal-footer .btn-submit-action,
+.bulletin-modal-footer .bdm-action-btn {
+  height: 38px !important;
+  box-sizing: border-box !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 0.88rem !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  padding: 0 16px !important;
+  margin: 0 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+
+.bulletin-modal-footer .btn-submit-action {
+  background: var(--primary) !important;
+  border: 1px solid var(--primary) !important;
+  color: #ffffff !important;
+}
+
+.bulletin-modal-footer .btn-submit-action:hover {
+  background: var(--primary-hover) !important;
+  border-color: var(--primary-hover) !important;
+}
+
+.bulletin-modal-footer .btn-cancel-action {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.bulletin-modal-footer .btn-cancel-action:hover {
+  background: #e2e8f0 !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
 }
 
 /* モーダル内アクションボタンの完全統一（高さ・フォントサイズ・角丸・行揃え） */
@@ -12533,7 +12584,7 @@ textarea.comment-textarea:active {
             <span>削除</span>
           </button>
         </div>
-        <div class="bulletin-edit-actions-right flex-center gap-8">
+        <div class="bulletin-edit-actions-right">
           <button type="button" class="btn-cancel-action" onclick="closeBulletinEditModalForce()">キャンセル</button>
           <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿する</button>
         </div>
@@ -12867,6 +12918,7 @@ textarea.comment-textarea:active {
           resEqLogs,
           resBulletin,
           resComments,
+          resReads,
           resAttStats
         ] = await Promise.all([
           sb.from('members').select('*').order('member_id'),
@@ -12878,6 +12930,7 @@ textarea.comment-textarea:active {
           sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false }),
           sb.from('view_bulletin_summary').select('*').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }),
           sb.from('bulletin_comments').select('*').eq('is_deleted', false).order('created_at', { ascending: true }),
+          sb.from('bulletin_reads').select('*'),
           sb.from('view_player_attendance_stats').select('*')
         ]);
 
@@ -13116,6 +13169,19 @@ textarea.comment-textarea:active {
         // 掲示板データの構造化
         const rawBulletin = resBulletin.data || [];
         const rawComments = resComments.data || [];
+        const rawReads = resReads ? (resReads.data || []) : [];
+
+        // 既読データの投稿別マッピング
+        const readersByPost = {};
+        rawReads.forEach(r => {
+          if (!readersByPost[r.post_id]) readersByPost[r.post_id] = [];
+          const rMember = idToMember[r.member_id];
+          readersByPost[r.post_id].push({
+            memberId: r.member_id,
+            memberName: rMember ? rMember.name : (r.member_name || 'メンバー'),
+            readAt: r.read_at
+          });
+        });
 
         const commentsByPost = {};
         rawComments.forEach(c => {
@@ -13132,8 +13198,19 @@ textarea.comment-textarea:active {
           });
         });
 
+        const activeMembersList = rawMembers.filter(m => !m.is_past);
+
         const bulletinPosts = rawBulletin.map(p => {
           const pAuthor = idToMember[p.author_member_id];
+          const postReaders = readersByPost[p.post_id] || [];
+          const readMemberIds = new Set(postReaders.map(r => r.memberId));
+          const unreadMembers = activeMembersList
+            .filter(m => !readMemberIds.has(m.member_id))
+            .map(m => ({
+              memberId: m.member_id,
+              memberName: m.name
+            }));
+
           return {
             id: p.post_id,
             category: p.category || '連絡',
@@ -13149,9 +13226,11 @@ textarea.comment-textarea:active {
             createdAt: p.created_at,
             updatedById: p.updated_by_member_id,
             updatedAt: p.updated_at,
-            readCount: Number(p.read_count || 0),
+            readCount: postReaders.length,
             commentCount: Number(p.comment_count || 0),
-            comments: commentsByPost[p.post_id] || []
+            comments: commentsByPost[p.post_id] || [],
+            readers: postReaders,
+            unreadMembers: unreadMembers
           };
         });
 
@@ -13160,7 +13239,8 @@ textarea.comment-textarea:active {
           success: true,
           posts: bulletinPosts,
           pinnedPosts: pinnedPosts,
-          totalUnreadCount: 0
+          totalUnreadCount: 0,
+          activeMemberCount: activeMembersList.length
         };
 
         // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
@@ -13579,20 +13659,44 @@ textarea.comment-textarea:active {
       },
 
       /**
-       * 掲示板既読の登録
+       * 掲示板既読の登録 (0.1s Direct)
        */
-      async markBulletinAsRead(postId, memberId) {
+      async markBulletinAsRead(postId, memberId, memberName) {
         const sb = getClient();
-        if (!sb) return;
-        if (!postId || !memberId) return;
+        if (!sb || !postId) return;
 
-        const readId = `READ_${postId}_${memberId}`;
-        await sb.from('bulletin_reads').upsert({
+        let targetMemberId = memberId;
+        // memberId が未解決または MBR- 形式でない場合は名簿キャッシュから自動解決
+        if (!targetMemberId || !String(targetMemberId).startsWith('MBR-')) {
+          const u = window.currentUser || {};
+          targetMemberId = u.memberId || null;
+          if (!targetMemberId && window.membersData && Array.isArray(window.membersData)) {
+            const searchName = (memberName || u.name || '').trim();
+            const searchEmail = (u.email || '').trim().toLowerCase();
+            const hit = window.membersData.find(m => 
+              (searchEmail && m.email && m.email.trim().toLowerCase() === searchEmail) ||
+              (searchName && m.name && m.name.trim() === searchName)
+            );
+            if (hit && hit.memberId) targetMemberId = hit.memberId;
+          }
+        }
+        if (!targetMemberId) {
+          console.warn('[Supabase] markBulletinAsRead: メンバーIDを解決できませんでした。', memberId, memberName);
+          return;
+        }
+
+        const readId = `READ_${postId}_${targetMemberId}`;
+        const { error } = await sb.from('bulletin_reads').upsert({
           read_id: readId,
           post_id: postId,
-          member_id: memberId,
+          member_id: targetMemberId,
           read_at: new Date().toISOString()
         }, { onConflict: 'post_id,member_id' });
+        if (error) {
+          console.error('[Supabase] markBulletinAsRead error:', error);
+        } else {
+          console.log(`⚡ [Supabase] markBulletinAsRead saved: ${readId}`);
+        }
       },
 
       /**
@@ -13772,8 +13876,9 @@ textarea.comment-textarea:active {
               return;
             }
 
-            if (prop === 'apiMarkAsRead') {
-              SupabaseService.markBulletinAsRead(args[0], args[1]);
+            if (prop === 'apiMarkAsRead' || prop === 'apiMarkBulletinPostRead') {
+              console.log('⚡ [Bypass] markBulletinAsRead routed to Supabase Direct (0.1s)');
+              SupabaseService.markBulletinAsRead(args[0], args[1], args[2]);
               if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
               return;
             }
@@ -24217,7 +24322,7 @@ function renderBulletinTimeline() {
     const readBtn = document.createElement('button');
     readBtn.type = 'button';
     readBtn.id = 'bulletinReadBtn_' + post.id;
-    readBtn.className = 'btn-card-read-summary' + (!post.isReadByMe ? ' unread-alert' : '');
+    readBtn.className = 'btn-card-read-summary';
     readBtn.title = '閲覧状況を確認';
     readBtn.innerHTML = `
       <span class="material-symbols-outlined" style="font-size:13px;">visibility</span>
