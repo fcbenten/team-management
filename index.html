@@ -9556,6 +9556,12 @@ a.btn-member-modal-save:hover {
   transition: all 0.15s ease;
 }
 
+.btn-card-read-summary .material-symbols-outlined {
+  font-size: 13px !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
+
 .btn-card-read-summary:hover {
   background: #eff6ff;
   border-color: #bfdbfe;
@@ -12520,9 +12526,17 @@ textarea.comment-textarea:active {
       <!-- 送信ステータスメッセージ -->
       <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
 
-      <div class="bulletin-modal-footer flex-end">
-        <button type="button" class="btn-cancel-action" onclick="closeBulletinEditModalForce()">キャンセル</button>
-        <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿する</button>
+      <div class="bulletin-modal-footer flex-between">
+        <div class="bulletin-edit-actions-left">
+          <button type="button" id="btnBulletinEditDelete" class="bdm-action-btn btn-delete-action hidden" onclick="handleBulletinEditDelete()">
+            <span class="material-symbols-outlined text-sm">delete</span>
+            <span>削除</span>
+          </button>
+        </div>
+        <div class="bulletin-edit-actions-right flex-center gap-8">
+          <button type="button" class="btn-cancel-action" onclick="closeBulletinEditModalForce()">キャンセル</button>
+          <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿する</button>
+        </div>
       </div>
     </form>
 
@@ -24348,6 +24362,11 @@ function openBulletinCreateModal(linkedEvent = null) {
   const statusEl = document.getElementById('bulletinFormStatus');
   if (statusEl) statusEl.classList.add('hidden');
 
+  const delBtn = document.getElementById('btnBulletinEditDelete');
+  if (delBtn) delBtn.classList.add('hidden');
+  const saveBtn = document.getElementById('btnSaveBulletinPost');
+  if (saveBtn) saveBtn.textContent = '投稿する';
+
   populateBulletinEventSelect(linkedEvent ? linkedEvent.id : '');
 
   modal.classList.add('active');
@@ -24373,6 +24392,11 @@ function openBulletinEditModal(post) {
 
   const statusEl = document.getElementById('bulletinFormStatus');
   if (statusEl) statusEl.classList.add('hidden');
+
+  const delBtn = document.getElementById('btnBulletinEditDelete');
+  if (delBtn) delBtn.classList.remove('hidden');
+  const saveBtn = document.getElementById('btnSaveBulletinPost');
+  if (saveBtn) saveBtn.textContent = '更新する';
 
   populateBulletinEventSelect(post.eventId || '');
 
@@ -24876,7 +24900,7 @@ function markPostAsReadIfUnread(post) {
   if (readBtn) {
     readBtn.className = 'btn-card-read-summary';
     readBtn.innerHTML = `
-      <span class="material-symbols-outlined text-xs">visibility</span>
+      <span class="material-symbols-outlined" style="font-size:13px;">visibility</span>
       <span>既読 ${post.readCount}</span>
     `;
   }
@@ -25329,21 +25353,35 @@ function handleBdmTogglePin() {
 }
 
 /**
- * 投稿削除処理
+ * 投稿削除の共通処理
+ * @param {string} postId
+ * @param {string} postTitle
  */
-function handleBdmDelete() {
-  const current = window.bulletinState.currentViewingPost;
-  if (!current || !current.id) return;
+function deleteBulletinPostById(postId, postTitle) {
+  if (!postId) return;
 
-  if (!confirm(`「${current.title}」を削除してもよろしいですか？`)) {
+  if (!confirm(`「${postTitle || 'この投稿'}」を削除してもよろしいですか？`)) {
     return;
   }
 
   const currentUser = window.currentUser || {};
   const actorName = currentUser.name || 'メンバー';
 
+  // モーダルを両方閉じる
   closeBulletinDetailModalForce();
+  closeBulletinEditModalForce();
 
+  // 1. メモリ配列から即座に除外（0秒UI更新）
+  const allPosts = window.bulletinState.posts || [];
+  window.bulletinState.posts = allPosts.filter(p => p.id !== postId);
+  window.bulletinState.pinnedPosts = (window.bulletinState.pinnedPosts || []).filter(p => p.id !== postId);
+  renderBulletinTimeline();
+  renderHomePinnedAnnouncements();
+  if (typeof renderHomeRecentBulletins === 'function') {
+    renderHomeRecentBulletins();
+  }
+
+  // 2. バックエンドへ送信
   if (typeof google !== 'undefined' && google.script && google.script.run) {
     google.script.run
       .withSuccessHandler(res => {
@@ -25351,15 +25389,37 @@ function handleBdmDelete() {
           loadBulletinData(true);
         } else {
           alert('削除に失敗しました: ' + (res ? res.error : ''));
+          loadBulletinData(true);
         }
       })
       .withFailureHandler(err => {
         alert('削除通信エラーが発生しました: ' + (err.message || ''));
+        loadBulletinData(true);
       })
-      .apiDeleteBulletinPost(current.id, actorName);
+      .apiDeleteBulletinPost(postId, actorName);
   } else {
     alert('モック: 投稿を削除しました。');
   }
+}
+
+/**
+ * 詳細モーダルからの投稿削除
+ */
+function handleBdmDelete() {
+  const current = window.bulletinState.currentViewingPost;
+  if (!current || !current.id) return;
+  deleteBulletinPostById(current.id, current.title);
+}
+
+/**
+ * 編集モーダルからの投稿削除
+ */
+function handleBulletinEditDelete() {
+  const editPostId = document.getElementById('bulletinEditPostId').value;
+  if (!editPostId) return;
+  const allPosts = window.bulletinState.posts || [];
+  const target = allPosts.find(p => p.id === editPostId);
+  deleteBulletinPostById(editPostId, target ? target.title : '');
 }
 
 function closeBulletinDetailModal(e) {
