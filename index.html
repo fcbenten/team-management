@@ -13490,6 +13490,7 @@ textarea.comment-textarea:active {
             roster.push(formatted);
           }
         });
+        window.nameToMember = nameToMember;
 
         // 試合記録 & 得点詳細の組み立て
         const rawMatches = resMatches.data || [];
@@ -13556,7 +13557,13 @@ textarea.comment-textarea:active {
         const seasons = Array.from(seasonSet).sort((a, b) => b - a);
         const history = { matches: matches, seasons: seasons };
 
-        // スタッツ計算 (全選手対象)
+        // スタッツ計算 (現役部員のみ対象・OB/特殊枠は完全除外)
+        const pastMemberNames = new Set(
+          rawMembers
+            .filter(m => !!m.is_past || m.member_type === 'PAST' || m.member_type === 'SPECIAL' || ['助っ人', 'OG', 'なし'].includes(m.name))
+            .map(m => m.name)
+        );
+
         const statsMap = {};
         roster.forEach(mem => {
           if (!mem.isPast && mem.memberType === 'REGULAR') {
@@ -13567,31 +13574,34 @@ textarea.comment-textarea:active {
         matches.forEach(m => {
           const attendedArr = (m.attended || '').split(',').map(s => s.trim()).filter(Boolean);
           attendedArr.forEach(pName => {
+            if (pastMemberNames.has(pName)) return;
             if (!statsMap[pName]) statsMap[pName] = { name: pName, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
             statsMap[pName].games++;
           });
 
-          if (m.mom && m.mom !== 'なし' && m.mom !== '-' && m.mom !== '不明') {
+          if (m.mom && m.mom !== 'なし' && m.mom !== '-' && m.mom !== '不明' && !pastMemberNames.has(m.mom)) {
             if (!statsMap[m.mom]) statsMap[m.mom] = { name: m.mom, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
             statsMap[m.mom].mom++;
           }
 
           (m.logs || []).forEach(l => {
-            if (l.type === '得点' && l.player && l.player !== '不明' && l.player !== 'OG' && l.player !== '助っ人') {
+            if (l.type === '得点' && l.player && l.player !== '不明' && l.player !== 'OG' && l.player !== '助っ人' && !pastMemberNames.has(l.player)) {
               if (!statsMap[l.player]) statsMap[l.player] = { name: l.player, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
               statsMap[l.player].goals++;
             }
-            if (l.assist && l.assist !== '不明' && l.assist !== '-' && l.assist !== 'なし' && l.assist !== 'OG' && l.assist !== '助っ人') {
+            if (l.assist && l.assist !== '不明' && l.assist !== '-' && l.assist !== 'なし' && l.assist !== 'OG' && l.assist !== '助っ人' && !pastMemberNames.has(l.assist)) {
               if (!statsMap[l.assist]) statsMap[l.assist] = { name: l.assist, games: 0, goals: 0, assists: 0, mom: 0, points: 0 };
               statsMap[l.assist].assists++;
             }
           });
         });
 
-        const stats = Object.values(statsMap).map(s => {
-          s.points = s.goals + s.assists;
-          return s;
-        });
+        const stats = Object.values(statsMap)
+          .filter(s => !pastMemberNames.has(s.name))
+          .map(s => {
+            s.points = s.goals + s.assists;
+            return s;
+          });
 
         // 出欠データの構造化
         const rawAttendance = resAttendance.data || [];
@@ -15932,6 +15942,56 @@ function getMemberAvatarUrl(memberOrName) {
   return '';
 }
 
+/**
+ * メンバーがOB（退団者）または集計除外対象か判定する共通ヘルパー
+ * @param {string} name - 選手名
+ * @returns {boolean} OB・過去選手・特殊枠なら true、現役部員なら false
+ */
+function isPastMember(name) {
+  if (!name) return true;
+  const clean = String(name).replace(/[\s\u3000]+/g, '').toLowerCase();
+  if (!clean || clean === 'og' || clean === '助っ人' || clean === '不明' || clean === '-' || clean === 'なし' || clean === '名前' || clean === '氏名') {
+    return true;
+  }
+
+  // 1. adminMemberList (または initialFullData.adminRoster) から判定
+  const adminList = (window.adminMemberList && window.adminMemberList.length > 0)
+    ? window.adminMemberList
+    : (window.initialFullData && window.initialFullData.adminRoster);
+  if (adminList && Array.isArray(adminList) && adminList.length > 0) {
+    const found = adminList.find(m => String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase() === clean);
+    if (found) {
+      return !!found.isPast || found.memberType === 'PAST' || found.role === 'OB';
+    }
+  }
+
+  // 2. roster (scheduleRoster または initialFullData.roster) から判定
+  // roster に登録されている選手は正規の現役部員（休部中も含む）
+  const roster = (window.scheduleRoster && window.scheduleRoster.length > 0)
+    ? window.scheduleRoster
+    : (window.initialFullData && window.initialFullData.roster);
+  if (roster && Array.isArray(roster) && roster.length > 0) {
+    const inRoster = roster.some(m => String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase() === clean);
+    if (inRoster) {
+      return false; // 現役部員
+    }
+    // 名簿がロードされているのに roster に存在しない選手は OB または過去の選手
+    return true;
+  }
+
+  // 3. nameToMember 辞書（Supabase Direct の全メンバー逆引き）
+  if (window.nameToMember) {
+    for (const [k, v] of Object.entries(window.nameToMember)) {
+      if (k && v && String(k).replace(/[\s\u3000]+/g, '').toLowerCase() === clean) {
+        return !!v.isPast || v.memberType === 'PAST' || v.role === 'OB';
+      }
+    }
+  }
+
+  return false;
+}
+
+window.isPastMember = isPastMember;
 window.normalizeMemberName = normalizeMemberName;
 window.getMemberAvatarUrl = getMemberAvatarUrl;
 window.normalizeDateStr = normalizeDateStr;
@@ -16819,6 +16879,11 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           if (data.calendarAttendance.year) {
             window.calendarAttendanceCache[data.calendarAttendance.year] = data.calendarAttendance;
           }
+        }
+
+        window.initialFullData = data;
+        if (data.adminRoster && Array.isArray(data.adminRoster)) {
+          window.adminMemberList = data.adminRoster;
         }
 
         if (data.roster) {
@@ -19248,7 +19313,7 @@ function renderHomeSeasonStats(data) {
     }
   }
 
-  // 4. 個人タイトル争い（得点王・アシスト王）
+  // 4. 個人タイトル争い（得点王・アシスト王）※OBは集計対象外
   const playerGoalMap = {};
   const playerAssistMap = {};
 
@@ -19258,11 +19323,15 @@ function renderHomeSeasonStats(data) {
         if (l.type === '得点') {
           if (l.player && l.player !== 'OG' && l.player !== '助っ人' && l.player !== '-' && l.player !== '不明') {
             const p = l.player.trim();
-            playerGoalMap[p] = (playerGoalMap[p] || 0) + 1;
+            if (typeof isPastMember !== 'function' || !isPastMember(p)) {
+              playerGoalMap[p] = (playerGoalMap[p] || 0) + 1;
+            }
           }
           if (l.assist && l.assist !== 'OG' && l.assist !== '助っ人' && l.assist !== '-' && l.assist !== 'なし' && l.assist !== '不明') {
             const a = l.assist.trim();
-            playerAssistMap[a] = (playerAssistMap[a] || 0) + 1;
+            if (typeof isPastMember !== 'function' || !isPastMember(a)) {
+              playerAssistMap[a] = (playerAssistMap[a] || 0) + 1;
+            }
           }
         }
       });
@@ -19272,7 +19341,7 @@ function renderHomeSeasonStats(data) {
   // ログが空の場合のフォールバック: data.stats
   if (Object.keys(playerGoalMap).length === 0 && data && data.stats && Array.isArray(data.stats)) {
     data.stats.forEach(p => {
-      if (p.name && p.name !== 'OG' && p.name !== '助っ人') {
+      if (p.name && p.name !== 'OG' && p.name !== '助っ人' && (typeof isPastMember !== 'function' || !isPastMember(p.name))) {
         if (p.goals > 0) playerGoalMap[p.name] = p.goals;
         if (p.assists > 0) playerAssistMap[p.name] = p.assists;
       }
@@ -20388,8 +20457,8 @@ function initStats(data) {
     return;
   }
   
-  // 初期データから「OG」と「助っ人」を完全に除外してグローバル変数へ格納
-  window.teamStatsData = data.filter(p => p.name !== 'OG' && p.name !== '助っ人');
+  // 初期データから「OG」「助っ人」およびOB（退団者）を完全に除外してグローバル変数へ格納
+  window.teamStatsData = data.filter(p => p.name !== 'OG' && p.name !== '助っ人' && (typeof isPastMember === 'function' ? !isPastMember(p.name) : true));
   
   // シーズン絞り込み用のプルダウンを生成
   populateRankingSeasonFilter();
@@ -20495,33 +20564,29 @@ function aggregateAttendanceFromBatch(season, category) {
     : window.calendarAttendanceData;
   const pMap = (attSource && attSource.players) ? attSource.players : {};
 
-  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ）
+  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ）※OBは完全除外
   const playerNames = new Set();
-  if (window.playerNumberMap) {
-    Object.keys(window.playerNumberMap).forEach(name => {
-      const trimmed = String(name || '').trim();
-      if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前' && trimmed !== '氏名') {
+  const checkAndAdd = (name) => {
+    const trimmed = String(name || '').trim();
+    if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前' && trimmed !== '氏名') {
+      if (typeof isPastMember === 'function' ? !isPastMember(trimmed) : true) {
         playerNames.add(trimmed);
       }
-    });
+    }
+  };
+
+  if (window.playerNumberMap) {
+    Object.keys(window.playerNumberMap).forEach(checkAndAdd);
   }
   if (Array.isArray(window.teamStatsData)) {
-    window.teamStatsData.forEach(p => {
-      const trimmed = String(p.name || '').trim();
-      if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人') {
-        playerNames.add(trimmed);
-      }
-    });
+    window.teamStatsData.forEach(p => checkAndAdd(p.name));
   }
-  Object.keys(pMap).forEach(name => {
-    const trimmed = String(name || '').trim();
-    if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人') {
-      playerNames.add(trimmed);
-    }
-  });
+  Object.keys(pMap).forEach(checkAndAdd);
 
   const resultList = [];
   playerNames.forEach(pName => {
+    if (typeof isPastMember === 'function' && isPastMember(pName)) return;
+
     // カレンダー出欠データから選手データを探索（正規化対応）
     let calPlayerStats = null;
     if (pMap[pName]) {
@@ -20563,10 +20628,11 @@ function aggregateAttendanceFromBatch(season, category) {
 function aggregateStatsFromMatches(season, category) {
   const statsMap = {};
   
-  // 1. チームデータ初期化（OGと助っ人は枠を作らない）
+  // 1. チームデータ初期化（OG、助っ人、およびOBは枠を作らない）
   if (Array.isArray(window.teamStatsData)) {
     window.teamStatsData.forEach(p => {
-      if (p.name !== 'OG' && p.name !== '助っ人') { 
+      const isPast = typeof isPastMember === 'function' ? isPastMember(p.name) : false;
+      if (p.name !== 'OG' && p.name !== '助っ人' && !isPast) { 
         statsMap[p.name] = { name: p.name, goals: 0, assists: 0, mom: 0, games: 0 };
       }
     });
@@ -20587,8 +20653,9 @@ function aggregateStatsFromMatches(season, category) {
     if (m.attended) {
       const attendees = m.attended.split(',').map(s => s.trim());
       attendees.forEach(name => {
-        // OGと助っ人は参加にカウントしない
+        // OG、助っ人、OBは参加にカウントしない
         if (!name || name === 'OG' || name === '助っ人') return; 
+        if (typeof isPastMember === 'function' && isPastMember(name)) return;
         
         // 名簿にない選手がいた場合は動的に枠を追加
         if (!statsMap[name]) statsMap[name] = { name: name, goals: 0, assists: 0, mom: 0, games: 0 };
@@ -20599,33 +20666,39 @@ function aggregateStatsFromMatches(season, category) {
     // 【MOMのカウント】
     if (m.mom && m.mom !== 'なし' && m.mom !== '-' && m.mom !== 'OG' && m.mom !== '助っ人' && m.mom !== '不明') { 
       const momName = m.mom.trim();
-      if (!statsMap[momName]) statsMap[momName] = { name: momName, goals: 0, assists: 0, mom: 0, games: 0 };
-      statsMap[momName].mom++;
+      if (typeof isPastMember !== 'function' || !isPastMember(momName)) {
+        if (!statsMap[momName]) statsMap[momName] = { name: momName, goals: 0, assists: 0, mom: 0, games: 0 };
+        statsMap[momName].mom++;
+      }
     }
     
     // 【得点・アシストのカウント】
     if (m.logs && Array.isArray(m.logs)) {
       m.logs.forEach(l => {
         if (l.type === '得点') {
-          // ゴール数を加算（OGや助っ人、削除された不明選手はランキングに加算しない）
+          // ゴール数を加算（OGや助っ人、OB、削除された不明選手はランキングに加算しない）
           if (l.player && l.player !== 'OG' && l.player !== '助っ人' && l.player !== '不明') {
             const pName = l.player.trim();
-            if (!statsMap[pName]) statsMap[pName] = { name: pName, goals: 0, assists: 0, mom: 0, games: 0 };
-            statsMap[pName].goals++;
+            if (typeof isPastMember !== 'function' || !isPastMember(pName)) {
+              if (!statsMap[pName]) statsMap[pName] = { name: pName, goals: 0, assists: 0, mom: 0, games: 0 };
+              statsMap[pName].goals++;
+            }
           }
           // アシスト数を加算
           if (l.assist && l.assist !== '-' && l.assist !== 'なし' && l.assist !== 'OG' && l.assist !== '助っ人' && l.assist !== '不明') {
             const aName = l.assist.trim();
-            if (!statsMap[aName]) statsMap[aName] = { name: aName, goals: 0, assists: 0, mom: 0, games: 0 };
-            statsMap[aName].assists++;
+            if (typeof isPastMember !== 'function' || !isPastMember(aName)) {
+              if (!statsMap[aName]) statsMap[aName] = { name: aName, goals: 0, assists: 0, mom: 0, games: 0 };
+              statsMap[aName].assists++;
+            }
           }
         }
       });
     }
   });
   
-  // 辞書(Map)形式になっているデータを配列に変換して返す
-  return Object.values(statsMap);
+  // 辞書(Map)形式になっているデータを配列に変換し、OBを除外して返す
+  return Object.values(statsMap).filter(p => typeof isPastMember === 'function' ? !isPastMember(p.name) : true);
 }
 
 /**
@@ -20656,21 +20729,22 @@ function setRankEmptyMessage(el, text) {
 function renderRankingsWithData(matchStats, attendanceStats) {
   const safeMatches = Array.isArray(matchStats) ? matchStats : [];
   const safeAttendance = Array.isArray(attendanceStats) ? attendanceStats : [];
+  const isPastCheck = (p) => typeof isPastMember === 'function' ? !isPastMember(p.name) : true;
 
   // 得点ランキング
-  const topGoals = safeMatches.filter(p => p.goals > 0).sort((a, b) => b.goals - a.goals);
+  const topGoals = safeMatches.filter(p => p.goals > 0 && isPastCheck(p)).sort((a, b) => b.goals - a.goals);
   renderSingleRanking('goals', topGoals, 'goals', 'GOALS');
   
   // アシストランキング
-  const topAssists = safeMatches.filter(p => p.assists > 0).sort((a, b) => b.assists - a.assists);
+  const topAssists = safeMatches.filter(p => p.assists > 0 && isPastCheck(p)).sort((a, b) => b.assists - a.assists);
   renderSingleRanking('assists', topAssists, 'assists', 'ASSISTS');
   
   // MVPランキング
-  const topMom = safeMatches.filter(p => p.mom > 0).sort((a, b) => b.mom - a.mom);
+  const topMom = safeMatches.filter(p => p.mom > 0 && isPastCheck(p)).sort((a, b) => b.mom - a.mom);
   renderSingleRanking('mom', topMom, 'mom', 'MVP');
   
   // 参加数ランキング（カレンダー出欠バッチの参加実績より描画）
-  const topGames = safeAttendance.filter(p => (p.attended || 0) > 0).sort((a, b) => b.attended - a.attended);
+  const topGames = safeAttendance.filter(p => (p.attended || 0) > 0 && isPastCheck(p)).sort((a, b) => b.attended - a.attended);
   renderSingleRanking('games', topGames, 'attended', 'ATTEND');
 }
 
@@ -20886,13 +20960,15 @@ function toggleRankList(type) {
 
     const statsMap = {};
 
-    // 1. まず名簿データをもとに全選手の枠を用意する
+    // 1. まず名簿データをもとに全選手の枠を用意する（OB・退団選手・特殊枠は除外）
     if (window.playerNumberMap) {
       Object.keys(window.playerNumberMap).forEach(name => {
         const trimmed = String(name || '').trim();
-        // OG、助っ人、CSVのヘッダー行（"名前"等）を除外
+        // OG、助っ人、CSVのヘッダー行（"名前"等）、OBを除外
         if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前') {
-          statsMap[trimmed] = { name: trimmed, games: 0, goals: 0, assists: 0, mom: 0 };
+          if (typeof isPastMember === 'function' ? !isPastMember(trimmed) : true) {
+            statsMap[trimmed] = { name: trimmed, games: 0, goals: 0, assists: 0, mom: 0 };
+          }
         }
       });
     }
@@ -20910,6 +20986,7 @@ function toggleRankList(type) {
         const attendedList = match.attended ? match.attended.split(',').map(s => s.trim()) : [];
         attendedList.forEach(name => {
           if (!name || name === '-' || name === 'なし' || name === 'OG' || name === '助っ人' || name === '名前' || name === '氏名') return;
+          if (typeof isPastMember === 'function' && isPastMember(name)) return;
 
           if (!statsMap[name]) statsMap[name] = { name: name, games: 0, goals: 0, assists: 0, mom: 0 };
           statsMap[name].games++;
@@ -20918,8 +20995,10 @@ function toggleRankList(type) {
         // MOMの集計
         const momName = String(match.mom || '').trim();
         if (momName && momName !== '-' && momName !== 'なし' && momName !== 'OG' && momName !== '助っ人' && momName !== '名前') {
-          if (!statsMap[momName]) statsMap[momName] = { name: momName, games: 0, goals: 0, assists: 0, mom: 0 };
-          statsMap[momName].mom++;
+          if (typeof isPastMember !== 'function' || !isPastMember(momName)) {
+            if (!statsMap[momName]) statsMap[momName] = { name: momName, games: 0, goals: 0, assists: 0, mom: 0 };
+            statsMap[momName].mom++;
+          }
         }
 
         // 得点・アシストの集計
@@ -20928,13 +21007,17 @@ function toggleRankList(type) {
             if (log.type === '得点') {
               const p = String(log.player || '').trim();
               if (p && p !== '-' && p !== 'なし' && p !== 'OG' && p !== '助っ人' && p !== '名前') {
-                if (!statsMap[p]) statsMap[p] = { name: p, games: 0, goals: 0, assists: 0, mom: 0 };
-                statsMap[p].goals++;
+                if (typeof isPastMember !== 'function' || !isPastMember(p)) {
+                  if (!statsMap[p]) statsMap[p] = { name: p, games: 0, goals: 0, assists: 0, mom: 0 };
+                  statsMap[p].goals++;
+                }
               }
               const a = String(log.assist || '').trim();
               if (a && a !== '-' && a !== 'なし' && a !== 'OG' && a !== '助っ人' && a !== '名前') {
-                if (!statsMap[a]) statsMap[a] = { name: a, games: 0, goals: 0, assists: 0, mom: 0 };
-                statsMap[a].assists++;
+                if (typeof isPastMember !== 'function' || !isPastMember(a)) {
+                  if (!statsMap[a]) statsMap[a] = { name: a, games: 0, goals: 0, assists: 0, mom: 0 };
+                  statsMap[a].assists++;
+                }
               }
             }
           });
@@ -20942,7 +21025,7 @@ function toggleRankList(type) {
       });
     }
 
-    currentPersonalStats = Object.values(statsMap);
+    currentPersonalStats = Object.values(statsMap).filter(p => typeof isPastMember === 'function' ? !isPastMember(p.name) : true);
 
     // 選択されたシーズンのカレンダー出欠データソース
     const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season]) 
