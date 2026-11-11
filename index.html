@@ -13252,54 +13252,70 @@ textarea.comment-textarea:active {
         const eventId = String(payload.eventId || '').trim();
         let memberId = payload.memberId;
 
-        // memberId が未指定の場合、名前またはメールから解決
+        // 1. memberId が未指定の場合、名前またはメールから確実に逆引き解決
+        const targetName = payload.userName || (window.currentUser ? window.currentUser.name : '');
+        const targetEmail = (payload.userEmail || (window.currentUser ? window.currentUser.email : '')).toLowerCase().trim();
+
         if (!memberId && window.currentUser) {
           memberId = window.currentUser.memberId || window.currentUser.id;
         }
 
-        if (!eventId || !memberId) {
-          throw new Error('予定IDまたはメンバーIDが不足しています。');
+        if (!memberId) {
+          try {
+            const cachedRoster = localStorage.getItem('fcb_cached_roster');
+            if (cachedRoster) {
+              const rList = JSON.parse(cachedRoster);
+              const found = (rList || []).find(m => {
+                if (targetEmail && m.email && String(m.email).toLowerCase().trim() === targetEmail) return true;
+                if (targetName && m.name && String(m.name).replace(/[\s\u3000]+/g, '').toLowerCase() === String(targetName).replace(/[\s\u3000]+/g, '').toLowerCase()) return true;
+                return false;
+              });
+              if (found) {
+                memberId = found.id || found.memberId;
+              }
+            }
+          } catch (e) { }
         }
 
         const status = String(payload.status || 'maybe').toLowerCase();
         const comment = payload.comment || null;
         const category = payload.category || payload.originalCategory || 'その他';
 
-        // 1. Supabase attendance に即時 UPSERT (0.1秒)
-        const { data, error } = await sb.from('attendance').upsert({
-          event_id: eventId,
-          member_id: memberId,
-          event_date: payload.originalDate || null,
-          event_title: payload.originalTitle || null,
-          category: category,
-          status: status,
-          comment: comment,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'event_id,member_id'
-        });
+        // 2. Supabase attendance に即時 UPSERT (0.1秒)
+        if (eventId && memberId) {
+          const { error: attError } = await sb.from('attendance').upsert({
+            event_id: eventId,
+            member_id: memberId,
+            event_date: payload.originalDate || null,
+            event_title: payload.originalTitle || null,
+            category: category,
+            status: status,
+            comment: comment,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'event_id,member_id'
+          });
 
-        if (error) {
-          console.error('[Supabase] Attendance UPSERT error:', error);
-          throw error;
+          if (attError) {
+            console.error('[Supabase] Attendance UPSERT error:', attError);
+          } else {
+            console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
+          }
+        } else {
+          console.warn('[Supabase] Missing eventId or memberId for Supabase UPSERT, proceeding to calendar sync:', { eventId, memberId });
         }
 
-        console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
-
-        // 2. 出欠変更をローカル集計データへ即時反映し、ランキング・個人成績を 0 秒リアルタイム再描画
+        // 3. 出欠変更をローカル集計データへ即時反映し、ランキング・個人成績を 0 秒リアルタイム再描画
         try {
-          const mem = (window.cachedRosterList || []).find(m => m.id === memberId || m.memberId === memberId) || (window.currentUser ? window.currentUser : null);
-          const pName = mem ? mem.name : null;
+          const pName = targetName || (window.currentUser ? window.currentUser.name : null);
           if (pName && window.calendarAttendanceData && window.calendarAttendanceData.players) {
             const pRec = window.calendarAttendanceData.players[pName];
             if (pRec) {
-              // リアルタイム更新（Supabase 再取得を待たずに画面即時反映）
               const prevAttended = pRec.all.attended;
               if (status === 'yes') {
                 pRec.all.attended++;
                 if (pRec[category]) pRec[category].attended++;
               } else if (prevAttended > 0) {
-                // no または maybe に変更された場合
                 pRec.all.attended = Math.max(0, pRec.all.attended - 1);
                 if (pRec[category] && pRec[category].attended > 0) pRec[category].attended--;
               }
@@ -13315,16 +13331,30 @@ textarea.comment-textarea:active {
           console.warn('[RealtimeUpdate] UI update warning:', uiErr);
         }
 
-        // 3. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
+        // 4. 裏側で Google カレンダー同期を確実に実行 (ユーザーは待たせない)
+        const calPayload = {
+          eventId: eventId,
+          originalDate: payload.originalDate || '',
+          originalTitle: payload.originalTitle || '',
+          status: status,
+          userEmail: targetEmail,
+          userName: targetName
+        };
+
         try {
           fetch(GAS_ENDPOINT_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify({
               functionName: 'updateEventAttendance',
-              args: [payload]
+              args: [calPayload]
             })
-          }).catch(e => console.warn('[CalendarSync] Non-blocking calendar sync warning:', e));
+          })
+          .then(r => r.json())
+          .then(res => {
+            console.log('⚡ [CalendarSync] Google Calendar sync response:', res);
+          })
+          .catch(e => console.warn('[CalendarSync] Non-blocking calendar sync warning:', e));
         } catch (syncErr) {
           console.warn('[CalendarSync] Kick failed:', syncErr);
         }
@@ -14758,6 +14788,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             const currentCleanName = String(window.currentUser.name).replace(/[\s\u3000]+/g, '').toLowerCase();
             const matchedMember = data.roster.find(m => String(m.name).replace(/[\s\u3000]+/g, '').toLowerCase() === currentCleanName);
             if (matchedMember) {
+              window.currentUser.memberId = matchedMember.id || matchedMember.memberId || '';
+              window.currentUser.id = matchedMember.id || matchedMember.memberId || '';
               window.currentUser.email = matchedMember.email || '';
               window.currentUser.hasCalendarLink = !!matchedMember.hasCalendarLink;
               if (matchedMember.role) window.currentUser.role = matchedMember.role;
@@ -19626,11 +19658,14 @@ function setMyAttendance(evOrKey, status) {
 
 
   // ⚡ 2. バックエンド (GAS) 経由で Google カレンダーを非同期更新
+  const myMemberId = user.memberId || user.id || '';
   const payload = {
     eventId: ev ? (ev.id || '') : (eventKey.length > 15 ? eventKey : ''),
     originalDate: ev ? ev.date : '',
     originalTitle: ev ? ev.title : '',
+    category: ev ? (ev.category || 'その他') : 'その他',
     status: status,
+    memberId: myMemberId,
     userEmail: myEmail || '',
     userName: myName || ''
   };
