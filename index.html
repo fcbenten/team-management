@@ -10870,6 +10870,43 @@ textarea.comment-textarea:active {
 </div>
 
 <!-- =========================================
+     全画面共通 汎用カスタム確認ダイアログ (confirm 代替)
+     ========================================= -->
+<div id="appConfirmModal" class="modal-overlay" style="display: none; z-index: 10000;" onclick="appConfirmModalCancel(event)">
+  <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-body logout-modal-body">
+      <div id="appConfirmIconWrap" style="margin: 0 auto 12px; display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: var(--primary);">
+        <span id="appConfirmIcon" class="material-symbols-outlined" style="font-size: 28px;">help_outline</span>
+      </div>
+      <div id="appConfirmTitle" class="logout-modal-title">確認</div>
+      <div id="appConfirmMessage" class="logout-modal-desc" style="white-space: pre-line; line-height: 1.6; margin-top: 6px;"></div>
+    </div>
+    <div class="modal-footer logout-modal-footer">
+      <button type="button" id="appConfirmBtnCancel" class="btn-cancel-action logout-btn" onclick="handleAppConfirmResult(false)">キャンセル</button>
+      <button type="button" id="appConfirmBtnOk" class="btn-primary-action logout-btn" onclick="handleAppConfirmResult(true)">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     全画面共通 汎用カスタム通知ダイアログ (alert 代替)
+     ========================================= -->
+<div id="appAlertModal" class="modal-overlay" style="display: none; z-index: 10000;" onclick="appAlertModalClose(event)">
+  <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-body logout-modal-body">
+      <div id="appAlertIconWrap" style="margin: 0 auto 12px; display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: var(--primary);">
+        <span id="appAlertIcon" class="material-symbols-outlined" style="font-size: 28px;">info</span>
+      </div>
+      <div id="appAlertTitle" class="logout-modal-title">お知らせ</div>
+      <div id="appAlertMessage" class="logout-modal-desc" style="white-space: pre-line; line-height: 1.6; margin-top: 6px;"></div>
+    </div>
+    <div class="modal-footer logout-modal-footer" style="justify-content: center;">
+      <button type="button" id="appAlertBtnOk" class="btn-primary-action logout-btn" style="min-width: 120px;" onclick="closeAppAlertModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
      試合詳細モーダル（全画面共通オーバーレイ）
      スコアボード、前後半得点、MOM、参加者、試合ログタイムライン
      ========================================= -->
@@ -16001,6 +16038,186 @@ window.setFieldError = setFieldError;
 window.clearFieldError = clearFieldError;
 
 // ==========================================
+// 全画面共通 汎用カスタム確認/通知ダイアログ
+// ==========================================
+let appConfirmResolver = null;
+
+/**
+ * 汎用確認ダイアログ（confirm の完全代替）
+ * @param {Object|string} options - { title, message, okText, cancelText, isDanger, icon } または メッセージ文字列
+ * @returns {Promise<boolean>} OKなら true、キャンセルなら false
+ */
+function showAppConfirm(options) {
+  return new Promise((resolve) => {
+    appConfirmResolver = resolve;
+    let title = '確認';
+    let message = '';
+    let okText = 'OK';
+    let cancelText = 'キャンセル';
+    let isDanger = false;
+    let icon = 'help_outline';
+
+    if (typeof options === 'string') {
+      message = options;
+    } else if (options && typeof options === 'object') {
+      if (options.title) title = options.title;
+      if (options.message) message = options.message;
+      if (options.okText) okText = options.okText;
+      if (options.cancelText) cancelText = options.cancelText;
+      if (options.isDanger) isDanger = !!options.isDanger;
+      if (options.icon) icon = options.icon;
+    }
+
+    const modal = document.getElementById('appConfirmModal');
+    const titleEl = document.getElementById('appConfirmTitle');
+    const msgEl = document.getElementById('appConfirmMessage');
+    const okBtn = document.getElementById('appConfirmBtnOk');
+    const cancelBtn = document.getElementById('appConfirmBtnCancel');
+    const iconEl = document.getElementById('appConfirmIcon');
+    const iconWrap = document.getElementById('appConfirmIconWrap');
+
+    if (!modal) {
+      resolve(false);
+      return;
+    }
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (okBtn) {
+      okBtn.textContent = okText;
+      if (isDanger) {
+        okBtn.className = 'btn-primary-action logout-btn logout-btn-danger';
+        okBtn.style.background = '#dc2626';
+        okBtn.style.color = '#ffffff';
+      } else {
+        okBtn.className = 'btn-primary-action logout-btn';
+        okBtn.style.background = '';
+        okBtn.style.color = '';
+      }
+    }
+    if (cancelBtn) cancelBtn.textContent = cancelText;
+    if (iconEl) iconEl.textContent = icon;
+    if (iconWrap) {
+      if (isDanger) {
+        iconWrap.style.background = 'rgba(239, 68, 68, 0.1)';
+        iconWrap.style.color = '#ef4444';
+      } else {
+        iconWrap.style.background = 'rgba(59, 130, 246, 0.1)';
+        iconWrap.style.color = 'var(--primary)';
+      }
+    }
+
+    modal.style.display = 'flex';
+  });
+}
+
+function handleAppConfirmResult(result) {
+  const modal = document.getElementById('appConfirmModal');
+  if (modal) modal.style.display = 'none';
+  if (appConfirmResolver) {
+    const fn = appConfirmResolver;
+    appConfirmResolver = null;
+    fn(result);
+  }
+}
+
+function appConfirmModalCancel(e) {
+  if (e && e.target && e.target.id === 'appConfirmModal') {
+    handleAppConfirmResult(false);
+  }
+}
+
+let appAlertResolver = null;
+
+/**
+ * 汎用通知ダイアログ（alert の完全代替）
+ * @param {Object|string} options - { title, message, okText, isError, icon } または メッセージ文字列
+ * @returns {Promise<void>}
+ */
+function showAppAlert(options) {
+  return new Promise((resolve) => {
+    appAlertResolver = resolve;
+    let title = 'お知らせ';
+    let message = '';
+    let okText = '閉じる';
+    let isError = false;
+    let icon = 'info';
+
+    if (typeof options === 'string') {
+      message = options;
+    } else if (options && typeof options === 'object') {
+      if (options.title) title = options.title;
+      if (options.message) message = options.message;
+      if (options.okText) okText = options.okText;
+      if (options.isError) {
+        isError = !!options.isError;
+        title = options.title || 'エラー';
+        icon = 'error_outline';
+      }
+      if (options.icon) icon = options.icon;
+    }
+
+    const modal = document.getElementById('appAlertModal');
+    const titleEl = document.getElementById('appAlertTitle');
+    const msgEl = document.getElementById('appAlertMessage');
+    const okBtn = document.getElementById('appAlertBtnOk');
+    const iconEl = document.getElementById('appAlertIcon');
+    const iconWrap = document.getElementById('appAlertIconWrap');
+
+    if (!modal) {
+      resolve();
+      return;
+    }
+
+    if (titleEl) titleEl.textContent = title;
+    if (msgEl) msgEl.textContent = message;
+    if (okBtn) okBtn.textContent = okText;
+    if (iconEl) iconEl.textContent = icon;
+    if (iconWrap) {
+      if (isError) {
+        iconWrap.style.background = 'rgba(239, 68, 68, 0.1)';
+        iconWrap.style.color = '#ef4444';
+      } else {
+        iconWrap.style.background = 'rgba(59, 130, 246, 0.1)';
+        iconWrap.style.color = 'var(--primary)';
+      }
+    }
+
+    modal.style.display = 'flex';
+  });
+}
+
+function closeAppAlertModal() {
+  const modal = document.getElementById('appAlertModal');
+  if (modal) modal.style.display = 'none';
+  if (appAlertResolver) {
+    const fn = appAlertResolver;
+    appAlertResolver = null;
+    fn();
+  }
+}
+
+function appAlertModalClose(e) {
+  if (e && e.target && e.target.id === 'appAlertModal') {
+    closeAppAlertModal();
+  }
+}
+
+window.showAppConfirm = showAppConfirm;
+window.handleAppConfirmResult = handleAppConfirmResult;
+window.appConfirmModalCancel = appConfirmModalCancel;
+window.showAppAlert = showAppAlert;
+window.closeAppAlertModal = closeAppAlertModal;
+window.appAlertModalClose = appAlertModalClose;
+
+// ブラウザ標準 alert をカスタムモーダルにオーバーライド
+if (typeof window !== 'undefined') {
+  window.alert = function(msg) {
+    showAppAlert(msg);
+  };
+}
+
+// ==========================================
 // モーダル表示時の画面横ズレ・ガタつき完全防止
 // ==========================================
 let cachedScrollbarWidth = 0;
@@ -16513,7 +16730,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!code) {
       if (err) {
         history.replaceState(null, '', window.location.pathname + window.location.hash);
-        alert('Google認証がキャンセルされたか、エラーが発生しました: ' + err);
+        showAppAlert({ title: '認証エラー', message: 'Google認証がキャンセルされたか、エラーが発生しました: ' + err, isError: true });
       }
       return false;
     }
@@ -16547,7 +16764,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             } catch (e) {}
             hideLoginScreen();
             loadAppInitialData();
-            alert('Googleカレンダーとの連携を完了しました！');
+            showAppAlert({ title: '連携完了', message: 'Googleカレンダーとの連携を完了しました！', icon: 'check_circle' });
           } else {
             // 新規登録部員はパスワード初期設定カードを表示
             openOAuthPasswordCard(res.email, res.name);
@@ -16557,13 +16774,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           const msg = (res && res.error === 'NOT_IN_ROSTER')
             ? '認証されたGoogleアカウント（' + (res.email || '') + '）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。'
             : ((res && res.error) ? res.error : '連携処理に失敗しました。');
-          alert(msg);
+          showAppAlert({ title: '連携エラー', message: msg, isError: true });
         }
       })
       .withFailureHandler(fetchErr => {
         if (loadingCard) loadingCard.style.display = 'none';
         if (loginCard) loginCard.style.display = 'block';
-        alert('連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''));
+        showAppAlert({ title: '通信エラー', message: '連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''), isError: true });
       })
       .apiExchangeOAuthCode(code, redirectUri);
 
@@ -17211,7 +17428,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    */
   function handlePushPermissionRequest() {
     if (typeof Notification === 'undefined') {
-      alert('お使いのブラウザ・端末はプッシュ通知に対応していません。');
+      showAppAlert({ title: '非対応環境', message: 'お使いのブラウザ・端末はプッシュ通知に対応していません。', icon: 'notifications_off' });
       return;
     }
 
@@ -17221,7 +17438,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       handleNotifTypeChange(currentVal);
 
       if (permission === 'denied') {
-        alert('ブラウザの設定で通知がブロックされています。ブラウザの設定から通知を許可してください。');
+        showAppAlert({ title: '通知ブロック', message: 'ブラウザの設定で通知がブロックされています。ブラウザの設定から通知を許可してください。', isError: true });
       }
     }).catch(err => {
       console.error('Push permission error:', err);
@@ -17232,7 +17449,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    * LINE公式アカウント連携クリック
    */
   function handleLineConnectClick() {
-    alert('LINE連携の案内:\nチーム公式LINEアカウントを開設次第、こちらから友だち追加を行うことで、出欠リマインドや緊急連絡をLINEトークで直接受け取れるようになります。');
+    showAppAlert({ title: 'LINE連携の案内', message: 'チーム公式LINEアカウントを開設次第、こちらから友だち追加を行うことで、出欠リマインドや緊急連絡をLINEトークで直接受け取れるようになります。', icon: 'chat' });
   }
 
   /**
@@ -17468,12 +17685,12 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!file) return;
 
     if (!window.currentUser || !window.currentUser.name) {
-      alert('ログインユーザーが特定できません。');
+      showAppAlert({ title: 'エラー', message: 'ログインユーザーが特定できません。', isError: true });
       return;
     }
 
     if (!file.type.startsWith('image/')) {
-      alert('画像ファイルを選択してください。');
+      showAppAlert({ title: 'ファイル形式', message: '画像ファイルを選択してください。', icon: 'image' });
       return;
     }
 
@@ -17548,9 +17765,17 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   /**
    * プロフィール画像削除処理
    */
-  function handleProfileImageDelete() {
+  async function handleProfileImageDelete() {
     if (!window.currentUser || !window.currentUser.name) return;
-    if (!confirm('プロフィール写真を削除しますか？')) return;
+    const ok = await showAppConfirm({
+      title: '写真の削除',
+      message: 'プロフィール写真を削除しますか？',
+      okText: '削除する',
+      cancelText: 'キャンセル',
+      isDanger: true,
+      icon: 'delete'
+    });
+    if (!ok) return;
 
     showAvatarStatus('削除中...', 'uploading');
 
@@ -17871,7 +18096,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     // メンバー管理タブへの切り替え時：代表・副代表権限を厳格チェック
     if (tabName === 'members') {
       if (!isCurrentUserAdmin()) {
-        alert('メンバー管理画面は「代表」または「副代表」のみアクセス可能です。');
+        showAppAlert({ title: 'アクセス制限', message: 'メンバー管理画面は「代表」または「副代表」のみアクセス可能です。', isError: true });
         switchTab('home');
         return;
       }
@@ -19885,7 +20110,7 @@ function goToEditMatch() {
   // 2. 試合結果のデータ群から直接データを引っこ抜く
   const match = window.allMatchResults.find(m => m.matchId === matchId);
   if (!match) {
-    alert('試合データが見つかりません');
+    showAppAlert({ title: 'データなし', message: '試合データが見つかりません', isError: true });
     return;
   }
   
@@ -20333,7 +20558,7 @@ function submitData() {
       }
       
       if (typeof res === 'string' && res.includes('エラー')) {
-        alert(res);
+        showAppAlert({ title: '保存エラー', message: res, isError: true });
       } else {
         
         // --- ローカルでの即時反映（ラグなし）処理 ---
@@ -20398,7 +20623,7 @@ function submitData() {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
       }
-      alert('通信エラーが発生しました: ' + (err.message || err));
+      showAppAlert({ title: '通信エラー', message: '通信エラーが発生しました: ' + (err.message || err), isError: true });
     })
     .saveMatchData(payload);
 }
@@ -23083,7 +23308,7 @@ function executeConfirmedDelete() {
         }
       } else {
         closeDeleteConfirmModal();
-        alert('削除に失敗しました: ' + (res ? res.error : '不明なエラー'));
+        showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -23092,7 +23317,7 @@ function executeConfirmedDelete() {
         execBtn.textContent = '削除';
       }
       closeDeleteConfirmModal();
-      alert('エラーが発生しました: ' + (err.message || ''));
+      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
     })
     .deleteCalendarEvent(payload);
 }
@@ -23474,7 +23699,7 @@ window.currentEditGuests = [];
 
         closeEventEditModal();
       } else {
-        alert('保存に失敗しました: ' + (res ? res.error : '不明なエラー'));
+        showAppAlert({ title: '保存エラー', message: '保存に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -23482,7 +23707,7 @@ window.currentEditGuests = [];
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
       }
-      alert('エラーが発生しました: ' + (err.message || ''));
+      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
     })
     .saveCalendarEvent(payload);
 }
@@ -24640,7 +24865,7 @@ function openMemberEditModalByName(memberName) {
 
   // 権限チェック: 自分より上位のロール（代表）は編集不可
   if (!canEditTarget(targetRole)) {
-    alert('上位ロール（代表）のメンバーを編集する権限はありません。');
+    showAppAlert({ title: '権限エラー', message: '上位ロール（代表）のメンバーを編集する権限はありません。', isError: true });
     return;
   }
 
@@ -24893,7 +25118,7 @@ function copyGuidanceEmail() {
       }, 2000);
     }
   }).catch(() => {
-    alert('コピーに失敗しました: ' + currentGuidanceEmail);
+    showAppAlert({ title: 'コピー失敗', message: 'コピーに失敗しました: ' + currentGuidanceEmail, isError: true });
   });
 }
 
@@ -24901,7 +25126,7 @@ function copyGuidanceEmail() {
  * 休部中またはOB選手をワンタップで「現役」へ復帰
  * @param {string} memberName 
  */
-function handleRestoreMember(memberName) {
+async function handleRestoreMember(memberName) {
   const list = window.adminMemberList || [];
   const member = list.find(m => m.name === memberName);
   if (!member) return;
@@ -24909,11 +25134,17 @@ function handleRestoreMember(memberName) {
   let targetRole = String(member.role || 'メンバー').trim();
   if (targetRole === '部員') targetRole = 'メンバー';
   if (!canEditTarget(targetRole)) {
-    alert('上位ロール（代表）のメンバーを操作する権限はありません。');
+    showAppAlert({ title: '権限エラー', message: '上位ロール（代表）のメンバーを操作する権限はありません。', isError: true });
     return;
   }
 
-  const ok = confirm(`「${member.name}」選手を現役に復帰させますか？\n（※出欠催促やアナウンス通知の配信対象に復帰します）`);
+  const ok = await showAppConfirm({
+    title: '現役復帰の確認',
+    message: `「${member.name}」選手を現役に復帰させますか？\n（※出欠催促やアナウンス通知の配信対象に復帰します）`,
+    okText: '現役に復帰',
+    cancelText: 'キャンセル',
+    icon: 'restart_alt'
+  });
   if (!ok) return;
 
   const payload = {
@@ -24948,11 +25179,11 @@ function handleRestoreMember(memberName) {
           renderMembersList(window.adminMemberList);
         }
       } else {
-        alert('復帰処理に失敗しました: ' + (res && res.error ? res.error : ''));
+        showAppAlert({ title: '復帰エラー', message: '復帰処理に失敗しました: ' + (res && res.error ? res.error : ''), isError: true });
       }
     })
     .withFailureHandler(err => {
-      alert('エラーが発生しました: ' + (err.message || ''));
+      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
     })
     .apiSaveMember(payload, actorEmail, actorName);
 }
@@ -24967,7 +25198,7 @@ function openMemberDeleteConfirmFromModal() {
   let targetRole = String(member.role || 'メンバー').trim();
   if (targetRole === '部員') targetRole = 'メンバー';
   if (!canEditTarget(targetRole)) {
-    alert('上位ロール（代表）のメンバーを削除する権限はありません。');
+    showAppAlert({ title: '権限エラー', message: '上位ロール（代表）のメンバーを削除する権限はありません。', isError: true });
     return;
   }
 
@@ -26086,7 +26317,7 @@ function handleSaveEquipmentSubmit(e) {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        alert('備品の保存に失敗しました: ' + (res ? res.error : '通信エラー'));
+        showAppAlert({ title: '保存失敗', message: '備品の保存に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
         return;
       }
 
@@ -26105,7 +26336,7 @@ function handleSaveEquipmentSubmit(e) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      alert('保存通信エラーが発生しました: ' + (err.message || err));
+      showAppAlert({ title: '通信エラー', message: '保存通信エラーが発生しました: ' + (err.message || err), isError: true });
     })
     .apiSaveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName);
 }
@@ -26199,7 +26430,7 @@ function executeDeleteEquipmentPermanently() {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        alert('備品の削除に失敗しました: ' + (res ? res.error : '通信エラー'));
+        showAppAlert({ title: '削除失敗', message: '備品の削除に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
       }
     })
     .withFailureHandler(function(err) {
@@ -26209,7 +26440,7 @@ function executeDeleteEquipmentPermanently() {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      alert('削除通信エラーが発生しました: ' + (err.message || err));
+      showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || err), isError: true });
     })
     .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
 }
@@ -26301,7 +26532,7 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
           btnEl.classList.remove('btn-resolving');
           btnEl.textContent = '解決';
         }
-        alert(res ? res.error : '解決の登録に失敗しました。');
+        showAppAlert({ title: '解決エラー', message: res ? res.error : '解決の登録に失敗しました。', isError: true });
         refreshEquipmentData(true);
         return;
       }
@@ -26314,7 +26545,7 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
         btnEl.classList.remove('btn-resolving');
         btnEl.textContent = '解決';
       }
-      alert('通信エラー: ' + (err.message || err));
+      showAppAlert({ title: '通信エラー', message: '通信エラー: ' + (err.message || err), isError: true });
       refreshEquipmentData(true);
     })
     .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);
@@ -26914,11 +27145,11 @@ function handleBulletinPostSubmit(e) {
   const content = document.getElementById('bulletinContentInput').value.trim();
 
   if (!title) {
-    alert('タイトルを入力してください。');
+    showAppAlert({ title: '入力エラー', message: 'タイトルを入力してください。', isError: true });
     return;
   }
   if (!content) {
-    alert('本文を入力してください。');
+    showAppAlert({ title: '入力エラー', message: '本文を入力してください。', isError: true });
     return;
   }
 
@@ -26990,7 +27221,7 @@ function handleBulletinPostSubmit(e) {
   } else {
     enableForm();
     closeBulletinEditModalForce();
-    alert('モック環境: 投稿を保存しました。');
+    showAppAlert({ title: 'モック環境', message: '投稿を保存しました。' });
   }
 }
 
@@ -27661,7 +27892,7 @@ function handleSubmitBulletinComment() {
   } else {
     enableBtn();
     inputEl.value = '';
-    alert('モック: コメントを送信しました');
+    showAppAlert({ title: 'モック環境', message: 'コメントを送信しました。' });
   }
 }
 
@@ -27789,10 +28020,18 @@ function handleBdmTogglePin() {
  * @param {string} postId
  * @param {string} postTitle
  */
-function deleteBulletinPostById(postId, postTitle) {
+async function deleteBulletinPostById(postId, postTitle) {
   if (!postId) return;
 
-  if (!confirm(`「${postTitle || 'この投稿'}」を削除してもよろしいですか？`)) {
+  const ok = await showAppConfirm({
+    title: '投稿の削除',
+    message: `「${postTitle || 'この投稿'}」を削除してもよろしいですか？`,
+    okText: '削除する',
+    cancelText: 'キャンセル',
+    isDanger: true,
+    icon: 'delete'
+  });
+  if (!ok) {
     return;
   }
 
@@ -27820,17 +28059,17 @@ function deleteBulletinPostById(postId, postTitle) {
         if (res && res.success) {
           loadBulletinData(true);
         } else {
-          alert('削除に失敗しました: ' + (res ? res.error : ''));
+          showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : ''), isError: true });
           loadBulletinData(true);
         }
       })
       .withFailureHandler(err => {
-        alert('削除通信エラーが発生しました: ' + (err.message || ''));
+        showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || ''), isError: true });
         loadBulletinData(true);
       })
       .apiDeleteBulletinPost(postId, actorName);
   } else {
-    alert('モック: 投稿を削除しました。');
+    showAppAlert({ title: 'モック環境', message: '投稿を削除しました。' });
   }
 }
 
