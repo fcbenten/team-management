@@ -7710,32 +7710,6 @@ th.sort-active .sort-icon {
   border: 1px solid #fde68a;
 }
 
-/* =========================================
-   在籍ステータスバッジ (休部 / OB)
-   ========================================= */
-.badge-status {
-  display: inline-flex;
-  align-items: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 4px;
-  letter-spacing: 0.3px;
-  line-height: 1.3;
-}
-
-.badge-status-suspended {
-  background: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fde68a;
-}
-
-.badge-status-ob {
-  background: #f1f5f9;
-  color: #64748b;
-  border: 1px solid #cbd5e1;
-}
-
 /* 休部カードスタイル */
 .member-card.is-suspended {
   border-left: 3px solid #f59e0b;
@@ -8429,16 +8403,33 @@ th.sort-active .sort-icon {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
 }
 
-/* モーダルフッター */
+/* モーダルフッター (左右分散: 左に完全削除、右にキャンセルと更新) */
 .member-modal-footer {
   display: flex !important;
-  justify-content: flex-end !important;
+  justify-content: space-between !important;
   align-items: center !important;
-  gap: 10px !important;
+  gap: 12px !important;
   padding: 14px 20px 16px !important;
   border-top: 1px solid var(--border-color) !important;
   background: #ffffff !important;
   box-sizing: border-box !important;
+}
+
+.member-modal-footer-left {
+  display: inline-flex;
+  align-items: center;
+}
+
+.member-modal-footer-right {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+}
+
+.member-modal-footer-right .btn-member-modal-cancel,
+.member-modal-footer-right .btn-member-modal-save {
+  margin: 0 !important;
 }
 
 .btn-member-modal-cancel {
@@ -12503,13 +12494,13 @@ textarea.comment-textarea:active {
 
           <div id="memberEditStatus" class="form-status-msg hidden"></div>
 
-          <div class="modal-footer member-modal-footer flex-between">
+          <div class="modal-footer member-modal-footer">
             <div class="member-modal-footer-left">
               <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
                 <span class="material-symbols-outlined text-sm">delete</span>メンバーを完全削除
               </button>
             </div>
-            <div class="member-modal-footer-right flex-center gap-8">
+            <div class="member-modal-footer-right">
               <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
               <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
             </div>
@@ -12621,7 +12612,6 @@ textarea.comment-textarea:active {
           <div class="member-card-top-row">
             <span class="member-number-badge hidden"></span>
             <span class="member-card-name"></span>
-            <span class="badge-status hidden"></span>
             <span class="badge-role hidden"></span>
             <span class="badge-pos hidden"></span>
           </div>
@@ -12669,7 +12659,6 @@ textarea.comment-textarea:active {
               <span class="member-card-name"></span>
             </div>
             <div class="member-card-badges-row">
-              <span class="badge-status hidden"></span>
               <span class="badge-role hidden"></span>
               <span class="badge-pos hidden"></span>
             </div>
@@ -22678,24 +22667,6 @@ function renderCardsToContainer(list, containerId, sectionType) {
     // 選手名
     card.querySelectorAll('.member-card-name').forEach(el => {
       el.textContent = name;
-    });
-
-    // 在籍ステータスバッジ (休部中 / OB)
-    card.querySelectorAll('.badge-status').forEach(el => {
-      if (isSuspended) {
-        el.textContent = '休部中';
-        el.className = 'badge-status badge-status-suspended';
-        el.title = '休部中（出欠催促・アナウンス通知の配信停止中）';
-        el.classList.remove('hidden');
-      } else if (isOb) {
-        el.textContent = 'OB';
-        el.className = 'badge-status badge-status-ob';
-        el.title = 'OB選手（退団者）';
-        el.classList.remove('hidden');
-      } else {
-        el.textContent = '';
-        el.className = 'badge-status hidden';
-      }
     });
 
     // 背番号バッジ (#10)
