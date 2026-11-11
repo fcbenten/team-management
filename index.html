@@ -23751,37 +23751,6 @@ function executeMemberDeletePermanently() {
     .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
 }
 
-  google.script.run
-    .withSuccessHandler(res => {
-      if (deleteBtn) deleteBtn.disabled = false;
-
-      if (res && res.success) {
-        setDeleteFormStatus('登録を取り消しました。', 'success');
-        if (res.roster) {
-          window.adminMemberList = res.roster;
-          window.scheduleRoster = res.roster;
-          if (typeof updateScheduleMemberListOptions === 'function') {
-            updateScheduleMemberListOptions(res.roster);
-          }
-          renderMembersList(window.adminMemberList);
-        }
-        setTimeout(() => {
-          closeModalById('memberDeleteModal');
-          closeModalById('memberEditModal');
-          window.currentDeletingMember = null;
-          window.currentEditingMember = null;
-        }, 500);
-      } else {
-        setDeleteFormStatus(res && res.error ? res.error : '取り消し処理に失敗しました。', 'error');
-      }
-    })
-    .withFailureHandler(err => {
-      if (deleteBtn) deleteBtn.disabled = false;
-      setDeleteFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
-    })
-    .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
-}
-
 /**
  * 編集フォームのステータスメッセージ表示
  */
