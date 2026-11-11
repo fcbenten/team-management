@@ -11049,11 +11049,53 @@ textarea.comment-textarea:active {
       <button type="submit" id="loginSubmitBtn" class="btn">ログイン</button>
 
       <div class="login-register-wrap">
-        <a href="https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec?page=register"
-          target="_blank" class="login-register-link">
-          初めての方はこちら（新規登録・Google連携）
+        <a href="javascript:void(0)" onclick="startGoogleOAuthFlow(event)" class="login-register-link">
+          初めての方はこちら（新規登録・Googleカレンダー連携）
         </a>
       </div>
+    </form>
+  </div>
+
+  <!-- Google連携中ローディングオーバーレイ -->
+  <div id="oauthLoadingOverlay" class="auth-card" style="display: none; text-align: center; padding: 40px 24px;">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle" style="margin-bottom: 24px;">Googleアカウント連携処理中</div>
+    <div class="spinner" style="margin: 0 auto 20px; width: 36px; height: 36px; border: 3px solid rgba(37,99,235,0.2); border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+    <div id="oauthLoadingText" style="font-size: 0.9rem; color: var(--text-muted);">カレンダー連携情報を同期しています...</div>
+  </div>
+
+  <!-- Google連携成功後の初期パスワード設定カード -->
+  <div id="oauthPasswordCard" class="auth-card" style="display: none;">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle">Google連携完了・パスワード設定</div>
+
+    <div class="alert-box alert-success" style="margin-bottom: 20px;">
+      Googleカレンダーとの連携が完了しました！<br>
+      今後は設定するパスワードでアプリにログインできます。
+    </div>
+
+    <form id="oauthPasswordForm" novalidate onsubmit="handleOAuthPasswordSubmit(event)" autocomplete="off" class="login-text-left">
+      <div class="form-group" style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
+        <div style="font-size: 0.76rem; color: #64748b; font-weight: bold; margin-bottom: 4px;">連携アカウント</div>
+        <div id="oauthTargetName" style="font-size: 0.95rem; font-weight: bold; color: #1e293b;"></div>
+        <div id="oauthTargetEmail" style="font-size: 0.85rem; color: #475569;"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="oauthNewPwInput">パスワード設定（4文字以上）</label>
+        <input type="password" id="oauthNewPwInput" class="form-input" placeholder="新しいパスワードを入力" autocomplete="new-password" required minlength="4">
+        <div id="err-oauthNewPwInput" class="field-error-msg hidden"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="oauthConfirmPwInput">パスワード（確認用）</label>
+        <input type="password" id="oauthConfirmPwInput" class="form-input" placeholder="もう一度入力" autocomplete="new-password" required minlength="4">
+        <div id="err-oauthConfirmPwInput" class="field-error-msg hidden"></div>
+      </div>
+
+      <div id="oauthPwGlobalMsg" class="alert-box alert-error hidden" style="margin-bottom: 16px;"></div>
+
+      <button type="submit" id="oauthPwSubmitBtn" class="btn" style="width: 100%;">設定完了してログイン</button>
     </form>
   </div>
 </div>
@@ -16165,6 +16207,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   window.applyInitialActiveTab = applyInitialActiveTab;
 
   window.addEventListener('DOMContentLoaded', function() {
+    // 0. Google OAuth リダイレクトコールバック（?code=...）のチェック（PWAネイティブ完結）
+    const isOAuthCallback = checkOAuthCallbackOnLoad();
+    if (isOAuthCallback) {
+      applyInitialActiveTab();
+      updateMobileHeaderHeight();
+      updateNavScrollIndicators();
+      return;
+    }
+
     let savedUser = null;
     try {
       const raw = localStorage.getItem('fcb_auth_user');
@@ -16361,6 +16412,192 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       });
     }
   }
+
+  /**
+   * Google OAuth 認証を直接起動する (PWAネイティブフロー: GAS画面を完全バイパス)
+   */
+  function startGoogleOAuthFlow(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const clientId = '578588983071-s1b4d5t2befflb29laviqfoo5mpdoldf.apps.googleusercontent.com';
+    const redirectUri = window.location.origin + window.location.pathname;
+    const scopes = [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/userinfo.email'
+    ].join(' ');
+
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: scopes,
+      access_type: 'offline',
+      prompt: 'select_account consent'
+    });
+
+    window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  }
+  window.startGoogleOAuthFlow = startGoogleOAuthFlow;
+
+  let oauthPendingEmail = '';
+  let oauthPendingName = '';
+
+  /**
+   * 画面ロード時に Google OAuth からの直接リダイレクト（?code=...）があるか検証・自動処理
+   */
+  function checkOAuthCallbackOnLoad() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const err = urlParams.get('error');
+
+    if (!code) {
+      if (err) {
+        history.replaceState(null, '', window.location.pathname + window.location.hash);
+        alert('Google認証がキャンセルされたか、エラーが発生しました: ' + err);
+      }
+      return false;
+    }
+
+    // URLから認可コードパラメータを即座に消去
+    history.replaceState(null, '', window.location.pathname + window.location.hash);
+
+    // ログイン画面のカードをローディング表示に切り替え
+    const screen = document.getElementById('loginScreen');
+    const loginCard = document.getElementById('loginCard');
+    const loadingCard = document.getElementById('oauthLoadingOverlay');
+    const pwCard = document.getElementById('oauthPasswordCard');
+
+    if (screen) screen.style.display = 'flex';
+    if (loginCard) loginCard.style.display = 'none';
+    if (pwCard) pwCard.style.display = 'none';
+    if (loadingCard) loadingCard.style.display = 'block';
+
+    const redirectUri = window.location.origin + window.location.pathname;
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (loadingCard) loadingCard.style.display = 'none';
+
+        if (res && res.success) {
+          if (res.hasPassword) {
+            // パスワード設定済み部員は即時自動ログイン
+            window.currentUser = res.user;
+            try {
+              localStorage.setItem('fcb_auth_user', JSON.stringify(res.user));
+            } catch (e) {}
+            hideLoginScreen();
+            loadAppInitialData();
+            alert('Googleカレンダーとの連携を完了しました！');
+          } else {
+            // 新規登録部員はパスワード初期設定カードを表示
+            openOAuthPasswordCard(res.email, res.name);
+          }
+        } else {
+          if (loginCard) loginCard.style.display = 'block';
+          const msg = (res && res.error === 'NOT_IN_ROSTER')
+            ? '認証されたGoogleアカウント（' + (res.email || '') + '）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。'
+            : ((res && res.error) ? res.error : '連携処理に失敗しました。');
+          alert(msg);
+        }
+      })
+      .withFailureHandler(fetchErr => {
+        if (loadingCard) loadingCard.style.display = 'none';
+        if (loginCard) loginCard.style.display = 'block';
+        alert('連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''));
+      })
+      .apiExchangeOAuthCode(code, redirectUri);
+
+    return true;
+  }
+
+  function openOAuthPasswordCard(email, name) {
+    oauthPendingEmail = email;
+    oauthPendingName = name;
+
+    const screen = document.getElementById('loginScreen');
+    const loginCard = document.getElementById('loginCard');
+    const loadingCard = document.getElementById('oauthLoadingOverlay');
+    const pwCard = document.getElementById('oauthPasswordCard');
+
+    if (screen) screen.style.display = 'flex';
+    if (loginCard) loginCard.style.display = 'none';
+    if (loadingCard) loadingCard.style.display = 'none';
+    if (pwCard) pwCard.style.display = 'block';
+
+    const nameEl = document.getElementById('oauthTargetName');
+    const emailEl = document.getElementById('oauthTargetEmail');
+    if (nameEl) nameEl.textContent = name || '登録部員';
+    if (emailEl) emailEl.textContent = email;
+  }
+
+  function handleOAuthPasswordSubmit(e) {
+    if (e) e.preventDefault();
+    const pw1El = document.getElementById('oauthNewPwInput');
+    const pw2El = document.getElementById('oauthConfirmPwInput');
+    const globalMsg = document.getElementById('oauthPwGlobalMsg');
+    const submitBtn = document.getElementById('oauthPwSubmitBtn');
+
+    if (!pw1El || !pw2El) return;
+    const p1 = pw1El.value.trim();
+    const p2 = pw2El.value.trim();
+
+    const err1 = document.getElementById('err-oauthNewPwInput');
+    const err2 = document.getElementById('err-oauthConfirmPwInput');
+    if (err1) { err1.textContent = ''; err1.classList.add('hidden'); }
+    if (err2) { err2.textContent = ''; err2.classList.add('hidden'); }
+    if (globalMsg) { globalMsg.textContent = ''; globalMsg.classList.add('hidden'); }
+
+    if (!p1 || p1.length < 4) {
+      if (err1) { err1.textContent = 'パスワードは4文字以上で設定してください。'; err1.classList.remove('hidden'); err1.style.display = 'block'; }
+      return;
+    }
+    if (p1 !== p2) {
+      if (err2) { err2.textContent = '確認用パスワードと一致しません。'; err2.classList.remove('hidden'); err2.style.display = 'block'; }
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '登録中...';
+    }
+
+    // Supabase Direct (0.1秒) でパスワードを保存
+    google.script.run
+      .withSuccessHandler(res => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '設定完了してログイン';
+        }
+        if (res && res.success && res.user) {
+          window.currentUser = res.user;
+          try {
+            localStorage.setItem('fcb_auth_user', JSON.stringify(res.user));
+          } catch (e) {}
+
+          hideLoginScreen();
+          loadAppInitialData();
+        } else {
+          if (globalMsg) {
+            globalMsg.textContent = (res && res.error) ? res.error : '登録に失敗しました。';
+            globalMsg.classList.remove('hidden');
+            globalMsg.style.display = 'block';
+          }
+        }
+      })
+      .withFailureHandler(err => {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '設定完了してログイン';
+        }
+        if (globalMsg) {
+          globalMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          globalMsg.classList.remove('hidden');
+          globalMsg.style.display = 'block';
+        }
+      })
+      .apiRegisterMember(oauthPendingEmail, p1);
+  }
+  window.handleOAuthPasswordSubmit = handleOAuthPasswordSubmit;
 
   /**
    * ログイン画面を表示
