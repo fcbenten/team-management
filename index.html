@@ -9154,6 +9154,37 @@ a.btn-member-modal-save:hover {
   margin-left: auto;
 }
 
+.equipment-modal-footer-left {
+  display: flex;
+  align-items: center;
+}
+
+/* 編集モーダル左下の危険操作リンク（備品削除トリガー） */
+.btn-equipment-danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-equipment-danger-link:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
+.btn-equipment-danger-link.hidden {
+  display: none !important;
+}
+
 .btn-equipment-modal-delete {
   background: transparent;
   border: 1px solid #fca5a5;
@@ -12795,11 +12826,42 @@ textarea.comment-textarea:active {
       </form>
     </div>
     <div class="modal-footer equipment-modal-footer">
-      <button type="button" id="btnDeleteEquipment" class="btn-equipment-modal-delete hidden" onclick="handleDeleteEquipmentClick()">削除</button>
+      <div class="equipment-modal-footer-left">
+        <button type="button" id="btnDeleteEquipment" class="btn-equipment-danger-link hidden" onclick="openEquipmentDeleteConfirmModal()">
+          <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+          <span>備品を削除</span>
+        </button>
+      </div>
       <div class="equipment-footer-right">
         <button type="button" class="btn-equipment-modal-cancel" onclick="closeEquipmentEditModal(event)">キャンセル</button>
         <button type="button" id="btnSaveEquipment" class="btn-equipment-modal-save" onclick="handleSaveEquipmentSubmit(event)">保存</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     5. 備品削除確認モーダル（アプリ統一デザイン）
+     ========================================= -->
+<div id="equipmentDeleteModal" class="modal-overlay" onclick="closeEquipmentDeleteModal(event)">
+  <div class="modal-content equipment-modal-content delete-confirm-content" onclick="event.stopPropagation()">
+    <div class="modal-body delete-confirm-body text-center">
+      <div class="delete-confirm-icon-wrap" style="background:#fef2f2; border-color:#fee2e2; color:#dc2626;">
+        <span class="material-symbols-outlined" style="font-size:36px;">delete</span>
+      </div>
+      <div class="delete-confirm-title" id="equipmentDeleteTitle">備品を削除しますか？</div>
+      <div class="delete-confirm-desc" id="equipmentDeleteDesc">
+        「<span id="equipmentDeleteTargetName" class="font-bold"></span>」を管理リストから削除します。<br>
+        <span class="text-xs text-muted" style="display:block;margin-top:8px;line-height:1.5;">
+          ※削除すると元に戻せません。<br>
+          ※現物の廃棄や紛失など、備品の管理を終了する場合に実行してください。
+        </span>
+      </div>
+      <div id="equipmentDeleteStatus" class="form-status-msg hidden mt-12"></div>
+    </div>
+    <div class="modal-footer delete-modal-footer">
+      <button type="button" class="btn-equipment-modal-cancel" onclick="closeEquipmentDeleteModal(event)">キャンセル</button>
+      <button type="button" id="btnConfirmDeleteEquipment" class="btn-member-modal-delete-danger" onclick="executeDeleteEquipmentPermanently()">削除する</button>
     </div>
   </div>
 </div>
@@ -24864,6 +24926,7 @@ function createSectionItemRow(item, isAdmin, options) {
  * 備品新規追加モーダルを開く
  */
 function openEquipmentAddModal() {
+  window.currentEditingEquipmentItem = null;
   document.getElementById('equipmentEditModalTitle').textContent = '備品の新規登録';
   document.getElementById('equipmentEditItemId').value = '';
   document.getElementById('equipmentEditNotes').value = '';
@@ -24880,6 +24943,7 @@ function openEquipmentAddModal() {
  * 備品編集モーダルを開く
  */
 function openEditEquipmentModal(item) {
+  window.currentEditingEquipmentItem = item;
   document.getElementById('equipmentEditModalTitle').textContent = '備品情報の編集';
   document.getElementById('equipmentEditItemId').value = item.itemId || '';
   document.getElementById('equipmentEditNotes').value = item.notes || '';
@@ -25062,9 +25126,9 @@ function handleSaveEquipmentSubmit(e) {
 }
 
 /**
- * 備品削除の実行（楽観的UI更新で0秒即時反映）
+ * 編集モーダル内の「備品を削除」ボタンから確認モーダルを開く
  */
-function handleDeleteEquipmentClick() {
+function openEquipmentDeleteConfirmModal() {
   const itemId = document.getElementById('equipmentEditItemId').value;
   if (!itemId) return;
 
@@ -25072,11 +25136,55 @@ function handleDeleteEquipmentClick() {
   const master = (window.equipmentState.masterList || []).find(m => m.code === itCode);
   const itemName = master ? master.name : 'この備品';
 
-  if (!confirm(itemName + ' を削除してもよろしいですか？')) {
-    return;
+  // 現在選択されている保管メンバー名を取得
+  const memberId = document.getElementById('equipmentEditMemberId').value;
+  const members = (window.scheduleRoster || window.adminMemberList || []);
+  const mInfo = members.find(m => {
+    const mId = m.memberId || ('MBR-' + ('000' + m.number).slice(-3));
+    return mId === memberId;
+  });
+  const holderText = mInfo ? `（保管: ${mInfo.name}）` : '';
+
+  const targetNameEl = document.getElementById('equipmentDeleteTargetName');
+  if (targetNameEl) {
+    targetNameEl.textContent = itemName + holderText;
   }
 
-  // 1. 楽観的UI更新（即時削除・即時モーダルクローズ）
+  const deleteBtn = document.getElementById('btnConfirmDeleteEquipment');
+  if (deleteBtn) {
+    deleteBtn.disabled = false;
+  }
+
+  const statusEl = document.getElementById('equipmentDeleteStatus');
+  if (statusEl) {
+    statusEl.textContent = '';
+    statusEl.classList.add('hidden');
+  }
+
+  openModalById('equipmentDeleteModal');
+}
+
+/**
+ * 備品削除確認モーダルを閉じる
+ */
+function closeEquipmentDeleteModal(event) {
+  if (event && event.target && event.target.closest('.delete-confirm-content') && !event.target.closest('.btn-equipment-modal-cancel')) {
+    return;
+  }
+  closeModalById('equipmentDeleteModal');
+}
+
+/**
+ * 備品削除の実行（楽観的UI更新で0秒即時反映）
+ */
+function executeDeleteEquipmentPermanently() {
+  const itemId = document.getElementById('equipmentEditItemId').value;
+  if (!itemId) return;
+
+  const deleteBtn = document.getElementById('btnConfirmDeleteEquipment');
+  if (deleteBtn) deleteBtn.disabled = true;
+
+  // 1. 楽観的UI更新（即時削除・両モーダルクローズ）
   const previousItems = JSON.parse(JSON.stringify(window.equipmentState.itemsList || []));
   window.equipmentState.itemsList = (window.equipmentState.itemsList || []).filter(it => it.itemId !== itemId);
 
@@ -25085,6 +25193,7 @@ function handleDeleteEquipmentClick() {
   }
 
   renderEquipmentUI();
+  closeModalById('equipmentDeleteModal');
   closeModalById('equipmentEditModal');
 
   if (typeof updateHomeEquipmentNotice === 'function') {
@@ -25095,7 +25204,7 @@ function handleDeleteEquipmentClick() {
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  // 2. バックグラウンドでGASへ削除リクエスト
+  // 2. バックグラウンドで削除リクエスト（Supabase Direct / GAS Proxy）
   google.script.run
     .withSuccessHandler(function(res) {
       if (!res || !res.success) {
@@ -25118,6 +25227,13 @@ function handleDeleteEquipmentClick() {
       alert('削除通信エラーが発生しました: ' + (err.message || err));
     })
     .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
+}
+
+/**
+ * 互換用エイリアス
+ */
+function handleDeleteEquipmentClick() {
+  openEquipmentDeleteConfirmModal();
 }
 
 /* =========================================
