@@ -16574,6 +16574,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             localStorage.setItem('fcb_auth_user', JSON.stringify(res.user));
           } catch (e) {}
 
+          // パスワード設定完了カードを非表示＆入力値リセット
+          const pwCard = document.getElementById('oauthPasswordCard');
+          if (pwCard) pwCard.style.display = 'none';
+          const loginCard = document.getElementById('loginCard');
+          if (loginCard) loginCard.style.display = 'block';
+          if (pw1El) pw1El.value = '';
+          if (pw2El) pw2El.value = '';
+
           hideLoginScreen();
           loadAppInitialData();
         } else {
@@ -16614,9 +16622,20 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    */
   function switchToLoginCard() {
     const loginCard = document.getElementById('loginCard');
+    const loadingCard = document.getElementById('oauthLoadingOverlay');
+    const pwCard = document.getElementById('oauthPasswordCard');
+
     if (loginCard) loginCard.style.display = 'block';
+    if (loadingCard) loadingCard.style.display = 'none';
+    if (pwCard) pwCard.style.display = 'none';
+
     const err = document.getElementById('loginErrorMsg');
     if (err) err.style.display = 'none';
+    const globalErr = document.getElementById('oauthPwGlobalMsg');
+    if (globalErr) {
+      globalErr.textContent = '';
+      globalErr.classList.add('hidden');
+    }
     clearAllLoginFieldErrors();
   }
   window.switchToLoginCard = switchToLoginCard;
@@ -16627,6 +16646,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   function hideLoginScreen() {
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'none';
+
+    const loadingCard = document.getElementById('oauthLoadingOverlay');
+    const pwCard = document.getElementById('oauthPasswordCard');
+    const loginCard = document.getElementById('loginCard');
+
+    if (loadingCard) loadingCard.style.display = 'none';
+    if (pwCard) pwCard.style.display = 'none';
+    if (loginCard) loginCard.style.display = 'block';
+
     clearAllLoginFieldErrors();
   }
 
