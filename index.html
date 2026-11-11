@@ -12190,7 +12190,7 @@ textarea.comment-textarea:active {
           現役 <span id="statTabActive" class="tab-count-badge">0</span>
         </button>
         <button type="button" class="member-status-tab" data-status="suspended" onclick="switchMemberStatusTab('suspended')">
-          休部 <span id="statTabSuspended" class="tab-count-badge">0</span>
+          休部中 <span id="statTabSuspended" class="tab-count-badge">0</span>
         </button>
         <button type="button" class="member-status-tab" data-status="ob" onclick="switchMemberStatusTab('ob')">
           OB <span id="statTabOb" class="tab-count-badge">0</span>
@@ -12281,12 +12281,23 @@ textarea.comment-textarea:active {
               </select>
             </div>
             <div class="form-group mb-0 flex-1">
-              <label class="form-label" for="memberEditStatusSelect">在籍ステータス</label>
-              <select id="memberEditStatusSelect" class="form-input">
-                <option value="REGULAR">現役</option>
-                <option value="SUSPENDED">休部</option>
-                <option value="PAST">OB（退団）</option>
+              <label class="form-label" for="memberEditEnrollmentSelect">在籍区分</label>
+              <select id="memberEditEnrollmentSelect" class="form-input" onchange="toggleSuspendedCheckboxVisibility()">
+                <option value="ACTIVE">現役</option>
+                <option value="OB">OB（退団）</option>
               </select>
+            </div>
+          </div>
+
+          <!-- 休部ステータス設定（現役選手のみ） -->
+          <div class="form-group mb-12 p-8" id="memberEditSuspendedWrap" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;">
+            <label class="form-label mb-2" style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#92400e;font-weight:600;margin-bottom:2px;">
+              <input type="checkbox" id="memberEditIsSuspended" style="width:17px;height:17px;cursor:pointer;">
+              <span>現在「休部中」として設定</span>
+            </label>
+            <div class="text-xs" style="color:#b45309;padding-left:25px;line-height:1.4;">
+              怪我等で一時的に活動休止する場合に設定します。<br>
+              休部中は出欠催促やアナウンス通知の配信対象から除外されます。
             </div>
           </div>
 
@@ -13090,7 +13101,7 @@ textarea.comment-textarea:active {
         rawMembers.forEach(m => {
           const isSpecial = (m.member_type === 'SPECIAL' || ['MBR-SPECIAL-GUEST', 'MBR-SPECIAL-OG', 'MBR-SPECIAL-NONE'].includes(m.member_id) || ['助っ人', 'OG', 'なし'].includes(m.name));
           const isPast = !!m.is_past || m.member_type === 'PAST';
-          const isSuspended = m.member_type === 'SUSPENDED';
+          const isSuspended = !isPast && (!!m.is_suspended || m.member_type === 'SUSPENDED');
 
           const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
           const formatted = {
@@ -13112,7 +13123,7 @@ textarea.comment-textarea:active {
             notifySettings: m.notify_settings ? (typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings) : { emergency: true, attendance: true, bulletin: true },
             isPast: isPast,
             isSuspended: isSuspended,
-            memberType: m.member_type || (isSpecial ? 'SPECIAL' : (isPast ? 'PAST' : (isSuspended ? 'SUSPENDED' : 'REGULAR')))
+            memberType: isSpecial ? 'SPECIAL' : (isPast ? 'PAST' : 'REGULAR')
           };
 
           // 全レコードを逆引き用辞書には登録（試合ログや過去スタッツの選手名解決用）
@@ -13130,8 +13141,8 @@ textarea.comment-textarea:active {
             adminRoster.push(formatted);
           }
 
-          // 通常の名簿一覧（roster）には正規の現役メンバー（休部・OB・特殊枠を除く）を追加
-          if (!isSpecial && !isPast && !isSuspended) {
+          // 通常の名簿一覧（roster）には正規の現役メンバー（休部中の部員も含む！くくりは現役）
+          if (!isSpecial && !isPast) {
             roster.push(formatted);
           }
         });
@@ -13979,7 +13990,7 @@ textarea.comment-textarea:active {
         }).map(m => {
           const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
           const isPast = !!m.is_past || m.member_type === 'PAST';
-          const isSuspended = m.member_type === 'SUSPENDED';
+          const isSuspended = !isPast && (!!m.is_suspended || m.member_type === 'SUSPENDED');
           return {
             memberId: m.member_id,
             id: m.member_id,
@@ -13996,7 +14007,7 @@ textarea.comment-textarea:active {
             notificationType: m.notification_type || 'none',
             isPast: isPast,
             isSuspended: isSuspended,
-            memberType: m.member_type || (isPast ? 'PAST' : (isSuspended ? 'SUSPENDED' : 'REGULAR'))
+            memberType: isPast ? 'PAST' : 'REGULAR'
           };
         });
 
@@ -14023,8 +14034,9 @@ textarea.comment-textarea:active {
         const birthday = payload.birthday || null;
         const phone = payload.phone || null;
         const email = payload.email ? String(payload.email).trim().toLowerCase() : null;
-        const memberType = payload.memberType || (payload.isPast ? 'PAST' : 'REGULAR');
-        const isPast = (memberType === 'PAST') || !!payload.isPast;
+        const isPast = !!payload.isPast;
+        const isSuspended = !isPast && !!payload.isSuspended;
+        const memberType = isPast ? 'PAST' : 'REGULAR';
 
         let memberId = payload.memberId || null;
 
@@ -14052,11 +14064,12 @@ textarea.comment-textarea:active {
             email: email,
             member_type: memberType,
             is_past: isPast,
+            is_suspended: isSuspended,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           });
           if (insErr) throw insErr;
-          console.log(`⚡ [Supabase] New member created: ${memberId} (${targetName}) [${memberType}]`);
+          console.log(`⚡ [Supabase] New member created: ${memberId} (${targetName}) [suspended: ${isSuspended}]`);
         } else {
           // 既存メンバー更新
           if (!memberId) {
@@ -14076,17 +14089,18 @@ textarea.comment-textarea:active {
             email: email,
             member_type: memberType,
             is_past: isPast,
+            is_suspended: isSuspended,
             updated_at: new Date().toISOString()
           };
 
           if (memberId) {
             const { error: updErr } = await sb.from('members').update(updateRecord).eq('member_id', memberId);
             if (updErr) throw updErr;
-            console.log(`⚡ [Supabase] Member updated: ${memberId} (${targetName}) [${memberType}]`);
+            console.log(`⚡ [Supabase] Member updated: ${memberId} (${targetName}) [suspended: ${isSuspended}]`);
           } else {
             const { error: updErr2 } = await sb.from('members').update(updateRecord).eq('name', origName || targetName);
             if (updErr2) throw updErr2;
-            console.log(`⚡ [Supabase] Member updated by name: ${origName || targetName} [${memberType}]`);
+            console.log(`⚡ [Supabase] Member updated by name: ${origName || targetName} [suspended: ${isSuspended}]`);
           }
         }
 
@@ -14127,11 +14141,12 @@ textarea.comment-textarea:active {
         const targetEmail = String(target.email || '').trim().toLowerCase();
         let targetId = target.memberId || target.id || null;
 
-        // member_id を特定して is_past = true, member_type = 'PAST' に更新
+        // member_id を特定して is_past = true, member_type = 'PAST', is_suspended = false に更新
         if (targetId) {
           const { error } = await sb.from('members').update({
             is_past: true,
             member_type: 'PAST',
+            is_suspended: false,
             updated_at: new Date().toISOString()
           }).eq('member_id', targetId);
           if (error) throw error;
@@ -14139,6 +14154,7 @@ textarea.comment-textarea:active {
           const { error } = await sb.from('members').update({
             is_past: true,
             member_type: 'PAST',
+            is_suspended: false,
             updated_at: new Date().toISOString()
           }).eq('name', targetName);
           if (error) throw error;
@@ -20261,6 +20277,16 @@ window.setMyAttendance = setMyAttendance;
  */
 function updateUnansweredBadges() {
   try {
+    // ログイン中のユーザーが休部中の場合は、スケジュール催促バッジを完全に非表示
+    const u = window.currentUser || {};
+    if (u.isSuspended) {
+      const filterBadge = document.getElementById('unansweredCountBadge');
+      if (filterBadge) filterBadge.classList.add('hidden');
+      const subtabAlertBadge = document.getElementById('subtabListAlertBadge');
+      if (subtabAlertBadge) subtabAlertBadge.classList.add('hidden');
+      return;
+    }
+
     const allItems = (window.eventsData && Array.isArray(window.eventsData)) ? window.eventsData : [];
     const now = new Date();
     const todayStr = formatDateStr(now.getFullYear(), now.getMonth() + 1, now.getDate());
@@ -21997,6 +22023,25 @@ function switchMemberStatusTab(status) {
   filterMembersList();
 }
 
+/**
+ * 編集モーダルの休部チェックボックスの表示制御（現役時のみ表示）
+ */
+function toggleSuspendedCheckboxVisibility() {
+  const enrollment = document.getElementById('memberEditEnrollmentSelect')?.value || 'ACTIVE';
+  const wrap = document.getElementById('memberEditSuspendedWrap');
+  const chk = document.getElementById('memberEditIsSuspended');
+  if (wrap) {
+    if (enrollment === 'ACTIVE') {
+      wrap.classList.remove('hidden');
+      wrap.style.display = 'block';
+    } else {
+      wrap.classList.add('hidden');
+      wrap.style.display = 'none';
+      if (chk) chk.checked = false;
+    }
+  }
+}
+
 // ロール階層定義 (代表: 2, 副代表: 1, メンバー: 0)
 const ROLE_LEVEL = {
   '代表': 2,
@@ -22117,24 +22162,26 @@ function updateMemberSummaryStats(list) {
     return m.memberType !== 'SPECIAL' && !['助っ人', 'OG', 'なし'].includes(mName) && !mId.includes('SPECIAL');
   });
 
-  let activeCount = 0;
-  let suspendedCount = 0;
-  let obCount = 0;
+  let activeCount = 0;   // 現役部員全員（休部中も含む！くくりは現役）
+  let suspendedCount = 0; // うち休部中
+  let obCount = 0;        // OB選手（退団者）
   let adminCount = 0;
   let fpCount = 0;
   let gkCount = 0;
 
   baseList.forEach(m => {
     const isOb = !!m.isPast || m.memberType === 'PAST';
-    const isSuspended = !isOb && m.memberType === 'SUSPENDED';
+    const isSuspended = !isOb && (!!m.isSuspended || m.memberType === 'SUSPENDED');
 
     if (isOb) {
       obCount++;
-    } else if (isSuspended) {
-      suspendedCount++;
     } else {
-      activeCount++;
-      // 現役のみFP/GKおよび管理者をカウント
+      activeCount++; // 現役部員としてカウント
+      if (isSuspended) {
+        suspendedCount++; // うち休部中
+      }
+
+      // 役割・ポジション別カウント
       let r = String(m.role || 'メンバー').trim();
       if (r === '部員') r = 'メンバー';
       if (r === '代表' || r === '副代表') adminCount++;
@@ -22199,14 +22246,17 @@ function filterMembersList() {
     }
 
     const isOb = !!m.isPast || m.memberType === 'PAST';
-    const isSuspended = !isOb && m.memberType === 'SUSPENDED';
+    const isSuspended = !isOb && (!!m.isSuspended || m.memberType === 'SUSPENDED');
 
     // 1. 在籍ステータスタブによる絞り込み
     if (currentTab === 'active') {
-      if (isOb || isSuspended) return false;
+      // 現役タブ: 休部中も「現役」として表示
+      if (isOb) return false;
     } else if (currentTab === 'suspended') {
+      // 休部中タブ: 現在休部中の選手のみをピックアップ表示
       if (!isSuspended) return false;
     } else if (currentTab === 'ob') {
+      // OBタブ: OB選手（退団者）のみ表示
       if (!isOb) return false;
     } // 'all' の場合は全員通過
 
@@ -22319,7 +22369,7 @@ function renderMemberCards(list) {
     const phone = String(m.phone || '').trim();
 
     const isOb = !!m.isPast || m.memberType === 'PAST';
-    const isSuspended = !isOb && m.memberType === 'SUSPENDED';
+    const isSuspended = !isOb && (!!m.isSuspended || m.memberType === 'SUSPENDED');
 
     if (isOb) {
       card.classList.add('is-ob');
@@ -22337,15 +22387,17 @@ function renderMemberCards(list) {
       el.textContent = name;
     });
 
-    // 在籍ステータスバッジ (休部 / OB)
+    // 在籍ステータスバッジ (休部中 / OB)
     card.querySelectorAll('.badge-status').forEach(el => {
       if (isSuspended) {
-        el.textContent = '休部';
+        el.textContent = '休部中';
         el.className = 'badge-status badge-status-suspended';
+        el.title = '休部中（出欠催促・アナウンス通知の配信停止中）';
         el.classList.remove('hidden');
       } else if (isOb) {
         el.textContent = 'OB';
         el.className = 'badge-status badge-status-ob';
+        el.title = 'OB選手（退団者）';
         el.classList.remove('hidden');
       } else {
         el.textContent = '';
@@ -22924,8 +22976,11 @@ function openMemberAddModal() {
     }
   }
 
-  const statusSelect = document.getElementById('memberEditStatusSelect');
-  if (statusSelect) statusSelect.value = 'REGULAR';
+  const enrollSelect = document.getElementById('memberEditEnrollmentSelect');
+  if (enrollSelect) enrollSelect.value = 'ACTIVE';
+  const chkSuspended = document.getElementById('memberEditIsSuspended');
+  if (chkSuspended) chkSuspended.checked = false;
+  toggleSuspendedCheckboxVisibility();
 
   const submitBtn = document.getElementById('btnSaveMemberSubmit');
   if (submitBtn) {
@@ -23000,11 +23055,12 @@ function openMemberEditModalByName(memberName) {
   }
 
   const isOb = !!member.isPast || member.memberType === 'PAST';
-  const isSuspended = !isOb && member.memberType === 'SUSPENDED';
-  const statusSelect = document.getElementById('memberEditStatusSelect');
-  if (statusSelect) {
-    statusSelect.value = isOb ? 'PAST' : (isSuspended ? 'SUSPENDED' : 'REGULAR');
-  }
+  const isSuspended = !isOb && (!!member.isSuspended || member.memberType === 'SUSPENDED');
+  const enrollSelect = document.getElementById('memberEditEnrollmentSelect');
+  if (enrollSelect) enrollSelect.value = isOb ? 'OB' : 'ACTIVE';
+  const chkSuspended = document.getElementById('memberEditIsSuspended');
+  if (chkSuspended) chkSuspended.checked = isSuspended;
+  toggleSuspendedCheckboxVisibility();
 
   const birthdayInput = document.getElementById('memberEditBirthday');
   if (birthdayInput) birthdayInput.value = member.birthday || '';
@@ -23093,8 +23149,9 @@ function handleSaveMemberSubmit(e) {
     }
   }
 
-  const statusSelect = document.getElementById('memberEditStatusSelect');
-  const statusVal = statusSelect ? statusSelect.value : 'REGULAR';
+  const enrollment = document.getElementById('memberEditEnrollmentSelect')?.value || 'ACTIVE';
+  const isOb = (enrollment === 'OB');
+  const isSuspended = !isOb && !!(document.getElementById('memberEditIsSuspended')?.checked);
 
   const payload = {
     isNew: isNew,
@@ -23106,8 +23163,9 @@ function handleSaveMemberSubmit(e) {
     birthday: birthday,
     phone: phone,
     email: email,
-    memberType: statusVal,
-    isPast: (statusVal === 'PAST')
+    isPast: isOb,
+    isSuspended: isSuspended,
+    memberType: isOb ? 'PAST' : 'REGULAR'
   };
 
   const u = window.currentUser || {};
