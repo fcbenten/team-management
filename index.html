@@ -14174,25 +14174,185 @@ textarea.comment-textarea:active {
       },
 
       /**
-       * 掲示板コメントの保存
+       * 掲示板コメントの投稿・保存 (0.1s Direct)
        */
-      async saveBulletinComment(payload) {
+      async addBulletinComment(postId, content, memberId, memberName) {
         const sb = getClient();
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const commentId = 'CMT-' + Date.now();
-        const currentMemberId = (window.currentUser && window.currentUser.memberId) ? window.currentUser.memberId : (payload.authorId || null);
+        let authorId = memberId;
+        if (!authorId || !String(authorId).startsWith('MBR-')) {
+          const u = window.currentUser || {};
+          authorId = u.memberId || null;
+          if (!authorId && window.scheduleRoster) {
+            const searchN = (memberName || u.name || '').trim();
+            const hit = window.scheduleRoster.find(m => m.name && m.name.trim() === searchN);
+            if (hit) authorId = hit.memberId || hit.id;
+          }
+        }
 
-        const { data, error } = await sb.from('bulletin_comments').insert({
+        const { error } = await sb.from('bulletin_comments').insert({
           comment_id: commentId,
-          post_id: payload.postId,
-          author_member_id: currentMemberId,
-          content: payload.content,
-          created_at: new Date().toISOString()
+          post_id: postId,
+          author_member_id: authorId,
+          content: content,
+          created_at: new Date().toISOString(),
+          is_deleted: false
         });
 
         if (error) throw error;
+        return { success: true, commentId: commentId };
+      },
+
+      /**
+       * 掲示板コメントの削除 (0.1s Direct)
+       */
+      async deleteBulletinComment(commentId, actorName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const { error } = await sb.from('bulletin_comments')
+          .update({ is_deleted: true })
+          .eq('comment_id', commentId);
+
+        if (error) throw error;
         return { success: true };
+      },
+
+      /**
+       * 掲示板コメント一覧の取得 (0.1s Direct)
+       */
+      async getBulletinComments(postId) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resComments, resMembers] = await Promise.all([
+          sb.from('bulletin_comments').select('*').eq('post_id', postId).eq('is_deleted', false).order('created_at', { ascending: true }),
+          sb.from('members').select('member_id, name, avatar_url')
+        ]);
+
+        if (resComments.error) throw resComments.error;
+
+        const idToMember = {};
+        (resMembers.data || []).forEach(m => {
+          idToMember[m.member_id] = m;
+        });
+
+        const comments = (resComments.data || []).map(c => {
+          const mem = idToMember[c.author_member_id];
+          return {
+            id: c.comment_id,
+            postId: c.post_id,
+            authorId: c.author_member_id,
+            authorName: mem ? mem.name : '不明',
+            authorAvatarUrl: mem ? (mem.avatar_url || '') : '',
+            content: c.content,
+            createdAt: c.created_at
+          };
+        });
+
+        return { success: true, comments: comments };
+      },
+
+      /**
+       * 掲示板既読者・未読者メンバー一覧の取得 (0.1s Direct)
+       */
+      async getBulletinPostReaders(postId) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resReads, resMembers] = await Promise.all([
+          sb.from('bulletin_reads').select('*').eq('post_id', postId),
+          sb.from('members').select('member_id, name, is_past, member_type')
+        ]);
+
+        if (resReads.error) throw resReads.error;
+
+        const idToMember = {};
+        const activeMembers = [];
+        (resMembers.data || []).forEach(m => {
+          idToMember[m.member_id] = m;
+          const isSpecial = m.member_type === 'SPECIAL' || ['助っ人', 'OG', 'なし'].includes(m.name);
+          if (!isSpecial && !m.is_past && m.member_type !== 'SUSPENDED') {
+            activeMembers.push(m);
+          }
+        });
+
+        const readers = [];
+        const readMemberIds = new Set();
+        (resReads.data || []).forEach(r => {
+          if (!r.member_id) return;
+          const m = idToMember[r.member_id];
+          if (m && m.name) {
+            readers.push({ memberId: r.member_id, memberName: m.name, readAt: r.read_at });
+            readMemberIds.add(r.member_id);
+          }
+        });
+
+        const unreadMembers = activeMembers
+          .filter(m => !readMemberIds.has(m.member_id))
+          .map(m => ({ memberId: m.member_id, memberName: m.name }));
+
+        return { success: true, readers: readers, unreadMembers: unreadMembers };
+      },
+
+      /**
+       * プロフィール写真削除 (0.1s Direct)
+       */
+      async deleteProfileImage(userName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const u = window.currentUser || {};
+        const targetName = (userName || u.name || '').trim();
+        const targetEmail = (u.email || '').trim().toLowerCase();
+
+        let query = sb.from('members').update({ avatar_url: null, updated_at: new Date().toISOString() });
+        if (targetEmail) {
+          query = query.eq('email', targetEmail);
+        } else if (targetName) {
+          query = query.eq('name', targetName);
+        } else {
+          throw new Error('対象ユーザーを特定できません。');
+        }
+
+        const { error } = await query;
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
+       * 通知設定保存 (0.1s Direct)
+       */
+      async saveNotificationSettings(payload, userName, userEmail) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const u = window.currentUser || {};
+        const targetEmail = (userEmail || u.email || '').trim().toLowerCase();
+        const targetName = (userName || u.name || '').trim();
+
+        const updateObj = {
+          notification_type: payload.type || payload.notificationType || 'none',
+          notify_settings: JSON.stringify(payload.settings || payload.notifySettings || {}),
+          updated_at: new Date().toISOString()
+        };
+        if (payload.lineUserId !== undefined) updateObj.line_user_id = payload.lineUserId;
+        if (payload.pushSubscription !== undefined) updateObj.push_subscription = payload.pushSubscription;
+
+        let query = sb.from('members').update(updateObj);
+        if (targetEmail) {
+          query = query.eq('email', targetEmail);
+        } else if (targetName) {
+          query = query.eq('name', targetName);
+        } else {
+          throw new Error('対象ユーザーを特定できません。');
+        }
+
+        const { error } = await query;
+        if (error) throw error;
+        return { success: true, message: '通知設定を保存しました' };
       },
 
       /**
@@ -14797,8 +14957,53 @@ textarea.comment-textarea:active {
               return;
             }
 
-            if (prop === 'apiSaveComment') {
-              SupabaseService.saveBulletinComment(args[0])
+            if (prop === 'apiAddBulletinComment' || prop === 'apiSaveComment') {
+              console.log('⚡ [Bypass] apiAddBulletinComment routed to Supabase Direct (0.1s)');
+              const pId = args[0] && typeof args[0] === 'object' ? args[0].postId : args[0];
+              const cContent = args[0] && typeof args[0] === 'object' ? args[0].content : args[1];
+              const mId = args[0] && typeof args[0] === 'object' ? args[0].authorId : args[2];
+              const mName = args[3];
+              SupabaseService.addBulletinComment(pId, cContent, mId, mName)
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiDeleteBulletinComment') {
+              console.log('⚡ [Bypass] apiDeleteBulletinComment routed to Supabase Direct (0.1s)');
+              SupabaseService.deleteBulletinComment(args[0], args[1])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiGetBulletinComments') {
+              console.log('⚡ [Bypass] apiGetBulletinComments routed to Supabase Direct (0.1s)');
+              SupabaseService.getBulletinComments(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiGetBulletinPostReaders') {
+              console.log('⚡ [Bypass] apiGetBulletinPostReaders routed to Supabase Direct (0.1s)');
+              SupabaseService.getBulletinPostReaders(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiDeleteProfileImage') {
+              console.log('⚡ [Bypass] apiDeleteProfileImage routed to Supabase Direct (0.1s)');
+              SupabaseService.deleteProfileImage(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiSaveNotificationSettings') {
+              console.log('⚡ [Bypass] apiSaveNotificationSettings routed to Supabase Direct (0.1s)');
+              SupabaseService.saveNotificationSettings(args[0], args[1], args[2])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;
