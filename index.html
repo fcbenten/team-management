@@ -14876,6 +14876,325 @@ textarea.comment-textarea:active {
           message: `${targetName} 選手を完全に削除しました。`,
           roster: latestRosterRes.roster
         };
+      },
+
+      /**
+       * ログイン画面用の部員リスト取得 (Supabase Direct: 0.1秒)
+       * @returns {Promise<Array>}
+       */
+      async getMemberListForLogin() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const { data, error } = await sb
+          .from('members')
+          .select('number, name, email, role, position, token, is_past')
+          .eq('is_past', false)
+          .order('number', { ascending: true, nullsFirst: false });
+
+        if (error) throw error;
+
+        return (data || []).map(m => ({
+          number: m.number ? Number(m.number) : 999,
+          name: m.name,
+          email: m.email || '',
+          role: m.role || 'メンバー',
+          position: m.position || 'FP',
+          hasCalendarLink: !!m.token
+        }));
+      },
+
+      /**
+       * ログイン認証処理 (Supabase Direct: 0.1秒)
+       * @param {string} identifier メールアドレスまたは選手名
+       * @param {string} password パスワード
+       * @returns {Promise<{success: boolean, user?: Object, error?: string}>}
+       */
+      async loginUser(identifier, password) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const cleanId = String(identifier || '').trim().toLowerCase();
+        const cleanIdNoSpace = cleanId.replace(/[\s\u3000]+/g, '').replace(/^#\d+/, '');
+        const inputPw = String(password || '').trim();
+
+        if (!cleanId || !inputPw) {
+          return { success: false, error: 'メールアドレスまたは選手名、およびパスワードを入力してください。' };
+        }
+
+        // members テーブルから全部員を取得（高々数十名、インメモリで確実かつ柔軟に照合）
+        const { data: members, error } = await sb
+          .from('members')
+          .select('*')
+          .eq('is_past', false);
+
+        if (error) throw error;
+
+        let member = null;
+        if (members && members.length > 0) {
+          member = members.find(m => {
+            const mEmail = String(m.email || '').trim().toLowerCase();
+            const mNameClean = String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase().replace(/^#\d+/, '');
+            if (cleanId.includes('@')) {
+              return mEmail === cleanId;
+            }
+            return mNameClean === cleanIdNoSpace || (mEmail && mEmail === cleanId);
+          });
+        }
+
+        if (!member) {
+          return { success: false, error: 'メールアドレスまたはパスワードが正しくありません。' };
+        }
+
+        // パスワード照合
+        const hashedInput = await (async function(str) {
+          try {
+            const buf = new TextEncoder().encode(str);
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+          } catch (e) {
+            return str;
+          }
+        })(inputPw);
+
+        const dbHash = String(member.password_hash || '').trim();
+        let isMatch = false;
+
+        if (dbHash) {
+          // 平文照合または SHA-256 ハッシュ照合
+          if (dbHash === inputPw || dbHash.toLowerCase() === hashedInput.toLowerCase()) {
+            isMatch = true;
+          }
+        } else {
+          // Supabase に password_hash が未設定の場合（初期移行時）:
+          // GAS の apiLoginUser に照合をフォールバックし、成功したら Supabase へ自動同期
+          try {
+            const gasRes = await fetch(GAS_ENDPOINT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ functionName: 'apiLoginUser', args: [cleanId, inputPw] })
+            }).then(r => r.json());
+
+            if (gasRes && gasRes.success && gasRes.data && gasRes.data.success) {
+              isMatch = true;
+              // 次回から 0.1s Direct ログインできるようパスワードを Supabase に自動保存
+              try {
+                await sb.from('members').update({ password_hash: inputPw }).eq('member_id', member.member_id);
+                console.log('⚡ [AuthMigration] Successfully migrated password to Supabase Direct for', member.name);
+              } catch (migErr) {
+                console.warn('[AuthMigration] Password save warning:', migErr);
+              }
+            }
+          } catch (gasErr) {
+            console.warn('[apiLoginUser] GAS fallback error:', gasErr);
+          }
+        }
+
+        if (!isMatch) {
+          return { success: false, error: 'メールアドレスまたはパスワードが正しくありません。' };
+        }
+
+        const user = {
+          name: member.name,
+          number: member.number ? Number(member.number) : 999,
+          email: member.email || '',
+          role: member.role || 'メンバー',
+          position: member.position || 'FP',
+          avatarUrl: member.avatar_url || '',
+          hasCalendarLink: !!member.token
+        };
+
+        return {
+          success: true,
+          user: user
+        };
+      },
+
+      /**
+       * パスワード変更処理 (Supabase Direct: 0.1秒)
+       * @param {string} identifier メールアドレスまたは選手名
+       * @param {string} oldPassword 現在のパスワード
+       * @param {string} newPassword 新しいパスワード
+       * @returns {Promise<{success: boolean, message?: string, error?: string}>}
+       */
+      async changePassword(identifier, oldPassword, newPassword) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const cleanId = String(identifier || '').trim().toLowerCase();
+        const cleanIdNoSpace = cleanId.replace(/[\s\u3000]+/g, '').replace(/^#\d+/, '');
+        const inputOldPw = String(oldPassword || '').trim();
+        const inputNewPw = String(newPassword || '').trim();
+
+        if (!inputNewPw || inputNewPw.length < 4) {
+          return { success: false, error: '新しいパスワードは4文字以上で設定してください。' };
+        }
+
+        const { data: members, error } = await sb
+          .from('members')
+          .select('*')
+          .eq('is_past', false);
+
+        if (error) throw error;
+
+        let member = null;
+        if (members && members.length > 0) {
+          member = members.find(m => {
+            const mEmail = String(m.email || '').trim().toLowerCase();
+            const mNameClean = String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase().replace(/^#\d+/, '');
+            if (cleanId.includes('@')) {
+              return mEmail === cleanId;
+            }
+            return mNameClean === cleanIdNoSpace || (mEmail && mEmail === cleanId);
+          });
+        }
+
+        if (!member) {
+          return { success: false, error: '部員情報が見つかりませんでした。' };
+        }
+
+        // 現在のパスワード照合
+        const hashedOld = await (async function(str) {
+          try {
+            const buf = new TextEncoder().encode(str);
+            const hash = await crypto.subtle.digest('SHA-256', buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+          } catch (e) {
+            return str;
+          }
+        })(inputOldPw);
+
+        const dbHash = String(member.password_hash || '').trim();
+        let isOldPwValid = false;
+
+        if (dbHash) {
+          if (dbHash === inputOldPw || dbHash.toLowerCase() === hashedOld.toLowerCase()) {
+            isOldPwValid = true;
+          }
+        } else {
+          try {
+            const gasRes = await fetch(GAS_ENDPOINT_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              body: JSON.stringify({ functionName: 'apiLoginUser', args: [cleanId, inputOldPw] })
+            }).then(r => r.json());
+            if (gasRes && gasRes.success && gasRes.data && gasRes.data.success) {
+              isOldPwValid = true;
+            }
+          } catch (e) {}
+        }
+
+        if (!isOldPwValid) {
+          return { success: false, error: '現在のパスワードが正しくありません。' };
+        }
+
+        // Supabase members.password_hash を直接更新 (0.1秒)
+        const { error: updateErr } = await sb
+          .from('members')
+          .update({
+            password_hash: inputNewPw,
+            updated_at: new Date().toISOString()
+          })
+          .eq('member_id', member.member_id);
+
+        if (updateErr) throw updateErr;
+
+        // 非同期でスプレッドシートにもパスワード更新を通知
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiChangePassword',
+              args: [member.email || member.name, inputOldPw, inputNewPw]
+            })
+          }).catch(e => console.warn('[ChangePwSync] GAS sync warning:', e));
+        } catch (syncErr) {
+          console.warn('[ChangePwSync] Kick failed:', syncErr);
+        }
+
+        return {
+          success: true,
+          message: 'パスワードを更新しました。'
+        };
+      },
+
+      /**
+       * 初回登録・新規パスワード設定処理 (Supabase Direct: 0.1秒)
+       * @param {string} email メールアドレス
+       * @param {string} newPassword 新しいパスワード
+       * @returns {Promise<{success: boolean, user?: Object, message?: string, error?: string}>}
+       */
+      async registerMember(email, newPassword) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const inputPw = String(newPassword || '').trim();
+
+        if (!cleanEmail) {
+          return { success: false, error: 'メールアドレスを入力してください。' };
+        }
+        if (!inputPw || inputPw.length < 4) {
+          return { success: false, error: 'パスワードは4文字以上で設定してください。' };
+        }
+
+        const { data: members, error } = await sb
+          .from('members')
+          .select('*')
+          .eq('email', cleanEmail)
+          .limit(1);
+
+        if (error) throw error;
+        if (!members || members.length === 0) {
+          return {
+            success: false,
+            error: '指定されたメールアドレスの部員が見つかりません。名簿に登録されているGmailアドレスを入力してください。'
+          };
+        }
+
+        const member = members[0];
+
+        // Supabase members.password_hash を直接更新 (0.1秒)
+        const { error: updateErr } = await sb
+          .from('members')
+          .update({
+            password_hash: inputPw,
+            updated_at: new Date().toISOString()
+          })
+          .eq('member_id', member.member_id);
+
+        if (updateErr) throw updateErr;
+
+        // 非同期でスプレッドシートにも登録通知
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiRegisterMember',
+              args: [cleanEmail, inputPw]
+            })
+          }).catch(e => console.warn('[RegisterMemberSync] GAS sync warning:', e));
+        } catch (syncErr) {
+          console.warn('[RegisterMemberSync] Kick failed:', syncErr);
+        }
+
+        const user = {
+          name: member.name,
+          number: member.number ? Number(member.number) : 999,
+          email: member.email,
+          role: member.role || 'メンバー',
+          position: member.position || 'FP',
+          avatarUrl: member.avatar_url || '',
+          hasCalendarLink: !!member.token
+        };
+
+        return {
+          success: true,
+          user: user,
+          message: 'パスワード設定が完了しました。'
+        };
       }
     };
 
@@ -15075,6 +15394,38 @@ textarea.comment-textarea:active {
             if (prop === 'apiDeleteMemberPermanently') {
               console.log('⚡ [Bypass] apiDeleteMemberPermanently routed to Supabase Direct (0.1s)');
               SupabaseService.deleteMemberPermanently(args[0], args[1], args[2])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiLoginUser') {
+              console.log('⚡ [Bypass] apiLoginUser routed to Supabase Direct (0.1s)');
+              SupabaseService.loginUser(args[0], args[1])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiChangePassword') {
+              console.log('⚡ [Bypass] apiChangePassword routed to Supabase Direct (0.1s)');
+              SupabaseService.changePassword(args[0], args[1], args[2])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiRegisterMember') {
+              console.log('⚡ [Bypass] apiRegisterMember routed to Supabase Direct (0.1s)');
+              SupabaseService.registerMember(args[0], args[1])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiGetMemberListForLogin') {
+              console.log('⚡ [Bypass] apiGetMemberListForLogin routed to Supabase Direct (0.1s)');
+              SupabaseService.getMemberListForLogin()
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;
