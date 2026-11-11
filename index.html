@@ -12798,8 +12798,10 @@ textarea.comment-textarea:active {
           })
         }).then(r => r.json()).then(calRes => {
           if (calRes && calRes.success && calRes.data) {
+            try { localStorage.setItem('fcb_cached_cal_attendance', JSON.stringify(calRes.data)); } catch (e) { }
             window.calendarAttendanceCache = window.calendarAttendanceCache || {};
             window.calendarAttendanceCache[calRes.data.year || String(new Date().getFullYear())] = calRes.data;
+            window.calendarAttendanceData = calRes.data;
             if (typeof filterAndRenderRankings === 'function') {
               filterAndRenderRankings();
             }
@@ -12824,11 +12826,14 @@ textarea.comment-textarea:active {
 
         const t0 = performance.now();
 
-        // カレンダーイベントはキャッシュから即座に同期展開（GASの3〜5秒ブロックを完全排除し0秒描画）
+        // カレンダーイベントおよび出欠バッチ集計はキャッシュから即座に同期展開（GASの3〜5秒ブロックを完全排除し0秒描画）
         let initialEvents = [];
+        let initialCalAttendance = null;
         try {
           const cached = localStorage.getItem('fcb_cached_events');
           if (cached) initialEvents = JSON.parse(cached);
+          const cachedAtt = localStorage.getItem('fcb_cached_cal_attendance');
+          if (cachedAtt) initialCalAttendance = JSON.parse(cachedAtt);
         } catch (e) { }
 
         // 10テーブル＋ビューを並列一括フェッチ (Supabase のみ: 0.15〜0.25秒で即時完了)
@@ -12868,48 +12873,48 @@ textarea.comment-textarea:active {
         const playerPositions = {};
         const playerAvatars = {};
 
-      const roster = [];
-      rawMembers.forEach(m => {
-        const isSpecial = (m.member_type === 'SPECIAL' || ['MBR-SPECIAL-GUEST', 'MBR-SPECIAL-OG', 'MBR-SPECIAL-NONE'].includes(m.member_id) || ['助っ人', 'OG', 'なし'].includes(m.name));
-        const isPast = !!m.is_past || m.member_type === 'PAST';
+        const roster = [];
+        rawMembers.forEach(m => {
+          const isSpecial = (m.member_type === 'SPECIAL' || ['MBR-SPECIAL-GUEST', 'MBR-SPECIAL-OG', 'MBR-SPECIAL-NONE'].includes(m.member_id) || ['助っ人', 'OG', 'なし'].includes(m.name));
+          const isPast = !!m.is_past || m.member_type === 'PAST';
 
-        const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
-        const formatted = {
-          memberId: m.member_id,
-          id: m.member_id,
-          name: m.name,
-          number: numVal !== null ? numVal : 999,
-          role: m.role || '選手',
-          position: m.position || 'FP',
-          email: m.email || '',
-          phone: m.phone || '',
-          birthday: m.birthday || '',
-          avatarUrl: m.avatar_url || '',
-          hasCalendarLink: !!m.token,
-          hasToken: !!m.token,
-          notificationType: m.notification_type || 'none',
-          lineUserId: m.line_user_id || '',
-          pushSubscription: m.push_subscription || '',
-          notifySettings: m.notify_settings ? (typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings) : { emergency: true, attendance: true, bulletin: true },
-          isPast: isPast,
-          memberType: m.member_type || (isSpecial ? 'SPECIAL' : (isPast ? 'PAST' : 'REGULAR'))
-        };
+          const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
+          const formatted = {
+            memberId: m.member_id,
+            id: m.member_id,
+            name: m.name,
+            number: numVal !== null ? numVal : 999,
+            role: m.role || '選手',
+            position: m.position || 'FP',
+            email: m.email || '',
+            phone: m.phone || '',
+            birthday: m.birthday || '',
+            avatarUrl: m.avatar_url || '',
+            hasCalendarLink: !!m.token,
+            hasToken: !!m.token,
+            notificationType: m.notification_type || 'none',
+            lineUserId: m.line_user_id || '',
+            pushSubscription: m.push_subscription || '',
+            notifySettings: m.notify_settings ? (typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings) : { emergency: true, attendance: true, bulletin: true },
+            isPast: isPast,
+            memberType: m.member_type || (isSpecial ? 'SPECIAL' : (isPast ? 'PAST' : 'REGULAR'))
+          };
 
-        // 全レコードを逆引き用辞書には登録（試合ログや過去スタッツの選手名解決用）
-        idToMember[m.member_id] = formatted;
-        if (m.name) nameToMember[m.name] = formatted;
-        if (m.email) memberMap[m.email.toLowerCase()] = m.name;
-        if (m.name && numVal !== null) {
-          playerNumbers[m.name] = numVal;
-          playerPositions[m.name] = m.position || 'FP';
-          playerAvatars[m.name] = m.avatar_url || '';
-        }
+          // 全レコードを逆引き用辞書には登録（試合ログや過去スタッツの選手名解決用）
+          idToMember[m.member_id] = formatted;
+          if (m.name) nameToMember[m.name] = formatted;
+          if (m.email) memberMap[m.email.toLowerCase()] = m.name;
+          if (m.name && numVal !== null) {
+            playerNumbers[m.name] = numVal;
+            playerPositions[m.name] = m.position || 'FP';
+            playerAvatars[m.name] = m.avatar_url || '';
+          }
 
-        // メンバー管理一覧（roster）には正規の現役メンバーのみを追加
-        if (!isSpecial && !isPast) {
-          roster.push(formatted);
-        }
-      });
+          // メンバー管理一覧（roster）には正規の現役メンバーのみを追加
+          if (!isSpecial && !isPast) {
+            roster.push(formatted);
+          }
+        });
 
         // 試合記録 & 得点詳細の組み立て
         const rawMatches = resMatches.data || [];
@@ -13204,13 +13209,16 @@ textarea.comment-textarea:active {
           });
         });
 
-        const calendarAttendancePayload = {
-          year: currentYearStr,
-          updatedAt: new Date().toISOString(),
-          players: calPlayers
-        };
+        const calendarAttendancePayload = (initialCalAttendance && initialCalAttendance.players && Object.keys(initialCalAttendance.players).length > 0)
+          ? initialCalAttendance
+          : {
+            year: currentYearStr,
+            updatedAt: new Date().toISOString(),
+            players: calPlayers
+          };
         window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-        window.calendarAttendanceCache[currentYearStr] = calendarAttendancePayload;
+        window.calendarAttendanceCache[calendarAttendancePayload.year || currentYearStr] = calendarAttendancePayload;
+        window.calendarAttendanceData = calendarAttendancePayload;
 
         // バックグラウンドで Google カレンダーの最新イベントを非同期取得 (初期描画を一切ブロックしない)
         setTimeout(() => {
