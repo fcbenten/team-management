@@ -15423,7 +15423,68 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     updateMobileHeaderHeight();
     updateNavScrollIndicators();
   });
+
+  /**
+   * 保存されているアクティブタブ名を取得（URLハッシュまたはsessionStorage）
+   * @returns {string} 有効なタブ名（デフォルト: 'home'）
+   */
+  function getSavedActiveTab() {
+    let tab = '';
+    try {
+      const hash = (window.location.hash || '').replace(/^#/, '').trim();
+      if (hash) tab = hash;
+    } catch (e) {}
+    if (!tab) {
+      try {
+        tab = sessionStorage.getItem('fcb_active_tab') || '';
+      } catch (e) {}
+    }
+    const validTabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment', 'members'];
+    if (!validTabs.includes(tab)) {
+      return 'home';
+    }
+    // メンバー管理タブは管理者権限がなければ home に安全フォールバック
+    if (tab === 'members' && typeof isCurrentUserAdmin === 'function' && !isCurrentUserAdmin()) {
+      return 'home';
+    }
+    return tab;
+  }
+  window.getSavedActiveTab = getSavedActiveTab;
+
+  /**
+   * ページ初期ロード時（HTMLパース直後やデータ取得中）に前回のタブを即時反映してチラつきを防止
+   */
+  function applyInitialActiveTab() {
+    const savedTab = getSavedActiveTab();
+    if (savedTab && savedTab !== 'home') {
+      document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => {
+        el.classList.remove('active');
+        const oc = el.getAttribute('onclick') || '';
+        if (oc.indexOf("'" + savedTab + "'") !== -1 || oc.indexOf('"' + savedTab + '"') !== -1) {
+          el.classList.add('active');
+        }
+      });
+      document.querySelectorAll('.content-area').forEach(el => {
+        el.classList.remove('active');
+      });
+      const targetTab = document.getElementById('tab-' + savedTab);
+      if (targetTab) {
+        targetTab.classList.add('active');
+      }
+      scrollActiveNavItemIntoView(false);
+    }
+  }
+  window.applyInitialActiveTab = applyInitialActiveTab;
+
   window.addEventListener('DOMContentLoaded', function() {
+    try {
+      const raw = localStorage.getItem('fcb_auth_user');
+      if (raw) {
+        window.currentUser = JSON.parse(raw);
+        if (typeof updateAdminNavVisibility === 'function') updateAdminNavVisibility();
+      }
+    } catch (e) {}
+    applyInitialActiveTab();
     updateMobileHeaderHeight();
     updateNavScrollIndicators();
     initLoginFormListeners();
@@ -15489,7 +15550,11 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     if (savedUser && savedUser.name) {
       window.currentUser = savedUser;
+      if (typeof updateAdminNavVisibility === 'function') {
+        updateAdminNavVisibility();
+      }
       hideLoginScreen();
+      applyInitialActiveTab();
       loadAppInitialData();
     } else {
       showLoginScreen();
@@ -15844,6 +15909,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         try { if (typeof initEquipmentView === 'function') initEquipmentView(); } catch (e) { console.error('Equipment Init Error:', e); }
 
         revealAllTabContents();
+
+        // 画面更新前のタブを復元（描画初期化を含む）
+        const restoredTab = getSavedActiveTab();
+        if (restoredTab && restoredTab !== 'home') {
+          switchTab(restoredTab);
+        } else {
+          scrollActiveNavItemIntoView(false);
+        }
 
         // Googleアカウント未連携チェック（メールアドレスが登録されているがGoogle未連携の場合、強制モーダルを表示）
         checkForceGoogleAuth();
@@ -16607,6 +16680,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     try {
       localStorage.removeItem('fcb_auth_user');
       sessionStorage.clear();
+      if (window.location.hash) {
+        history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
     } catch (e) {}
 
     window.currentUser = null;
@@ -16763,6 +16839,25 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       try { document.activeElement.blur(); } catch (e) {}
     }
 
+    // メンバー管理タブへの切り替え時：代表・副代表権限を厳格チェック
+    if (tabName === 'members') {
+      if (!isCurrentUserAdmin()) {
+        alert('メンバー管理画面は「代表」または「副代表」のみアクセス可能です。');
+        switchTab('home');
+        return;
+      }
+    }
+
+    // タブ状態を永続化（'input' は復元時に 'results' へ戻す）
+    const tabToPersist = (tabName === 'input') ? 'results' : tabName;
+    try {
+      sessionStorage.setItem('fcb_active_tab', tabToPersist);
+      const targetHash = '#' + tabToPersist;
+      if (window.location.hash !== targetHash) {
+        history.replaceState(null, '', targetHash);
+      }
+    } catch (e) {}
+
     // すべてのタブとコンテンツエリアを非アクティブにする
     document.querySelectorAll('.sidebar-nav .nav-item').forEach(el => {
       el.classList.remove('active');
@@ -16820,13 +16915,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       if (mc) mc.scrollTop = 0;
     });
 
-    // メンバー管理タブへの切り替え時：代表・副代表権限を厳格チェック
+    // メンバー管理タブへの切り替え時：一覧初期化
     if (tabName === 'members') {
-      if (!isCurrentUserAdmin()) {
-        alert('メンバー管理画面は「代表」または「副代表」のみアクセス可能です。');
-        switchTab('home');
-        return;
-      }
       if (typeof initMembersView === 'function') {
         const list = (window.adminMemberList && window.adminMemberList.length > 0) ? window.adminMemberList : window.scheduleRoster;
         initMembersView(list);
@@ -16864,6 +16954,16 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     updateMobileHeaderHeight();
   }
+  window.switchTab = switchTab;
+
+  // ブラウザの戻る/進む操作（ハッシュ変更）時のタブ連動
+  window.addEventListener('hashchange', function() {
+    const target = getSavedActiveTab();
+    const current = getCurrentActiveTabName();
+    if (target && target !== current) {
+      switchTab(target);
+    }
+  });
 
   /**
    * スワイプ操作可能なメインタブ一覧を取得（権限に応じて動的構築）
