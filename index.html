@@ -11051,57 +11051,7 @@ textarea.comment-textarea:active {
       <div class="login-register-wrap">
         <a href="https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec?page=register"
           target="_blank" class="login-register-link">
-          初めての方はこちら（Google連携・新規登録）
-        </a>
-      </div>
-
-      <div style="margin-top: 10px; text-align: center;">
-        <a href="javascript:void(0)" onclick="switchToRegisterCard(event)" class="text-muted" style="font-size: 0.78rem; text-decoration: underline;">
-          ※Google連携を使わずに直接パスワード設定する場合はこちら
-        </a>
-      </div>
-    </form>
-  </div>
-
-  <!-- 新規登録・パスワード初期設定カード (PWA内完結) -->
-  <div id="registerCard" class="auth-card" style="display: none;">
-    <div class="auth-title">FC Benten</div>
-    <div class="auth-subtitle">初期登録・パスワード設定</div>
-
-    <form id="nativeRegisterForm" novalidate onsubmit="handleNativeRegister(event)" autocomplete="off" class="login-text-left">
-      <div class="form-group">
-        <label class="form-label" for="regNativeEmailInput">Gmailアドレス</label>
-        <input type="email" id="regNativeEmailInput" class="form-input" placeholder="名簿登録済みのGmail" autocomplete="off" required>
-        <div id="err-regNativeEmailInput" class="field-error-msg hidden"></div>
-        <div class="form-help" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">※事前に管理者が名簿に登録したGmailアドレスを入力してください。</div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="regNativePasswordInput">新しいパスワード（4文字以上）</label>
-        <input type="password" id="regNativePasswordInput" class="form-input" placeholder="4文字以上のパスワード" autocomplete="new-password" required minlength="4">
-        <div id="err-regNativePasswordInput" class="field-error-msg hidden"></div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label" for="regNativeConfirmPasswordInput">パスワード（確認用）</label>
-        <input type="password" id="regNativeConfirmPasswordInput" class="form-input" placeholder="もう一度入力" autocomplete="new-password" required minlength="4">
-        <div id="err-regNativeConfirmPasswordInput" class="field-error-msg hidden"></div>
-      </div>
-
-      <div id="regNativeGlobalMsg" class="alert-box alert-error hidden" style="margin-bottom: 16px;"></div>
-
-      <button type="submit" id="regNativeSubmitBtn" class="btn">設定してログイン</button>
-
-      <div class="login-register-wrap">
-        <a href="javascript:void(0)" onclick="switchToLoginCard(event)" class="login-register-link">
-          すでに登録済みの方はこちら（ログイン画面へ）
-        </a>
-      </div>
-
-      <div style="margin-top: 14px; text-align: center;">
-        <a href="https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec?page=register"
-          target="_blank" class="text-muted" style="font-size: 0.76rem; text-decoration: underline;">
-          Googleカレンダー同期用アカウント連携はこちら
+          初めての方はこちら（新規登録・Google連携）
         </a>
       </div>
     </form>
@@ -16425,141 +16375,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   /**
    * ログインカードを表示
    */
-  function switchToLoginCard(e) {
-    if (e && e.preventDefault) e.preventDefault();
+  function switchToLoginCard() {
     const loginCard = document.getElementById('loginCard');
-    const registerCard = document.getElementById('registerCard');
     if (loginCard) loginCard.style.display = 'block';
-    if (registerCard) registerCard.style.display = 'none';
     const err = document.getElementById('loginErrorMsg');
     if (err) err.style.display = 'none';
-    const regMsg = document.getElementById('regNativeGlobalMsg');
-    if (regMsg) {
-      regMsg.textContent = '';
-      regMsg.classList.add('hidden');
-    }
     clearAllLoginFieldErrors();
   }
   window.switchToLoginCard = switchToLoginCard;
-
-  /**
-   * 新規登録・パスワード初期設定カードを表示 (PWA内完結)
-   */
-  function switchToRegisterCard(e) {
-    if (e && e.preventDefault) e.preventDefault();
-    const loginCard = document.getElementById('loginCard');
-    const registerCard = document.getElementById('registerCard');
-    if (loginCard) loginCard.style.display = 'none';
-    if (registerCard) registerCard.style.display = 'block';
-    const regMsg = document.getElementById('regNativeGlobalMsg');
-    if (regMsg) {
-      regMsg.textContent = '';
-      regMsg.classList.add('hidden');
-    }
-    clearAllLoginFieldErrors();
-  }
-  window.switchToRegisterCard = switchToRegisterCard;
-
-  /**
-   * PWA内完結の新規パスワード登録処理 (Supabase Direct: 0.1秒)
-   */
-  function handleNativeRegister(e) {
-    if (e) e.preventDefault();
-
-    const emailInput = document.getElementById('regNativeEmailInput');
-    const pwInput = document.getElementById('regNativePasswordInput');
-    const confirmPwInput = document.getElementById('regNativeConfirmPasswordInput');
-    const submitBtn = document.getElementById('regNativeSubmitBtn');
-    const globalMsg = document.getElementById('regNativeGlobalMsg');
-
-    if (!emailInput || !pwInput || !confirmPwInput) return;
-
-    const email = emailInput.value.trim().toLowerCase();
-    const pass = pwInput.value.trim();
-    const confirmPass = confirmPwInput.value.trim();
-
-    // バリデーション
-    let hasError = false;
-    const emailErr = document.getElementById('err-regNativeEmailInput');
-    const pwErr = document.getElementById('err-regNativePasswordInput');
-    const confirmErr = document.getElementById('err-regNativeConfirmPasswordInput');
-
-    if (emailErr) { emailErr.textContent = ''; emailErr.classList.add('hidden'); }
-    if (pwErr) { pwErr.textContent = ''; pwErr.classList.add('hidden'); }
-    if (confirmErr) { confirmErr.textContent = ''; confirmErr.classList.add('hidden'); }
-    if (globalMsg) { globalMsg.textContent = ''; globalMsg.classList.add('hidden'); }
-
-    if (!email || !email.includes('@')) {
-      if (emailErr) {
-        emailErr.textContent = '有効なGmailアドレスを入力してください。';
-        emailErr.classList.remove('hidden');
-        emailErr.style.display = 'block';
-      }
-      hasError = true;
-    }
-
-    if (!pass || pass.length < 4) {
-      if (pwErr) {
-        pwErr.textContent = 'パスワードは4文字以上で入力してください。';
-        pwErr.classList.remove('hidden');
-        pwErr.style.display = 'block';
-      }
-      hasError = true;
-    }
-
-    if (pass !== confirmPass) {
-      if (confirmErr) {
-        confirmErr.textContent = 'パスワードと確認用パスワードが一致しません。';
-        confirmErr.classList.remove('hidden');
-        confirmErr.style.display = 'block';
-      }
-      hasError = true;
-    }
-
-    if (hasError) return;
-
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.textContent = '登録中...';
-    }
-
-    google.script.run
-      .withSuccessHandler(res => {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = '設定してログイン';
-        }
-
-        if (res && res.success && res.user) {
-          window.currentUser = res.user;
-          try {
-            localStorage.setItem('fcb_auth_user', JSON.stringify(res.user));
-          } catch (err) {}
-
-          hideLoginScreen();
-          loadAppInitialData();
-        } else {
-          if (globalMsg) {
-            globalMsg.textContent = (res && res.error) ? res.error : '登録に失敗しました。';
-            globalMsg.classList.remove('hidden');
-            globalMsg.style.display = 'block';
-          }
-        }
-      })
-      .withFailureHandler(err => {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = '設定してログイン';
-        }
-        if (globalMsg) {
-          globalMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
-          globalMsg.classList.remove('hidden');
-          globalMsg.style.display = 'block';
-        }
-      })
-      .apiRegisterMember(email, pass);
-  }
-  window.handleNativeRegister = handleNativeRegister;
 
   /**
    * ログイン画面を非表示にする
