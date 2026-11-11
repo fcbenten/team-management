@@ -7753,63 +7753,128 @@ th.sort-active .sort-icon {
 }
 
 /* =========================================
-   在籍ステータス切り替えタブ (現役 / 休部 / OB / すべて)
+   メンバー一覧セクション群 (現役 / 休部中 / OB)
    ========================================= */
-.member-status-tabs {
+.members-sections-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.member-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* セクション見出し (緑・オレンジ・グレーのドット付き) */
+.member-section-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  -webkit-overflow-scrolling: touch;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 2px;
 }
 
-.member-status-tab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  font-size: 0.84rem;
-  font-weight: 500;
-  color: #64748b;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
+.section-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.member-status-tab:hover {
-  background: #f8fafc;
-  color: var(--primary);
-  border-color: #cbd5e1;
+.dot-active {
+  background-color: #10b981; /* 明るいエメラルドグリーン */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-.member-status-tab.active {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
-  font-weight: 600;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+.dot-suspended {
+  background-color: #f59e0b; /* 温かみのあるアンバー/オレンジ */
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
 }
 
-.tab-count-badge {
+.dot-ob {
+  background-color: #94a3b8; /* 落ち着いたスレートグレー */
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.section-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.section-count-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0 6px;
-  height: 18px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  border-radius: 10px;
+  padding: 2px 9px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 9999px;
   background: #f1f5f9;
   color: #475569;
+  line-height: 1.2;
 }
 
-.member-status-tab.active .tab-count-badge {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ffffff;
+/* セクション内空表示 */
+.member-section-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: var(--radius);
+}
+
+/* OBセクション (アコーディオン開閉バー) */
+.ob-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  padding: 4px 6px;
+}
+
+.ob-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.ob-accordion-header:hover {
+  background: #f1f5f9;
+}
+
+.ob-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ob-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ob-toggle-icon {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.ob-accordion-content {
+  padding: 8px 6px 10px;
 }
 
 /* Googleアカウント連携バッジ (メール欄に小さく添える) */
@@ -7989,30 +8054,32 @@ th.sort-active .sort-icon {
   font-weight: 300;
 }
 
-/* 削除ボタン */
-.btn-member-delete {
+/* 復帰ボタン: 休部中・OBから現役に復帰 */
+.btn-member-restore {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid #fee2e2;
-  background: #ffffff;
+  gap: 3px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
   border-radius: 4px;
-  color: #ef4444;
+  color: #059669;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.btn-member-delete:hover {
-  background: #fef2f2;
-  border-color: #fca5a5;
-  color: #dc2626;
+.btn-member-restore:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
 }
 
-.btn-member-delete .material-symbols-outlined {
-  font-size: 15px;
+.btn-member-restore .material-symbols-outlined {
+  font-size: 14px;
 }
 
 /* 上位ロール保護ロックバッジ */
@@ -8531,6 +8598,82 @@ a.btn-member-modal-save:hover {
   font-weight: 500 !important;
   box-sizing: border-box !important;
   margin: 0 !important;
+}
+
+/* 編集モーダル左下の危険操作リンク（完全削除トリガー） */
+.btn-member-danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-member-danger-link:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
+/* 在籍ステータス注記ボックス */
+.member-status-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.member-status-hint-box.hint-suspended {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.member-status-hint-box.hint-ob {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.member-status-hint-box .status-hint-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* 過去記録存在時の安全警告アラート */
+.delete-guard-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  text-align: left;
+}
+
+.delete-guard-alert .material-symbols-outlined {
+  font-size: 18px;
+  flex-shrink: 0;
+  color: #dc2626;
+  margin-top: 1px;
 }
 
 .text-amber {
@@ -12181,25 +12324,9 @@ textarea.comment-textarea:active {
 
     <!-- =========================================
          検索・フィルターエリア
-         在籍ステータスタブ、役割・ポジション絞り込み、フリーワード検索
+         役割・ポジション絞り込み、フリーワード検索
          ========================================= -->
     <div class="card-box filter-box mb-16">
-      <!-- 在籍ステータス切り替えタブ (現役 / 休部 / OB / すべて) -->
-      <div class="member-status-tabs mb-12" id="memberStatusTabs">
-        <button type="button" class="member-status-tab active" data-status="active" onclick="switchMemberStatusTab('active')">
-          現役 <span id="statTabActive" class="tab-count-badge">0</span>
-        </button>
-        <button type="button" class="member-status-tab" data-status="suspended" onclick="switchMemberStatusTab('suspended')">
-          休部中 <span id="statTabSuspended" class="tab-count-badge">0</span>
-        </button>
-        <button type="button" class="member-status-tab" data-status="ob" onclick="switchMemberStatusTab('ob')">
-          OB <span id="statTabOb" class="tab-count-badge">0</span>
-        </button>
-        <button type="button" class="member-status-tab" data-status="all" onclick="switchMemberStatusTab('all')">
-          すべて <span id="statTabAll" class="tab-count-badge">0</span>
-        </button>
-      </div>
-
       <div class="filter-row">
         <div class="form-group mb-0 filter-select-group">
           <select id="memberRoleFilter" class="filter-select" onchange="filterMembersList()">
@@ -12225,11 +12352,70 @@ textarea.comment-textarea:active {
     </div>
 
     <!-- =========================================
-         メンバー一覧カードグリッド
-         全メンバー情報をカード形式で動的表示（PC/モバイル最適化）
+         メンバー一覧セクション群
+         1. 現役メンバー
+         2. 休部中メンバー
+         3. OB・退団メンバー (最下部アコーディオン開閉)
          ========================================= -->
-    <div id="membersListContainer" class="members-list-grid">
-      <!-- JSで動的にカードを生成 -->
+    <div class="members-sections-wrap">
+
+      <!-- 1. 現役メンバーセクション -->
+      <section class="member-section" id="sectionActiveMembers">
+        <div class="member-section-header">
+          <span class="section-dot dot-active"></span>
+          <h3 class="section-title">現役メンバー</h3>
+          <span class="section-count-badge" id="sectionCountActive">0名</span>
+        </div>
+        <div id="membersListActive" class="members-list-grid">
+          <!-- JSで動的生成 -->
+        </div>
+      </section>
+
+      <!-- 2. 休部中メンバーセクション -->
+      <section class="member-section" id="sectionSuspendedMembers">
+        <div class="member-section-header">
+          <span class="section-dot dot-suspended"></span>
+          <h3 class="section-title">休部中メンバー</h3>
+          <span class="section-count-badge" id="sectionCountSuspended">0名</span>
+        </div>
+        <div id="membersListSuspended" class="members-list-grid">
+          <!-- JSで動的生成 -->
+        </div>
+        <div id="suspendedEmptyHint" class="member-section-empty hidden">
+          現在、休部中のメンバーはいません
+        </div>
+      </section>
+
+      <!-- 3. OB・退団メンバーセクション (案A: アコーディオン方式) -->
+      <section class="member-section ob-section" id="sectionObMembers">
+        <div class="ob-accordion-header" onclick="toggleObAccordion()">
+          <div class="ob-header-left">
+            <span class="section-dot dot-ob"></span>
+            <h3 class="section-title">OB・退団メンバー</h3>
+            <span class="section-count-badge" id="sectionCountOb">0名</span>
+          </div>
+          <div class="ob-header-right">
+            <span id="obAccordionToggleText" class="ob-toggle-text">一覧を表示</span>
+            <span id="obAccordionToggleIcon" class="material-symbols-outlined ob-toggle-icon">expand_more</span>
+          </div>
+        </div>
+        <div id="obAccordionContent" class="ob-accordion-content hidden">
+          <div id="membersListOb" class="members-list-grid">
+            <!-- JSで動的生成 -->
+          </div>
+          <div id="obEmptyHint" class="member-section-empty hidden">
+            OBメンバーはいません
+          </div>
+        </div>
+      </section>
+
+      <!-- 全体で0件のときの空表示 -->
+      <div id="membersTotalEmpty" class="card-box text-center p-24 text-muted hidden">
+        <span class="material-symbols-outlined text-4xl mb-8 text-gray-400">search_off</span>
+        <div class="font-bold">該当するメンバーが見つかりません</div>
+        <div class="text-xs text-muted mt-4">検索条件を変更するか、新規メンバーを追加してください</div>
+      </div>
+
     </div>
 
   </div> <!-- /tab-main-content -->
@@ -12281,24 +12467,19 @@ textarea.comment-textarea:active {
               </select>
             </div>
             <div class="form-group mb-0 flex-1">
-              <label class="form-label" for="memberEditEnrollmentSelect">在籍区分</label>
-              <select id="memberEditEnrollmentSelect" class="form-input" onchange="toggleSuspendedCheckboxVisibility()">
+              <label class="form-label" for="memberEditStatusSelect">在籍ステータス</label>
+              <select id="memberEditStatusSelect" class="form-input" onchange="handleMemberStatusSelectChange()">
                 <option value="ACTIVE">現役</option>
+                <option value="SUSPENDED">休部中</option>
                 <option value="OB">OB（退団）</option>
               </select>
             </div>
           </div>
 
-          <!-- 休部ステータス設定（現役選手のみ） -->
-          <div class="form-group mb-12 p-8" id="memberEditSuspendedWrap" style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:8px 10px;">
-            <label class="form-label mb-2" style="display:flex;align-items:center;gap:8px;cursor:pointer;color:#92400e;font-weight:600;margin-bottom:2px;">
-              <input type="checkbox" id="memberEditIsSuspended" style="width:17px;height:17px;cursor:pointer;">
-              <span>現在「休部中」として設定</span>
-            </label>
-            <div class="text-xs" style="color:#b45309;padding-left:25px;line-height:1.4;">
-              怪我等で一時的に活動休止する場合に設定します。<br>
-              休部中は出欠催促やアナウンス通知の配信対象から除外されます。
-            </div>
+          <!-- 在籍ステータス説明バナー（休部中またはOB選択時に表示） -->
+          <div id="memberStatusHintBox" class="member-status-hint-box hidden mb-12">
+            <span class="material-symbols-outlined text-sm status-hint-icon" id="memberStatusHintIcon">info</span>
+            <span id="memberStatusHintText" class="status-hint-text"></span>
           </div>
 
           <div class="form-row mb-12">
@@ -12322,9 +12503,16 @@ textarea.comment-textarea:active {
 
           <div id="memberEditStatus" class="form-status-msg hidden"></div>
 
-          <div class="modal-footer member-modal-footer">
-            <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
-            <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
+          <div class="modal-footer member-modal-footer flex-between">
+            <div class="member-modal-footer-left">
+              <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
+                <span class="material-symbols-outlined text-sm">delete</span>メンバーを完全削除
+              </button>
+            </div>
+            <div class="member-modal-footer-right flex-center gap-8">
+              <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
+              <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
+            </div>
           </div>
         </form>
       </div>
@@ -12332,8 +12520,8 @@ textarea.comment-textarea:active {
   </div>
 
   <!-- =========================================
-       メンバー削除確認モーダル（オーバーレイ）
-       対象選手名・アバター表示および削除確定
+       メンバー完全削除確認モーダル（誤登録取り消し用）
+       対象選手名表示・過去データ存在時の安全ガード
        ========================================= -->
   <div id="memberDeleteModal" class="modal-overlay" onclick="closeMemberDeleteModal(event)">
     <div class="modal-content member-modal-content delete-confirm-content" onclick="event.stopPropagation()">
@@ -12344,19 +12532,24 @@ textarea.comment-textarea:active {
             <span class="material-symbols-outlined">person</span>
           </div>
         </div>
-        <div class="delete-confirm-title" id="memberDeleteNameTitle">選手をOBへ移動</div>
-        <div class="delete-confirm-desc">
-          この選手をOB（退団者）へ変更しますか？<br>
-          <span class="text-xs text-muted" style="display:block;margin-top:6px;line-height:1.4;">
-            ※選手データは削除されず、OB選手として保持されます。<br>
-            過去の試合記録や得点スタッツは維持され、いつでも現役に復帰できます。
+        <div class="delete-confirm-title" id="memberDeleteNameTitle">選手を完全削除</div>
+        <div class="delete-confirm-desc" id="memberDeleteDesc">
+          このメンバー情報をデータベースから完全に削除しますか？<br>
+          <span class="text-xs text-danger" style="display:block;margin-top:6px;line-height:1.4;">
+            ※誤って新規追加した場合の取り消し用です。削除すると元に戻せません。<br>
+            ※引退・退団の場合は削除せず、在籍ステータスを「OB」に変更してください。
           </span>
+        </div>
+        <!-- 過去記録が存在して削除できない場合の安全警告領域 -->
+        <div id="memberDeleteGuardAlert" class="delete-guard-alert hidden mt-12">
+          <span class="material-symbols-outlined text-sm">block</span>
+          <span id="memberDeleteGuardAlertText">この選手には過去の試合出場記録やスタッツが存在するため完全削除できません。退団される場合は在籍ステータスを「OB」に変更してください。</span>
         </div>
         <div id="memberDeleteStatus" class="form-status-msg hidden mt-12"></div>
       </div>
       <div class="modal-footer delete-modal-footer">
         <button type="button" class="btn-member-modal-cancel" onclick="closeMemberDeleteModal(event)">キャンセル</button>
-        <button type="button" id="btnConfirmDeleteMember" class="btn-member-modal-delete-danger" onclick="executeMemberDelete()">削除を実行</button>
+        <button type="button" id="btnConfirmDeleteMember" class="btn-member-modal-delete-danger" onclick="executeMemberDeletePermanently()">完全に削除</button>
       </div>
     </div>
   </div>
@@ -12450,13 +12643,13 @@ textarea.comment-textarea:active {
         </div>
       </div>
       <div class="member-card-actions">
+        <button type="button" class="btn-member-restore hidden" title="現役へ復帰">
+          <span class="material-symbols-outlined">restart_alt</span>復帰
+        </button>
         <button type="button" class="btn-member-edit" title="編集">
           <span class="material-symbols-outlined">edit</span>編集
         </button>
-        <button type="button" class="btn-member-delete" title="削除">
-          <span class="material-symbols-outlined">delete</span>
-        </button>
-        <span class="badge-role-locked hidden" title="代表の編集・削除は代表のみ行えます">
+        <span class="badge-role-locked hidden" title="代表の編集は代表のみ行えます">
           <span class="material-symbols-outlined">lock</span>
         </span>
       </div>
@@ -12483,13 +12676,13 @@ textarea.comment-textarea:active {
           </div>
         </div>
         <div class="member-card-actions">
+          <button type="button" class="btn-member-restore hidden" title="現役へ復帰">
+            <span class="material-symbols-outlined">restart_alt</span>復帰
+          </button>
           <button type="button" class="btn-member-edit" title="編集">
             <span class="material-symbols-outlined">edit</span>編集
           </button>
-          <button type="button" class="btn-member-delete" title="削除">
-            <span class="material-symbols-outlined">delete</span>
-          </button>
-          <span class="badge-role-locked hidden" title="代表の編集・削除は代表のみ行えます">
+          <span class="badge-role-locked hidden" title="代表の編集は代表のみ行えます">
             <span class="material-symbols-outlined">lock</span>
           </span>
         </div>
@@ -14183,6 +14376,50 @@ textarea.comment-textarea:active {
           message: `${targetName} 選手をOBへ移動しました。`,
           roster: latestRosterRes.roster
         };
+      },
+
+      /**
+       * メンバー完全物理削除 (誤登録の完全消去) (Supabase Direct: 0.1秒)
+       */
+      async deleteMemberPermanently(target, actorEmail, actorName) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const targetName = String(target.name || '').trim();
+        const targetEmail = String(target.email || '').trim().toLowerCase();
+        let targetId = target.memberId || target.id || null;
+
+        if (targetId) {
+          const { error } = await sb.from('members').delete().eq('member_id', targetId);
+          if (error) throw error;
+        } else if (targetEmail) {
+          const { error } = await sb.from('members').delete().eq('email', targetEmail);
+          if (error) throw error;
+        } else {
+          const { error } = await sb.from('members').delete().eq('name', targetName);
+          if (error) throw error;
+        }
+
+        // 非同期でスプレッドシートからも物理削除を同期
+        try {
+          fetch(GAS_ENDPOINT_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              functionName: 'apiDeleteMember',
+              args: [{ name: targetName, email: targetEmail }, actorEmail, actorName]
+            })
+          }).catch(e => console.warn('[MemberPermanentDeleteSync] GAS sync warning:', e));
+        } catch (syncErr) {
+          console.warn('[MemberPermanentDeleteSync] Kick failed:', syncErr);
+        }
+
+        const latestRosterRes = await this.getAdminMemberList();
+        return {
+          success: true,
+          message: `${targetName} 選手を完全に削除しました。`,
+          roster: latestRosterRes.roster
+        };
       }
     };
 
@@ -14305,6 +14542,14 @@ textarea.comment-textarea:active {
             if (prop === 'apiDeleteMember') {
               console.log('⚡ [Bypass] apiDeleteMember routed to Supabase Direct (0.1s)');
               SupabaseService.deleteMember(args[0], args[1], args[2])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiDeleteMemberPermanently') {
+              console.log('⚡ [Bypass] apiDeleteMemberPermanently routed to Supabase Direct (0.1s)');
+              SupabaseService.deleteMemberPermanently(args[0], args[1], args[2])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;
@@ -22004,41 +22249,53 @@ document.addEventListener('click', function (e) {
 window.adminMemberList = [];
 window.currentEditingMember = null;
 window.currentDeletingMember = null;
-window.currentMemberStatusTab = 'active'; // 'active' | 'suspended' | 'ob' | 'all'
 
 /**
- * 在籍ステータスタブの切り替え
- * @param {string} status - 'active' | 'suspended' | 'ob' | 'all'
+ * OB・退団メンバーセクションのアコーディオン開閉
  */
-function switchMemberStatusTab(status) {
-  window.currentMemberStatusTab = status || 'active';
-  const tabs = document.querySelectorAll('.member-status-tab');
-  tabs.forEach(btn => {
-    if (btn.getAttribute('data-status') === window.currentMemberStatusTab) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-  filterMembersList();
+function toggleObAccordion() {
+  const content = document.getElementById('obAccordionContent');
+  const toggleText = document.getElementById('obAccordionToggleText');
+  const toggleIcon = document.getElementById('obAccordionToggleIcon');
+  if (!content) return;
+
+  const isHidden = content.classList.contains('hidden');
+  if (isHidden) {
+    content.classList.remove('hidden');
+    if (toggleText) toggleText.textContent = '一覧を閉じる';
+    if (toggleIcon) toggleIcon.textContent = 'expand_less';
+  } else {
+    content.classList.add('hidden');
+    if (toggleText) toggleText.textContent = '一覧を表示';
+    if (toggleIcon) toggleIcon.textContent = 'expand_more';
+  }
 }
 
 /**
- * 編集モーダルの休部チェックボックスの表示制御（現役時のみ表示）
+ * 編集モーダルの在籍ステータス変更イベントハンドラー
+ * （休部中・OB選択時に注意書きバナーを表示）
  */
-function toggleSuspendedCheckboxVisibility() {
-  const enrollment = document.getElementById('memberEditEnrollmentSelect')?.value || 'ACTIVE';
-  const wrap = document.getElementById('memberEditSuspendedWrap');
-  const chk = document.getElementById('memberEditIsSuspended');
-  if (wrap) {
-    if (enrollment === 'ACTIVE') {
-      wrap.classList.remove('hidden');
-      wrap.style.display = 'block';
-    } else {
-      wrap.classList.add('hidden');
-      wrap.style.display = 'none';
-      if (chk) chk.checked = false;
-    }
+function handleMemberStatusSelectChange() {
+  const select = document.getElementById('memberEditStatusSelect');
+  const val = select ? select.value : 'ACTIVE';
+  const hintBox = document.getElementById('memberStatusHintBox');
+  const hintText = document.getElementById('memberStatusHintText');
+  const hintIcon = document.getElementById('memberStatusHintIcon');
+
+  if (!hintBox || !hintText) return;
+
+  if (val === 'SUSPENDED') {
+    hintBox.className = 'member-status-hint-box hint-suspended mb-12';
+    if (hintIcon) hintIcon.textContent = 'pause_circle';
+    hintText.textContent = '怪我や仕事等による一時的な活動休止です。出欠催促やアナウンス通知の配信対象から除外されます。';
+    hintBox.classList.remove('hidden');
+  } else if (val === 'OB') {
+    hintBox.className = 'member-status-hint-box hint-ob mb-12';
+    if (hintIcon) hintIcon.textContent = 'history';
+    hintText.textContent = '退団者として記録されます。過去の試合戦績や個人スタッツは維持され、いつでも現役に復帰できます。';
+    hintBox.classList.remove('hidden');
+  } else {
+    hintBox.classList.add('hidden');
   }
 }
 
@@ -22191,34 +22448,29 @@ function updateMemberSummaryStats(list) {
     }
   });
 
-  // タブ別カウントバッジの更新
-  const tabActiveEl = document.getElementById('statTabActive');
-  const tabSuspendedEl = document.getElementById('statTabSuspended');
-  const tabObEl = document.getElementById('statTabOb');
-  const tabAllEl = document.getElementById('statTabAll');
+  // セクション人数バッジ
+  const countActiveEl = document.getElementById('sectionCountActive');
+  const countSuspendedEl = document.getElementById('sectionCountSuspended');
+  const countObEl = document.getElementById('sectionCountOb');
 
-  if (tabActiveEl) tabActiveEl.textContent = activeCount;
-  if (tabSuspendedEl) tabSuspendedEl.textContent = suspendedCount;
-  if (tabObEl) tabObEl.textContent = obCount;
-  if (tabAllEl) tabAllEl.textContent = baseList.length;
+  if (countActiveEl) countActiveEl.textContent = activeCount + '名';
+  if (countSuspendedEl) countSuspendedEl.textContent = suspendedCount + '名';
+  if (countObEl) countObEl.textContent = obCount + '名';
 
-  // 統計サマリーピルの更新
+  // 統計サマリーピルの更新（在籍部員数 = 現役 + 休部中）
   const totalEl = document.getElementById('statTotalMembers');
-  const adminEl = document.getElementById('statAdminMembers');
   const fpEl = document.getElementById('statFpMembers');
   const gkEl = document.getElementById('statGkMembers');
 
-  if (totalEl) totalEl.textContent = activeCount;
-  if (adminEl) adminEl.textContent = adminCount;
+  if (totalEl) totalEl.textContent = activeCount + suspendedCount;
   if (fpEl) fpEl.textContent = fpCount;
   if (gkEl) gkEl.textContent = gkCount;
 }
 
 /**
- * 検索・フィルター処理
+ * 検索・フィルター処理（現役・休部中・OBの3セクションへ振り分け）
  */
 function filterMembersList() {
-  const currentTab = window.currentMemberStatusTab || 'active';
   const searchInput = document.getElementById('memberSearchInput');
   const clearBtn = document.getElementById('memberSearchClearBtn');
   const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
@@ -22237,30 +22489,19 @@ function filterMembersList() {
 
   const all = window.adminMemberList || [];
 
-  const filtered = all.filter(m => {
-    // 特殊枠（助っ人、OG、なし）は全タブで完全除外
+  const activeList = [];
+  const suspendedList = [];
+  const obList = [];
+
+  all.forEach(m => {
+    // 特殊枠（助っ人、OG、なし）は完全除外
     const mName = String(m.name || '').trim();
     const mId = String(m.memberId || m.id || '').trim();
     if (m.memberType === 'SPECIAL' || ['助っ人', 'OG', 'なし'].includes(mName) || mId.includes('SPECIAL')) {
-      return false;
+      return;
     }
 
-    const isOb = !!m.isPast || m.memberType === 'PAST';
-    const isSuspended = !isOb && (!!m.isSuspended || m.memberType === 'SUSPENDED');
-
-    // 1. 在籍ステータスタブによる絞り込み
-    if (currentTab === 'active') {
-      // 現役タブ: 休部中も「現役」として表示
-      if (isOb) return false;
-    } else if (currentTab === 'suspended') {
-      // 休部中タブ: 現在休部中の選手のみをピックアップ表示
-      if (!isSuspended) return false;
-    } else if (currentTab === 'ob') {
-      // OBタブ: OB選手（退団者）のみ表示
-      if (!isOb) return false;
-    } // 'all' の場合は全員通過
-
-    // 2. 検索クエリマッチ（名前、背番号、役割、生年月日、電話番号、メール）
+    // 検索クエリマッチ（名前、背番号、役割、生年月日、電話番号、メール）
     if (cleanQuery) {
       const name = String(m.name || '').replace(/[\s\u3000]+/g, '').toLowerCase();
       const num = String(m.number !== undefined && m.number !== 999 ? m.number : '');
@@ -22277,26 +22518,81 @@ function filterMembersList() {
                       email.includes(cleanQuery) ||
                       birthday.includes(cleanQuery) ||
                       (phone && (phone.includes(cleanQuery) || (queryNoHyphen && phone.includes(queryNoHyphen))));
-      if (!matched) return false;
+      if (!matched) return;
     }
 
-    // 3. 役割フィルター (代表, 副代表, メンバー)
+    // 役割フィルター (代表, 副代表, メンバー)
     if (selectedRole !== 'all') {
       let r = String(m.role || 'メンバー').trim();
       if (r === '部員') r = 'メンバー';
-      if (r !== selectedRole) return false;
+      if (r !== selectedRole) return;
     }
 
-    // 4. ポジションフィルター
+    // ポジションフィルター
     if (selectedPos !== 'all') {
       const p = String(m.position || '').trim().toUpperCase();
-      if (p !== selectedPos) return false;
+      if (p !== selectedPos) return;
     }
 
-    return true;
+    const isOb = !!m.isPast || m.memberType === 'PAST';
+    const isSuspended = !isOb && (!!m.isSuspended || m.memberType === 'SUSPENDED');
+
+    if (isOb) {
+      obList.push(m);
+    } else if (isSuspended) {
+      suspendedList.push(m);
+    } else {
+      activeList.push(m);
+    }
   });
 
-  renderMemberCards(filtered);
+  // セクション人数バッジ更新
+  const countActiveEl = document.getElementById('sectionCountActive');
+  const countSuspendedEl = document.getElementById('sectionCountSuspended');
+  const countObEl = document.getElementById('sectionCountOb');
+  if (countActiveEl) countActiveEl.textContent = activeList.length + '名';
+  if (countSuspendedEl) countSuspendedEl.textContent = suspendedList.length + '名';
+  if (countObEl) countObEl.textContent = obList.length + '名';
+
+  // 1. 現役メンバーセクション描画
+  renderCardsToContainer(activeList, 'membersListActive', 'active');
+
+  // 2. 休部中メンバーセクション描画
+  renderCardsToContainer(suspendedList, 'membersListSuspended', 'suspended');
+  const suspendedHint = document.getElementById('suspendedEmptyHint');
+  if (suspendedHint) {
+    if (suspendedList.length === 0) suspendedHint.classList.remove('hidden');
+    else suspendedHint.classList.add('hidden');
+  }
+
+  // 3. OBメンバーセクション描画
+  renderCardsToContainer(obList, 'membersListOb', 'ob');
+  const obHint = document.getElementById('obEmptyHint');
+  if (obHint) {
+    if (obList.length === 0) obHint.classList.remove('hidden');
+    else obHint.classList.add('hidden');
+  }
+
+  // 全体0件の制御
+  const totalEmptyEl = document.getElementById('membersTotalEmpty');
+  const secActive = document.getElementById('sectionActiveMembers');
+  const secSuspended = document.getElementById('sectionSuspendedMembers');
+  const secOb = document.getElementById('sectionObMembers');
+
+  const isTotalEmpty = (activeList.length === 0 && suspendedList.length === 0 && obList.length === 0);
+  if (totalEmptyEl) {
+    if (isTotalEmpty) {
+      totalEmptyEl.classList.remove('hidden');
+      if (secActive) secActive.classList.add('hidden');
+      if (secSuspended) secSuspended.classList.add('hidden');
+      if (secOb) secOb.classList.add('hidden');
+    } else {
+      totalEmptyEl.classList.add('hidden');
+      if (secActive) secActive.classList.remove('hidden');
+      if (secSuspended) secSuspended.classList.remove('hidden');
+      if (secOb) secOb.classList.remove('hidden');
+    }
+  }
 }
 
 /**
@@ -22336,21 +22632,18 @@ function formatBirthdayWithAge(birthdayStr) {
 }
 
 /**
- * メンバーカードのHTML生成・挿入（テンプレート複製 & 値バインド）
+ * 指定コンテナへのメンバーカード生成・挿入
+ * @param {Array} list 
+ * @param {string} containerId 
+ * @param {'active'|'suspended'|'ob'} sectionType 
  */
-function renderMemberCards(list) {
-  const container = document.getElementById('membersListContainer');
+function renderCardsToContainer(list, containerId, sectionType) {
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   container.replaceChildren();
 
-  if (!list || list.length === 0) {
-    const tplEmpty = document.getElementById('tpl-member-empty');
-    if (tplEmpty) {
-      container.appendChild(tplEmpty.content.cloneNode(true));
-    }
-    return;
-  }
+  if (!list || list.length === 0) return;
 
   const tplCard = document.getElementById('tpl-member-card');
   if (!tplCard) return;
@@ -22558,8 +22851,8 @@ function renderMemberCards(list) {
     // --- 操作ボタン / 権限 ---
     const canEdit = canEditTarget(role);
     card.querySelectorAll('.member-card-actions').forEach(actionsArea => {
+      const restoreBtn = actionsArea.querySelector('.btn-member-restore');
       const editBtn = actionsArea.querySelector('.btn-member-edit');
-      const deleteBtn = actionsArea.querySelector('.btn-member-delete');
       const lockBadge = actionsArea.querySelector('.badge-role-locked');
 
       if (canEdit) {
@@ -22567,18 +22860,18 @@ function renderMemberCards(list) {
           editBtn.classList.remove('hidden');
           editBtn.onclick = () => openMemberEditModalByName(m.name);
         }
-        if (deleteBtn) {
-          if (isOb) {
-            deleteBtn.classList.add('hidden'); // OB選手は既に退団状態のため削除ボタン不要
+        if (restoreBtn) {
+          if (sectionType === 'active') {
+            restoreBtn.classList.add('hidden');
           } else {
-            deleteBtn.classList.remove('hidden');
-            deleteBtn.onclick = () => openMemberDeleteModalByName(m.name);
+            restoreBtn.classList.remove('hidden');
+            restoreBtn.onclick = () => handleRestoreMember(m.name);
           }
         }
         if (lockBadge) lockBadge.classList.add('hidden');
       } else {
         if (editBtn) editBtn.classList.add('hidden');
-        if (deleteBtn) deleteBtn.classList.add('hidden');
+        if (restoreBtn) restoreBtn.classList.add('hidden');
         if (lockBadge) lockBadge.classList.remove('hidden');
       }
     });
@@ -22976,11 +23269,12 @@ function openMemberAddModal() {
     }
   }
 
-  const enrollSelect = document.getElementById('memberEditEnrollmentSelect');
-  if (enrollSelect) enrollSelect.value = 'ACTIVE';
-  const chkSuspended = document.getElementById('memberEditIsSuspended');
-  if (chkSuspended) chkSuspended.checked = false;
-  toggleSuspendedCheckboxVisibility();
+  const statusSelect = document.getElementById('memberEditStatusSelect');
+  if (statusSelect) statusSelect.value = 'ACTIVE';
+  handleMemberStatusSelectChange();
+
+  const delTrigger = document.getElementById('btnDeleteMemberTrigger');
+  if (delTrigger) delTrigger.classList.add('hidden'); // 新規追加時は完全削除不要
 
   const submitBtn = document.getElementById('btnSaveMemberSubmit');
   if (submitBtn) {
@@ -23022,6 +23316,8 @@ function openMemberEditModalByName(memberName) {
   const member = list.find(m => m.name === memberName);
   if (!member) return;
 
+  window.currentEditingMember = member;
+
   let targetRole = String(member.role || 'メンバー').trim();
   if (targetRole === '部員') targetRole = 'メンバー';
 
@@ -23056,11 +23352,16 @@ function openMemberEditModalByName(memberName) {
 
   const isOb = !!member.isPast || member.memberType === 'PAST';
   const isSuspended = !isOb && (!!member.isSuspended || member.memberType === 'SUSPENDED');
-  const enrollSelect = document.getElementById('memberEditEnrollmentSelect');
-  if (enrollSelect) enrollSelect.value = isOb ? 'OB' : 'ACTIVE';
-  const chkSuspended = document.getElementById('memberEditIsSuspended');
-  if (chkSuspended) chkSuspended.checked = isSuspended;
-  toggleSuspendedCheckboxVisibility();
+  const statusSelect = document.getElementById('memberEditStatusSelect');
+  if (statusSelect) {
+    if (isOb) statusSelect.value = 'OB';
+    else if (isSuspended) statusSelect.value = 'SUSPENDED';
+    else statusSelect.value = 'ACTIVE';
+  }
+  handleMemberStatusSelectChange();
+
+  const delTrigger = document.getElementById('btnDeleteMemberTrigger');
+  if (delTrigger) delTrigger.classList.remove('hidden'); // 既存メンバーは完全削除トリガーを表示
 
   const birthdayInput = document.getElementById('memberEditBirthday');
   if (birthdayInput) birthdayInput.value = member.birthday || '';
@@ -23149,9 +23450,9 @@ function handleSaveMemberSubmit(e) {
     }
   }
 
-  const enrollment = document.getElementById('memberEditEnrollmentSelect')?.value || 'ACTIVE';
-  const isOb = (enrollment === 'OB');
-  const isSuspended = !isOb && !!(document.getElementById('memberEditIsSuspended')?.checked);
+  const statusVal = document.getElementById('memberEditStatusSelect')?.value || 'ACTIVE';
+  const isOb = (statusVal === 'OB');
+  const isSuspended = (statusVal === 'SUSPENDED');
 
   const payload = {
     isNew: isNew,
@@ -23279,17 +23580,106 @@ function copyGuidanceEmail() {
 }
 
 /**
- * 削除確認モーダルを開く
+ * 休部中またはOB選手をワンタップで「現役」へ復帰
+ * @param {string} memberName 
  */
-function openMemberDeleteModalByName(memberName) {
+function handleRestoreMember(memberName) {
   const list = window.adminMemberList || [];
   const member = list.find(m => m.name === memberName);
   if (!member) return;
 
   let targetRole = String(member.role || 'メンバー').trim();
   if (targetRole === '部員') targetRole = 'メンバー';
+  if (!canEditTarget(targetRole)) {
+    alert('上位ロール（代表）のメンバーを操作する権限はありません。');
+    return;
+  }
 
-  // 権限チェック: 自分より上位のロール（代表）は削除不可
+  const ok = confirm(`「${member.name}」選手を現役に復帰させますか？\n（※出欠催促やアナウンス通知の配信対象に復帰します）`);
+  if (!ok) return;
+
+  const payload = {
+    isNew: false,
+    originalName: member.name,
+    name: member.name,
+    number: (member.number !== undefined && member.number !== 999) ? member.number : '',
+    role: member.role || 'メンバー',
+    position: member.position || '',
+    birthday: member.birthday || '',
+    phone: member.phone || '',
+    email: member.email || '',
+    isPast: false,
+    isSuspended: false,
+    memberType: 'REGULAR'
+  };
+
+  const u = window.currentUser || {};
+  const actorEmail = u.email || '';
+  const actorName = u.name || '';
+
+  // Supabase Direct (バイパス経由で即時更新 0.1s)
+  google.script.run
+    .withSuccessHandler(res => {
+      if (res && res.success) {
+        if (res.roster) {
+          window.adminMemberList = res.roster;
+          window.scheduleRoster = res.roster;
+          if (typeof updateScheduleMemberListOptions === 'function') {
+            updateScheduleMemberListOptions(res.roster);
+          }
+          renderMembersList(window.adminMemberList);
+        }
+      } else {
+        alert('復帰処理に失敗しました: ' + (res && res.error ? res.error : ''));
+      }
+    })
+    .withFailureHandler(err => {
+      alert('エラーが発生しました: ' + (err.message || ''));
+    })
+    .apiSaveMember(payload, actorEmail, actorName);
+}
+
+/**
+ * 対象メンバーに過去の試合記録（出席、得点、MOM等）が存在するか判定
+ * @param {Object} member 
+ * @returns {boolean}
+ */
+function hasMemberPastRecords(member) {
+  if (!member) return false;
+  const name = String(member.name || '').trim();
+  const mId = String(member.memberId || member.id || '').trim();
+
+  // 1. Supabase/ローカルキャッシュの試合記録からチェック
+  const matches = (window.supabaseState && window.supabaseState.history && window.supabaseState.history.matches) || [];
+  for (const m of matches) {
+    if (m.momMemberId === mId || (m.mom && m.mom === name)) return true;
+    const attended = String(m.attended || '').split(',').map(s => s.trim());
+    if (attended.includes(name)) return true;
+    if (m.logs && Array.isArray(m.logs)) {
+      for (const l of m.logs) {
+        if (l.player === name || l.assist === name) return true;
+      }
+    }
+  }
+
+  // 2. 出欠データからチェック
+  const attendance = (window.supabaseState && window.supabaseState.attendance) || [];
+  for (const att of attendance) {
+    if (att.member_id === mId || att.member_name === name) return true;
+  }
+
+  return false;
+}
+
+/**
+ * 編集モーダル内の「メンバーを完全削除」ボタンから削除確認モーダルを開く
+ */
+function openMemberDeleteConfirmFromModal() {
+  const member = window.currentEditingMember;
+  if (!member) return;
+
+  let targetRole = String(member.role || 'メンバー').trim();
+  if (targetRole === '部員') targetRole = 'メンバー';
   if (!canEditTarget(targetRole)) {
     alert('上位ロール（代表）のメンバーを削除する権限はありません。');
     return;
@@ -23299,10 +23689,10 @@ function openMemberDeleteModalByName(memberName) {
 
   const titleEl = document.getElementById('memberDeleteNameTitle');
   if (titleEl) {
-    titleEl.textContent = `「${member.name}」選手を削除`;
+    titleEl.textContent = `「${member.name}」選手を完全削除`;
   }
 
-  // 選手の写真（アバター）を表示
+  // アバター表示
   const imgEl = document.getElementById('memberDeleteAvatarImg');
   const placeholderEl = document.getElementById('memberDeleteAvatarPlaceholder');
   if (imgEl && placeholderEl) {
@@ -23312,10 +23702,6 @@ function openMemberDeleteModalByName(memberName) {
       imgEl.alt = member.name;
       imgEl.classList.remove('hidden');
       placeholderEl.classList.add('hidden');
-      imgEl.onerror = function() {
-        imgEl.classList.add('hidden');
-        placeholderEl.classList.remove('hidden');
-      };
     } else {
       imgEl.src = '';
       imgEl.classList.add('hidden');
@@ -23323,10 +23709,31 @@ function openMemberDeleteModalByName(memberName) {
     }
   }
 
-  setDeleteFormStatus('', '');
+  // 過去記録が存在するか安全チェック
+  const hasRecords = hasMemberPastRecords(member);
+  const guardAlert = document.getElementById('memberDeleteGuardAlert');
+  const deleteDesc = document.getElementById('memberDeleteDesc');
   const deleteBtn = document.getElementById('btnConfirmDeleteMember');
-  if (deleteBtn) deleteBtn.disabled = false;
 
+  if (hasRecords) {
+    // 過去記録があるため完全削除不可（OB変更を案内）
+    if (guardAlert) guardAlert.classList.remove('hidden');
+    if (deleteDesc) deleteDesc.classList.add('hidden');
+    if (deleteBtn) {
+      deleteBtn.disabled = true;
+      deleteBtn.classList.add('hidden');
+    }
+  } else {
+    // 誤登録のため完全削除可能
+    if (guardAlert) guardAlert.classList.add('hidden');
+    if (deleteDesc) deleteDesc.classList.remove('hidden');
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.classList.remove('hidden');
+    }
+  }
+
+  setDeleteFormStatus('', '');
   openModalById('memberDeleteModal');
 }
 
@@ -23341,19 +23748,11 @@ function closeMemberDeleteModal(e) {
 }
 
 /**
- * メンバー削除の実行
+ * 誤登録メンバーの完全物理削除を実行
  */
-function executeMemberDelete() {
+function executeMemberDeletePermanently() {
   const member = window.currentDeletingMember;
   if (!member) return;
-
-  let targetRole = String(member.role || 'メンバー').trim();
-  if (targetRole === '部員') targetRole = 'メンバー';
-
-  if (!canEditTarget(targetRole)) {
-    setDeleteFormStatus('上位ロール（代表）のメンバーを削除する権限はありません。', 'error');
-    return;
-  }
 
   const u = window.currentUser || {};
   const actorEmail = u.email || '';
@@ -23362,14 +23761,14 @@ function executeMemberDelete() {
   const deleteBtn = document.getElementById('btnConfirmDeleteMember');
   if (deleteBtn) deleteBtn.disabled = true;
 
-  setDeleteFormStatus('削除を実行中...', 'loading');
+  setDeleteFormStatus('完全削除を実行中...', 'loading');
 
   google.script.run
     .withSuccessHandler(res => {
       if (deleteBtn) deleteBtn.disabled = false;
 
       if (res && res.success) {
-        setDeleteFormStatus(res.message || '削除が完了しました。', 'success');
+        setDeleteFormStatus('削除が完了しました。', 'success');
         if (res.roster) {
           window.adminMemberList = res.roster;
           window.scheduleRoster = res.roster;
@@ -23380,7 +23779,9 @@ function executeMemberDelete() {
         }
         setTimeout(() => {
           closeModalById('memberDeleteModal');
+          closeModalById('memberEditModal');
           window.currentDeletingMember = null;
+          window.currentEditingMember = null;
         }, 500);
       } else {
         setDeleteFormStatus(res && res.error ? res.error : '削除処理に失敗しました。', 'error');
@@ -23390,7 +23791,7 @@ function executeMemberDelete() {
       if (deleteBtn) deleteBtn.disabled = false;
       setDeleteFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
     })
-    .apiDeleteMember({ name: member.name, email: member.email }, actorEmail, actorName);
+    .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
 }
 
 /**
