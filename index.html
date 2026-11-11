@@ -13146,7 +13146,7 @@ textarea.comment-textarea:active {
         // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
         const mergedEvents = mergeEventsWithAttendance(initialEvents, resAttendance.data || [], idToMember);
 
-        // 8. カレンダー出欠の初期集計オブジェクトを構築 (0ms で画面即時描画)
+        // 8. Supabase 集計ビュー (view_player_attendance_stats) からカレンダー出欠オブジェクトをリアルタイム構築 (0ms)
         const currentYearStr = new Date().getFullYear().toString();
         const calPlayers = {};
         roster.forEach(m => {
@@ -13160,64 +13160,64 @@ textarea.comment-textarea:active {
           };
         });
 
-        // イベントおよび出欠データから当年分の参加実績を集計
-        mergedEvents.forEach(ev => {
-          const evDateStr = ev.date || (ev.start ? ev.start.substring(0, 10) : '');
-          if (!evDateStr) return;
-          const evYear = evDateStr.substring(0, 4);
-          if (evYear !== currentYearStr) return;
-
-          let cat = ev.category || 'その他';
-          if (!['公式戦', 'TRM', 'TR'].includes(cat)) cat = 'その他';
-
-          const attDetail = ev.attendeesDetail || {};
-          const yesList = attDetail.yes || [];
-          const noList = attDetail.no || [];
-          const maybeList = attDetail.maybe || [];
-
-          const invitedList = new Set([...yesList, ...noList, ...maybeList]);
-          invitedList.forEach(name => {
-            if (!calPlayers[name]) {
-              calPlayers[name] = {
-                name: name,
-                all: { invited: 0, attended: 0, rate: 0 },
-                '公式戦': { invited: 0, attended: 0, rate: 0 },
-                'TRM': { invited: 0, attended: 0, rate: 0 },
-                'TR': { invited: 0, attended: 0, rate: 0 },
-                'その他': { invited: 0, attended: 0, rate: 0 }
-              };
-            }
-            calPlayers[name].all.invited++;
-            calPlayers[name][cat].invited++;
-          });
-
-          yesList.forEach(name => {
-            if (calPlayers[name]) {
-              calPlayers[name].all.attended++;
-              calPlayers[name][cat].attended++;
-            }
-          });
-        });
-
-        Object.keys(calPlayers).forEach(pName => {
-          const pRec = calPlayers[pName];
-          ['all', '公式戦', 'TRM', 'TR', 'その他'].forEach(cKey => {
-            const item = pRec[cKey];
-            if (item && item.invited > 0) {
-              item.rate = Math.round((item.attended / item.invited) * 100);
-            }
-          });
-        });
-
-        const calendarAttendancePayload = (initialCalAttendance && initialCalAttendance.players && Object.keys(initialCalAttendance.players).length > 0)
-          ? initialCalAttendance
-          : {
-            year: currentYearStr,
-            updatedAt: new Date().toISOString(),
-            players: calPlayers
+        // Supabase view_player_attendance_stats の結果をリアルタイム反映 (深夜バッチ完全不要)
+        (resAttStats.data || []).forEach(st => {
+          const mName = st.member_name;
+          if (!mName) return;
+          if (!calPlayers[mName]) {
+            calPlayers[mName] = {
+              name: mName,
+              all: { invited: 0, attended: 0, rate: 0 },
+              '公式戦': { invited: 0, attended: 0, rate: 0 },
+              'TRM': { invited: 0, attended: 0, rate: 0 },
+              'TR': { invited: 0, attended: 0, rate: 0 },
+              'その他': { invited: 0, attended: 0, rate: 0 }
+            };
+          }
+          const tot = Number(st.total_events || 0);
+          const att = Number(st.attended_events || 0);
+          calPlayers[mName].all = {
+            invited: tot,
+            attended: att,
+            rate: tot > 0 ? Math.round((att / tot) * 100) : 0
           };
+          const offInv = Number(st.invited_official || 0);
+          const offAtt = Number(st.attended_official || 0);
+          calPlayers[mName]['公式戦'] = {
+            invited: offInv,
+            attended: offAtt,
+            rate: offInv > 0 ? Math.round((offAtt / offInv) * 100) : 0
+          };
+          const trmInv = Number(st.invited_trm || 0);
+          const trmAtt = Number(st.attended_trm || 0);
+          calPlayers[mName]['TRM'] = {
+            invited: trmInv,
+            attended: trmAtt,
+            rate: trmInv > 0 ? Math.round((trmAtt / trmInv) * 100) : 0
+          };
+          const trInv = Number(st.invited_tr || 0);
+          const trAtt = Number(st.attended_tr || 0);
+          calPlayers[mName]['TR'] = {
+            invited: trInv,
+            attended: trAtt,
+            rate: trInv > 0 ? Math.round((trAtt / trInv) * 100) : 0
+          };
+          const othInv = Number(st.invited_other || 0);
+          const othAtt = Number(st.attended_other || 0);
+          calPlayers[mName]['その他'] = {
+            invited: othInv,
+            attended: othAtt,
+            rate: othInv > 0 ? Math.round((othAtt / othInv) * 100) : 0
+          };
+        });
+
+        const calendarAttendancePayload = {
+          year: currentYearStr,
+          updatedAt: new Date().toISOString(),
+          players: calPlayers
+        };
         window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-        window.calendarAttendanceCache[calendarAttendancePayload.year || currentYearStr] = calendarAttendancePayload;
+        window.calendarAttendanceCache[currentYearStr] = calendarAttendancePayload;
         window.calendarAttendanceData = calendarAttendancePayload;
 
         // バックグラウンドで Google カレンダーの最新イベントを非同期取得 (初期描画を一切ブロックしない)
@@ -13263,6 +13263,7 @@ textarea.comment-textarea:active {
 
         const status = String(payload.status || 'maybe').toLowerCase();
         const comment = payload.comment || null;
+        const category = payload.category || payload.originalCategory || 'その他';
 
         // 1. Supabase attendance に即時 UPSERT (0.1秒)
         const { data, error } = await sb.from('attendance').upsert({
@@ -13270,6 +13271,7 @@ textarea.comment-textarea:active {
           member_id: memberId,
           event_date: payload.originalDate || null,
           event_title: payload.originalTitle || null,
+          category: category,
           status: status,
           comment: comment,
           updated_at: new Date().toISOString()
@@ -13284,7 +13286,36 @@ textarea.comment-textarea:active {
 
         console.log(`[Supabase] Attendance updated: ${eventId} -> ${memberId}: ${status}`);
 
-        // 2. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
+        // 2. 出欠変更をローカル集計データへ即時反映し、ランキング・個人成績を 0 秒リアルタイム再描画
+        try {
+          const mem = (window.cachedRosterList || []).find(m => m.id === memberId || m.memberId === memberId) || (window.currentUser ? window.currentUser : null);
+          const pName = mem ? mem.name : null;
+          if (pName && window.calendarAttendanceData && window.calendarAttendanceData.players) {
+            const pRec = window.calendarAttendanceData.players[pName];
+            if (pRec) {
+              // リアルタイム更新（Supabase 再取得を待たずに画面即時反映）
+              const prevAttended = pRec.all.attended;
+              if (status === 'yes') {
+                pRec.all.attended++;
+                if (pRec[category]) pRec[category].attended++;
+              } else if (prevAttended > 0) {
+                // no または maybe に変更された場合
+                pRec.all.attended = Math.max(0, pRec.all.attended - 1);
+                if (pRec[category] && pRec[category].attended > 0) pRec[category].attended--;
+              }
+              if (typeof filterAndRenderRankings === 'function') {
+                filterAndRenderRankings();
+              }
+              if (typeof filterAndRenderPersonalStats === 'function') {
+                filterAndRenderPersonalStats();
+              }
+            }
+          }
+        } catch (uiErr) {
+          console.warn('[RealtimeUpdate] UI update warning:', uiErr);
+        }
+
+        // 3. 裏側で Google カレンダー同期を非同期キック (ユーザーは待たせない)
         try {
           fetch(GAS_ENDPOINT_URL, {
             method: 'POST',
@@ -13740,35 +13771,55 @@ textarea.comment-textarea:active {
             attendanceByEvent[eid].push(att);
           });
 
-          // ログインユーザーがカレンダー側で変更した最新ステータスを Supabase に自動 UPSERT
-          if (myEmail && myId) {
-            for (const ev of rawEvents) {
-              const cleanEvId = String(ev.id || '').split('@')[0];
-              const detail = ev.attendeesDetail || {};
-              const yesEmails = (detail.yesEmails || []).map(e => String(e).toLowerCase().trim());
-              const noEmails = (detail.noEmails || []).map(e => String(e).toLowerCase().trim());
-              const maybeEmails = (detail.maybeEmails || []).map(e => String(e).toLowerCase().trim());
+          // カレンダー側で変更された全メンバーの最新ステータスを Supabase に自動一括同期
+          const emailToMember = {};
+          try {
+            const cachedRoster = localStorage.getItem('fcb_cached_roster');
+            if (cachedRoster) {
+              const rList = JSON.parse(cachedRoster);
+              (rList || []).forEach(m => {
+                if (m.email && m.id) emailToMember[String(m.email).trim().toLowerCase()] = m;
+              });
+            }
+          } catch (e) { }
 
-              let calStatus = null;
-              if (yesEmails.includes(myEmail)) calStatus = 'yes';
-              else if (noEmails.includes(myEmail)) calStatus = 'no';
-              else if (maybeEmails.includes(myEmail)) calStatus = 'maybe';
+          const upsertBatch = [];
+          for (const ev of rawEvents) {
+            const cleanEvId = String(ev.id || '').split('@')[0];
+            const detail = ev.attendeesDetail || {};
+            const eventAtts = attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || [];
 
-              if (calStatus) {
-                const existingAtt = (attendanceByEvent[cleanEvId] || attendanceByEvent[ev.id] || []).find(a => a.member_id === myId);
-                if (!existingAtt || existingAtt.status !== calStatus) {
-                  console.log(`⚡ [Resume] Syncing calendar change to Supabase: ${cleanEvId} -> ${calStatus}`);
-                  await sb.from('attendance').upsert({
+            const processList = (emails, status) => {
+              (emails || []).forEach(em => {
+                const cleanEm = String(em).toLowerCase().trim();
+                const mem = emailToMember[cleanEm];
+                if (!mem) return;
+                const mId = mem.id || mem.memberId;
+                if (!mId) return;
+
+                const existing = eventAtts.find(a => a.member_id === mId);
+                if (!existing || existing.status !== status) {
+                  upsertBatch.push({
                     event_id: cleanEvId,
-                    member_id: myId,
+                    member_id: mId,
                     event_date: ev.date || null,
                     event_title: ev.title || null,
-                    status: calStatus,
+                    category: ev.category || 'その他',
+                    status: status,
                     updated_at: new Date().toISOString()
-                  }, { onConflict: 'event_id,member_id' });
+                  });
                 }
-              }
-            }
+              });
+            };
+
+            processList(detail.yesEmails, 'yes');
+            processList(detail.noEmails, 'no');
+            processList(detail.maybeEmails, 'maybe');
+          }
+
+          if (upsertBatch.length > 0) {
+            console.log(`⚡ [Resume] Syncing ${upsertBatch.length} calendar attendance changes to Supabase...`);
+            await sb.from('attendance').upsert(upsertBatch, { onConflict: 'event_id,member_id' });
           }
 
           // 最新イベントをアプリのメモリに適用
