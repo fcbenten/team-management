@@ -1,0 +1,963 @@
+/* =========================================
+   備品管理画面 スタイル (css_equipment.html)
+   ※ アプリ共通のデザインシステム・変数（css.html / css_common.html）に完全準拠
+   ========================================= */
+
+/* 1. ヘッダーカード */
+.equipment-header-card {
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.equipment-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.equipment-header-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.equipment-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.equipment-title-icon {
+  font-size: 26px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.equipment-header-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.equipment-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-refresh-equipment {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+}
+
+.btn-refresh-equipment:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--primary);
+}
+
+.btn-refresh-equipment .material-symbols-outlined {
+  font-size: 16px;
+  color: #64748b;
+}
+
+.btn-refresh-equipment:hover .material-symbols-outlined {
+  color: var(--primary);
+}
+
+.btn-add-equipment {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  white-space: nowrap;
+}
+
+.btn-add-equipment:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-add-equipment .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* 統計サマリーピル */
+.equipment-stat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: none !important;
+  padding-top: 0 !important;
+}
+
+.equipment-stat-pills .stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+}
+
+.equipment-stat-pills .stat-pill-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.equipment-stat-pills .stat-pill-val {
+  color: #475569;
+  font-weight: 700;
+}
+
+/* 2. 備品グループセクション（左寄・幅比率6:4〜7:3レイアウト） */
+.equipment-layout-container {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr; /* 左62% : 右38% の黄金バランス */
+  gap: 16px;
+  align-items: start;
+}
+
+.equipment-col-left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* ビブス・審判道具・その他の隙間を綺麗に詰める */
+}
+
+.equipment-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.equipment-section-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.equipment-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.equipment-section-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.equipment-section-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.equipment-section-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 1px 7px;
+  border-radius: 12px;
+}
+
+/* ビブス用サブボックス（水色・黄色） */
+.equipment-subbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* ボール用サブボックスコンテナ（チーム所有・個人所有） */
+.equipment-ball-subbox-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.equipment-empty-hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-style: italic;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.equipment-subbox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.equipment-subbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.equipment-subbox-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+/* 各セクション内のアイテム行リスト */
+.equipment-item-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.equipment-item-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  transition: all 0.15s ease;
+  min-height: 42px;
+}
+
+.equipment-item-row:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* 品目ラベル（審判道具・その他など）: 固定幅で名前の開始位置を完全統一 */
+.equipment-item-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-width: 105px;
+  width: 105px;
+}
+
+/* 備考（文字色を薄くし、名前と被らないようマージンと最小幅を確保） */
+.equipment-item-note {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+  padding: 0 4px;
+  margin-left: 8px; /* 保管メンバー名と絶対に被らないよう必ず間隔を確保 */
+}
+
+/* ビブス行での保管メンバー情報（左寄せ・名前が絶対に見切れない幅を確保） */
+.equipment-bibs-row .equipment-item-holder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 120px;
+}
+
+/* ボール行での保管メンバー情報（3桁背番号や長い氏名でも絶対に被らない十分な幅を確保） */
+.equipment-ball-row .equipment-item-holder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
+/* ラベル付き行（審判道具・その他）での保管メンバー情報 */
+.equipment-labeled-row .equipment-item-holder {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: 180px;
+}
+
+.holder-avatar-wrap {
+  width: 26px;
+  height: 26px;
+  border-radius: 50% !important;
+  overflow: hidden;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #cbd5e1;
+}
+
+.holder-avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% !important;
+  object-fit: cover;
+  display: block;
+}
+
+.holder-avatar-icon {
+  font-size: 16px !important;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.holder-info-group {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.holder-number-pill,
+.holder-number-text {
+  display: inline-block;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  flex-shrink: 0;
+}
+
+.holder-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  white-space: nowrap;
+}
+
+.holder-name-unassigned {
+  color: #94a3b8;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* 操作（編集ボタン） */
+.equipment-item-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.btn-item-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  background: #ffffff;
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-item-edit:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--primary);
+}
+
+.btn-item-edit .material-symbols-outlined {
+  font-size: 13px;
+}
+
+/* 3. モーダル・ダイアログ（アプリ共通規約に完全統一） */
+.equipment-modal-content {
+  max-width: 440px;
+  width: 92%;
+  background: #ffffff !important;
+  color: var(--text-main) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.equipment-modal-content .modal-header {
+  padding: 14px 20px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: #ffffff !important;
+}
+
+.equipment-modal-content .modal-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--text-heading) !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em;
+  margin: 0 !important;
+}
+
+.equipment-modal-body {
+  padding: 16px 20px 20px !important;
+}
+
+.equipment-modal-body input,
+.equipment-modal-body select,
+.equipment-modal-body .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #ffffff !important;
+  color: var(--text-heading) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: var(--radius) !important;
+  font-family: inherit !important;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+.equipment-modal-body input:focus,
+.equipment-modal-body select:focus {
+  border-color: var(--primary) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.equipment-modal-footer {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 14px 20px 16px !important;
+  border-top: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.equipment-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.equipment-modal-footer-left {
+  display: flex;
+  align-items: center;
+}
+
+/* 編集モーダル左下の危険操作リンク（備品削除トリガー） */
+.btn-equipment-danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-equipment-danger-link .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.btn-equipment-danger-link:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
+.btn-equipment-danger-link.hidden {
+  display: none !important;
+}
+
+.btn-equipment-modal-delete {
+  background: transparent;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-equipment-modal-delete:hover {
+  background: #fee2e2;
+  border-color: #ef4444;
+}
+
+.btn-equipment-modal-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-equipment-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-equipment-modal-cancel:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.btn-equipment-modal-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff !important;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+}
+
+.btn-equipment-modal-save:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-equipment-modal-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 4. ホーム画面の備品アラート表示コンテナ（1イベント1バナー） */
+.home-equipment-notice-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.equipment-notice-banner {
+  margin-bottom: 0 !important;
+}
+
+.notice-gear-badges-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.notice-gear-item-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 4px 10px;
+  background: #ffffff;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.app-notice-banner:not(.notice-urgent) .notice-gear-item-pill {
+  border-color: #fde68a;
+}
+
+.notice-gear-item-name {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.btn-banner-resolve {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: 1px solid #b91c1c;
+  background: #dc2626;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.35);
+  transition: all 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn-banner-resolve:hover {
+  background: #b91c1c;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-banner-resolve:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}
+
+.app-notice-banner:not(.notice-urgent) .btn-banner-resolve {
+  background: #d97706;
+  border-color: #b45309;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.35);
+}
+
+.app-notice-banner:not(.notice-urgent) .btn-banner-resolve:hover {
+  background: #b45309;
+  box-shadow: 0 2px 5px rgba(217, 119, 6, 0.45);
+}
+
+.btn-banner-resolve.btn-resolving,
+.btn-edm-resolve.btn-resolving {
+  background: #64748b !important;
+  border-color: #475569 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: wait !important;
+  opacity: 0.85;
+}
+
+/* =========================================
+   スマホ・タブレット表示最適化 (max-width: 767px)
+   ========================================= */
+@media (max-width: 767px) {
+  /* 1カラム化と横幅100%制御 */
+  .equipment-layout-container {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  .equipment-col-left,
+  .equipment-col-right {
+    gap: 10px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* ヘッダーカード */
+  .equipment-header-card {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .equipment-header-title {
+    font-size: 1.05rem;
+  }
+
+  .equipment-title-icon {
+    font-size: 22px;
+  }
+
+  /* 統計サマリー: 3カラムのグリッドで均等配置（折り返さず綺麗に1行に収容） */
+  .equipment-stat-pills {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+  }
+
+  .equipment-stat-pills .stat-pill {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 4px !important;
+    border-radius: 8px !important;
+    gap: 2px !important;
+    text-align: center !important;
+    min-width: 0 !important;
+  }
+
+  .equipment-stat-pills .stat-pill-label {
+    font-size: 0.68rem !important;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .equipment-stat-pills .stat-pill-val {
+    font-size: 0.88rem !important;
+    line-height: 1.1;
+  }
+
+  /* セクションカード */
+  .equipment-section-card {
+    padding: 12px 10px;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .equipment-section-header {
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .equipment-section-title {
+    font-size: 0.95rem;
+  }
+
+  /* ビブスのサブボックス（水色・黄色）: 1カラム化して横幅を最大確保 */
+  .equipment-subbox-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .equipment-subbox {
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+
+  .equipment-subbox-title {
+    font-size: 0.82rem;
+  }
+
+  /* アイテム行: スマホ向け2段レイアウト（1行目: 品名・保管者・編集ボタン / 2行目: 備考） */
+  .equipment-item-row {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    padding: 7px 9px !important;
+    gap: 4px 8px !important;
+    min-height: 40px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* 品名ラベル（審判道具・その他）: 1行目左端 */
+  .equipment-labeled-row .equipment-item-label {
+    order: 1 !important;
+    width: auto !important;
+    min-width: auto !important;
+    max-width: 85px !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: var(--primary) !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
+    border-radius: 4px !important;
+    padding: 2px 5px !important;
+    line-height: 1.25 !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* 保管メンバー情報（アバター + 背番号 + 氏名）: 1行目中央 */
+  .equipment-item-holder,
+  .equipment-bibs-row .equipment-item-holder,
+  .equipment-ball-row .equipment-item-holder,
+  .equipment-labeled-row .equipment-item-holder {
+    order: 2 !important;
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    overflow: hidden !important;
+  }
+
+  .holder-avatar-wrap {
+    width: 22px !important;
+    height: 22px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .holder-avatar-icon {
+    font-size: 14px !important;
+  }
+
+  .holder-info-group {
+    display: inline-flex !important;
+    align-items: baseline !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    flex-shrink: 1 !important;
+  }
+
+  .holder-number-text {
+    font-size: 0.78rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .holder-name {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 110px !important;
+    flex-shrink: 1 !important;
+  }
+
+  /* 編集ボタン: 1行目右端に固定（3行目に落ちないようorder: 3とmargin-left: autoを指定） */
+  .equipment-item-actions {
+    order: 3 !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .btn-item-edit {
+    padding: 3px 7px !important;
+    font-size: 0.72rem !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .btn-item-edit .material-symbols-outlined {
+    font-size: 12px !important;
+  }
+
+  /* 備考: 2行目に横幅100%で配置（order: 4により編集ボタンより下に配置） */
+  .equipment-item-note {
+    order: 4 !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 2px !important;
+    padding: 3px 8px !important;
+    background: #f8fafc !important;
+    border-radius: 4px !important;
+    font-size: 0.72rem !important;
+    color: #64748b !important;
+    border-left: 2px solid #cbd5e1 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* 空表示プレースホルダー */
+  .equipment-empty-hint {
+    font-size: 0.75rem !important;
+    padding: 6px 8px !important;
+  }
+
+  /* モーダル最適化 */
+  .equipment-modal-content {
+    width: 94% !important;
+    max-width: 400px !important;
+    border-radius: 12px !important;
+  }
+
+  .equipment-modal-content .modal-header {
+    padding: 12px 16px !important;
+  }
+
+  .equipment-modal-content .modal-title {
+    font-size: 0.98rem !important;
+  }
+
+  .equipment-modal-body {
+    padding: 14px 16px 16px !important;
+  }
+
+  .equipment-modal-footer {
+    padding: 12px 16px 14px !important;
+  }
+}
+
+/* 極小スマートフォン向け微調整 (max-width: 480px) */
+@media (max-width: 480px) {
+  .equipment-header-top {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .equipment-header-actions {
+    display: flex !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .btn-refresh-equipment,
+  .btn-add-equipment {
+    flex: 1 !important;
+    justify-content: center !important;
+  }
+}
+
+/* 備品削除確認モーダル固有スタイル */
+.delete-confirm-icon-wrap.is-danger-icon {
+  background: #fef2f2 !important;
+  border-color: #fee2e2 !important;
+  color: var(--danger, #dc2626) !important;
+}
+
+.delete-confirm-icon-wrap.is-danger-icon .material-symbols-outlined {
+  font-size: 36px;
+}
+
+.equipment-delete-warning-text {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}

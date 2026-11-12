@@ -1,0 +1,185 @@
+/* =========================================
+   📝 入力・修正フォーム
+   ========================================= */
+
+/* フォームコンテナの初期状態は非表示 */
+#inputFormContainer {
+  display: none;
+}
+
+#inputLogHeader {
+  display: none;
+}
+
+/* ★ カレンダーから自動取得される情報の箱（プレビュー風） */
+.info-preview-box {
+  background-color: #f8fafc !important; /* さわやかなライトグレー */
+  border: 1px dashed #cbd5e1 !important; /* 点線で「確定情報エリア」を表現 */
+  box-shadow: none !important;
+}
+
+/* 日付と出席者の間に引くうっすらとした下線 */
+.preview-top-row {
+  align-items: flex-start;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+/* ★ 読み取り専用テキストの見栄えをリッチに */
+.readonly-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-heading);
+  padding: 2px 0 0 0;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+/* 出席者は少し行間を開けて見やすく */
+.attended-list {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #475569;
+  font-weight: 700;
+}
+
+/* =========================================
+   ⏱ タイムラインログ（入力画面）
+   ========================================= */
+.timeline-log-container {
+  padding-left: 4px;
+  font-size: 0.88rem;
+}
+
+.input-tl-header {
+  border-bottom: 1px dashed var(--border-color);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.input-tl-row {
+  margin-bottom: 12px;
+  position: relative;
+  padding-right: 45px;
+}
+
+.input-tl-time {
+  line-height: 1.3;
+  width: 75px !important;
+  white-space: nowrap;
+}
+
+.input-tl-left {
+  flex: 1;
+  text-align: right;
+  padding-right: 16px;
+  color: var(--text-heading);
+}
+
+.input-tl-center {
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.input-tl-right {
+  flex: 1;
+  text-align: left;
+  padding-left: 16px;
+  color: var(--text-heading);
+}
+
+.input-btn-del-wrap {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.input-action-left {
+  text-align: right;
+}
+
+.input-action-title-left {
+  justify-content: flex-end;
+}
+
+.input-action-right {
+  text-align: left;
+}
+
+.input-action-title-right {
+  color: #dc2626 !important;
+  justify-content: flex-start;
+}
+
+.log-period-title {
+  font-weight: bold;
+  color: var(--primary-light);
+  margin-top: 10px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 2px;
+  font-size: 0.8rem;
+}
+
+.log-period-title:first-child {
+  margin-top: 0;
+}
+
+.log-item {
+  padding-left: 8px;
+  margin: 6px 0;
+  color: #475569;
+  line-height: 1.4;
+  font-size: 0.85rem;
+}
+
+.log-time {
+  font-weight: bold;
+  color: #64748b;
+  display: inline-block;
+  min-width: 36px;
+}
+
+.log-type {
+  font-weight: 600;
+}
+
+.log-type.type-goal {
+  color: #16a34a;
+}
+
+.log-type.type-opp-goal {
+  color: #dc2626;
+}
+
+.log-type.type-card {
+  color: #d97706;
+}
+
+/* =========================================
+
+/* =========================================
+   🏷 ステータスバッジ（入力画面用）
+   ========================================= */
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+.status-new {
+  background-color: #dbeafe;
+  color: #1e3a8a;
+}
+
+.status-edit {
+  background-color: #fef08a;
+  color: #854d0e;
+}

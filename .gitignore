@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build outputs (PWA配信ディレクトリ)
+pwa-dist/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Local IDE & OS files
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Intermediate HTML files generated during spec rendering
+docs/flow_diagram_fitted.html
+docs/flow_images/*.html
+

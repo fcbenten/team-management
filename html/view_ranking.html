@@ -1,0 +1,123 @@
+<div id="tab-ranking" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+  <!-- =========================================
+       固定ヘッダーエリア（検索・フィルター ＋ サブナビゲーション）
+       ========================================= -->
+  <div class="ranking-sticky-header">
+    <div class="card-box filter-box filter-compact mb-16 ranking-filter-box">
+      <div class="filter-row">
+        <div class="form-group mb-0 filter-select-group">
+          <select id="rankingSeasonFilter" class="filter-select" onchange="filterAndRenderRankings()"></select>
+        </div>
+        <div class="form-group mb-0 filter-select-group">
+          <select id="rankingCategoryFilter" class="filter-select" onchange="filterAndRenderRankings()">
+            <option value="all">全カテゴリ</option>
+            <option value="公式戦">公式戦</option>
+            <option value="TRM">TRM</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ランキングサブナビゲーション（モバイル用） -->
+    <div class="sub-tab-container">
+      <div class="sub-tab active" onclick="switchSubTab('goals', this)">得点</div>
+      <div class="sub-tab" onclick="switchSubTab('assists', this)">アシスト</div>
+      <div class="sub-tab" onclick="switchSubTab('mom', this)">MVP</div>
+      <div class="sub-tab" onclick="switchSubTab('games', this)">参加数</div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       ランキンググリッドエリア（PC: 横並び4列 / モバイル: タブ表示）
+       ========================================= -->
+  <div class="ranking-grid-container">
+    <!-- 得点ランキング -->
+    <div id="subtab-goals" class="subtab-content active">
+      <div class="ranking-column-header">
+        <span class="ranking-column-title">得点</span>
+        <span class="ranking-column-badge badge-goals">GOALS</span>
+      </div>
+      <div id="rankGoals" class="rank-list"><div class="loading">読み込み中...</div></div>
+      <div class="rank-load-more-container" id="toggleWrap-goals">
+        <button id="btn-toggle-goals" class="btn btn-load-more" onclick="toggleRankList('goals')">
+          <span class="material-symbols-outlined">expand_more</span>
+          <span class="btn-toggle-text">全件を表示</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- アシストランキング -->
+    <div id="subtab-assists" class="subtab-content">
+      <div class="ranking-column-header">
+        <span class="ranking-column-title">アシスト</span>
+        <span class="ranking-column-badge badge-assists">ASSISTS</span>
+      </div>
+      <div id="rankAssists" class="rank-list"><div class="loading">読み込み中...</div></div>
+      <div class="rank-load-more-container" id="toggleWrap-assists">
+        <button id="btn-toggle-assists" class="btn btn-load-more" onclick="toggleRankList('assists')">
+          <span class="material-symbols-outlined">expand_more</span>
+          <span class="btn-toggle-text">全件を表示</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- MVPランキング -->
+    <div id="subtab-mom" class="subtab-content">
+      <div class="ranking-column-header">
+        <span class="ranking-column-title">MVP</span>
+        <span class="ranking-column-badge badge-mom">MVP</span>
+      </div>
+      <div id="rankMom" class="rank-list"><div class="loading">読み込み中...</div></div>
+      <div class="rank-load-more-container" id="toggleWrap-mom">
+        <button id="btn-toggle-mom" class="btn btn-load-more" onclick="toggleRankList('mom')">
+          <span class="material-symbols-outlined">expand_more</span>
+          <span class="btn-toggle-text">全件を表示</span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 参加数ランキング -->
+    <div id="subtab-games" class="subtab-content">
+      <div class="ranking-column-header">
+        <span class="ranking-column-title">参加数</span>
+        <span class="ranking-column-badge badge-games">ATTEND</span>
+      </div>
+      <div id="rankGames" class="rank-list"><div class="loading">読み込み中...</div></div>
+      <div class="rank-load-more-container" id="toggleWrap-games">
+        <button id="btn-toggle-games" class="btn btn-load-more" onclick="toggleRankList('games')">
+          <span class="material-symbols-outlined">expand_more</span>
+          <span class="btn-toggle-text">全件を表示</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  
+
+  </div>
+</div>
+
+<!-- =========================================
+     ランキングアイテム描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- 各ランキング共通アイテムカードテンプレート（順位、アバター、選手名、背番号、スコア数値と単位） -->
+<template id="tpl-rank-item">
+  <div class="rank-card">
+    <div class="rank-num"></div>
+    <div class="rank-avatar">
+      <span class="material-symbols-outlined">person</span>
+    </div>
+    <div class="rank-player-info">
+      <div class="rank-name"></div>
+      <div class="rank-number"></div>
+    </div>
+    <div class="rank-score-wrap">
+      <div class="rank-score-val"></div>
+      <div class="rank-score-label"></div>
+    </div>
+  </div>
+</template>

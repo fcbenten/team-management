@@ -1,0 +1,83 @@
+<!-- =========================================
+       ログイン画面（SPAカード切り替えオーバーレイ）
+       Gmailアドレス・パスワード認証、ログイン状態保持、新規登録リンク
+       ========================================= -->
+<div id="loginScreen" class="auth-container login-overlay">
+
+  <!-- ログインカード -->
+  <div id="loginCard" class="auth-card">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle">チーム管理システム ログイン</div>
+
+         <form id="loginForm" novalidate onsubmit="handleUserLogin(event)" autocomplete="off" class="login-text-left">
+           <div class="form-group">
+             <label class="form-label" for="loginEmailInput">Gmailアドレス</label>
+             <input type="email" id="loginEmailInput" class="form-input" placeholder="example@gmail.com" autocomplete="off" required>
+             <div id="err-loginEmailInput" class="field-error-msg hidden"></div>
+           </div>
+
+           <div class="form-group">
+             <label class="form-label" for="loginPasswordInput">パスワード</label>
+             <input type="password" id="loginPasswordInput" class="form-input" placeholder="パスワードを入力" autocomplete="current-password" required>
+             <div id="err-loginPasswordInput" class="field-error-msg hidden"></div>
+           </div>
+
+
+      <div class="form-group login-remember-row">
+        <input type="checkbox" id="rememberLoginCheck" checked class="login-remember-check">
+        <label for="rememberLoginCheck" class="login-remember-label">ログイン状態を保持する</label>
+      </div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn">ログイン</button>
+
+      <div class="login-register-wrap">
+        <a href="javascript:void(0)" onclick="startGoogleOAuthFlow(event)" class="login-register-link">
+          初めての方はこちら（新規登録・Googleカレンダー連携）
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <!-- Google連携中ローディングオーバーレイ -->
+  <div id="oauthLoadingOverlay" class="auth-card oauth-loading-card">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle oauth-loading-subtitle">Googleアカウント連携処理中</div>
+    <div class="spinner oauth-loading-spinner"></div>
+    <div id="oauthLoadingText" class="oauth-loading-text">カレンダー連携情報を同期しています...</div>
+  </div>
+
+  <!-- Google連携成功後の初期パスワード設定カード -->
+  <div id="oauthPasswordCard" class="auth-card oauth-password-card">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle">Google連携完了・パスワード設定</div>
+
+    <div class="alert-box alert-success oauth-alert-margin">
+      Googleカレンダーとの連携が完了しました！<br>
+      今後は設定するパスワードでアプリにログインできます。
+    </div>
+
+    <form id="oauthPasswordForm" novalidate onsubmit="handleOAuthPasswordSubmit(event)" autocomplete="off" class="login-text-left">
+      <div class="form-group oauth-account-box">
+        <div class="oauth-account-badge">連携アカウント</div>
+        <div id="oauthTargetName" class="oauth-account-name"></div>
+        <div id="oauthTargetEmail" class="oauth-account-email"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="oauthNewPwInput">パスワード設定（4文字以上）</label>
+        <input type="password" id="oauthNewPwInput" class="form-input" placeholder="新しいパスワードを入力" autocomplete="new-password" required minlength="4">
+        <div id="err-oauthNewPwInput" class="field-error-msg hidden"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="oauthConfirmPwInput">パスワード（確認用）</label>
+        <input type="password" id="oauthConfirmPwInput" class="form-input" placeholder="もう一度入力" autocomplete="new-password" required minlength="4">
+        <div id="err-oauthConfirmPwInput" class="field-error-msg hidden"></div>
+      </div>
+
+      <div id="oauthPwGlobalMsg" class="alert-box alert-error hidden oauth-global-msg"></div>
+
+      <button type="submit" id="oauthPwSubmitBtn" class="btn oauth-btn-full">設定完了してログイン</button>
+    </form>
+  </div>
+</div>

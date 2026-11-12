@@ -1,0 +1,170 @@
+<div id="tab-input" class="content-area">
+  <div class="tab-loading-placeholder">
+    <div class="loading">読み込み中...</div>
+  </div>
+  <div class="tab-main-content hidden">
+
+    <!-- =========================================
+       ヘッダー・ナビゲーション
+       ========================================= -->
+    <div class="mb-16">
+      <button class="btn btn-outline" onclick="handleInputBack()">← スコアに戻る</button>
+    </div>
+
+    <!-- =========================================
+       試合選択エリア（新規登録時のみ表示）
+       ========================================= -->
+    <div class="card-box mb-16" id="eventSelectBox">
+      <div class="form-group mb-0">
+        <select id="eventSelect" onchange="clearFieldError('eventSelect'); onEventSelect();">
+          <option value="">読み込み中...</option>
+        </select>
+        <div id="err-eventSelect" class="field-error-msg hidden"></div>
+      </div>
+    </div>
+
+    <!-- =========================================
+       入力フォームコンテナ
+       新規登録時や編集時に表示されるメインの入力領域
+       ========================================= -->
+    <div id="inputFormContainer">
+
+      <!-- プレビュー情報エリア（自動取得された変更不可の情報を表示） -->
+      <div class="card-box info-preview-box">
+        <div id="statusBadge" class="status-badge"></div>
+
+        <div class="flex-row preview-top-row">
+          <div class="form-group form-group-12">
+            <label>日付</label>
+            <div id="matchDate" class="readonly-text"></div>
+          </div>
+          <div class="form-group form-group-1">
+            <label>カテゴリ</label>
+            <div id="matchCategory" class="readonly-text"></div>
+          </div>
+          <div class="form-group form-group-2">
+            <label>対戦相手</label>
+            <div id="opponent" class="readonly-text"></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>開催場所</label>
+          <input type="text" id="matchLocation" placeholder="例: 駒沢オリンピック公園">
+        </div>
+
+        <div class="form-group">
+          <label>出席者</label>
+          <div id="attended" class="readonly-text attended-list"></div>
+        </div>
+      </div>
+
+      <!-- MOM選択エリア -->
+      <div class="card-box">
+        <div class="form-group">
+          <label>MOM (マン・オブ・ザ・マッチ)</label>
+          <select id="momSelect">
+            <option value="なし">なし</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- アクションログ（得点・カード）入力エリア -->
+      <div class="card-box">
+        <label>得点・カード記録</label>
+
+        <div class="flex-row">
+          <div class="form-group">
+            <select id="logType" onchange="togglePlayerSelect()">
+              <option value="得点">得点</option>
+              <option value="相手得点">相手得点</option>
+              <option value="イエロー">イエロー</option>
+              <option value="レッド">レッド</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <select id="logPeriod">
+              <option value="前半">前半</option>
+              <option value="後半">後半</option>
+              <option value="延長">延長</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <input type="number" id="logMin" placeholder="分" min="0">
+          </div>
+        </div>
+
+        <div class="flex-row">
+          <div class="form-group" id="playerGroup">
+            <label>選手</label>
+            <select id="logPlayer"
+              onchange="clearFieldError('logPlayer'); if(this.value === 'OG') document.getElementById('logAssist').value = '-';"></select>
+            <div id="err-logPlayer" class="field-error-msg hidden"></div>
+          </div>
+          <div class="form-group" id="assistGroup">
+            <label>アシスト</label>
+            <select id="logAssist"></select>
+          </div>
+        </div>
+
+        <button class="btn btn-add" onclick="addLog()">追加</button>
+      </div>
+
+      <!-- 記録一覧・保存エリア -->
+      <div class="card-box">
+        <label>記録一覧</label>
+
+        <div class="tl-header input-tl-header" id="inputLogHeader">
+          <div class="tl-time input-tl-time"></div>
+          <div class="tl-left input-tl-left">FC Benten</div>
+          <div class="tl-center input-tl-center"></div>
+          <div class="tl-right input-tl-right" id="inputLogOpponentName">相手チーム</div>
+        </div>
+
+        <div id="inputNoLogs" class="empty-state">まだ記録はありません</div>
+        <div id="logList" class="timeline-log-container mb-16"></div>
+
+        <button id="submitBtn" class="btn" onclick="submitData()">保存</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- =========================================
+     タイムライン描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- 試合記録入力画面 タイムライン行テンプレート（時間、左右アクション、削除ボタン） -->
+<template id="tpl-input-row">
+  <div class="tl-row input-tl-row">
+    <div class="tl-time input-tl-time"></div>
+    <div class="tl-left"></div>
+    <div class="tl-center">
+      <div class="tl-dot"></div>
+      <div class="tl-line"></div>
+    </div>
+    <div class="tl-right"></div>
+    <div class="input-btn-del-wrap">
+      <button class="btn-del">削除</button>
+    </div>
+  </div>
+</template>
+
+<!-- 試合記録入力画面 自チーム（FC Benten）側アクションテンプレート（得点者、アシスト） -->
+<template id="tpl-input-action-left">
+  <div class="tl-action-box left-box input-action-left">
+    <div class="tl-action-title input-action-title-left"></div>
+    <div class="tl-player"></div>
+    <div class="tl-assist"></div>
+  </div>
+</template>
+
+<!-- 試合記録入力画面 相手チーム側アクションテンプレート（相手得点など） -->
+<template id="tpl-input-action-right">
+  <div class="tl-action-box right-box input-action-right">
+    <div class="tl-action-title input-action-title-right"></div>
+  </div>
+</template>

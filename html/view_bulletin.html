@@ -1,0 +1,257 @@
+<!-- =========================================
+     📢 活動記録・チーム掲示板画面 (view_bulletin.html)
+     ========================================= -->
+<div id="tab-bulletin" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">活動記録を読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <!-- アクション・フィルターバー（タイトル部なし・他画面と統一） -->
+    <div class="bulletin-action-bar mb-16">
+      <div class="bulletin-filter-pills">
+        <button type="button" class="filter-pill-btn active" onclick="setBulletinCategoryFilter('all', this)">すべて</button>
+        <button type="button" class="filter-pill-btn" onclick="setBulletinCategoryFilter('活動記録', this)">活動記録</button>
+        <button type="button" class="filter-pill-btn" onclick="setBulletinCategoryFilter('連絡事項', this)">連絡事項</button>
+        <button type="button" class="filter-pill-btn" onclick="setBulletinCategoryFilter('その他', this)">その他</button>
+      </div>
+      <div class="bulletin-header-actions">
+        <button type="button" class="btn-create-post" onclick="openBulletinCreateModal()">
+          <span class="material-symbols-outlined">edit_note</span>
+          <span>新規投稿</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- タイムラインフィード表示コンテナ -->
+    <div id="bulletinTimelineList" class="bulletin-timeline-list">
+      <!-- JavaScriptで動的描画 -->
+    </div>
+
+  </div> <!-- /tab-main-content -->
+</div> <!-- /#tab-bulletin -->
+
+<!-- =========================================
+     投稿作成・編集モーダル
+     ========================================= -->
+<div id="bulletinEditModalOverlay" class="modal-overlay" onclick="closeBulletinEditModal(event)">
+  <div class="modal-content bulletin-edit-modal" onclick="event.stopPropagation()">
+    
+    <div class="modal-header">
+      <div class="flex-center gap-8">
+        <span class="material-symbols-outlined text-primary">edit_note</span>
+        <h3 id="bulletinEditModalTitle" class="modal-title font-bold">活動記録を投稿</h3>
+      </div>
+      <button type="button" class="modal-close" onclick="closeBulletinEditModalForce()">&times;</button>
+    </div>
+
+    <form id="bulletinPostForm" onsubmit="handleBulletinPostSubmit(event)">
+      <input type="hidden" id="bulletinEditPostId" value="">
+      
+      <div class="modal-section">
+        <!-- カテゴリ選択 -->
+        <div class="form-group mb-16">
+          <label class="form-label" for="bulletinCategorySelect">カテゴリ <span class="text-danger">*</span></label>
+          <select id="bulletinCategorySelect" class="form-input" required>
+            <option value="活動記録">活動記録</option>
+            <option value="連絡事項">連絡事項</option>
+            <option value="その他">その他</option>
+          </select>
+        </div>
+
+        <!-- タイトル -->
+        <div class="form-group mb-16">
+          <label class="form-label" for="bulletinTitleInput">タイトル <span class="text-danger">*</span></label>
+          <input type="text" id="bulletinTitleInput" class="form-input" placeholder="例: 10/22 TRM vsカバモン戦の振り返り" required autocomplete="off">
+        </div>
+
+        <!-- 活動スケジュールとの紐付け（任意） -->
+        <div class="form-group mb-16">
+          <label class="form-label" for="bulletinEventSelect">関連する活動イベント（任意）</label>
+          <select id="bulletinEventSelect" class="form-input">
+            <option value="">なし</option>
+            <!-- JavaScriptで直近および過去の予定リストを注入 -->
+          </select>
+          <div class="form-help">活動を選択すると、カレンダーや予定詳細画面と自動リンクされます。</div>
+        </div>
+
+        <!-- ホーム画面ピン留めチェック -->
+        <div class="form-group mb-16 bulletin-pin-option-row">
+          <label class="bulletin-pin-checkbox-label" for="bulletinIsPinnedCheck">
+            <input type="checkbox" id="bulletinIsPinnedCheck">
+            <span class="material-symbols-outlined text-amber">push_pin</span>
+            <span class="font-bold">ホーム画面上部にピン留めする（重要アナウンス）</span>
+          </label>
+          <div class="form-help pl-24">チェックを入れると、ホーム画面の最上部に目立つカードとして常時固定表示されます。</div>
+        </div>
+
+        <!-- 本文入力エリア -->
+        <div class="form-group mb-0">
+          <label class="form-label" for="bulletinContentInput">本文 <span class="text-danger">*</span></label>
+          <textarea id="bulletinContentInput" class="form-input bulletin-content-textarea" rows="8" placeholder="活動の振り返り、得失点状況、よかった点・課題、チーム連絡事項などを入力してください。" required></textarea>
+        </div>
+      </div>
+
+      <!-- 送信ステータスメッセージ -->
+      <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
+
+      <div class="bulletin-modal-footer flex-between">
+        <div class="bulletin-edit-actions-left">
+          <button type="button" id="btnBulletinEditDelete" class="bdm-action-btn btn-delete-action hidden" onclick="handleBulletinEditDelete()">
+            <span class="material-symbols-outlined text-sm">delete</span>
+            <span>削除</span>
+          </button>
+        </div>
+        <div class="bulletin-edit-actions-right">
+          <button type="button" class="btn-cancel-action" onclick="closeBulletinEditModalForce()">キャンセル</button>
+          <button type="submit" id="btnSaveBulletinPost" class="btn-submit-action">投稿</button>
+        </div>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- =========================================
+     投稿詳細閲覧モーダル
+     ========================================= -->
+<div id="bulletinDetailModalOverlay" class="modal-overlay" onclick="closeBulletinDetailModal(event)">
+  <div class="modal-content bulletin-detail-modal" onclick="event.stopPropagation()">
+    
+    <div class="modal-header">
+      <div class="bulletin-detail-header-badges">
+        <span id="bdmCategoryBadge" class="category-badge"></span>
+        <span id="bdmPinnedBadge" class="bulletin-pinned-pill hidden">
+          <span class="material-symbols-outlined">push_pin</span>
+          ホーム固定中
+        </span>
+      </div>
+      <button type="button" class="modal-close" onclick="closeBulletinDetailModalForce()">&times;</button>
+    </div>
+
+    <div class="modal-section bulletin-detail-body">
+      <!-- タイトル -->
+      <h2 id="bdmTitle" class="bulletin-detail-title"></h2>
+
+      <!-- 投稿者メタ情報 -->
+      <div class="bulletin-detail-meta-row">
+        <div class="bulletin-detail-author-box">
+          <div class="bulletin-author-avatar-wrap">
+            <img id="bdmAuthorAvatarImg" class="bulletin-author-avatar-img hidden" alt="">
+            <div id="bdmAuthorAvatarPlaceholder" class="bulletin-author-avatar-placeholder">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+          </div>
+          <span id="bdmAuthorName" class="author-name"></span>
+          <span id="bdmCreatedAt" class="created-at text-muted"></span>
+        </div>
+      </div>
+
+      <!-- 紐付けイベント情報カード（存在する場合のみ表示） -->
+      <div id="bdmEventBox" class="bulletin-linked-event-card hidden">
+        <div class="linked-event-icon">
+          <span class="material-symbols-outlined">event</span>
+        </div>
+        <div class="linked-event-info">
+          <div class="linked-event-label">関連する活動</div>
+          <div id="bdmEventTitle" class="linked-event-title font-bold"></div>
+          <div id="bdmEventDate" class="linked-event-date text-muted text-xs"></div>
+        </div>
+        <button type="button" id="btnBdmJumpEvent" class="btn-linked-event-action" title="スケジュール詳細を開く">
+          <span class="material-symbols-outlined">calendar_month</span>
+        </button>
+      </div>
+
+      <!-- 本文全文 -->
+      <div id="bdmContent" class="bulletin-detail-content-text"></div>
+
+      <!-- コメントセクション -->
+      <div class="bulletin-comments-section" id="bdmCommentsSection">
+        <div class="comments-section-header">
+          <div class="comments-section-title font-bold">
+            <span class="material-symbols-outlined text-sm">chat_bubble</span>
+            <span>コメント</span>
+            <span id="bdmCommentCountBadge" class="comment-count-badge">0</span>
+          </div>
+        </div>
+
+        <!-- コメント一覧リスト -->
+        <div id="bdmCommentsList" class="comments-list-container">
+          <div class="comments-loading text-xs text-muted">読み込み中...</div>
+        </div>
+
+        <!-- コメント入力エリア -->
+        <div class="comment-input-box">
+          <textarea id="bdmCommentInput" class="comment-textarea" placeholder="コメントを入力... (Shift+Enterで改行)" rows="2" maxlength="500"></textarea>
+          <div class="comment-input-actions">
+            <span class="comment-char-counter"><span id="bdmCommentCharCount">0</span>/500</span>
+            <button type="button" id="btnSubmitComment" class="btn-comment-submit" onclick="handleSubmitBulletinComment()">
+              <span class="material-symbols-outlined text-sm mr-1">send</span>投稿
+            </button>
+          </div>
+          <div id="bdmCommentStatusMsg" class="comment-status-msg hidden"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 既読・未読者確認セクション -->
+    <div class="modal-section bulletin-readers-section">
+      <div class="bulletin-readers-header">
+        <div class="readers-summary-title">
+          <span class="material-symbols-outlined text-muted">visibility</span>
+          <span>閲覧状況</span>
+          <span id="bdmReadSummaryBadge" class="readers-stat-badge">既読: 0名 / 未読: 0名</span>
+        </div>
+        <button type="button" class="btn-readers-toggle" onclick="toggleBulletinReadersAccordion()">
+          <span id="readersToggleText">一覧を表示</span>
+          <span id="readersToggleIcon" class="material-symbols-outlined text-sm">expand_more</span>
+        </button>
+      </div>
+
+      <!-- 既読者・未読者一覧アコーディオン（タブ不要・縦並び） -->
+      <div id="bdmReadersAccordion" class="readers-accordion-content hidden">
+        <!-- 既読セクション -->
+        <div class="readers-group-section mb-12">
+          <div class="readers-group-header">
+            <span class="material-symbols-outlined text-sm text-success">check_circle</span>
+            <span class="font-bold">既読 (<span id="bdmCountYes">0</span>)</span>
+          </div>
+          <div id="bdmReadersListYes" class="readers-chips-list">
+            <!-- 既読メンバー名チップ -->
+          </div>
+        </div>
+
+        <!-- 未読セクション -->
+        <div class="readers-group-section">
+          <div class="readers-group-header">
+            <span class="material-symbols-outlined text-sm text-muted">radio_button_unchecked</span>
+            <span class="font-bold">未読 (<span id="bdmCountNo">0</span>)</span>
+          </div>
+          <div id="bdmReadersListNo" class="readers-chips-list">
+            <!-- 未読メンバー名チップ -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作フッター（統一ボタンスタイル） -->
+    <div class="bulletin-modal-footer flex-between">
+      <div class="bulletin-detail-actions-left flex-center gap-8">
+        <label id="btnBdmTogglePin" class="bdm-action-btn bdm-pin-btn" for="bdmPinCheckbox" title="ホーム画面にピン留め">
+          <input type="checkbox" id="bdmPinCheckbox" onchange="handleBdmTogglePinCheckbox(this.checked)">
+          <span class="material-symbols-outlined text-sm" id="bdmPinActionIcon">push_pin</span>
+          <span id="bdmPinActionText">ピン留め</span>
+        </label>
+        <button type="button" id="btnBdmDelete" class="bdm-action-btn btn-delete-action" onclick="handleBdmDelete()">
+          <span class="material-symbols-outlined text-sm">delete</span>
+          <span>削除</span>
+        </button>
+      </div>
+      <div class="bulletin-detail-actions-right">
+        <button type="button" id="btnBdmEdit" class="bdm-action-btn btn-edit-action" onclick="openBulletinEditModalFromCurrent()">
+          <span class="material-symbols-outlined text-sm">edit</span>
+          <span>編集</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

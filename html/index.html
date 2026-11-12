@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+     <meta charset="UTF-8">
+     <base target="_top">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+     <!-- Material Symbols -->
+     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+
+     <!-- Supabase JS Client (v2) -->
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+     <!-- =========================================
+       CSS スタイルシート
+       ========================================= -->
+     <!-- 共通デザイン・変数・レイアウト -->
+     <link rel="stylesheet" href="../css/base.css">
+     <link rel="stylesheet" href="../css/common.css">
+     <link rel="stylesheet" href="../css/layout.css">
+
+     <!-- 各画面専用デザイン -->
+     <link rel="stylesheet" href="../css/home.css">
+     <link rel="stylesheet" href="../css/login.css">
+     <link rel="stylesheet" href="../css/results.css">
+     <link rel="stylesheet" href="../css/input.css">
+     <link rel="stylesheet" href="../css/ranking.css">
+     <link rel="stylesheet" href="../css/personal.css">
+     <link rel="stylesheet" href="../css/schedule.css">
+     <link rel="stylesheet" href="../css/members.css">
+     <link rel="stylesheet" href="../css/equipment.css">
+     <link rel="stylesheet" href="../css/bulletin.css">
+</head>
+
+<body>
+
+     <!-- =========================================
+       共通UIコンポーネント・モーダル
+       ========================================= -->
+     <!-- #include "view_common.html" -->
+
+     <!-- =========================================
+       ログイン画面
+       ========================================= -->
+     <!-- #include "view_login.html" -->
+
+     <div id="appLayout" class="app-layout">
+       <!-- =========================================
+         サイドバー（スマホ時は上部ヘッダー）
+         ========================================= -->
+       <aside class="sidebar">
+         <div class="sidebar-header">
+           <div class="sidebar-logo">
+             <div class="header-title">FC Benten</div>
+             <div class="header-subtitle text-muted text-sm">Team Management</div>
+           </div>
+           
+           <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
+           <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
+             <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
+               <span class="material-symbols-outlined" id="headerUserIcon">person</span>
+               <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
+             </button>
+           </div>
+         </div>
+
+         <!-- ナビゲーションメニュー -->
+         <div class="sidebar-nav-wrapper">
+           <button type="button" class="nav-scroll-btn nav-scroll-left hidden" id="navScrollLeft" onclick="scrollNavBy(-150)" aria-label="前へスクロール">
+             <span class="material-symbols-outlined">chevron_left</span>
+           </button>
+           <nav class="sidebar-nav" id="sidebarNav">
+           <a class="nav-item active" onclick="switchTab('home')">
+             <span class="material-symbols-outlined mr-3">home</span>
+             ホーム
+           </a>
+           <a class="nav-item" onclick="switchTab('schedule')">
+             <span class="material-symbols-outlined mr-3">calendar_today</span>
+             スケジュール
+           </a>
+           <a class="nav-item" onclick="switchTab('results')">
+             <span class="material-symbols-outlined mr-3">sports_soccer</span>
+             スコア
+           </a>
+           <a class="nav-item" id="navItemBulletin" onclick="switchTab('bulletin')">
+             <span class="material-symbols-outlined mr-3">article</span>
+             活動記録
+           </a>
+           <a class="nav-item" onclick="switchTab('ranking')">
+             <span class="material-symbols-outlined mr-3">leaderboard</span>
+             ランキング
+           </a>
+           <a class="nav-item" onclick="switchTab('personal')">
+             <span class="material-symbols-outlined mr-3">bar_chart</span>
+             スタッツ
+           </a>
+           <a class="nav-item" onclick="switchTab('equipment')">
+             <span class="material-symbols-outlined mr-3">inventory_2</span>
+             備品
+           </a>
+           <a class="nav-item hidden" id="navItemMembers" onclick="switchTab('members')">
+             <span class="material-symbols-outlined mr-3">manage_accounts</span>
+             メンバー管理
+           </a>
+           </nav>
+           <button type="button" class="nav-scroll-btn nav-scroll-right hidden" id="navScrollRight" onclick="scrollNavBy(150)" aria-label="次へスクロール">
+             <span class="material-symbols-outlined">chevron_right</span>
+           </button>
+           <div class="nav-scroll-track" id="navScrollTrack">
+             <div class="nav-scroll-thumb" id="navScrollThumb"></div>
+           </div>
+         </div>
+
+         <!-- PC用ユーザー情報（スマホ時は非表示） -->
+         <div class="sidebar-footer" id="headerUserInfo">
+           <button type="button" id="headerUserNameBtn" class="sidebar-user-btn" onclick="openUserProfileModal()">
+             <span class="material-symbols-outlined mr-2" id="sidebarUserIcon">person</span>
+             <img id="sidebarUserAvatarImg" class="sidebar-user-avatar-img hidden mr-2" alt="">
+             <span id="headerUserNameText">プロフィール</span>
+           </button>
+         </div>
+       </aside>
+
+       <!-- =========================================
+         メインコンテンツ
+         ========================================= -->
+       <main class="main-content">
+
+
+     <!-- =========================================
+       各画面（View）のHTML読み込み
+       ========================================= -->
+     <!-- #include "view_home.html" -->
+     <!-- #include "view_results.html" -->
+     <!-- #include "view_input.html" -->
+     <!-- #include "view_ranking.html" -->
+     <!-- #include "view_personal.html" -->
+     <!-- #include "view_schedule.html" -->
+     <!-- #include "view_members.html" -->
+     <!-- #include "view_equipment.html" -->
+     <!-- #include "view_bulletin.html" -->
+       </main>
+     </div> <!-- /app-layout -->
+
+
+     <!-- =========================================
+       JavaScriptモジュールの読み込み
+       ※DOM（HTML）が構築された後に動かすため、Bodyの末尾に配置
+       ========================================= -->
+     <!-- Supabase データベース直結サービスクライアント -->
+     <script src="../js/supabase.js"></script>
+     <!-- 共通スクリプトの読み込み -->
+     <script src="../js/common.js"></script>
+     <script src="../js/main.js"></script>
+     <script src="../js/home.js"></script>
+     <script src="../js/results.js"></script>
+     <script src="../js/input.js"></script>
+     <script src="../js/ranking.js"></script>
+     <script src="../js/personal.js"></script>
+     <script src="../js/schedule.js"></script>
+     <script src="../js/members.js"></script>
+     <script src="../js/equipment.js"></script>
+     <script src="../js/bulletin.js"></script>
+
+</body>
+
+</html>

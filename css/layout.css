@@ -1,0 +1,407 @@
+/* =========================================
+   🏠 メイン画面 (index.html) 専用スタイル
+   ========================================= */
+
+/* --- パスワード変更セクション (プロフィールモーダル内) --- */
+.pw-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+.pw-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 10px;
+}
+.pw-msg {
+  display: none;
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+.pw-msg.active {
+  display: block;
+}
+.pw-msg.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+.pw-msg.loading {
+  background: #f8fafc;
+  color: #475569;
+}
+.pw-msg.success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+.pw-input-group {
+  margin-bottom: 8px;
+}
+.pw-input-group-last {
+  margin-bottom: 10px;
+}
+.pw-input {
+  font-size: 0.85rem !important;
+  padding: 8px 10px !important;
+}
+.pw-submit-btn {
+  font-size: 0.85rem !important;
+  padding: 8px 12px !important;
+}
+
+/* --- 通知設定セクション (プロフィールモーダル内) --- */
+.profile-notif-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+.notif-section-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+.notif-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.notif-radio-card {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  padding: 10px 12px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.notif-radio-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.notif-radio-card:has(input:checked),
+.notif-radio-card.selected {
+  border-color: var(--primary, #0284c7);
+  background: #f0f9ff;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12);
+}
+.notif-radio-card input[type="radio"] {
+  width: auto !important;
+  margin-top: 3px;
+  margin-right: 10px;
+  accent-color: var(--primary, #0284c7);
+  cursor: pointer;
+}
+.notif-radio-content {
+  flex: 1;
+}
+.notif-radio-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.notif-type-icon {
+  font-size: 18px !important;
+}
+.notif-icon-line { color: #06c755; }
+.notif-icon-push { color: #0284c7; }
+.notif-icon-both { color: #6366f1; }
+.notif-icon-none { color: #94a3b8; }
+
+.notif-type-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+.notif-status-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.notif-status-badge.badge-gray {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+.notif-status-badge.badge-green {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.notif-radio-desc {
+  font-size: 0.73rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  padding-left: 24px;
+}
+.notif-action-area {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}
+.btn-notif-action {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+.btn-notif-line {
+  background: #06c755;
+  color: #ffffff;
+}
+.btn-notif-line:hover {
+  background: #05b34c;
+}
+.btn-notif-push {
+  background: var(--primary, #0284c7);
+  color: #ffffff;
+}
+.btn-notif-push:hover {
+  background: #0369a1;
+}
+.notif-target-box {
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+.notif-target-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 6px;
+}
+.notif-target-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.notif-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-heading);
+  cursor: pointer;
+  margin-bottom: 0;
+  user-select: none;
+}
+.notif-checkbox-label input[type="checkbox"] {
+  width: auto !important;
+  cursor: pointer;
+  accent-color: var(--primary, #0284c7);
+}
+.notif-status-msg {
+  font-size: 0.78rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 6px;
+}
+.notif-status-msg.success {
+  background: #f0fdf4;
+  color: #15803d;
+}
+.notif-status-msg.error {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+#btnSaveNotificationSettings {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  padding: 11px 16px !important;
+  background-color: var(--primary, #0284c7) !important;
+  color: #ffffff !important;
+  border: 1px solid var(--primary, #0284c7) !important;
+  border-radius: var(--radius, 4px) !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  box-sizing: border-box !important;
+}
+#btnSaveNotificationSettings:hover:not(:disabled) {
+  background-color: var(--primary-hover, #0369a1) !important;
+  border-color: var(--primary-hover, #0369a1) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+#btnSaveNotificationSettings:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none !important;
+}
+#btnSaveNotificationSettings:disabled {
+  opacity: 0.6 !important;
+  cursor: not-allowed !important;
+}
+.logout-modal-content {
+  max-width: 340px !important;
+  text-align: center;
+}
+.logout-modal-body {
+  padding: 24px 16px 20px !important;
+  text-align: center;
+}
+.logout-modal-title {
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  color: var(--text-heading);
+}
+.logout-modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+.logout-modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px !important;
+}
+.logout-btn {
+  flex: 1;
+  margin: 0 !important;
+}
+.logout-btn-danger {
+  flex: 1;
+  margin: 0 !important;
+  background: #ef4444 !important;
+  border-color: #ef4444 !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+
+/* --- プロフィールモーダル内 ログアウトボタン --- */
+.btn-logout {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #fff !important;
+  border: 1px solid #fca5a5 !important;
+  color: #ef4444 !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  padding: 9px 16px !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px !important;
+}
+.btn-logout:hover {
+  background: #fef2f2 !important;
+  border-color: #f87171 !important;
+}
+
+/* --- Googleアカウント強制連携モーダル --- */
+.force-auth-overlay {
+  z-index: 99999 !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.force-auth-modal-content {
+  max-width: 440px !important;
+  text-align: center;
+}
+.force-auth-modal-body {
+  padding: 28px 24px 20px !important;
+  text-align: center;
+}
+.force-auth-icon-circle {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: rgba(59, 130, 246, 0.12);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+}
+.force-auth-icon {
+  font-size: 32px;
+  color: #3b82f6;
+}
+.force-auth-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text-heading);
+}
+.force-auth-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 18px;
+}
+.force-auth-email-box {
+  background: rgba(241, 245, 249, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.force-auth-email-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.force-auth-email-val {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  word-break: break-all;
+}
+.btn-force-auth {
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px !important;
+  font-size: 0.92rem !important;
+  font-weight: 700 !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
+}
+.force-auth-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 10px;
+  line-height: 1.4;
+}
+.force-auth-modal-footer {
+  border-top: 1px solid var(--border-color);
+  padding: 14px 20px !important;
+  text-align: center;
+  justify-content: center !important;
+  background: #ffffff !important;
+}
+.force-auth-logout-link {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.force-auth-logout-link:hover {
+  color: var(--text-heading);
+}

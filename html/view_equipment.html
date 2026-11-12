@@ -1,0 +1,131 @@
+<div id="tab-equipment" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">備品データを読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <!-- =========================================
+         1. ヘッダー・アクション・サマリーエリア
+         ========================================= -->
+    <div class="card-box mb-16 equipment-header-card">
+      <div class="equipment-header-top mb-0">
+        <!-- 統計サマリーバッジ -->
+        <div class="equipment-stat-pills" id="equipmentStatSummary">
+          <div class="stat-pill"><span class="stat-pill-label">管理備品数</span><span id="statTotalEquipment" class="stat-pill-val">0点</span></div>
+          <div class="stat-pill"><span class="stat-pill-label">ボール総数</span><span id="statTotalBalls" class="stat-pill-val">0球</span></div>
+          <div class="stat-pill"><span class="stat-pill-label">保管メンバー</span><span id="statTotalHolders" class="stat-pill-val">0名</span></div>
+        </div>
+        <div class="equipment-header-actions">
+          <button type="button" class="btn-refresh-equipment" onclick="refreshEquipmentData(true)" title="最新情報に更新">
+            <span class="material-symbols-outlined">refresh</span>
+            <span>更新</span>
+          </button>
+          <button type="button" id="btnAddEquipment" class="btn-add-equipment hidden" onclick="openEquipmentAddModal()">
+            <span class="material-symbols-outlined">add_circle</span>
+            <span>備品を追加</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         2. 検索エリア（カテゴリフィルター削除）
+         ========================================= -->
+    <div class="card-box filter-box mb-16">
+      <div class="filter-row">
+        <div class="form-group mb-0 filter-search-group flex-1">
+          <span class="material-symbols-outlined filter-search-icon">search</span>
+          <input type="text" id="equipmentSearchInput" class="filter-search-input" placeholder="備品名、保管者名、備考で検索..." oninput="filterEquipmentList()">
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         3. 備品一覧レイアウト（左右2カラム構成）
+         ========================================= -->
+    <div class="equipment-layout-container" id="equipmentLayoutContainer">
+      <div class="equipment-col-left" id="equipmentColLeft"></div>
+      <div class="equipment-col-right" id="equipmentColRight"></div>
+    </div>
+    <div id="equipmentEmptyState" class="card-box text-center p-24 text-muted hidden">
+      <span class="material-symbols-outlined text-4xl mb-8 text-gray-400">inventory</span>
+      <div class="font-bold">該当する備品が見つかりません</div>
+      <div class="text-xs text-muted mt-4">検索条件を変更してください</div>
+    </div>
+
+  </div> <!-- /tab-main-content -->
+</div> <!-- /tab-equipment -->
+
+<!-- =========================================
+     4. 備品編集・追加モーダル（代表・副代表のみ）
+     ========================================= -->
+<div id="equipmentEditModal" class="modal-overlay" onclick="closeEquipmentEditModal(event)">
+  <div class="modal-content equipment-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title font-bold" id="equipmentEditModalTitle">備品情報の編集</div>
+      <button type="button" class="modal-close" onclick="closeEquipmentEditModal(event)">&times;</button>
+    </div>
+    <div class="modal-body equipment-modal-body">
+      <form id="equipmentEditForm" onsubmit="event.preventDefault(); handleSaveEquipmentSubmit(event); return false;">
+        <input type="hidden" id="equipmentEditItemId" value="">
+
+        <div class="form-group mb-16">
+          <label class="form-label" for="equipmentEditCode">品目 <span class="badge-required">必須</span></label>
+          <select id="equipmentEditCode" class="form-input" required>
+            <!-- JSで備品マスタ一覧を挿入 -->
+          </select>
+        </div>
+
+        <div class="form-group mb-16">
+          <label class="form-label" for="equipmentEditMemberId">保管メンバー <span class="badge-required">必須</span></label>
+          <select id="equipmentEditMemberId" class="form-input" required>
+            <!-- JSで名簿一覧を挿入 -->
+          </select>
+        </div>
+
+        <div class="form-group mb-16">
+          <label class="form-label" for="equipmentEditNotes">備考 <span class="text-xs text-muted font-normal">（任意）</span></label>
+          <input type="text" id="equipmentEditNotes" class="form-input" placeholder="例: 1〜10番（青）、モルテン5号" maxlength="50">
+        </div>
+
+        <div id="equipmentEditError" class="field-error-msg hidden mb-12"></div>
+      </form>
+    </div>
+    <div class="modal-footer equipment-modal-footer">
+      <div class="equipment-modal-footer-left">
+        <button type="button" id="btnDeleteEquipment" class="btn-equipment-danger-link hidden" onclick="openEquipmentDeleteConfirmModal()">
+          <span class="material-symbols-outlined">delete</span>
+          <span>備品を削除</span>
+        </button>
+      </div>
+      <div class="equipment-footer-right">
+        <button type="button" class="btn-equipment-modal-cancel" onclick="closeEquipmentEditModal(event)">キャンセル</button>
+        <button type="button" id="btnSaveEquipment" class="btn-equipment-modal-save" onclick="handleSaveEquipmentSubmit(event)">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     5. 備品削除確認モーダル（アプリ統一デザイン）
+     ========================================= -->
+<div id="equipmentDeleteModal" class="modal-overlay" onclick="closeEquipmentDeleteModal(event)">
+  <div class="modal-content equipment-modal-content delete-confirm-content" onclick="event.stopPropagation()">
+    <div class="modal-body delete-confirm-body text-center">
+      <div class="delete-confirm-icon-wrap is-danger-icon">
+        <span class="material-symbols-outlined">delete</span>
+      </div>
+      <div class="delete-confirm-title" id="equipmentDeleteTitle">備品を削除しますか？</div>
+      <div class="delete-confirm-desc" id="equipmentDeleteDesc">
+        「<span id="equipmentDeleteTargetName" class="font-bold"></span>」を管理リストから削除します。<br>
+        <span class="text-xs text-muted equipment-delete-warning-text">
+          ※削除すると元に戻せません。<br>
+          ※現物の廃棄や紛失など、備品の管理を終了する場合に実行してください。
+        </span>
+      </div>
+      <div id="equipmentDeleteStatus" class="form-status-msg hidden mt-12"></div>
+    </div>
+    <div class="modal-footer delete-modal-footer">
+      <button type="button" class="btn-equipment-modal-cancel" onclick="closeEquipmentDeleteModal(event)">キャンセル</button>
+      <button type="button" id="btnConfirmDeleteEquipment" class="btn-member-modal-delete-danger" onclick="executeDeleteEquipmentPermanently()">削除する</button>
+    </div>
+  </div>
+</div>

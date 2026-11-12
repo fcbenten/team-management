@@ -1,0 +1,386 @@
+<!-- =========================================
+     共通UIコンポーネント・モーダル（全画面共通）
+     ========================================= -->
+
+<!-- =========================================
+     引っ張って更新（Pull to Refresh）インジケーター
+     ========================================= -->
+<div id="pullToRefresh" class="ptr-indicator">
+  <div class="ptr-box">
+    <span class="material-symbols-outlined ptr-icon" id="ptrIcon">arrow_downward</span>
+    <div class="ptr-spinner" id="ptrSpinner"></div>
+    <span class="ptr-text" id="ptrText">引っ張って更新</span>
+  </div>
+</div>
+
+<!-- =========================================
+     トースト通知（廃止）
+     ========================================= -->
+<div id="app-toast" class="hidden" aria-hidden="true"></div>
+
+<!-- =========================================
+     プロフィール確認・パスワード変更モーダル
+     プロフィール写真設定、選手基本情報、パスワード変更、ログアウト
+     ========================================= -->
+<div id="userProfileModal" class="modal-overlay" onclick="closeUserProfileModal(event)">
+  <div class="modal-content profile-modal-content">
+    <div class="modal-header">
+      <div class="modal-title font-bold">プロフィール設定</div>
+      <button type="button" class="modal-close" onclick="closeUserProfileModal(event)">&times;</button>
+    </div>
+    <div class="modal-body profile-modal-body">
+      <!-- プロフィール写真設定エリア -->
+      <div class="profile-avatar-section">
+        <div class="profile-avatar-preview-box" id="profileAvatarBox" onclick="handleProfileAvatarBoxClick(event)" title="タップして写真を拡大">
+          <span class="material-symbols-outlined profile-avatar-placeholder" id="profileAvatarPlaceholder">person</span>
+          <img id="profileAvatarImg" class="profile-avatar-img hidden" alt="">
+        </div>
+        <input type="file" id="profileImgInput" accept="image/*" class="hidden" onchange="handleProfileImageSelect(event)">
+        <div class="profile-avatar-actions">
+          <button type="button" class="btn-avatar-select" onclick="document.getElementById('profileImgInput').click()">
+            <span class="material-symbols-outlined">photo_camera</span>写真を選択
+          </button>
+          <button type="button" id="btnDeleteAvatar" class="btn-avatar-delete hidden" onclick="handleProfileImageDelete()">
+            削除
+          </button>
+        </div>
+        <div id="avatarUploadStatus" class="avatar-upload-status hidden"></div>
+      </div>
+
+      <div class="profile-item-row">
+        <span class="profile-label">選手名</span>
+        <span id="profileName" class="profile-value font-bold"></span>
+      </div>
+      <div class="profile-item-row">
+        <span class="profile-label">背番号</span>
+        <span id="profileNumber" class="profile-value font-bold"></span>
+      </div>
+      <div class="profile-item-row">
+        <span class="profile-label">ポジション</span>
+        <span id="profilePosition" class="profile-value font-bold">-</span>
+      </div>
+      <div class="profile-item-row">
+        <span class="profile-label">メールアドレス</span>
+        <span id="profileEmail" class="profile-value font-mono"></span>
+      </div>
+
+      <!-- 通知設定セクション -->
+      <div class="profile-notif-section">
+        <div class="pw-section-title">通知設定</div>
+        <div class="notif-section-desc">連絡やリマインドの受け取り方法を選択できます。</div>
+
+        <!-- 通知手段の選択肢 -->
+        <div class="notif-type-list mb-12">
+          <label class="notif-radio-card" id="notifCardLine">
+            <input type="radio" name="profileNotifType" value="line" onchange="handleNotifTypeChange(this.value)">
+            <div class="notif-radio-content">
+              <div class="notif-radio-header">
+                <span class="material-symbols-outlined notif-type-icon notif-icon-line">chat</span>
+                <span class="notif-type-name">LINE通知</span>
+                <span class="notif-status-badge badge-gray" id="notifBadgeLine">未連携</span>
+              </div>
+              <div class="notif-radio-desc">公式LINEの個別トークで受信</div>
+            </div>
+          </label>
+
+          <label class="notif-radio-card" id="notifCardPush">
+            <input type="radio" name="profileNotifType" value="push" onchange="handleNotifTypeChange(this.value)">
+            <div class="notif-radio-content">
+              <div class="notif-radio-header">
+                <span class="material-symbols-outlined notif-type-icon notif-icon-push">notifications_active</span>
+                <span class="notif-type-name">プッシュ通知</span>
+                <span class="notif-status-badge badge-gray" id="notifBadgePush">未許可</span>
+              </div>
+              <div class="notif-radio-desc">スマホ画面上部のバナーで直接受信</div>
+            </div>
+          </label>
+
+          <label class="notif-radio-card" id="notifCardBoth">
+            <input type="radio" name="profileNotifType" value="both" onchange="handleNotifTypeChange(this.value)">
+            <div class="notif-radio-content">
+              <div class="notif-radio-header">
+                <span class="material-symbols-outlined notif-type-icon notif-icon-both">mark_email_read</span>
+                <span class="notif-type-name">両方で受け取る</span>
+              </div>
+              <div class="notif-radio-desc">LINEとプッシュ通知の両方に配信</div>
+            </div>
+          </label>
+
+          <label class="notif-radio-card" id="notifCardNone">
+            <input type="radio" name="profileNotifType" value="none" onchange="handleNotifTypeChange(this.value)">
+            <div class="notif-radio-content">
+              <div class="notif-radio-header">
+                <span class="material-symbols-outlined notif-type-icon notif-icon-none">notifications_off</span>
+                <span class="notif-type-name">通知を受け取らない</span>
+              </div>
+              <div class="notif-radio-desc">アプリを開いた時のみ確認</div>
+            </div>
+          </label>
+        </div>
+
+        <!-- 端末許可・LINE連携のアクションボタンエリア -->
+        <div id="notifActionArea" class="notif-action-area mb-12 hidden">
+          <div id="notifActionLineWrap" class="hidden">
+            <button type="button" class="btn-notif-action btn-notif-line w-full mb-6" onclick="handleLineConnectClick()">
+              <span class="material-symbols-outlined mr-2">add_link</span>LINE公式アカウントと連携
+            </button>
+            <div class="text-2xs text-muted text-center">※友だち追加画面が開きます。追加後に連携完了となります。</div>
+          </div>
+          <div id="notifActionPushWrap" class="hidden">
+            <button type="button" class="btn-notif-action btn-notif-push w-full mb-6" onclick="handlePushPermissionRequest()">
+              <span class="material-symbols-outlined mr-2">notifications</span>この端末の通知を有効化
+            </button>
+            <div class="text-2xs text-muted text-center" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
+          </div>
+        </div>
+
+        <!-- 通知対象項目のチェックボックス -->
+        <div class="notif-target-box mb-12" id="notifTargetBox">
+          <div class="notif-target-title">受け取る通知項目</div>
+          <div class="notif-target-items">
+            <label class="notif-checkbox-label">
+              <input type="checkbox" id="notifItemEmergency" checked>
+              <span>雨天中止・緊急連絡</span>
+            </label>
+            <label class="notif-checkbox-label">
+              <input type="checkbox" id="notifItemAttendance" checked>
+              <span>出欠未回答リマインド</span>
+            </label>
+            <label class="notif-checkbox-label">
+              <input type="checkbox" id="notifItemBulletin" checked>
+              <span>活動記録（掲示板）の新着</span>
+            </label>
+          </div>
+        </div>
+
+        <button type="button" id="btnSaveNotificationSettings" class="btn btn-primary-action w-full mb-8" onclick="handleSaveNotificationSettings()">
+          通知設定を保存
+        </button>
+        <div id="notifSaveMsg" class="notif-status-msg hidden"></div>
+      </div>
+
+      <!-- パスワード変更セクション -->
+      <div class="pw-section">
+        <div class="pw-section-title">パスワード変更</div>
+        
+        <button type="button" id="showPwChangeBtn" class="btn-edit w-full mb-12" onclick="togglePwChangeForm()">ログインパスワード変更</button>
+        
+        <div id="pwChangeFormArea" class="hidden">
+          <div id="changePwMsg" class="pw-msg"></div>
+          <div class="pw-input-group">
+            <input type="password" id="currentPwInput" placeholder="現在のパスワード" class="pw-input">
+          </div>
+          <div class="pw-input-group">
+            <input type="password" id="newPwInput" placeholder="新しいパスワード（4文字以上）" class="pw-input">
+          </div>
+          <div class="pw-input-group-last">
+            <input type="password" id="confirmNewPwInput" placeholder="新しいパスワード（確認用）" class="pw-input">
+          </div>
+          <button type="button" class="btn btn-primary-action w-full pw-submit-btn" onclick="handlePasswordChange()">パスワードを更新</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer profile-modal-footer">
+      <button type="button" class="btn btn-logout w-full mb-8" onclick="openLogoutModal(event)">
+        <span class="material-symbols-outlined mr-2">logout</span>ログアウト
+      </button>
+      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     ログアウト確認モーダル
+     ========================================= -->
+<div id="logoutConfirmModal" class="modal-overlay" onclick="closeLogoutModal(event)">
+  <div class="modal-content profile-modal-content logout-modal-content">
+    <div class="modal-body logout-modal-body">
+      <div class="logout-modal-title">ログアウトしますか？</div>
+      <div class="logout-modal-desc">ログアウトしてログイン画面に戻ります。</div>
+    </div>
+    <div class="modal-footer logout-modal-footer">
+      <button type="button" class="btn-cancel-action logout-btn" onclick="closeLogoutModal(event)">キャンセル</button>
+      <button type="button" class="btn-primary-action logout-btn-danger" onclick="executeLogout()">ログアウト</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     全画面共通 汎用カスタム確認ダイアログ (confirm 代替)
+     ========================================= -->
+<div id="appConfirmModal" class="modal-overlay app-dialog-overlay" onclick="appConfirmModalCancel(event)">
+  <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-body logout-modal-body">
+      <div id="appConfirmIconWrap" class="app-dialog-icon-wrap">
+        <span id="appConfirmIcon" class="material-symbols-outlined app-dialog-icon">help_outline</span>
+      </div>
+      <div id="appConfirmTitle" class="logout-modal-title">確認</div>
+      <div id="appConfirmMessage" class="logout-modal-desc app-dialog-message"></div>
+    </div>
+    <div class="modal-footer logout-modal-footer">
+      <button type="button" id="appConfirmBtnCancel" class="btn-cancel-action logout-btn" onclick="handleAppConfirmResult(false)">キャンセル</button>
+      <button type="button" id="appConfirmBtnOk" class="btn-primary-action logout-btn" onclick="handleAppConfirmResult(true)">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     全画面共通 汎用カスタム通知ダイアログ (alert 代替)
+     ========================================= -->
+<div id="appAlertModal" class="modal-overlay app-dialog-overlay" onclick="appAlertModalClose(event)">
+  <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
+    <div class="modal-body logout-modal-body">
+      <div id="appAlertIconWrap" class="app-dialog-icon-wrap">
+        <span id="appAlertIcon" class="material-symbols-outlined app-dialog-icon">info</span>
+      </div>
+      <div id="appAlertTitle" class="logout-modal-title">お知らせ</div>
+      <div id="appAlertMessage" class="logout-modal-desc app-dialog-message"></div>
+    </div>
+    <div class="modal-footer logout-modal-footer app-dialog-footer-center">
+      <button type="button" id="appAlertBtnOk" class="btn-primary-action logout-btn app-dialog-btn-single" onclick="closeAppAlertModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     試合詳細モーダル（全画面共通オーバーレイ）
+     スコアボード、前後半得点、MOM、参加者、試合ログタイムライン
+     ========================================= -->
+<div id="matchDetailModal" class="modal-overlay" onclick="closeMatchDetailModal(event)">
+  <div class="modal-content">
+    <!-- モーダルヘッダー -->
+    <div class="modal-match-header">
+      <div class="modal-match-header-left">
+        <div class="modal-match-header-row">
+          <span id="modalCategory" class="category-badge"></span>
+          <span id="modalDate" class="text-muted modal-match-date"></span>
+        </div>
+        <div id="modalLocationRow" class="modal-match-location-row hidden">
+          <span class="material-symbols-outlined modal-loc-icon">location_on</span>
+          <span id="modalLocation"></span>
+        </div>
+      </div>
+      <div class="modal-match-header-right">
+        <button type="button" class="modal-close" onclick="closeMatchDetailModal(event)">&times;</button>
+      </div>
+    </div>
+
+    <!-- スコアボード -->
+    <div class="modal-score-board">
+      <div class="modal-score-row">
+        <div class="team-name team-name-left">FC Benten</div>
+        <div id="modalScoreBox" class="modal-score-box">
+          <span id="modalMyScore"></span>
+          <span class="score-hyphen">-</span>
+          <span id="modalOppScore"></span>
+        </div>
+        <div id="modalOpponent" class="team-name team-name-right"></div>
+      </div>
+      <div id="modalHalfScores" class="modal-half-scores">
+        <div class="modal-half-row">
+          <div class="half-col-left">前半</div>
+          <div class="half-col-center" id="modalHalf1stVal">0 - 0</div>
+          <div class="half-col-right"></div>
+        </div>
+        <div class="modal-half-row">
+          <div class="half-col-left">後半</div>
+          <div class="half-col-center" id="modalHalf2ndVal">0 - 0</div>
+          <div class="half-col-right"></div>
+        </div>
+        <div id="modalHalfExtRow" class="hidden modal-half-row">
+          <div class="half-col-left">延長</div>
+          <div class="half-col-center" id="modalHalfExtVal">0 - 0</div>
+          <div class="half-col-right"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOM表示エリア -->
+    <div class="modal-section">
+      <div class="modal-section-title">
+        <span class="material-symbols-outlined">emoji_events</span>MOM
+      </div>
+      <div id="modalMom" class="modal-section-content"></div>
+    </div>
+
+    <!-- 参加者エリア -->
+    <div class="modal-section">
+      <div class="modal-section-title">
+        <span class="material-symbols-outlined">group</span>参加者
+      </div>
+      <div id="modalAttended" class="modal-section-content"></div>
+    </div>
+
+    <!-- 試合ログエリア -->
+    <div class="modal-section modal-section-last">
+      <div class="modal-section-title">
+        <span class="material-symbols-outlined">history</span>試合ログ
+      </div>
+      <div id="modalLogs"></div>
+      <div id="modalNoLogs" class="empty-state hidden">記録はありません</div>
+    </div>
+
+    <!-- モーダルフッター -->
+    <div class="modal-footer modal-match-footer">
+      <button type="button" class="btn-primary btn-match-edit" onclick="goToEditMatch()">
+        <span class="material-symbols-outlined">edit_square</span>この試合を編集
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     プロフィール画像拡大モーダル（ライトボックス）
+     ========================================= -->
+<div id="avatarLightboxModal" class="avatar-lightbox-overlay hidden" onclick="closeAvatarLightbox()">
+  <button type="button" class="avatar-lightbox-close" onclick="closeAvatarLightbox()" aria-label="閉じる">
+    <span class="material-symbols-outlined">close</span>
+  </button>
+  <div class="avatar-lightbox-content" onclick="event.stopPropagation()">
+    <div class="avatar-lightbox-img-wrap">
+      <img id="avatarLightboxImg" src="" alt="" class="avatar-lightbox-img">
+    </div>
+    <div id="avatarLightboxName" class="avatar-lightbox-name"></div>
+  </div>
+</div>
+
+<!-- =========================================
+     Googleアカウント強制連携モーダル（未連携時は閉じられないブロッキングモーダル）
+     ========================================= -->
+<div id="forceGoogleAuthModal" class="modal-overlay force-auth-overlay">
+  <div class="modal-content profile-modal-content force-auth-modal-content">
+    <div class="modal-body force-auth-modal-body">
+      <div class="force-auth-icon-circle">
+        <span class="material-symbols-outlined force-auth-icon">sync_lock</span>
+      </div>
+
+      <h2 class="force-auth-title">Googleアカウント連携のお願い</h2>
+      <p class="force-auth-desc">
+        FC Benten アプリをご利用いただくには、Googleカレンダーとのアカウント連携が必要です。<br>
+        下のボタンからGoogleアカウントの連携を完了してください。
+      </p>
+
+      <div class="force-auth-email-box">
+        <div class="force-auth-email-label">連携対象メールアドレス:</div>
+        <div id="forceAuthEmailDisplay" class="force-auth-email-val"></div>
+      </div>
+
+      <div id="forceAuthStatus" class="form-status-msg hidden"></div>
+
+      <button type="button" id="btnForceGoogleAuth" class="btn-primary-action btn-force-auth" onclick="handleForceGoogleAuthClick()">
+        <span class="material-symbols-outlined">sync_lock</span>
+        <span>Googleアカウント連携</span>
+      </button>
+
+      <p class="force-auth-note">
+        ※ボタンをタップするとGoogle認証画面が開きます。認証完了後、自動的にアプリへ戻ります。
+      </p>
+    </div>
+
+    <div class="modal-footer force-auth-modal-footer">
+      <a href="javascript:void(0)" onclick="executeLogout()" class="force-auth-logout-link">
+        別のアカウントでログイン（ログアウト）
+      </a>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,417 @@
+/* =========================================
+   👑 ランキング画面用スタイル（新カードUI & PC4列グリッド）
+   ========================================= */
+
+/* サブタブの枠組み（モバイル用：角丸4px） */
+.sub-tab-container { 
+  display: flex; 
+  gap: 4px; 
+  margin-bottom: 16px; 
+  padding: 4px;
+  background: #e2e8f0;
+  border-radius: 4px; /* 試合結果カードと同じ4px */
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+/* サブタブ（未選択）のデザイン */
+.sub-tab { 
+  flex: 1;
+  text-align: center;
+  padding: 8px 10px; 
+  font-size: 0.82rem; 
+  border-radius: 4px; /* 試合結果カードと同じ4px */
+  background: transparent !important; 
+  color: #64748b !important; 
+  border: none !important;
+  cursor: pointer; 
+  font-weight: 600; 
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.sub-tab:hover:not(.active) {
+  color: #475569 !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* サブタブ（選択中）のデザイン */
+.sub-tab.active { 
+  background: #ffffff !important; 
+  color: var(--primary) !important; 
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  font-weight: 700;
+}
+
+/* ランキンググリッドコンテナ */
+.ranking-grid-container {
+  width: 100%;
+}
+
+/* 個別サブタブコンテンツ枠（カテゴリごとにグルーピングした白カード枠） */
+.subtab-content {
+  background: var(--bg-card, #ffffff);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 16px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* 列ヘッダー（カード内のすっきりした見出し） */
+.ranking-column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0 14px 0;
+  margin-bottom: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ranking-column-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-heading, #475569);
+}
+
+.ranking-column-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+.badge-goals   { background: #e0f2fe; color: #0284c7; }
+.badge-assists { background: #eff6ff; color: #2563eb; }
+.badge-mom     { background: #fefce8; color: #ca8a04; }
+.badge-games   { background: #f0fdf4; color: #16a34a; }
+
+/* ランキングカードリストコンテナ */
+.rank-list { 
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* 試合結果と同じ間隔 */
+  padding: 0; 
+  margin: 0; 
+  width: 100%;
+}
+
+/* 個別ランキングカード（サンプル画像準拠のフラットカード仕様） */
+.rank-card {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card, #ffffff);
+  border-radius: 6px !important;
+  padding: 8px 12px;
+  box-shadow: none;
+  border: 1px solid var(--border-color, #e2e8f0);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.rank-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* 順位別の外枠 & 背景色（サンプル画像準拠） */
+.rank-card.rank-1 {
+  border: 1px solid #fcd34d !important;
+  background: #fffdf5 !important;
+}
+.rank-card.rank-2 {
+  border: 1px solid #cbd5e1 !important;
+  background: #f8fafc !important;
+}
+.rank-card.rank-3 {
+  border: 1px solid #fdba74 !important;
+  background: #fffaf5 !important;
+}
+.rank-card.rank-other {
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+/* 順位番号（1〜3位はクラウンバッジ、4位以降はシンプルな数字表示） */
+.rank-num { 
+  width: 32px; 
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 10px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  line-height: 1;
+}
+
+.rank-badge-svg {
+  width: 32px;
+  height: 38px;
+  display: block;
+}
+
+.rank-card.rank-other .rank-num { 
+  color: #94a3b8; 
+  font-weight: 700; 
+  font-size: 1.15rem;
+}
+
+/* アバター（全順位共通・円形・丸型に統一） */
+.rank-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50% !important;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0 10px 0 0;
+  overflow: hidden;
+}
+
+.rank-avatar .material-symbols-outlined {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.rank-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% !important;
+  display: block;
+}
+
+/* 選手情報（名前 ＋ 背番号：1〜3位は太字で強調、4位以降は標準の太さ） */
+.rank-player-info { 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1; 
+  min-width: 0;
+}
+
+.rank-name { 
+  color: var(--text-heading);
+  font-weight: 500 !important; /* 1〜3位も含め全順位統一で500（標準）に統一 */
+  font-size: 0.88rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-number {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 400; /* 背番号は細めで控えめに */
+  margin-top: 1px;
+}
+
+/* 成績（スコア数値 ＋ 英語ラベル） */
+.rank-score-wrap { 
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+  min-width: 44px;
+}
+
+.rank-score-val { 
+  font-size: 1.22rem; 
+  line-height: 1.1;
+  text-align: right;
+}
+
+.rank-card.rank-1 .rank-score-val { color: #d97706; font-weight: 800; }
+.rank-card.rank-2 .rank-score-val { color: #5c728a; font-weight: 800; }
+.rank-card.rank-3 .rank-score-val { color: #9a3412; font-weight: 800; }
+.rank-card.rank-other .rank-score-val { color: #475569; font-weight: 700; }
+
+.rank-score-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+  text-align: right;
+}
+
+/* 「全件を表示 / 折りたたむ」ボタン（サンプル画像準拠のクリーンなテキストリンク形式） */
+.rank-load-more-container {
+  margin-top: 12px;
+  margin-bottom: 2px;
+  width: 100%;
+  display: none;
+  text-align: center !important;
+}
+
+.rank-load-more-container .btn-load-more {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--text-muted, #64748b) !important;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px;
+  margin: 0 auto !important;
+  transition: color 0.15s ease;
+}
+
+.rank-load-more-container .btn-load-more:hover {
+  color: var(--text-heading, #475569) !important;
+  background: transparent !important;
+}
+
+.rank-load-more-container .btn-load-more .material-symbols-outlined {
+  font-size: 1.1rem;
+}
+
+/* 空状態・ローディング表示の集約スタイル */
+.rank-list .loading {
+  padding: 24px 0;
+}
+
+.rank-empty-msg {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* =========================================
+   💻 レスポンシブ切り替え (PC横並び / モバイルタブ)
+   ========================================= */
+
+/* PC・タブレット（768px以上共通） */
+@media (min-width: 768px) {
+  .ranking-sticky-header {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin-bottom: 16px !important;
+    box-shadow: none !important;
+  }
+
+  .ranking-sticky-header .ranking-filter-box {
+    margin-bottom: 0 !important;
+  }
+
+  /* PCではサブタブボタンを非表示にして全列を同時表示 */
+  .sub-tab-container {
+    display: none !important;
+  }
+  
+  .ranking-grid-container {
+    display: grid !important;
+    align-items: start;
+    width: 100% !important;
+  }
+
+  /* PC時は全サブタブコンテンツを常時表示 */
+  .subtab-content {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+
+  /* PC用の列ヘッダーを表示 */
+  .ranking-column-header {
+    display: flex !important;
+  }
+}
+
+/* 画面幅1024px以上は4列横並び（カード同士の間隔を20pxに整えて美しいグルーピングを形成） */
+@media (min-width: 1024px) {
+  .ranking-grid-container {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 20px !important;
+    width: 100% !important;
+  }
+}
+
+/* 画面幅768px〜1023pxは2列×2行 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .ranking-grid-container {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+    width: 100% !important;
+  }
+}
+
+/* スマホ（767px以下：タブ切り替え＆スクロール固定ヘッダー） */
+@media (max-width: 767px) {
+  #tab-ranking.content-area {
+    padding-top: 0 !important;
+  }
+
+  .ranking-sticky-header {
+    position: sticky !important;
+    top: var(--sidebar-height, 56px) !important;
+    z-index: 990 !important;
+    background: var(--bg-body, #f8fafc) !important;
+    padding-top: 6px !important;
+    padding-bottom: 4px !important;
+    margin-bottom: 6px !important;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .ranking-sticky-header .ranking-filter-box {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius, 4px) !important;
+  }
+
+  .ranking-sticky-header .sub-tab-container {
+    margin-bottom: 0 !important;
+  }
+
+  .sub-tab-container {
+    display: flex !important;
+  }
+
+  .ranking-grid-container {
+    display: block !important;
+  }
+
+  .subtab-content {
+    display: none !important;
+  }
+
+  .subtab-content.active {
+    display: block !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* モバイル時は上部サブタブで判別できるため列ヘッダー（「得点 GOALS」等）は非表示 */
+  .ranking-column-header {
+    display: none !important;
+  }
+
+  .rank-load-more-container {
+    text-align: center !important;
+  }
+
+  .rank-load-more-container .btn-load-more {
+    margin: 0 auto !important;
+    max-width: 280px !important;
+  }
+}

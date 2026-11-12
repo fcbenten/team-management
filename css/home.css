@@ -1,0 +1,254 @@
+/* =========================================
+   ホーム画面（ダッシュボード）専用スタイル
+   ※ サイト全体のグレー文字基調・クリーンデザインに完全統一
+   ========================================= */
+
+/* 1. セクションカード共通 */
+.home-section-card {
+  padding: 18px 20px !important;
+  margin-bottom: 0 !important;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* 2. 最上段: チーム戦績ヒーローカード（下部セクションとの間に十分な余白を確保） */
+#homeSeasonStatsCard,
+.home-stats-hero-card {
+  margin-bottom: 28px !important;
+  padding: 20px 22px !important;
+}
+
+/* 3. 下段グリッドレイアウト（PC: 2カラム / スマホ: 1カラム） */
+.home-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+.home-column-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (min-width: 840px) {
+  .home-grid-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+}
+
+@media (max-width: 639px) {
+  .home-section-card {
+    padding: 12px 10px !important;
+  }
+
+  #homeSeasonStatsCard,
+  .home-stats-hero-card {
+    margin-bottom: 20px !important;
+    padding: 12px 10px !important;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .home-grid-layout {
+    gap: 16px;
+  }
+}
+
+.home-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.home-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.home-section-title .material-symbols-outlined {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+}
+
+.home-section-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.home-section-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+/* 4. 共通カードマウント領域 */
+.home-shared-card-wrap {
+  width: 100%;
+}
+
+.home-shared-card-wrap .schedule-agenda-card,
+.home-shared-card-wrap .match-card {
+  margin-bottom: 0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+  cursor: pointer;
+}
+
+.home-shared-card-wrap .schedule-agenda-card:hover,
+.home-shared-card-wrap .match-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ホーム画面内の直近試合結果カード: PC表示時でも狭いカラム幅に合わせて3段縦積みレイアウトを完全保護（重なり解消） */
+.home-shared-card-wrap .match-card {
+  position: static !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  min-height: auto !important;
+  padding: 12px 16px !important;
+}
+
+.home-shared-card-wrap .match-card .match-card-meta {
+  max-width: 100% !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  position: static !important;
+}
+
+.home-shared-card-wrap .match-card .match-card-main {
+  position: static !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  height: auto !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
+}
+
+.home-shared-card-wrap .match-card .match-card-location-row {
+  position: static !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  border-top: 1px dashed var(--border-color) !important;
+  padding-top: 6px !important;
+  margin-top: 2px !important;
+}
+
+.home-shared-card-wrap .match-card .match-team {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+}
+
+/* 5. 空状態共通 */
+.home-empty-state {
+  text-align: center;
+  padding: 24px 16px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius);
+}
+
+/* 6. 活動予定ブロック（次回の活動 / 次の公式戦） */
+.home-activity-block {
+  width: 100%;
+}
+
+.home-block-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.home-block-icon {
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
+/* 次節未定カード */
+.home-tbd-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.home-tbd-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  flex-shrink: 0;
+}
+
+.home-tbd-icon {
+  font-size: 22px;
+  color: var(--text-muted);
+}
+
+.home-tbd-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.home-tbd-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tbd-status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.home-tbd-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}

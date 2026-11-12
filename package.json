@@ -1,0 +1,20 @@
+{
+  "name": "teammanagement",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "npx clasp push && npx clasp deploy -i AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS --description \"Update\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/google-apps-script": "^2.0.12"
+  },
+  "dependencies": {
+    "glob": "^13.0.6"
+  }
+}

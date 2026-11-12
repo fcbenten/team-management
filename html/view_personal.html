@@ -1,0 +1,192 @@
+<div id="tab-personal" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+  <!-- =========================================
+       検索・フィルターエリア
+       シーズンおよびカテゴリ（公式戦/TRM）による個人成績絞り込み
+       ========================================= -->
+  <div class="personal-sticky-header sticky-filter-header">
+    <div class="card-box filter-box filter-compact mb-16 personal-filter-box">
+      <div class="filter-row">
+        <div class="form-group mb-0 filter-select-group">
+          <select id="personalSeasonFilter" class="filter-select" onchange="filterAndRenderPersonalStats()"></select>
+        </div>
+        <div class="form-group mb-0 filter-select-group">
+          <select id="personalCategoryFilter" class="filter-select" onchange="filterAndRenderPersonalStats()">
+            <option value="all">全カテゴリ</option>
+            <option value="公式戦">公式戦</option>
+            <option value="TRM">TRM</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       個人成績一覧テーブルエリア
+       背番号、選手名、参加数、参加率、得点、アシスト、MVPのソート対応テーブル
+       ========================================= -->
+  <div class="card-box stats-table-card">
+    <div class="stats-table-header">
+      <div class="stats-table-title">個人成績一覧</div>
+    </div>
+    
+    <div class="table-responsive">
+      <table class="stats-table" id="personalStatsTable">
+        <thead>
+          <tr>
+            <!-- 各ヘッダーをクリックすると、その項目でソート(並び替え)を実行します -->
+            <th onclick="sortPersonalStats('number')" data-sort="number" class="th-number">NO.<span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('name')" data-sort="name" class="text-left th-name">名前<span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('games')" data-sort="games" class="th-stat th-games col-pc-only" title="参加数"><span class="th-text">参加数</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('rate')" data-sort="rate" class="th-stat th-rate" title="参加率"><span class="th-text">参加率</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('goals')" data-sort="goals" class="th-stat th-goals" title="得点数"><span class="th-text">得点</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('assists')" data-sort="assists" class="th-stat th-assists" title="アシスト数"><span class="th-text">アシスト</span><span class="sort-icon"></span></th>
+            <th onclick="sortPersonalStats('mom')" data-sort="mom" class="th-stat th-mom" title="MVP"><span class="th-text">MVP</span><span class="sort-icon"></span></th>
+          </tr>
+        </thead>
+        <tbody id="personalStatsBody">
+          <tr><td colspan="7"><div class="loading">読み込み中...</div></td></tr>
+          <!-- JSで動的に選手ごとの行が生成・挿入されます -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- =========================================
+       選手詳細情報モーダル（全画面共通オーバーレイ）
+       選手名タップ時に表示: 個人成績サマリー、参加試合勝敗、タイムライン参加履歴
+       ========================================= -->
+  <div id="playerModalOverlay" class="modal-overlay" onclick="closePlayerModal(event)">
+    <div class="modal-content">
+      
+      <!-- モーダルのヘッダー部分（選手名とバッジ） -->
+      <div class="modal-header">
+        <div class="pm-header-left">
+          <div class="pm-avatar-wrap">
+            <span class="material-symbols-outlined pm-avatar-placeholder" id="pmAvatarPlaceholder">person</span>
+            <img id="pmAvatarImg" class="pm-avatar-img hidden" alt="">
+          </div>
+          <div>
+            <div id="pm-header-title" class="modal-player-name"></div>
+            <div id="pm-badges">
+              <span id="pm-badge-category" class="category-badge"></span>
+            </div>
+          </div>
+        </div>
+        <button class="modal-close" onclick="closePlayerModal(event)">&times;</button>
+      </div>
+
+      <!-- スクロール可能な詳細コンテンツエリア -->
+      <div class="scrollable-section">
+        
+        <!-- 個人成績サマリー（参加数、得点など） -->
+        <div class="modal-section">
+          <div id="pm-summary-stats" class="summary-grid-5">
+            <div class="stat-box"><div class="stat-label">参加</div><div id="pm-stat-games" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">参加率</div><div class="stat-value"><span id="pm-stat-rate">0</span><span class="rate-unit">%</span></div></div>
+            <div class="stat-box"><div class="stat-label">MVP</div><div id="pm-stat-mom" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">得点</div><div id="pm-stat-goals" class="stat-value">0</div></div>
+            <div class="stat-box"><div class="stat-label">アシスト</div><div id="pm-stat-assists" class="stat-value">0</div></div>
+          </div>
+        </div>
+        
+        <!-- チームの勝敗結果（その選手が参加した試合） -->
+        <div class="modal-section">
+          <div class="modal-section-title">チーム勝敗 (参加試合)</div>
+          <div id="pm-team-results" class="team-results-row">
+            <div class="result-box box-win"><span id="pm-res-wins">0</span> 勝</div>
+            <div class="result-box box-lose"><span id="pm-res-losses">0</span> 敗</div>
+            <div class="result-box box-draw"><span id="pm-res-draws">0</span> 分</div>
+          </div>
+        </div>
+        
+        <!-- 参加した試合のタイムライン履歴 -->
+        <div class="modal-section pm-history-section">
+          <div class="modal-section-title">参加履歴</div>
+          <div id="pm-action-history" class="history-container"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  </div>
+</div>
+
+<!-- =========================================
+     個人スタッツ描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- 個人成績テーブル 選手データ行テンプレート（背番号、選手名・ポジション、参加数、参加率バー、得点、アシスト、MVP） -->
+<template id="tpl-personal-row">
+  <tr>
+    <td class="col-number"></td>
+    <td class="text-left col-name-cell">
+      <div class="player-cell-wrap">
+        <span class="player-avatar-icon"><span class="material-symbols-outlined">person</span></span>
+        <div class="player-name-meta">
+          <span class="player-name"></span>
+          <span class="player-pos-badge"></span>
+        </div>
+      </div>
+    </td>
+    <td class="col-games col-pc-only"><span class="stat-num-box"></span></td>
+    <td class="col-rate-cell">
+      <div class="rate-cell-wrap">
+        <div class="rate-bar-track">
+          <div class="rate-bar-fill"></div>
+        </div>
+        <span class="rate-text">0%</span>
+      </div>
+      <div class="rate-sub-mobile"></div>
+    </td>
+    <td class="col-goals col-stat"><span class="stat-num-box"></span></td>
+    <td class="col-assists col-stat"><span class="stat-num-box"></span></td>
+    <td class="col-mom col-stat"><span class="stat-num-box"></span></td>
+  </tr>
+</template>
+
+<!-- 個人成績テーブル 絞り込み条件一致なし時の空状態テンプレート -->
+<template id="tpl-personal-empty">
+  <tr>
+    <td colspan="7" class="empty-state">条件に一致する成績データがありません</td>
+  </tr>
+</template>
+
+<!-- 選手詳細モーダル 参加履歴なし時の空状態テンプレート -->
+<template id="tpl-pm-empty-history">
+  <div class="empty-state">参加履歴はありません</div>
+</template>
+
+<!-- 選手詳細モーダル 参加試合カードテンプレート（対戦相手、スコア、MVP選出バッジ、個人アクション一覧） -->
+<template id="tpl-pm-match-card">
+  <div class="pm-match-card">
+    <div class="pm-match-header">
+      <div class="pm-match-header-left">
+        <span class="category-badge card-category"></span>
+        <span class="pm-match-date"></span>
+        <span class="pm-match-vs">vs</span>
+        <span class="pm-match-opp"></span>
+      </div>
+      <div class="pm-match-header-right">
+        <span class="pm-score-pill"></span>
+      </div>
+    </div>
+    <div class="pm-mvp-container hidden">
+      <span class="pm-mvp-badge">★ MVP選出</span>
+    </div>
+    <div class="pm-events-container"></div>
+  </div>
+</template>
+
+<!-- 選手詳細モーダル 試合内の個別アクション（得点、アシスト、警告等の発生時間・種別）テンプレート -->
+<template id="tpl-pm-event-row">
+  <div class="pm-event-row">
+    <div class="pm-event-time"></div>
+    <div class="pm-action-pill"></div>
+    <div class="pm-event-detail"></div>
+  </div>
+</template>

@@ -1,0 +1,753 @@
+/* =========================================
+   📄 ページヘッダー＆フィルター
+   ========================================= */
+
+
+/* フィルターモジュールのスタイルは css_common.html に共通定義 */
+
+.results-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.results-filter-box {
+  flex: 1;
+  max-width: 800px;
+  min-width: 300px;
+  margin-bottom: 0 !important;
+}
+
+.results-create-wrap {
+  flex-shrink: 0;
+}
+
+.results-create-wrap.mobile-only {
+  display: none !important;
+}
+
+.btn-match-create {
+  width: auto !important;
+  padding: 12px 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.btn-match-create-icon {
+  font-size: 1.2rem;
+  margin-bottom: -2px;
+}
+
+.load-more-container {
+  text-align: center;
+}
+
+.btn-load-more {
+  width: 100%;
+  max-width: 300px;
+  padding: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.btn-load-more .material-symbols-outlined {
+  font-size: 1.2rem;
+}
+
+.btn-load-more:hover {
+  background-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+@media (max-width: 767px) {
+  #tab-results.content-area {
+    padding-top: 0 !important;
+  }
+
+  /* フィルターのスクロール固定化（共通sticky-filter-headerを採用） */
+  .results-filter-bar {
+    display: block !important;
+    position: sticky !important;
+    top: var(--sidebar-height, 56px) !important;
+    z-index: 990 !important;
+    background: var(--bg-body, #f8fafc) !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    margin-bottom: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .results-filter-bar .results-filter-box {
+    position: static !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    background-color: var(--bg-card, #ffffff) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius, 4px) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  .results-filter-bar .pc-only {
+    display: none !important;
+  }
+
+  .results-create-wrap.mobile-only {
+    display: block !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+  }
+
+  .results-create-wrap.mobile-only .btn-match-create {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+}
+
+/* =========================================
+   📊 試合結果カード
+   ========================================= */
+.result-card,
+.match-card {
+  background: var(--bg-card) !important;
+  border-radius: 6px !important;
+  padding: 12px 16px !important;
+  margin-bottom: 8px !important;
+  border: 1px solid var(--border-color) !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.2s;
+  
+  /* 3段構成カードレイアウト */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.result-card:active {
+  transform: scale(0.99);
+}
+
+.result-header,
+.match-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+}
+
+.category-badge {
+  background: #f3f4f6 !important;
+  border: 1px solid var(--border-color) !important;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 700;
+  color: var(--text-muted) !important;
+  font-size: 0.75rem;
+}
+
+.result-date {
+  color: var(--text-muted) !important;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.result-body,
+.match-card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+.result-team {
+  flex: 1;
+  font-size: 1rem;
+  color: var(--text-heading) !important;
+  word-break: break-word;
+}
+
+.result-team:last-child {
+  text-align: right;
+}
+
+.result-score,
+.match-score {
+  font-size: 1.3rem;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 6px;
+  text-align: center;
+  min-width: 80px;
+  margin: 0 8px;
+}
+
+.result-score.win, .match-score.win { color: #16a34a !important; background: #f0fdf4 !important; border: 1px solid #86efac !important; }
+.result-score.lose, .match-score.lose { color: #dc2626 !important; background: #fef2f2 !important; border: 1px solid #fca5a5 !important; }
+.result-score.draw, .match-score.draw { color: #475569 !important; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
+
+
+/* =========================================
+   🖼 モーダル専用スタイル
+   ========================================= */
+#matchDetailModal .modal-content {
+  max-width: 500px;
+  padding: 24px 20px !important;
+}
+
+.modal-match-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.modal-match-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+
+.modal-match-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-match-date {
+  font-size: 0.9rem;
+}
+
+.modal-match-location-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+.modal-loc-icon {
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.modal-match-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.modal-score-board {
+  text-align: center;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+.modal-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: nowrap;
+}
+
+.modal-score-board .team-name {
+  font-size: 1.05rem !important;
+  font-weight: 700;
+  color: var(--text-heading) !important;
+  word-break: break-word;
+  line-height: 1.3;
+}
+
+.team-name-left {
+  flex: 1;
+  text-align: right;
+}
+
+.team-name-right {
+  flex: 1;
+  text-align: left;
+}
+
+.score-hyphen {
+  margin: 0 6px;
+  opacity: 0.5;
+  font-weight: 600;
+}
+
+.score-hyphen-sm {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.result-card:active { transform: scale(0.99); }
+
+/* 試合一覧カードのレイアウト */
+.match-card-clickable {
+  cursor: pointer;
+}
+
+/* 1段目: カテゴリタグと開催日（同列） */
+.match-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.match-card-meta .category-badge {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+.match-card-date-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #475569;
+  font-size: 0.85rem;
+}
+
+/* 2段目: チーム名とスコア */
+.match-card-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.match-team {
+  flex: 1;
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  word-break: break-word;
+  color: #475569;
+}
+
+.match-team-left {
+  text-align: right;
+}
+
+.match-team-right {
+  text-align: left;
+}
+
+/* 3段目: 会場名（会場名は長いことが多いため独立行、未入力時は非表示） */
+.match-card-location-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+  font-size: 0.8rem;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-color);
+  max-width: 100%;
+}
+
+.match-card-location-row.hidden {
+  display: none !important;
+}
+
+.card-location {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-icon, .loc-icon {
+  font-size: 1.0rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .match-card {
+    padding: 10px 12px !important;
+    gap: 8px;
+  }
+  .match-team {
+    font-size: 0.9rem;
+  }
+  .match-card-date-row {
+    font-size: 0.8rem;
+  }
+}
+
+.match-card-score-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  border-radius: 4px;
+  flex-shrink: 0;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  min-width: 68px;
+}
+
+.match-card-score-box.win {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #16a34a !important;
+}
+
+.match-card-score-box.lose {
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #dc2626 !important;
+}
+
+.match-card-score-box.draw {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.modal-score-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 14px;
+  border-radius: 6px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.2;
+  min-width: 72px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.modal-score-box.win {
+  background: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  color: #16a34a !important;
+}
+
+.modal-score-box.lose {
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #dc2626 !important;
+}
+
+.modal-score-box.draw {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+@media (max-width: 600px) {
+  .modal-score-board {
+    padding: 14px 16px !important;
+  }
+  .modal-score-row {
+    gap: 8px !important;
+  }
+  .modal-score-box {
+    padding: 3px 10px !important;
+    font-size: 1.15rem !important;
+    min-width: 64px !important;
+  }
+  .modal-score-board .team-name {
+    font-size: 0.95rem !important;
+  }
+}
+
+.modal-half-scores {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 8px;
+  width: 100%;
+}
+.modal-half-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+.half-col-left {
+  flex: 1;
+  text-align: right;
+  color: var(--text-muted);
+}
+.half-col-center {
+  color: var(--text-main) !important;
+  text-align: center;
+}
+.half-col-right {
+  flex: 1;
+}
+
+
+
+.modal-section-title {
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  color: var(--text-heading) !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  margin-bottom: 12px !important;
+}
+
+.modal-section-title .material-symbols-outlined {
+  vertical-align: text-bottom;
+  margin-right: 4px;
+  font-size: 1.2rem;
+}
+
+.modal-section-content {
+  font-size: 0.95rem;
+  color: var(--text-main) !important;
+  line-height: 1.6;
+  padding: 0 8px;
+}
+
+.modal-match-footer {
+  padding: 20px 24px;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.btn-match-edit {
+  width: 100%;
+  padding: 14px;
+  font-weight: bold;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-match-edit .material-symbols-outlined {
+  font-size: 1.2rem;
+}
+
+/* =========================================
+   ⏱ 試合ログ（タイムライン）専用スタイル
+   ========================================= */
+.tl-header { display: none; }
+
+.tl-period-label {
+  font-weight: 800;
+  color: var(--text-heading) !important;
+  margin: 16px 0 12px 0;
+  font-size: 0.95rem;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+
+.tl-row { display: flex; align-items: stretch; min-height: 48px; padding-left: 16px; }
+
+.tl-time {
+  width: 55px;
+  color: var(--text-muted) !important;
+  font-weight: 700;
+  font-size: 0.9rem;
+  padding-top: 1px;
+  text-align: right;
+  padding-right: 16px;
+  flex-shrink: 0;
+}
+
+.tl-left { flex: 1; text-align: right; padding-right: 16px; padding-bottom: 16px; display: flex; flex-direction: column; justify-content: flex-start; }
+.tl-center { width: 16px; display: flex; flex-direction: column; align-items: center; position: relative; flex-shrink: 0; }
+.tl-right { flex: 1; text-align: left; padding-left: 16px; padding-bottom: 16px; display: flex; flex-direction: column; justify-content: flex-start; }
+
+.tl-dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--border-color); border: 2px solid var(--bg-card); z-index: 1; margin-top: 5px; }
+.tl-dot.dot-goal { background-color: #0d9488; }
+.tl-dot.dot-card { background-color: #d29922; }
+.tl-dot.dot-opp { background-color: #dc2626; }
+
+.tl-line { width: 2px; background-color: var(--border-color) !important; flex: 1; margin-top: -10px; }
+.tl-row:last-child .tl-line { background-color: transparent !important; }
+
+.tl-action-title {
+  font-weight: 700;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  width: fit-content;
+}
+
+.left-box .tl-action-title {
+  margin-left: auto;
+}
+
+.right-box .tl-action-title {
+  margin-right: auto;
+  background: #fee2e2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #dc2626 !important;
+}
+
+.tl-action-title.badge-goal {
+  background: #ccfbf1 !important;
+  color: #0d9488 !important;
+  border: none !important;
+}
+
+.tl-action-title.badge-yellow {
+  background: #fef9c3 !important;
+  border: 1px solid #fde047 !important;
+  color: #a16207 !important;
+}
+
+.tl-action-title.badge-red {
+  background: #fee2e2 !important;
+  border: 1px solid #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+.tl-player { margin-top: 4px; font-size: 0.9rem; color: var(--text-main) !important; font-weight: 600; }
+.tl-assist { font-size: 0.8rem; color: var(--text-muted) !important; margin-top: 2px; }
+
+/* PC用 試合結果カードのスタイル調整（左: 日付・開催地エリア / 中央: スコアエリア / 右: 対戦相手） */
+@media (min-width: 768px) {
+  .results-filter-bar {
+    margin-bottom: 20px;
+    gap: 16px;
+  }
+  .match-card {
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    padding: 16px 24px !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    min-height: 84px;
+    box-sizing: border-box;
+  }
+  .match-card:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  /* 【左エリア・上段】: カテゴリタグと開催日 */
+  .match-card-meta {
+    max-width: calc(50% - 140px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.2;
+    z-index: 1;
+  }
+
+  /* 【左エリア・下段】: 開催場所（長い施設名も見切れないよう十分な横幅を確保） */
+  .match-card-location-row {
+    max-width: calc(50% - 140px);
+    border-top: none !important;
+    padding-top: 0 !important;
+    margin: 0 !important;
+    min-width: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 1;
+  }
+
+  /* 【スコアエリア】: カード全体の完全中央配置（「さらに読み込む」ボタンの真上にスコアが並ぶ） */
+  .match-card-main {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 0 24px;
+    box-sizing: border-box;
+    pointer-events: none;
+    border-left: none !important;
+  }
+
+  .match-card-score-box {
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    padding: 0 14px;
+    box-sizing: border-box;
+    font-size: 1.1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin: 0 14px;
+  }
+
+  .match-team {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: #475569;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    flex: 1 1 0px !important;
+    min-width: 0;
+  }
+
+  .match-team-left {
+    text-align: right;
+    justify-content: flex-end;
+  }
+
+  .match-team-right {
+    text-align: left;
+    justify-content: flex-start;
+  }
+}

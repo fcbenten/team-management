@@ -1,0 +1,428 @@
+<div id="tab-members" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <!-- =========================================
+         ヘッダーアクション・統計サマリーエリア
+         Google Cloud Consoleリンク、新規メンバー追加ボタン、役職・ポジション別集計
+         ========================================= -->
+    <div class="card-box mb-16 members-header-card">
+      <div class="members-header-top mb-0">
+        <!-- 統計サマリーバッジ -->
+        <div class="members-stat-pills" id="membersStatSummary">
+          <div class="stat-pill"><span class="stat-pill-label">メンバー数</span><span id="statTotalMembers" class="stat-pill-val">0</span></div>
+          <div class="stat-pill"><span class="stat-pill-label">FP</span><span id="statFpMembers" class="stat-pill-val">0</span></div>
+          <div class="stat-pill"><span class="stat-pill-label">GK</span><span id="statGkMembers" class="stat-pill-val">0</span></div>
+        </div>
+        <div class="members-header-actions">
+          <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-gcp-header-link" title="Google Cloud Console (テストユーザー登録画面を開く)">
+            <span class="material-symbols-outlined">open_in_new</span>
+            <span>Google Cloud Console</span>
+          </a>
+          <button type="button" class="btn-add-member" onclick="openMemberAddModal()">
+            <span class="material-symbols-outlined">person_add</span>
+            <span>新規追加</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         検索・フィルターエリア
+         役割・ポジション絞り込み、フリーワード検索
+         ========================================= -->
+    <div class="card-box filter-box mb-16">
+      <div class="filter-row">
+        <div class="form-group mb-0 filter-select-group">
+          <select id="memberRoleFilter" class="filter-select" onchange="filterMembersList()">
+            <option value="all">すべての役割</option>
+            <option value="代表">代表</option>
+            <option value="副代表">副代表</option>
+            <option value="メンバー">メンバー</option>
+          </select>
+        </div>
+        <div class="form-group mb-0 filter-select-group">
+          <select id="memberPositionFilter" class="filter-select" onchange="filterMembersList()">
+            <option value="all">全ポジション</option>
+            <option value="FP">FP</option>
+            <option value="GK">GK</option>
+          </select>
+        </div>
+        <div class="form-group mb-0 filter-search-group">
+          <span class="material-symbols-outlined filter-search-icon">search</span>
+          <input type="text" id="memberSearchInput" class="filter-search-input" placeholder="名前・背番号・役割・生年月日・TELで検索..." oninput="filterMembersList()">
+          <button type="button" id="memberSearchClearBtn" class="members-search-clear hidden" onclick="clearMemberSearch()">&times;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         メンバー一覧セクション群
+         1. 現役メンバー
+         2. 休部中メンバー
+         3. OB・退団メンバー (最下部アコーディオン開閉)
+         ========================================= -->
+    <div class="members-sections-wrap">
+
+      <!-- 1. 現役メンバーセクション -->
+      <section class="member-section" id="sectionActiveMembers">
+        <div class="member-section-header">
+          <span class="section-dot dot-active"></span>
+          <h3 class="section-title">現役メンバー</h3>
+          <span class="section-count-badge" id="sectionCountActive">0名</span>
+        </div>
+        <div id="membersListActive" class="members-list-grid">
+          <!-- JSで動的生成 -->
+        </div>
+      </section>
+
+      <!-- 2. 休部中メンバーセクション -->
+      <section class="member-section" id="sectionSuspendedMembers">
+        <div class="member-section-header">
+          <span class="section-dot dot-suspended"></span>
+          <h3 class="section-title">休部中メンバー</h3>
+          <span class="section-count-badge" id="sectionCountSuspended">0名</span>
+        </div>
+        <div id="membersListSuspended" class="members-list-grid">
+          <!-- JSで動的生成 -->
+        </div>
+        <div id="suspendedEmptyHint" class="member-section-empty hidden">
+          現在、休部中のメンバーはいません
+        </div>
+      </section>
+
+      <!-- 3. OB・退団メンバーセクション (案A: アコーディオン方式) -->
+      <section class="member-section ob-section" id="sectionObMembers">
+        <div class="ob-accordion-header" onclick="toggleObAccordion()">
+          <div class="ob-header-left">
+            <span class="section-dot dot-ob"></span>
+            <h3 class="section-title">OB・退団メンバー</h3>
+            <span class="section-count-badge" id="sectionCountOb">0名</span>
+          </div>
+          <div class="ob-header-right">
+            <span id="obAccordionToggleText" class="ob-toggle-text">一覧を表示</span>
+            <span id="obAccordionToggleIcon" class="material-symbols-outlined ob-toggle-icon">expand_more</span>
+          </div>
+        </div>
+        <div id="obAccordionContent" class="ob-accordion-content hidden">
+          <div id="membersListOb" class="members-list-grid">
+            <!-- JSで動的生成 -->
+          </div>
+          <div id="obEmptyHint" class="member-section-empty hidden">
+            OBメンバーはいません
+          </div>
+        </div>
+      </section>
+
+      <!-- 全体で0件のときの空表示 -->
+      <div id="membersTotalEmpty" class="card-box text-center p-24 text-muted hidden">
+        <span class="material-symbols-outlined text-4xl mb-8 text-gray-400">search_off</span>
+        <div class="font-bold">該当するメンバーが見つかりません</div>
+        <div class="text-xs text-muted mt-4">検索条件を変更するか、新規メンバーを追加してください</div>
+      </div>
+
+    </div>
+
+  </div> <!-- /tab-main-content -->
+
+  <!-- =========================================
+       メンバー追加・編集モーダル（オーバーレイ）
+       選手名、背番号、ポジション、役割、生年月日、電話番号、メールアドレス入力
+       ========================================= -->
+  <div id="memberEditModal" class="modal-overlay" onclick="closeMemberEditModal(event)">
+    <div class="modal-content member-modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title font-bold" id="memberEditModalTitle">メンバーの編集</div>
+        <button type="button" class="modal-close" onclick="closeMemberEditModal(event)">&times;</button>
+      </div>
+      <div class="modal-body member-modal-body">
+        <form id="memberEditForm" onsubmit="event.preventDefault(); handleSaveMemberSubmit(event); return false;">
+          <input type="hidden" id="memberEditIsNew" value="false">
+          <input type="hidden" id="memberEditOriginalName" value="">
+
+          <div class="form-group mb-12">
+            <label class="form-label" for="memberEditName">選手名 <span class="badge-required">必須</span></label>
+            <input type="text" id="memberEditName" class="form-input" placeholder="例: 山田 太郎" maxlength="30" required>
+            <div id="err-memberEditName" class="field-error-msg hidden"></div>
+          </div>
+
+          <div class="form-row mb-12">
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditNumber">背番号 <span class="text-xs text-muted font-normal">（2桁まで）</span></label>
+              <input type="number" id="memberEditNumber" class="form-input" placeholder="例: 10" min="0" max="99" oninput="if(this.value.length>2) this.value=this.value.slice(0,2)">
+              <div id="err-memberEditNumber" class="field-error-msg hidden"></div>
+            </div>
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditPosition">ポジション</label>
+              <select id="memberEditPosition" class="form-input">
+                <option value="FP">FP</option>
+                <option value="GK">GK</option>
+                <option value="">未設定</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row mb-12">
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditRole">役割</label>
+              <select id="memberEditRole" class="form-input">
+                <option value="メンバー">メンバー</option>
+                <option value="副代表">副代表</option>
+                <option value="代表">代表</option>
+              </select>
+            </div>
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditStatusSelect">在籍ステータス</label>
+              <select id="memberEditStatusSelect" class="form-input" onchange="handleMemberStatusSelectChange()">
+                <option value="ACTIVE">現役</option>
+                <option value="SUSPENDED">休部中</option>
+                <option value="OB">OB（退団）</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 在籍ステータス説明バナー（休部中またはOB選択時に表示） -->
+          <div id="memberStatusHintBox" class="member-status-hint-box hidden mb-12">
+            <span class="material-symbols-outlined text-sm status-hint-icon" id="memberStatusHintIcon">info</span>
+            <span id="memberStatusHintText" class="status-hint-text"></span>
+          </div>
+
+          <div class="form-row mb-12">
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditBirthday">生年月日 <span class="text-xs text-muted font-normal">（YYYY/MM/DD）</span></label>
+              <input type="text" id="memberEditBirthday" class="form-input" placeholder="例: 1995/05/12" maxlength="10">
+              <div id="err-memberEditBirthday" class="field-error-msg hidden"></div>
+            </div>
+            <div class="form-group mb-0 flex-1">
+              <label class="form-label" for="memberEditPhone">電話番号</label>
+              <input type="tel" id="memberEditPhone" class="form-input" placeholder="例: 090-1234-5678" maxlength="13">
+              <div id="err-memberEditPhone" class="field-error-msg hidden"></div>
+            </div>
+          </div>
+
+          <div class="form-group mb-16">
+            <label class="form-label" for="memberEditEmail">メールアドレス <span class="text-xs text-muted font-normal">（Gmailアカウント）</span></label>
+            <input type="email" id="memberEditEmail" class="form-input" placeholder="例: member@gmail.com">
+            <div id="err-memberEditEmail" class="field-error-msg hidden"></div>
+          </div>
+
+          <div id="memberEditStatus" class="form-status-msg hidden"></div>
+        </form>
+      </div>
+
+      <div class="modal-footer member-modal-footer">
+        <div class="member-modal-footer-left">
+          <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
+            <span class="material-symbols-outlined text-sm">delete</span>メンバーを削除
+          </button>
+        </div>
+        <div class="member-modal-footer-right">
+          <button type="button" class="btn-member-modal-cancel" onclick="closeMemberEditModal(event)">キャンセル</button>
+          <button type="button" id="btnSaveMemberSubmit" class="btn-member-modal-save" onclick="handleSaveMemberSubmit(event)">更新</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       メンバー登録削除確認モーダル（個人情報完全消去用）
+       ※過去の試合・得点等の記録は残り、選手名は「不明」とフォールバック表示
+       ========================================= -->
+  <div id="memberDeleteModal" class="modal-overlay" onclick="closeMemberDeleteModal(event)">
+    <div class="modal-content member-modal-content delete-confirm-content" onclick="event.stopPropagation()">
+      <div class="modal-body delete-confirm-body text-center">
+        <div class="delete-confirm-icon-wrap" id="memberDeleteAvatarWrap">
+          <img id="memberDeleteAvatarImg" class="delete-confirm-avatar-img hidden" alt="">
+          <div id="memberDeleteAvatarPlaceholder" class="delete-confirm-avatar-placeholder">
+            <span class="material-symbols-outlined">person</span>
+          </div>
+        </div>
+        <div class="delete-confirm-title" id="memberDeleteNameTitle">登録を削除しますか？</div>
+        <div class="delete-confirm-desc" id="memberDeleteDesc">
+          このメンバーの登録（連絡先・アカウント情報）を完全に削除します。<br>
+          <span class="text-xs text-muted member-delete-warning-text">
+            ※過去の試合結果や得点記録は残りますが、選手名は「不明」と表示されます。<br>
+            ※記録に名前を残したい場合は、削除ではなく在籍ステータスを「OB」に変更してください。
+          </span>
+        </div>
+        <!-- 備品所持など注意事項がある場合の表示領域 -->
+        <div id="memberDeleteGuardAlert" class="delete-guard-alert hidden mt-12">
+          <span class="material-symbols-outlined text-sm">info</span>
+          <span id="memberDeleteGuardAlertText">※このメンバーが現在保管している備品がある場合、所持者は「未割当」に変更されます。</span>
+        </div>
+        <div id="memberDeleteStatus" class="form-status-msg hidden mt-12"></div>
+      </div>
+      <div class="modal-footer delete-modal-footer">
+        <button type="button" class="btn-member-modal-cancel" onclick="closeMemberDeleteModal(event)">キャンセル</button>
+        <button type="button" id="btnConfirmDeleteMember" class="btn-member-modal-delete-danger" onclick="executeMemberDeletePermanently()">登録を削除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+       管理者向け Google OAuth設定案内モーダル（オーバーレイ）
+       メールアドレスコピー、GCPテストユーザー登録画面への誘導リンク
+       ========================================= -->
+  <div id="adminOAuthGuidanceModal" class="modal-overlay" onclick="closeAdminOAuthGuidanceModal(event)">
+    <div class="modal-content member-modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title font-bold">Google認証設定のお願い</div>
+        <button type="button" class="modal-close" onclick="closeAdminOAuthGuidanceModal(event)">&times;</button>
+      </div>
+      <div class="modal-body member-modal-body">
+        <div class="guidance-lead-text">
+          <strong id="adminGuidanceMemberName"></strong> 選手のメールアドレスを登録・更新しました。
+        </div>
+        
+        <div class="guidance-email-box">
+          <div class="guidance-email-label">登録メールアドレス:</div>
+          <div class="guidance-email-row">
+            <span id="adminGuidanceEmailText" class="guidance-email-code"></span>
+            <button type="button" class="guidance-copy-btn" id="btnCopyGuidanceEmail" onclick="copyGuidanceEmail()">
+              <span class="material-symbols-outlined guidance-copy-icon">content_copy</span> コピー
+            </button>
+          </div>
+        </div>
+
+        <div class="guidance-warning-box">
+          <div class="guidance-warning-title">
+            <span class="material-symbols-outlined guidance-warning-icon">warning</span>
+            <span>OAuthテストユーザーへの登録が必要です</span>
+          </div>
+          <p class="guidance-warning-desc">
+            本システムは現在Google Cloudのテストモードで運用されています。<br>
+            Google Cloud Consoleのテストユーザへ上記のアドレスを登録してください。
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer member-modal-footer">
+        <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
+        <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
+          <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
+          <span>テストユーザー登録画面を開く</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div> <!-- /tab-members -->
+
+<!-- =========================================
+     メンバー一覧描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- メンバー情報カードテンプレート（PC横並び・モバイル2段のレスポンシブ構成） -->
+<template id="tpl-member-card">
+  <div class="member-card">
+    <!-- PC用レイアウト (横1行フレックス構成) -->
+    <div class="member-card-pc">
+      <div class="member-card-left">
+        <div class="member-card-avatar-wrap">
+          <img class="member-card-avatar hidden" alt="">
+          <div class="member-card-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>
+        </div>
+        <div class="member-card-details">
+          <div class="member-card-top-row">
+            <span class="member-number-badge hidden"></span>
+            <span class="member-card-name"></span>
+            <span class="badge-role hidden"></span>
+            <span class="badge-pos hidden"></span>
+          </div>
+          <div class="member-card-bottom-row">
+            <span class="member-info-item member-info-birthday hidden" title="生年月日">
+              <span class="material-symbols-outlined">cake</span>
+              <span class="member-birthday-text"></span>
+            </span>
+            <span class="member-info-item member-info-phone hidden" title="電話番号">
+              <span class="material-symbols-outlined">call</span>
+              <span class="member-phone-text"></span>
+            </span>
+            <span class="member-info-item member-info-email" title="メールアドレス">
+              <span class="material-symbols-outlined">mail</span>
+              <span class="member-email-text"></span>
+              <span class="badge-google-link hidden"></span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="member-card-actions">
+        <button type="button" class="btn-member-restore hidden" title="現役へ復帰">
+          <span class="material-symbols-outlined">restart_alt</span>復帰
+        </button>
+        <button type="button" class="btn-member-edit" title="編集">
+          <span class="material-symbols-outlined">edit</span>編集
+        </button>
+        <span class="badge-role-locked hidden" title="代表の編集は代表のみ行えます">
+          <span class="material-symbols-outlined">lock</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- スマホ用レイアウト (2段構成) -->
+    <div class="member-card-mobile">
+      <div class="member-card-header">
+        <div class="member-card-identity">
+          <div class="member-card-avatar-wrap">
+            <img class="member-card-avatar hidden" alt="">
+            <div class="member-card-avatar-placeholder"><span class="material-symbols-outlined">person</span></div>
+          </div>
+          <div class="member-card-main-info">
+            <div class="member-card-name-row">
+              <span class="member-number-badge hidden"></span>
+              <span class="member-card-name"></span>
+            </div>
+            <div class="member-card-badges-row">
+              <span class="badge-role hidden"></span>
+              <span class="badge-pos hidden"></span>
+            </div>
+          </div>
+        </div>
+        <div class="member-card-actions">
+          <button type="button" class="btn-member-restore hidden" title="現役へ復帰">
+            <span class="material-symbols-outlined">restart_alt</span>復帰
+          </button>
+          <button type="button" class="btn-member-edit" title="編集">
+            <span class="material-symbols-outlined">edit</span>編集
+          </button>
+          <span class="badge-role-locked hidden" title="代表の編集は代表のみ行えます">
+            <span class="material-symbols-outlined">lock</span>
+          </span>
+        </div>
+      </div>
+      <div class="member-card-meta-grid">
+        <div class="member-meta-item member-meta-birthday" title="生年月日">
+          <span class="material-symbols-outlined">cake</span>
+          <span class="member-birthday-text"></span>
+        </div>
+        <div class="member-meta-item member-meta-phone" title="電話番号">
+          <span class="material-symbols-outlined">call</span>
+          <span class="member-phone-text"></span>
+        </div>
+        <div class="member-meta-item member-meta-email" title="メールアドレス">
+          <span class="material-symbols-outlined">mail</span>
+          <span class="member-email-text"></span>
+          <span class="badge-google-link hidden"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<!-- メンバー一覧 検索・絞り込み結果0件時の空状態テンプレート -->
+<template id="tpl-member-empty">
+  <div class="card-box text-center p-24 text-muted">
+    <span class="material-symbols-outlined text-4xl mb-8 text-gray-400">search_off</span>
+    <div class="font-bold">該当するメンバーが見つかりません</div>
+    <div class="text-xs text-muted mt-4">検索条件を変更するか、新規メンバーを追加してください</div>
+  </div>
+</template>
+
+<!-- メンバー一覧 初回データ読み込み中プレースホルダーテンプレート -->
+<template id="tpl-member-loading">
+  <div class="card-box text-center p-24 text-muted">
+    <div class="loading">メンバー一覧を読み込み中...</div>
+  </div>
+</template>
+
+

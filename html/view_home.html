@@ -1,0 +1,227 @@
+<div id="tab-home" class="content-area active">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <!-- =========================================
+         1. 重要なお知らせエリア（普段は非表示、未入力出欠等がある場合のみ表示）
+         ========================================= -->
+    <div id="homeNoticeArea" class="app-notice-banner hidden" role="alert">
+      <div class="notice-banner-left">
+        <span id="homeNoticeIcon" class="material-symbols-outlined notice-banner-icon text-muted">notifications</span>
+        <div class="notice-banner-text-wrap">
+          <span id="homeNoticeText" class="notice-banner-text"></span>
+          <span id="homeNoticeSubtext" class="notice-banner-subtext hidden"></span>
+        </div>
+      </div>
+      <a id="homeNoticeAction" class="notice-banner-action-link" onclick="switchTab('schedule')">スケジュール &rarr;</a>
+    </div>
+
+    <!-- 備品不在・持参警告バナーコンテナ（1イベントにつき1件アラートカードを表示） -->
+    <div id="homeEquipmentNoticeArea" class="home-equipment-notice-container"></div>
+
+    <!-- 活動記録・ピン留めアナウンスコンテナ -->
+    <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
+
+    <!-- =========================================
+         2. ホーム最上段: チーム現在年度の成績（KPIダッシュボード）
+         ========================================= -->
+    <div class="card-box home-section-card home-stats-hero-card" id="homeSeasonStatsCard">
+      <div class="home-section-header">
+        <div class="home-section-title">
+          <span class="material-symbols-outlined text-muted">leaderboard</span>
+          <span id="homeSeasonTitle">今シーズン チーム戦績</span>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <!-- 1. チーム通算勝率 -->
+        <div class="kpi-tile">
+          <div class="kpi-card-header">
+            <div class="kpi-card-title">チーム通算勝率</div>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-card-main-stat">
+              <span class="kpi-card-big-value" id="homeSeasonWinRate">0.0%</span>
+              <span class="kpi-card-record-text" id="homeSeasonRecordText">0戦 0勝 0分 0敗</span>
+            </div>
+          </div>
+          <div class="kpi-card-footer">
+            <span class="kpi-footer-label">直近5戦フォーム:</span>
+            <div class="kpi-form-dots" id="homeRecentFormDots"></div>
+          </div>
+        </div>
+
+        <!-- 2. 得失点差 / 総得点 -->
+        <div class="kpi-tile">
+          <div class="kpi-card-header">
+            <div class="kpi-card-title">得失点差 / 総得点</div>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-card-main-stat">
+              <span class="kpi-card-big-value" id="homeGoalDiff">&plusmn;0</span>
+              <span class="kpi-card-record-text">
+                <strong class="kpi-goals-text" id="homeTotalGoals">0得点</strong> / <span id="homeTotalConceded">0失点</span>
+              </span>
+            </div>
+          </div>
+          <div class="kpi-card-footer kpi-footer-between">
+            <div class="kpi-footer-stat-group">
+              <span class="kpi-footer-label">平均得点:</span>
+              <span class="kpi-footer-value" id="homeAvgGoals">0.0点</span>
+            </div>
+            <div class="kpi-footer-stat-group">
+              <span class="kpi-footer-label">平均失点:</span>
+              <span class="kpi-footer-value" id="homeAvgConceded">0.0点</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. 月間チーム出席率（年間・月間・先月分を表示、皆勤選手・上部タグは不要） -->
+        <div class="kpi-tile">
+          <div class="kpi-card-header">
+            <div class="kpi-card-title">月間チーム出席率</div>
+          </div>
+          <div class="kpi-card-body">
+            <div class="kpi-card-main-stat">
+              <span class="kpi-card-big-value" id="homeMonthAttRate">--%</span>
+              <span class="kpi-card-record-text text-muted" id="homePrevMonthAttText">前月 --%</span>
+            </div>
+          </div>
+          <div class="kpi-card-footer kpi-footer-between">
+            <div class="kpi-footer-stat-group">
+              <span class="kpi-footer-label">年間出席率:</span>
+              <span class="kpi-footer-value" id="homeYearAttRate">--%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. 個人タイトル -->
+        <div class="kpi-tile">
+          <div class="kpi-card-header">
+            <div class="kpi-card-title">個人タイトル</div>
+            <span class="kpi-card-badge badge-amber"><span class="material-symbols-outlined star-icon">hotel_class</span>Leader</span>
+          </div>
+          <div class="kpi-card-body kpi-lead-body">
+            <div class="kpi-lead-row">
+              <div class="kpi-lead-name-group">
+                <span class="material-symbols-outlined kpi-lead-icon icon-goal">sports_soccer</span>
+                <span class="kpi-lead-type">得点王:</span>
+                <span class="kpi-lead-name" id="homeTopScorerName">-</span>
+              </div>
+              <span class="kpi-lead-pill pill-orange" id="homeTopScorerVal">0 点</span>
+            </div>
+            <div class="kpi-lead-row">
+              <div class="kpi-lead-name-group">
+                <span class="material-symbols-outlined kpi-lead-icon icon-assist">ads_click</span>
+                <span class="kpi-lead-type">アシスト王:</span>
+                <span class="kpi-lead-name" id="homeTopAssisterName">-</span>
+              </div>
+              <span class="kpi-lead-pill pill-blue" id="homeTopAssisterVal">0 A</span>
+            </div>
+          </div>
+          <div class="kpi-card-footer kpi-footer-end">
+            <a class="home-section-link" onclick="switchTab('ranking')">ランキング &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         3. 活動予定 ＆ 直近の試合結果（2カラムグリッド / スマホ1カラム）
+         ========================================= -->
+    <div class="home-grid-layout">
+      
+      <!-- 活動予定カード（次回の活動 ＆ 次の公式戦） -->
+      <div class="card-box home-section-card" id="homeNextEventCard">
+        <div class="home-section-header">
+          <div class="home-section-title">
+            <span class="material-symbols-outlined text-muted">event_available</span>
+            活動予定
+          </div>
+          <a class="home-section-link" onclick="switchTab('schedule')">スケジュール &rarr;</a>
+        </div>
+
+        <!-- 1. 次回の活動ブロック -->
+        <div class="home-activity-block mb-16">
+          <div class="home-block-label">
+            <span class="material-symbols-outlined home-block-icon">schedule</span>
+            次回の活動
+          </div>
+          <div id="homeNextEventContent" class="home-shared-card-wrap">
+            <div id="homeNextEventMount"></div>
+          </div>
+          <div id="homeNoNextEventMsg" class="home-empty-state hidden">
+            現在、予定されている活動はありません
+          </div>
+        </div>
+
+        <!-- 2. 次の公式戦ブロック -->
+        <div class="home-activity-block">
+          <div class="home-block-label">
+            <span class="material-symbols-outlined home-block-icon">emoji_events</span>
+            次の公式戦
+          </div>
+          <div id="homeNextOfficialContent" class="home-shared-card-wrap">
+            <div id="homeNextOfficialMount"></div>
+          </div>
+          <div id="homeNoNextOfficialMsg" class="home-tbd-card hidden">
+            <div class="home-tbd-icon-wrap">
+              <span class="material-symbols-outlined home-tbd-icon">calendar_month</span>
+            </div>
+            <div class="home-tbd-info">
+              <div class="home-tbd-badge-row">
+                <span class="category-badge badge-official">公式戦</span>
+                <span class="tbd-status-pill">次節未定</span>
+              </div>
+              <div class="home-tbd-desc">現在、確定している公式戦（都リーグ・大会等）の予定はありません</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右カラム: 直近の試合結果 ＆ 最新の活動記録 -->
+      <div class="home-column-wrap">
+        <!-- 直近の試合結果カード（スコア一覧と同一の試合結果カード形式） -->
+        <div class="card-box home-section-card" id="homeRecentMatchSection">
+          <div class="home-section-header">
+            <div class="home-section-title">
+              <span class="material-symbols-outlined text-muted">sports_soccer</span>
+              直近の試合結果
+            </div>
+            <a class="home-section-link" onclick="switchTab('results')">スコア &rarr;</a>
+          </div>
+
+          <!-- 共通 match-card マウント先 -->
+          <div id="homeRecentMatchContent" class="home-shared-card-wrap">
+            <div id="homeRecentMatchMount"></div>
+          </div>
+
+          <div id="homeNoRecentMatchMsg" class="home-empty-state hidden">
+            登録されている試合記録がありません
+          </div>
+        </div>
+
+        <!-- 最新の活動記録カード（直近2〜3件の投稿） -->
+        <div class="card-box home-section-card" id="homeRecentBulletinSection">
+          <div class="home-section-header">
+            <div class="home-section-title">
+              <span class="material-symbols-outlined text-muted">article</span>
+              最新の活動記録
+            </div>
+            <a class="home-section-link" onclick="switchTab('bulletin')">活動記録 &rarr;</a>
+          </div>
+
+          <div id="homeRecentBulletinMount" class="home-recent-bulletin-list">
+            <!-- JSで最新の投稿をコンパクトに表示 -->
+          </div>
+
+          <div id="homeNoRecentBulletinMsg" class="home-empty-state hidden">
+            投稿がありません
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

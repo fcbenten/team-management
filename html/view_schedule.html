@@ -1,0 +1,377 @@
+<div id="tab-schedule" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+  <!-- =========================================
+       サブタブ切り替え（カレンダー / 予定リスト）
+       月間カレンダー表示と直近予定アジェンダリスト表示の切り替え
+       ========================================= -->
+  <div class="schedule-subtabs-container">
+    <div class="schedule-subtabs">
+      <button type="button" id="subtab-calendar" class="schedule-subtab active" onclick="switchScheduleSubTab('calendar')">カレンダー</button>
+      <button type="button" id="subtab-list" class="schedule-subtab" onclick="switchScheduleSubTab('list')">予定リスト<span id="subtabListAlertBadge" class="subtab-alert-badge hidden" title="未入力の予定があります">!</span></button>
+    </div>
+  </div>
+
+  <div class="schedule-desktop-layout">
+    <!-- =========================================
+         1. 月間カレンダーエリア
+         前月/翌月/今日切り替えナビゲーション、曜日ヘッダー、日付グリッド
+         ========================================= -->
+    <div id="scheduleCalendarView" class="schedule-view-section active">
+      <div class="card-box cal-card">
+        <!-- カレンダー操作ヘッダー -->
+        <div class="cal-nav-row">
+          <button class="cal-nav-btn" onclick="changeCalMonth(-1)">&lt;</button>
+          <div id="calMonthTitle" class="cal-month-title"></div>
+          <button class="cal-nav-btn" onclick="changeCalMonth(1)">&gt;</button>
+          <button class="cal-today-btn" onclick="jumpCalToday()">今日</button>
+        </div>
+
+        <!-- 曜日ヘッダー -->
+        <div class="cal-weekdays-row">
+          <div class="cal-weekday sun">日</div>
+          <div class="cal-weekday">月</div>
+          <div class="cal-weekday">火</div>
+          <div class="cal-weekday">水</div>
+          <div class="cal-weekday">木</div>
+          <div class="cal-weekday">金</div>
+          <div class="cal-weekday sat">土</div>
+        </div>
+
+        <!-- カレンダー日付グリッド -->
+        <div id="calGrid" class="cal-grid">
+          
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================
+         2. 今後の予定リストエリア（アジェンダ一覧）
+         出欠状況（未入力/出席/欠席/未定）フィルター、直近予定カード一覧、ワンタップ出欠入力
+         ========================================= -->
+    <div id="scheduleListView" class="schedule-view-section">
+      <div class="schedule-list-title">今後の予定</div>
+      <!-- 絞り込みフィルターバー -->
+      <div class="schedule-filter-bar mb-16">
+        <button type="button" class="filter-pill-btn active" onclick="setScheduleFilter('all', this)">すべて</button>
+        <button type="button" id="filterBtnUnanswered" class="filter-pill-btn" onclick="setScheduleFilter('unanswered', this)">未入力<span id="unansweredCountBadge" class="unanswered-count-badge hidden">0</span></button>
+        <button type="button" class="filter-pill-btn" onclick="setScheduleFilter('yes', this)">出席</button>
+        <button type="button" class="filter-pill-btn" onclick="setScheduleFilter('no', this)">欠席</button>
+        <button type="button" class="filter-pill-btn" onclick="setScheduleFilter('maybe', this)">未定</button>
+      </div>
+
+      <div id="scheduleAgendaList" class="schedule-agenda-list">
+        
+      </div>
+    </div>
+  </div>
+
+  </div> <!-- /tab-main-content -->
+</div> <!-- /#tab-schedule -->
+
+  <!-- =========================================
+       予定詳細モーダル（オーバーレイ）
+       日時・場所・MAP連携・詳細説明・自身の出欠回答・参加者出欠状況一覧
+       ========================================= -->
+  <div id="eventDetailModalOverlay" class="modal-overlay" onclick="closeEventDetailModal(event)">
+    <div class="modal-content event-detail-modal">
+      
+      <!-- モーダルヘッダー -->
+      <div class="modal-header">
+        <!-- 1段目: 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ -->
+        <div class="event-modal-actions-row">
+          <div class="event-modal-left-actions">
+            <!-- 鉛筆マーク（編集） -->
+            <button type="button" class="btn-event-icon-action" onclick="onEditEventClick()" title="編集">
+              <span class="material-symbols-outlined">edit</span>
+            </button>
+            <!-- 3点ボタン（削除・複製） -->
+            <div class="event-detail-menu-wrap">
+              <button type="button" class="btn-event-icon-action" id="btnEventDetailMore" onclick="toggleEventDetailMenu(event)" title="その他のオプション">
+                <span class="material-symbols-outlined">more_vert</span>
+              </button>
+              <div id="eventDetailDropdownMenu" class="event-detail-dropdown hidden" onclick="event.stopPropagation()">
+                <button type="button" class="dropdown-item" onclick="onDetailMenuDuplicate(event)">
+                  <span class="material-symbols-outlined">content_copy</span>
+                  <span>複製</span>
+                </button>
+                <button type="button" class="dropdown-item text-danger" onclick="onDetailMenuDelete(event)">
+                  <span class="material-symbols-outlined">delete</span>
+                  <span>削除</span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- 閉じるボタン（右寄せ） -->
+          <button type="button" class="modal-close" onclick="closeEventDetailModal(event)">&times;</button>
+        </div>
+        <!-- 2段目: タグとタイトルが横並び -->
+        <div class="event-modal-title-row">
+          <div id="edmCategoryBadge" class="category-badge"></div>
+          <div id="edmTitle" class="event-modal-title hidden"></div>
+        </div>
+      </div>
+
+      <!-- スクロール可能な詳細コンテンツ本体 -->
+      <div class="event-modal-body">
+        
+        <!-- 日付 -->
+        <div class="event-detail-row">
+          <div class="event-detail-label">日付</div>
+          <div id="edmDate" class="event-detail-val font-semibold"></div>
+        </div>
+
+        <!-- 時間 -->
+        <div class="event-detail-row">
+          <div class="event-detail-label">時間</div>
+          <div id="edmTime" class="event-detail-val font-semibold"></div>
+        </div>
+
+        <!-- 場所（Google Map連携） -->
+        <div class="event-detail-row" id="edmLocationRow">
+          <div class="event-detail-label">場所</div>
+          <div class="event-detail-val">
+            <div class="event-location-wrapper">
+              <span id="edmLocationText" class="font-bold"></span>
+              <a id="edmMapLink" href="#" target="_blank" rel="noopener noreferrer" class="map-link-btn">MAPで開く</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 説明 -->
+        <div class="event-detail-row" id="edmDescriptionRow">
+          <div class="event-detail-label">説明</div>
+          <div class="event-detail-val">
+            <div id="edmDescriptionText" class="event-description-box"></div>
+          </div>
+        </div>
+
+        <!-- 備品持参予定エリア -->
+        <div class="event-detail-row" id="edmEquipmentRow">
+          <div class="event-detail-label">備品</div>
+          <div class="event-detail-val">
+            <div id="edmEquipmentContent" class="edm-equipment-content"></div>
+          </div>
+        </div>
+
+        <!-- 活動記録エリア -->
+        <div class="event-detail-row" id="edmBulletinRow">
+          <div class="event-detail-label">活動記録</div>
+          <div class="event-detail-val">
+            <div id="edmBulletinContent" class="edm-bulletin-content"></div>
+          </div>
+        </div>
+
+        <!-- 自身の出欠直接入力エリア -->
+        <div class="event-detail-row" id="edmMyAttendanceRow">
+          <div class="event-detail-label">あなたの出欠</div>
+          <div class="event-detail-val">
+            <div class="attend-quick-actions modal-attend-actions">
+              <button type="button" id="edmMockYesBtn" class="btn-attend-choice btn-attend-yes" onclick="onModalSetAttendance('yes')">出席</button>
+              <button type="button" id="edmMockNoBtn" class="btn-attend-choice btn-attend-no" onclick="onModalSetAttendance('no')">欠席</button>
+              <button type="button" id="edmMockMaybeBtn" class="btn-attend-choice btn-attend-maybe" onclick="onModalSetAttendance('maybe')">未定</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 出欠席リスト -->
+        <div class="event-detail-row">
+          <div class="event-detail-label">出欠状況</div>
+          <div class="event-detail-val">
+            <div class="attend-container-box">
+              <!-- 出席 -->
+              <div class="attend-group">
+                <div class="attend-group-title text-success">出席 (<span id="edmYesCount">0</span>名)</div>
+                <div id="edmYesNames" class="attend-names">-</div>
+              </div>
+              <!-- 欠席 -->
+              <div class="attend-group">
+                <div class="attend-group-title text-danger">欠席 (<span id="edmNoCount">0</span>名)</div>
+                <div id="edmNoNames" class="attend-names">-</div>
+              </div>
+              <!-- 未定 -->
+              <div class="attend-group">
+                <div class="attend-group-title text-muted">未定・保留 (<span id="edmMaybeCount">0</span>名)</div>
+                <div id="edmMaybeNames" class="attend-names">-</div>
+              </div>
+              <!-- 未入力 -->
+              <div class="attend-group">
+                <div class="attend-group-title text-muted unanswered">未入力 (<span id="edmUnansweredCount">0</span>名)</div>
+                <div id="edmUnansweredNames" class="attend-names">-</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================
+       予定編集・新規作成（複製）モーダル（オーバーレイ）
+       タイトル、日時、終日設定、場所、説明、ゲスト招待管理
+       ========================================= -->
+  <div id="eventEditModalOverlay" class="modal-overlay" onclick="closeEventEditModal(event)">
+    <div class="modal-content event-edit-modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div id="eventEditModalTitle" class="font-bold text-lg">予定の編集</div>
+        <button class="modal-close" onclick="closeEventEditModal(event)">&times;</button>
+      </div>
+      <form id="eventEditForm" onsubmit="event.preventDefault(); submitEventEditForm(event); return false;">
+        <input type="hidden" id="eeEventId" value="">
+        <input type="hidden" id="eeIsDuplicate" value="0">
+        <input type="hidden" id="eeOriginalDate" value="">
+        <input type="hidden" id="eeOriginalTitle" value="">
+        <div class="event-modal-body">
+          <!-- 予定タイトル入力ブロック -->
+          <div class="form-group mb-12">
+            <label class="form-label font-bold text-sm">タイトル <span class="text-danger">*</span></label>
+            <input type="text" id="eeTitle" class="form-control" placeholder="例: 都リーグ vs チーム名 / TR" required oninput="clearFieldError('eeTitle')">
+            <div id="err-eeTitle" class="field-error-msg hidden"></div>
+          </div>
+
+          <!-- 日付入力ブロック -->
+          <div class="form-group mb-12">
+            <label class="form-label font-bold text-sm">日付 <span class="text-danger">*</span></label>
+            <input type="date" id="eeDate" class="form-control" required oninput="clearFieldError('eeDate')">
+            <div id="err-eeDate" class="field-error-msg hidden"></div>
+          </div>
+
+          <!-- 終日設定トグル -->
+          <div class="form-group mb-12">
+            <label class="checkbox-label cursor-pointer">
+              <input type="checkbox" id="eeIsAllDay" onchange="toggleAllDayInputs()">
+              <span>終日の予定にする</span>
+            </label>
+          </div>
+
+          <!-- 開始・終了時刻入力ブロック -->
+          <div id="eeTimeGroup" class="time-inputs-grid">
+            <div class="form-group form-group-time">
+              <label class="form-label font-bold text-sm">開始時刻</label>
+              <input type="time" id="eeStartTime" class="form-control" value="09:00">
+            </div>
+            <div class="form-group form-group-time">
+              <label class="form-label font-bold text-sm">終了時刻</label>
+              <input type="time" id="eeEndTime" class="form-control" value="12:00">
+            </div>
+          </div>
+
+          <!-- 開催場所入力ブロック -->
+          <div class="form-group mb-12">
+            <label class="form-label font-bold text-sm">場所</label>
+            <input type="text" id="eeLocation" class="form-control" placeholder="例: 目黒区立碑文谷体育館">
+          </div>
+
+          <!-- 説明・連絡事項入力ブロック -->
+          <div class="form-group mb-12">
+            <label class="form-label font-bold text-sm">説明 / メモ</label>
+            <textarea id="eeDescription" class="form-control" rows="3" placeholder="集合時間、持ち物、注意事項など"></textarea>
+          </div>
+
+          <!-- ゲスト招待・追加ブロック -->
+          <div class="form-group mb-12">
+            <div class="flex items-center justify-between mb-4">
+              <label class="form-label font-bold text-sm mb-0">ゲスト</label>
+              <div id="eeGuestSummary" class="text-xs text-muted font-bold hidden">0人のゲスト</div>
+            </div>
+            <div class="guest-input-wrapper">
+              <input type="text" list="memberListOptions" id="eeGuestInput" class="form-control" placeholder="名前またはメールアドレス" onkeypress="if(event.key==='Enter'){event.preventDefault();addGuestToEditList();}" oninput="clearFieldError('eeGuestInput')">
+              <datalist id="memberListOptions"></datalist>
+              <button type="button" class="btn-primary-sm" onclick="addGuestToEditList()">追加</button>
+            </div>
+            <div id="err-eeGuestInput" class="field-error-msg hidden"></div>
+            <div id="eeGuestList" class="guest-list-container">
+              <!-- ゲストリストが動的に追加される -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 操作フッター（削除・キャンセル・保存） -->
+        <div class="event-modal-footer">
+          <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">削除</button>
+          <div class="footer-right-btns">
+            <button type="button" class="btn-cancel-action" onclick="closeEventEditModal(event)">キャンセル</button>
+            <button type="button" id="eeSubmitBtn" class="btn-submit-action" onclick="submitEventEditForm(event)">カレンダーに保存</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- =========================================
+       カスタム削除確認モーダル（オーバーレイ）
+       予定削除時の警告表示および確定実行
+       ========================================= -->
+  <div id="eventDeleteConfirmModalOverlay" class="modal-overlay" onclick="closeDeleteConfirmModal(event)">
+    <div class="modal-content event-confirm-modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="font-bold text-lg text-danger">予定の削除</div>
+        <button class="modal-close" onclick="closeDeleteConfirmModal(event)">&times;</button>
+      </div>
+      <div class="event-modal-body confirm-modal-body text-center">
+        <div class="confirm-icon-box mb-12"><span class="material-symbols-outlined">warning</span></div>
+        <div id="deleteConfirmTargetText" class="font-bold mb-8 text-base">この予定を削除しますか？</div>
+        <div class="text-sm text-muted">※ Google カレンダーから完全に削除されます。<br>この操作は取り消せません。</div>
+      </div>
+      <div class="event-modal-footer flex-end gap-8">
+        <button type="button" class="btn-cancel-action" onclick="closeDeleteConfirmModal(event)">キャンセル</button>
+        <button type="button" id="deleteConfirmExecuteBtn" class="btn-danger-execute" onclick="executeConfirmedDelete()">削除</button>
+      </div>
+    </div>
+  </div>
+
+<!-- =========================================
+     予定・アジェンダ描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- 予定アジェンダカードテンプレート（日付バッジ、タイトル、時間、場所、ワンタップ出欠ボタングループ） -->
+<template id="tpl-schedule-card">
+  <article class="schedule-agenda-card cursor-pointer relative overflow-hidden transition-colors">
+    <div class="schedule-agenda-accent"></div>
+    <div class="schedule-agenda-header">
+      <span class="schedule-agenda-badge category-badge"></span>
+      <span class="schedule-agenda-date"></span>
+    </div>
+    <h4 class="schedule-agenda-title"></h4>
+    <div class="schedule-agenda-details">
+      <div class="schedule-agenda-detail-row">
+        <span class="material-symbols-outlined">schedule</span>
+        <span class="schedule-agenda-time"></span>
+      </div>
+      <div class="schedule-agenda-detail-row loc-row hidden">
+        <span class="material-symbols-outlined">location_on</span>
+        <span class="schedule-agenda-loc"></span>
+      </div>
+    </div>
+    <div class="schedule-agenda-footer">
+      <div class="schedule-agenda-buttons-container">
+        <button type="button" class="btn-inline-attend btn-inline-yes">出席</button>
+        <button type="button" class="btn-inline-attend btn-inline-no">欠席</button>
+        <button type="button" class="btn-inline-attend btn-inline-maybe">未定</button>
+      </div>
+    </div>
+  </article>
+</template>
+
+<!-- 予定編集モーダル ゲスト行テンプレート（アバター、メールアドレス/選手名、削除ボタン） -->
+<template id="tpl-guest-item">
+  <div class="guest-item">
+    <div class="guest-item-left">
+      <div class="guest-avatar">
+        <span class="material-symbols-outlined guest-avatar-icon">person</span>
+      </div>
+      <div class="guest-email"></div>
+      <div class="guest-status hidden"></div>
+    </div>
+    <button type="button" class="btn-remove-guest material-symbols-outlined">close</button>
+  </div>
+</template>
+
+<!-- 予定アジェンダ一覧 該当予定0件時の空状態メッセージテンプレート -->
+<template id="tpl-schedule-empty">
+  <div class="card-box empty-state text-muted schedule-empty-msg"></div>
+</template>

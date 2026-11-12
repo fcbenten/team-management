@@ -1,0 +1,153 @@
+/* =========================================
+   📝 登録画面専用 (view_register.html)
+   ========================================= */
+
+/* エラー画面の案内テキスト */
+.reg-error-desc {
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 16px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* アカウント情報の表示ボックス */
+.reg-account-box {
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+}
+.reg-account-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+.reg-account-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 2px;
+}
+.reg-account-email {
+  font-size: 0.85rem;
+  color: #475569;
+}
+
+/* 警告ボックス内のテキスト */
+.reg-warning-title {
+  margin: 0;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.reg-warning-text {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* アイコン付きボタン (Googleボタン等) */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.reg-btn-wrap {
+  text-align: center;
+}
+
+.google-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* 登録成功画面ボックス */
+.reg-success-box {
+  text-align: center;
+  padding: 16px 0 8px 0;
+}
+
+.reg-success-title {
+  font-size: 1.15rem;
+  color: var(--text-heading);
+}
+
+.reg-success-sub {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #475569;
+}
+
+.reg-fallback-wrap {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
+
+.reg-fallback-link {
+  font-size: 0.8rem;
+  color: #64748b;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+
+.reg-fallback-link:hover {
+  color: var(--primary, #2563eb);
+}
+
+/* Google連携完了ポップアップ専用スタイル (view_auth_success.html) */
+.auth-success-icon-wrap {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  background: rgba(16, 185, 129, 0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success, #10b981);
+  font-size: 28px;
+}
+
+.auth-success-title {
+  color: var(--success, #10b981);
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.auth-success-desc {
+  color: var(--text-muted, #64748b);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+  text-align: center;
+}
+
+.auth-success-btn {
+  display: inline-block;
+  width: 100%;
+  padding: 12px 24px;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+}
+
+.reg-return-btn {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  text-decoration: none;
+  padding: 10px 16px;
+}
+
+.reg-close-tab-btn {
+  width: 100%;
+  padding: 12px 20px;
+}

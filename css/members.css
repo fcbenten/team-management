@@ -1,0 +1,1334 @@
+/* =========================================
+   👥 メンバー管理画面 (view_members.html) スタイル
+   ========================================= */
+
+.text-success {
+  color: #16a34a !important;
+}
+
+.members-header-card {
+  padding: 16px 20px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+
+.members-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.members-header-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.members-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+
+.members-title-icon {
+  font-size: 26px;
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.members-header-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ヘッダーアクションボタングループ */
+.members-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Google Cloud Consoleリンクボタン */
+.btn-gcp-header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: var(--radius);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-gcp-header-link:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: var(--primary);
+}
+
+.btn-gcp-header-link .material-symbols-outlined {
+  font-size: 16px;
+  color: #64748b;
+}
+
+.btn-gcp-header-link:hover .material-symbols-outlined {
+  color: var(--primary);
+}
+
+/* 新規追加ボタン */
+.btn-add-member {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.25);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-add-member:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.btn-add-member .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* 統計ピルバッジ (PC初期値: 水平バッジ) */
+.members-stat-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: none !important;
+  padding-top: 0 !important;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+}
+
+.stat-pill-label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.stat-pill-val {
+  color: #475569;
+  font-weight: 700;
+}
+
+/* 検索クリアボタン */
+.members-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 18px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 4px 6px;
+  line-height: 1;
+}
+
+/* メンバーカード一覧リスト (PC: 縦並び1カラムリスト) */
+.members-list-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+/* メンバーカード本体 (PC: 横1行フレックス配置) */
+.member-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.member-card:hover {
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.member-card-pc {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.member-card-mobile {
+  display: none !important;
+}
+
+.member-card-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.member-card-avatar-wrap {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50% !important;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.member-card-avatar {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% !important;
+  object-fit: cover;
+  display: block;
+}
+
+.member-card-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50% !important;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.member-card-avatar-placeholder .material-symbols-outlined {
+  font-size: 24px;
+}
+
+.member-card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.member-card-top-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.member-number-badge {
+  display: inline-block;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #64748b;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+  flex-shrink: 0;
+  margin-right: 2px;
+}
+
+.member-card-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-card-bottom-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  row-gap: 4px;
+  column-gap: 14px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.member-info-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.member-info-item .material-symbols-outlined {
+  font-size: 15px;
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.member-email-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* 役割バッジ (代表, 副代表, メンバー の3パターンのみ) */
+.badge-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.badge-role-daihyo,
+.badge-role-fuku,
+.badge-role-member {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* ポジションバッジ (スタッツ一覧と同色に完全統一) */
+.badge-pos {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.badge-pos-fp {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.badge-pos-gk {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+/* 休部カードスタイル（現役・OBと統一したフラットデザイン） */
+.member-card.is-suspended {
+  border-left: none;
+}
+
+/* OBカードスタイル (控えめなグレー表示) */
+.member-card.is-ob {
+  background: #fcfcfd;
+  opacity: 0.88;
+  border-color: #e2e8f0;
+}
+
+.member-card.is-ob:hover {
+  opacity: 1;
+}
+
+/* =========================================
+   メンバー一覧セクション群 (現役 / 休部中 / OB)
+   ========================================= */
+.members-sections-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.member-section {
+  display: flex;
+  flex-direction: column;
+}
+
+/* セクション見出し (緑・オレンジ・グレーのドット付き) */
+.member-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.section-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-active {
+  background-color: #10b981; /* 明るいエメラルドグリーン */
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.dot-suspended {
+  background-color: #f59e0b; /* 温かみのあるアンバー/オレンジ */
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.dot-ob {
+  background-color: #94a3b8; /* 落ち着いたスレートグレー */
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.section-title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.section-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 9px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #475569;
+  line-height: 1.2;
+}
+
+/* セクション内空表示 */
+.member-section-empty {
+  padding: 16px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: var(--radius);
+}
+
+/* OBセクション (アコーディオン開閉バー) */
+.ob-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  padding: 4px 6px;
+}
+
+.ob-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+  user-select: none;
+}
+
+.ob-accordion-header:hover {
+  background: #f1f5f9;
+}
+
+.ob-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ob-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ob-toggle-icon {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.ob-accordion-content {
+  padding: 8px 6px 10px;
+}
+
+/* Googleアカウント連携バッジ (メール欄に小さく添える) */
+.badge-google-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  line-height: 1.2;
+  margin-left: 6px;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.google-link-icon {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+
+.badge-google-linked {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-google-unlinked {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  font-weight: 700;
+}
+
+/* =========================================
+   OAuth設定案内モーダル専用スタイル（共通部品に準拠）
+   ========================================= */
+.guidance-lead-text {
+  font-size: 0.88rem;
+  color: var(--text-heading);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.guidance-email-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.guidance-email-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.guidance-email-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.guidance-email-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0284c7;
+  word-break: break-all;
+  user-select: all;
+}
+
+.guidance-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.guidance-copy-btn:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+/* 警告ボックス（黄色・高コントラスト） */
+.guidance-warning-box {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 0;
+}
+
+.guidance-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-bottom: 6px;
+}
+
+.guidance-warning-desc {
+  font-size: 0.78rem;
+  color: #78350f;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.guidance-warning-desc strong {
+  color: #92400e;
+}
+
+.guidance-copy-icon {
+  font-size: 15px;
+}
+
+.guidance-warning-icon {
+  font-size: 17px;
+  color: #d97706;
+}
+
+.guidance-btn-icon {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+/* アクションボタン群 */
+.member-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* 編集ボタン: 細文字 (font-weight: 400) */
+.btn-member-edit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  border-radius: 4px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-member-edit:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #475569;
+}
+
+.btn-member-edit .material-symbols-outlined {
+  font-size: 14px;
+  font-weight: 300;
+}
+
+/* 復帰ボタン: 休部中・OBから現役に復帰 */
+.btn-member-restore {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 9px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: 1px solid #a7f3d0;
+  background: #ecfdf5;
+  border-radius: 4px;
+  color: #059669;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-member-restore:hover {
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+
+.btn-member-restore .material-symbols-outlined {
+  font-size: 14px;
+}
+
+/* 上位ロール保護ロックバッジ */
+.badge-role-locked {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: default;
+}
+
+.badge-role-locked .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* スマホ最適化 (採用レイアウト: 4列統計ピル & 2段構造カード) */
+@media (max-width: 768px) {
+  .member-card-pc {
+    display: none !important;
+  }
+
+  .member-card-mobile {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 9px !important;
+    width: 100% !important;
+  }
+
+  .members-header-card {
+    padding: 12px 14px;
+    margin-bottom: 12px;
+  }
+
+  .members-header-top {
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .members-header-title {
+    font-size: 1.05rem;
+    gap: 6px;
+  }
+
+  .members-title-icon {
+    font-size: 24px;
+  }
+
+  .members-header-subtitle {
+    font-size: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .members-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .btn-gcp-header-link {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    border-radius: 6px;
+  }
+
+  .btn-add-member {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
+  }
+
+  /* 統計サマリーバッジ: スマホ3列均等配置 (メンバー数 / FP / GK) */
+  .members-stat-pills {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 6px !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+  }
+
+  .stat-pill {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 2px !important;
+    border-radius: 6px !important;
+    text-align: center !important;
+    gap: 2px !important;
+  }
+
+  .stat-pill-label {
+    font-size: 0.68rem !important;
+    line-height: 1.2 !important;
+  }
+
+  .stat-pill-val {
+    font-size: 0.98rem !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+  }
+
+  .members-list-grid {
+    gap: 10px;
+  }
+
+  /* メンバーカード: スマホ2段カード構成 */
+  .member-card {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 9px !important;
+    padding: 12px 14px !important;
+    border-radius: 8px !important;
+  }
+
+  .member-card:hover {
+    transform: none;
+  }
+
+  .member-card-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .member-card-identity {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .member-card-avatar-wrap {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .member-card-main-info {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 3px !important;
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
+
+  .member-card-name-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    min-width: 0 !important;
+  }
+
+  .member-number-badge {
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    color: #64748b !important;
+    line-height: 1.3 !important;
+    margin-right: 2px !important;
+  }
+
+  .member-card-name {
+    font-size: 0.98rem !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+  }
+
+  .member-card-badges-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .member-card-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .member-card-meta-grid {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 5px 8px !important;
+    border-top: 1px solid #f1f5f9 !important;
+    padding-top: 8px !important;
+    width: 100% !important;
+    font-size: 0.76rem !important;
+  }
+
+  .member-meta-item {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    min-width: 0 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .member-meta-email {
+    grid-column: 1 / -1 !important;
+  }
+
+  .member-email-text {
+    max-width: 100% !important;
+  }
+}
+
+/* モーダル関連 */
+.member-modal-content {
+  max-width: 440px !important;
+  width: 92% !important;
+  border-radius: var(--radius) !important;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.member-modal-content .modal-header {
+  padding: 14px 20px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 1px solid var(--border-color) !important;
+  background-color: #ffffff !important;
+}
+
+.member-modal-content .modal-title {
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: var(--text-heading) !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em;
+  margin: 0 !important;
+}
+
+.member-modal-content .modal-close {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  margin-right: -4px !important;
+  font-size: 1.35rem !important;
+  line-height: 1 !important;
+  color: var(--text-muted) !important;
+  cursor: pointer !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 0 !important;
+  transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.member-modal-content .modal-close:hover {
+  color: var(--text-heading) !important;
+  background-color: #f1f5f9 !important;
+}
+
+.member-modal-body {
+  padding: 16px 20px 20px !important;
+}
+
+.badge-required {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #ef4444;
+  background: #fee2e2;
+  padding: 1px 5px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.form-status-msg {
+  font-size: 0.82rem;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.form-status-msg.error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.form-status-msg.loading {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.form-status-msg.success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+/* 読み取り専用インプット */
+.input-readonly {
+  background-color: #f1f5f9 !important;
+  color: #64748b !important;
+  cursor: not-allowed !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* モーダル内フォーム入力欄（telや全typeの見た目を均一化） */
+.member-modal-body input,
+.member-modal-body select,
+.member-modal-body .form-input {
+  width: 100%;
+  padding: 10px 12px;
+  background-color: #ffffff !important;
+  color: var(--text-heading) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 2px !important;
+  font-family: inherit !important;
+  font-size: 0.95rem;
+  box-sizing: border-box;
+}
+
+/* フィールド単位のエラー表示 */
+.field-error-msg {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.input-has-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.input-has-error:focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.18) !important;
+}
+
+/* モーダルフッター (左右分散: 左に完全削除、右にキャンセルと更新) */
+.member-modal-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 14px 20px 16px !important;
+  border-top: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+}
+
+.member-modal-footer-left {
+  display: inline-flex;
+  align-items: center;
+}
+
+.member-modal-footer-right {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+}
+
+.member-modal-footer-right .btn-member-modal-cancel,
+.member-modal-footer-right .btn-member-modal-save {
+  margin: 0 !important;
+}
+
+.btn-member-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #475569;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-member-modal-cancel:hover {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.btn-member-modal-save,
+a.btn-member-modal-save {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff !important;
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  text-decoration: none !important;
+}
+
+.btn-member-modal-save:hover,
+a.btn-member-modal-save:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #ffffff !important;
+}
+
+.btn-member-modal-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-member-modal-delete-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ffffff;
+  background: #ef4444;
+  border: 1px solid #ef4444;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-member-modal-delete-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.btn-member-modal-delete-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 削除確認モーダル */
+.delete-confirm-content {
+  max-width: 360px !important;
+}
+
+.delete-confirm-body {
+  padding: 24px 20px 16px !important;
+}
+
+.delete-confirm-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
+}
+
+.delete-confirm-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.delete-confirm-avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.delete-confirm-avatar-placeholder .material-symbols-outlined {
+  font-size: 38px;
+}
+
+.delete-confirm-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  margin-bottom: 8px;
+}
+
+.delete-confirm-desc {
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.member-delete-warning-text {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* 左右均等ボタン配置 (キャンセル / 削除を実行: 50% 50%) */
+.delete-modal-footer {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  padding: 14px 20px 16px !important;
+  border-top: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+.delete-modal-footer .btn-member-modal-cancel,
+.delete-modal-footer .btn-member-modal-delete-danger {
+  width: 100% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  padding: 9px 12px !important;
+  font-size: 0.85rem !important;
+  font-weight: 500 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+/* 編集モーダル左下の危険操作リンク（完全削除トリガー） */
+.btn-member-danger-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px 4px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-member-danger-link:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
+}
+
+/* 在籍ステータス注記ボックス */
+.member-status-hint-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+.member-status-hint-box.hint-suspended {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.member-status-hint-box.hint-ob {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.member-status-hint-box .status-hint-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* 過去記録存在時の安全警告アラート */
+.delete-guard-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  text-align: left;
+}
+
+.delete-guard-alert .material-symbols-outlined {
+  font-size: 18px;
+  flex-shrink: 0;
+  color: #dc2626;
+  margin-top: 1px;
+}
+
+.text-amber {
+  color: #b45309;
+}
+
+.text-muted-meta {
+  color: #94a3b8 !important;
+}

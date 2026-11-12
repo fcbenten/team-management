@@ -1,0 +1,941 @@
+/* =========================================
+   📊 スタッツ（個人成績）テーブル用スタイル
+   ========================================= */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -20px -20px -20px;
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  color: var(--text-heading);
+}
+
+.stats-table thead {
+  background-color: #f9fafb;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.stats-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.stats-table th:hover {
+  color: var(--text-heading);
+  background-color: #f3f4f6;
+}
+
+.stats-table th.th-number {
+  font-size: 0.84rem;
+}
+
+.stats-table th.th-name {
+  font-size: 0.88rem;
+}
+
+.stats-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-color);
+  font-weight: 500;
+}
+
+.stats-table td.col-number {
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 0.95rem;
+}
+
+.stats-table tbody tr {
+  transition: background-color 0.15s;
+}
+
+.stats-table tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* 選手セル（アバターアイコン＋名前＋ポジション） */
+.player-cell-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* プロフィールアイコン（円形・丸型に統一） */
+.player-avatar-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50% !important;
+  background: #f1f5f9;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.player-avatar-icon .material-symbols-outlined {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.player-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% !important;
+  display: block;
+}
+
+.player-name-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.player-pos-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.player-pos-badge.pos-badge-fp {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.player-pos-badge.pos-badge-gk {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* 参加率プログレスバー */
+.rate-cell-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rate-bar-track {
+  width: 48px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.rate-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+/* 参加率バーの色分け（ユーザー指定：30%以下は赤） */
+.rate-bar-red {
+  background: #ef4444 !important;
+}
+
+.rate-bar-warn {
+  background: #f59e0b !important;
+}
+
+.rate-bar-good {
+  background: #10b981 !important;
+}
+
+.rate-text {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-heading);
+  min-width: 32px;
+  text-align: left;
+}
+
+.rate-sub-mobile {
+  display: none;
+}
+
+/* 各トップ数値の統一ハイライトバッジ（濃い枠線 ＋ 淡い背景色） */
+.stat-num-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  font-weight: 700;
+  box-sizing: border-box;
+}
+
+.stat-top-highlight {
+  background: #fffbeb !important;
+  border: 1.5px solid #d97706 !important;
+  color: #b45309 !important;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-weight: 800;
+  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.12);
+}
+
+.col-pc-only {
+  display: table-cell;
+}
+
+/* 選手名（通常テキストカラー・視認性の高いフォントサイズで統一） */
+.player-name,
+.player-link {
+  color: var(--text-heading) !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* 行全体をタップ可能にして詳細モーダルを開くスタイル */
+.stats-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.stats-table tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.stats-table tbody tr:active {
+  background-color: #f1f5f9;
+}
+
+.stats-table .text-left {
+  text-align: left;
+  padding-left: 14px;
+}
+
+.stats-table .font-semibold {
+  font-weight: 600;
+}
+
+.stats-table-header {
+  margin-bottom: 12px;
+}
+
+.stats-table-title {
+  display: block;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-heading);
+  letter-spacing: normal;
+  line-height: 1.4;
+}
+
+/* PC（デスクトップ）ではテキスト表示、アイコン非表示 */
+.th-icon {
+  display: none;
+}
+.th-text {
+  display: inline;
+}
+
+.sort-icon {
+  margin-left: 4px;
+  font-size: 0.7rem;
+  color: #cbd5e1;
+  opacity: 0.8;
+  transition: color 0.2s;
+}
+
+th.sort-active .sort-icon {
+  color: var(--primary);
+  opacity: 1;
+}
+
+/* =========================================
+   📱 スマホ用：極限レスポンシブ＆等間隔アイコン表示
+   ========================================= */
+@media (max-width: 767px) {
+  #tab-personal.content-area {
+    padding-top: 0 !important;
+  }
+
+  /* フィルターのスクロール固定化（共通sticky-filter-headerを採用） */
+  .personal-sticky-header {
+    position: sticky !important;
+    top: var(--sidebar-height, 56px) !important;
+    z-index: 990 !important;
+    background: var(--bg-body, #f8fafc) !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+    box-sizing: border-box !important;
+  }
+
+  .personal-sticky-header .personal-filter-box {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    background-color: var(--bg-card, #ffffff) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius, 4px) !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03) !important;
+    padding: 10px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* テーブルカードの余白を最適化して下寄りを解消 */
+  .card-box.stats-table-card {
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 16px !important;
+    border-top: none !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    overflow: visible !important;
+  }
+
+  .stats-table-header {
+    display: none !important; /* スマホ時は省スペース化 */
+  }
+
+  .card-box.stats-table-card .table-responsive {
+    overflow: visible !important;
+    margin: 0 !important;
+  }
+
+  /* 一覧テーブルヘッダーのスクロール固定化（フィルターの真下に吸着：上6px + カード60px + 下6px = 72px） */
+  .stats-table thead,
+  .stats-table thead th {
+    position: sticky !important;
+    top: calc(var(--sidebar-height, 56px) + 72px) !important;
+    z-index: 985 !important;
+    background-color: #ffffff !important;
+  }
+
+  .stats-table thead th {
+    height: 40px !important;
+    box-sizing: border-box !important;
+    vertical-align: middle !important;
+    border-top: 1px solid var(--border-color) !important;
+    border-bottom: 2px solid var(--border-color) !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+  }
+
+
+  /* スマホ版でもヘッダーは文字（テキスト）でわかりやすく表示 */
+  .th-text {
+    display: inline-block !important;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    line-height: 1.2 !important;
+    color: var(--text-heading) !important;
+    letter-spacing: -0.02em !important;
+  }
+  .th-icon {
+    display: none !important;
+  }
+  th.sort-active .th-text {
+    color: var(--primary) !important;
+  }
+
+  /* PC専用列をスマホでは非表示 */
+  .col-pc-only {
+    display: none !important;
+  }
+
+  /* テーブル全体を固定幅にして均等配置を保証（separateでsticky境界線を安定化） */
+  .stats-table {
+    table-layout: fixed !important;
+    width: 100% !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+
+  /* NO.列（視認性を保ちつつコンパクト固定幅化＆中央配置） */
+  .stats-table th.th-number {
+    width: 38px !important;
+    max-width: 38px !important;
+    text-align: center !important;
+    padding: 10px 1px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+  }
+  .stats-table td.col-number {
+    width: 38px !important;
+    max-width: 38px !important;
+    text-align: center !important;
+    padding: 6px 1px !important;
+    font-size: 0.86rem !important;
+    font-weight: 600 !important;
+    color: var(--text-heading) !important;
+  }
+
+  /* 名前列：アバター＋名前＋バッジを美しく配置 */
+  .stats-table th.th-name {
+    width: auto !important;
+    text-align: left !important;
+    padding: 10px 3px 10px 6px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+  }
+  .stats-table td.col-name-cell {
+    width: auto !important;
+    text-align: left !important;
+    padding: 6px 3px 6px 6px !important;
+    overflow: hidden;
+  }
+
+  .player-cell-wrap {
+    gap: 6px !important;
+  }
+
+  .player-avatar-icon {
+    width: 26px !important;
+    height: 26px !important;
+    border-radius: 50% !important;
+  }
+
+  .player-avatar-icon .material-symbols-outlined {
+    font-size: 0.95rem !important;
+  }
+
+  .player-name-meta {
+    gap: 4px !important;
+    flex-wrap: wrap !important;
+  }
+
+  .player-name,
+  .player-link {
+    font-size: 0.88rem !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+  }
+
+  .player-pos-badge {
+    font-size: 0.62rem !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+    font-weight: 700 !important;
+  }
+
+  /* 参加率列（スマホではバー＋％をコンパクトに縦積み） */
+  .stats-table th.th-rate {
+    width: 17% !important;
+    min-width: 17% !important;
+    max-width: 17% !important;
+    text-align: center !important;
+    padding: 10px 1px !important;
+  }
+  .stats-table td.col-rate-cell {
+    width: 17% !important;
+    min-width: 17% !important;
+    max-width: 17% !important;
+    text-align: center !important;
+    padding: 6px 1px !important;
+  }
+
+  .rate-cell-wrap {
+    gap: 3px !important;
+    flex-direction: column !important;
+  }
+
+  .rate-bar-track {
+    width: 32px !important;
+    height: 4px !important;
+    margin: 0 auto !important;
+  }
+
+  .rate-text {
+    font-size: 0.72rem !important;
+    min-width: auto !important;
+    text-align: center !important;
+    line-height: 1 !important;
+  }
+
+  .rate-sub-mobile {
+    display: block !important;
+    font-size: 0.6rem !important;
+    color: var(--text-muted) !important;
+    line-height: 1.1 !important;
+    margin-top: 1px !important;
+    text-align: center !important;
+  }
+
+  /* 得点、アシスト、MVP（テキスト幅に応じた最適配分） */
+  .stats-table th.th-stat {
+    text-align: center !important;
+    padding: 10px 1px !important;
+  }
+  .stats-table td.col-stat {
+    text-align: center !important;
+    padding: 6px 1px !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+  }
+  .stats-table th.th-rate, .stats-table td.col-rate-cell {
+    width: 16% !important;
+    min-width: 16% !important;
+    max-width: 16% !important;
+  }
+  .stats-table th.th-goals, .stats-table td:nth-child(4) {
+    width: 12% !important;
+    min-width: 12% !important;
+    max-width: 12% !important;
+  }
+  .stats-table th.th-assists, .stats-table td:nth-child(5) {
+    width: 16% !important;
+    min-width: 16% !important;
+    max-width: 16% !important;
+  }
+  .stats-table th.th-mom, .stats-table td:nth-child(6) {
+    width: 12% !important;
+    min-width: 12% !important;
+    max-width: 12% !important;
+  }
+
+  .stat-num-box {
+    min-width: 20px !important;
+    height: 20px !important;
+    font-size: 0.76rem !important;
+    box-sizing: border-box;
+  }
+
+  .stat-top-highlight {
+    min-width: 20px !important;
+    height: 20px !important;
+    padding: 0 2px !important;
+    border-width: 1.5px !important;
+  }
+
+  .stats-table th.th-stat .th-icon {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto !important;
+    vertical-align: middle;
+  }
+
+  /* ソート矢印を絶対配置（右端）にし、アイコン・テキストが左にズレず完全中央揃え（下の数値の真上）になるようにする */
+  .stats-table th.th-stat .sort-icon,
+  .stats-table th.th-number .sort-icon,
+  .stats-table th.th-rate .sort-icon {
+    position: absolute !important;
+    right: 2px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
+    font-size: 0.46rem !important;
+    line-height: 1 !important;
+  }
+
+  .stats-table th.th-name .sort-icon {
+    position: static !important;
+    margin-left: 2px !important;
+    font-size: 0.55rem !important;
+    vertical-align: middle;
+  }
+}
+
+/* =========================================
+   👤 スタッツ モーダル専用スタイル
+   ========================================= */
+#playerModalOverlay .modal-content {
+  padding: 24px !important;
+  display: flex !important;
+  flex-direction: column;
+  max-height: 90vh !important;
+}
+
+#playerModalOverlay .modal-header {
+  padding: 0 0 12px 0;
+  margin-bottom: 12px;
+  background-color: transparent;
+  border-bottom: none !important;
+}
+
+#playerModalOverlay .modal-section {
+  padding: 0 !important;
+  border-bottom: none !important;
+  margin-bottom: 16px !important;
+}
+
+#playerModalOverlay .pm-history-section {
+  border-bottom: none !important;
+  margin-bottom: 0 !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+#playerModalOverlay .scrollable-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  margin-bottom: 0 !important;
+}
+
+.pm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.pm-avatar-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 50% !important;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.pm-avatar-placeholder {
+  font-size: 28px !important;
+  color: #94a3b8;
+}
+
+.pm-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50% !important;
+  display: block;
+}
+
+#playerModalOverlay .modal-header > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.modal-player-name {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #475569 !important;
+}
+
+#playerModalOverlay #pm-badges {
+  margin-top: 0 !important;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+/* 5つのマス（サマリー）- 白背景・枠線・統一されたウェイトとサイズ */
+.summary-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.summary-grid-5 .stat-box {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  padding: 10px 4px !important;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.summary-grid-5 .stat-label {
+  font-size: 0.75rem !important;
+  color: #64748b !important;
+  margin-bottom: 4px !important;
+  font-weight: 500 !important;
+  white-space: nowrap;
+}
+
+.summary-grid-5 .stat-value {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #2563eb !important;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.summary-grid-5 .rate-unit {
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  margin-left: 1px;
+  color: #2563eb !important;
+}
+
+@media (max-width: 480px) {
+  .summary-grid-5 {
+    gap: 4px;
+  }
+  .summary-grid-5 .stat-box {
+    padding: 8px 2px !important;
+  }
+  .summary-grid-5 .stat-label {
+    font-size: 0.68rem !important;
+  }
+  .summary-grid-5 .stat-value {
+    font-size: 1.1rem !important;
+  }
+}
+
+/* 勝敗ブロック */
+#playerModalOverlay .modal-section-title {
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin-bottom: 8px !important;
+}
+
+.team-results-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.result-box {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.box-win { color: #16a34a !important; border-color: #86efac !important; background: #f0fdf4 !important; }
+.box-lose { color: #dc2626 !important; border-color: #fca5a5 !important; background: #fef2f2 !important; }
+.box-draw { color: #475569 !important; border-color: #cbd5e1 !important; background: #f8fafc !important; }
+
+/* 参加履歴（タイムライン）の箱 */
+.history-container {
+  background: #ffffff !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius);
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 180px;
+}
+
+/* 試合ごとのカードアイテム */
+.pm-match-card {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.pm-match-card:last-child {
+  border-bottom: none;
+}
+
+/* 試合ヘッダー行 */
+.pm-match-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pm-match-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.pm-match-header-left .category-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+/* 日付 */
+.pm-match-date {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
+}
+
+/* vs と 対戦相手名 */
+.pm-match-vs {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.pm-match-opp {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* スコアバッジ（右上） */
+.pm-match-header-right {
+  flex-shrink: 0;
+}
+
+.pm-score-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  min-width: 54px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.pm-score-win {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  color: #16a34a;
+}
+
+.pm-score-lose {
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+.pm-score-draw {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+}
+
+/* MVP選出バッジ (MVPはそのまま) */
+.pm-mvp-container {
+  margin-bottom: 8px;
+}
+
+.pm-mvp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #b45309;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* イベントリスト */
+.pm-events-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pm-event-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pm-event-time {
+  min-width: 60px;
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* アクションピル（色分け廃止・すべて引き分けと同じ配色に統一） */
+.pm-action-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.pm-action-goal,
+.pm-action-assist,
+.pm-action-yellow,
+.pm-action-red {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+
+.pm-action-none {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: #64748b !important;
+  font-size: 0.78rem !important;
+  font-weight: 400 !important;
+}
+
+/* 詳細テキスト（アシスト元・ゴール者等） */
+.pm-event-detail {
+  font-size: 0.78rem;
+  color: #64748b;
+  font-weight: 400;
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+@media (max-width: 480px) {
+  .pm-match-card {
+    padding: 10px 8px;
+  }
+  .pm-match-header-left {
+    gap: 6px;
+  }
+  .pm-match-date {
+    font-size: 0.82rem;
+  }
+  .pm-match-opp {
+    font-size: 0.82rem;
+  }
+  .pm-event-row {
+    gap: 8px;
+  }
+  .pm-event-time {
+    min-width: 54px;
+    font-size: 0.74rem;
+  }
+}

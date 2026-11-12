@@ -1,0 +1,134 @@
+<div id="tab-results" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+  <!-- =========================================
+       検索・フィルターエリア
+       シーズン・カテゴリ絞り込み、対戦相手検索、新規試合結果作成ボタン
+       ========================================= -->
+  <div class="results-filter-bar sticky-filter-header">
+    <div class="card-box filter-box results-filter-box">
+      <div class="filter-row">
+        <div class="form-group mb-0 filter-select-group">
+          <select id="seasonFilter" class="filter-select" onchange="filterMatchResults()"></select>
+        </div>
+        <div class="form-group mb-0 filter-select-group">
+          <select id="categoryFilter" class="filter-select" onchange="filterMatchResults()">
+            <option value="all">全カテゴリ</option>
+            <option value="公式戦">公式戦</option>
+            <option value="TRM">TRM</option>
+          </select>
+        </div>
+        <div class="form-group mb-0 filter-search-group">
+          <span class="material-symbols-outlined filter-search-icon">search</span>
+          <input type="text" id="searchFilter" class="filter-search-input" placeholder="対戦相手を検索" onkeyup="filterMatchResults()">
+        </div>
+      </div>
+    </div>
+    
+    <!-- 新規作成ボタン（PC用：フィルターバー内に配置） -->
+    <div class="results-create-wrap pc-only">
+      <button class="btn btn-primary-action btn-match-create" onclick="openNewMatchInput()">
+        <span class="material-symbols-outlined btn-match-create-icon">add</span>
+        新規試合結果の作成
+      </button>
+    </div>
+  </div>
+
+  <!-- 新規作成ボタン（スマホ用：固定ヘッダー直下に配置し、リストと共に自然にスクロール） -->
+  <div class="results-create-wrap mobile-only">
+    <button class="btn btn-primary-action btn-match-create" onclick="openNewMatchInput()">
+      <span class="material-symbols-outlined btn-match-create-icon">add</span>
+      新規試合結果の作成
+    </button>
+  </div>
+
+  <!-- =========================================
+       試合結果一覧リスト
+       過去の試合カード一覧および追加読み込みボタン
+       ========================================= -->
+  <div id="resultsList"><div class="loading">読み込み中...</div></div>
+  
+  <div class="load-more-container mt-16 mb-16 hidden" id="loadMoreContainer">
+    <button class="btn btn-load-more" onclick="loadMoreMatches()">
+      <span class="material-symbols-outlined">expand_more</span>さらに読み込む
+    </button>
+  </div>
+</div>
+
+</div>
+
+<!-- =========================================
+     試合結果一覧・タイムライン描画用 HTMLテンプレート
+     （JavaScriptから複製・データ注入して使用する骨組み）
+     ========================================= -->
+
+<!-- 試合結果カードテンプレート（カテゴリ、開催日、対戦カード・スコア、会場名） -->
+<template id="tpl-match-card">
+  <div class="match-card match-card-clickable">
+    <!-- 1段目: カテゴリタグと開催日（同列） -->
+    <div class="match-card-meta">
+      <span class="category-badge card-category"></span>
+      <div class="match-card-date-row">
+        <span class="material-symbols-outlined date-icon">calendar_today</span>
+        <span class="text-muted card-date"></span>
+      </div>
+    </div>
+    
+    <!-- 2段目: チーム名とスコア -->
+    <div class="match-card-main">
+      <div class="match-team match-team-left">FC Benten</div>
+      <div class="match-card-score-box">
+        <span class="card-my-score"></span>
+        <span class="score-hyphen-sm">-</span>
+        <span class="card-opp-score"></span>
+      </div>
+      <div class="match-team match-team-right card-opponent"></div>
+    </div>
+    
+    <!-- 3段目: 会場名（会場名は長いことが多いため独立した3段目行に配置、未入力時は非表示） -->
+    <div class="match-card-location-row hidden">
+      <span class="material-symbols-outlined loc-icon">location_on</span>
+      <span class="text-muted card-location"></span>
+    </div>
+  </div>
+</template>
+
+<!-- タイムライン ピリオドラベルテンプレート（前半、後半、延長などの区切りヘッダー） -->
+<template id="tpl-period">
+  <div class="tl-period-label"></div>
+</template>
+
+<!-- タイムライン 試合経過行テンプレート（時間表示、左右アクション枠、中央ライン・ドット） -->
+<template id="tpl-log-row">
+  <div class="tl-row">
+    <div class="tl-time"></div>
+    <div class="tl-left"></div>
+    <div class="tl-center">
+      <div class="tl-dot"></div>
+      <div class="tl-line"></div>
+    </div>
+    <div class="tl-right"></div>
+  </div>
+</template>
+
+<!-- タイムライン 自チーム（FC Benten）側アクションテンプレート（得点・アシスト・カード） -->
+<template id="tpl-action-left">
+  <div class="tl-action-box left-box">
+    <div class="tl-action-title"></div>
+    <div class="tl-player"></div>
+    <div class="tl-assist"></div>
+  </div>
+</template>
+
+<!-- タイムライン 相手チーム側アクションテンプレート（失点・カード） -->
+<template id="tpl-action-right">
+  <div class="tl-action-box right-box">
+    <div class="tl-action-title"></div>
+  </div>
+</template>
+
+<!-- 試合結果一覧 検索・絞り込み結果0件時の空状態メッセージテンプレート -->
+<template id="tpl-results-empty">
+  <div class="card-box text-center text-muted py-2 text-sm results-empty-msg"></div>
+</template>
