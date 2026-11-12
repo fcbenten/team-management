@@ -33,13 +33,20 @@ def main():
 
     # 3. 構文チェック
     print("\n--- [3/5] JavaScript Syntax Check ---")
-    syntax_check_cmd = f'python -c "' \
-        f'with open(r\'{os.path.join(pwa_dist_dir, "index.html")}\', \'r\', encoding=\'utf-8\') as f: html = f.read()\n' \
-        f'import re\n' \
-        f'scripts = re.findall(r\'<script>(.*?)</script>\', html, re.DOTALL)\n' \
-        f'with open(r\'{os.path.join(pwa_dist_dir, "temp_check.js")}\', \'w\', encoding=\'utf-8\') as f: f.write(\'\\n;\\n\'.join(scripts))\n' \
-        f'" ; node -c "{os.path.join(pwa_dist_dir, "temp_check.js")}" ; Remove-Item "{os.path.join(pwa_dist_dir, "temp_check.js")}"'
-    run(syntax_check_cmd, cwd=base_dir)
+    pwa_html_path = os.path.join(pwa_dist_dir, "index.html")
+    with open(pwa_html_path, "r", encoding="utf-8") as f:
+        html = f.read()
+    import re
+    scripts = re.findall(r'<script>(.*?)</script>', html, re.DOTALL)
+    temp_js = os.path.join(pwa_dist_dir, "temp_check.js")
+    with open(temp_js, "w", encoding="utf-8") as f:
+        f.write("\n;\n".join(scripts))
+    try:
+        run(f'node -c "{temp_js}"', cwd=base_dir)
+        print("JavaScript syntax validated successfully.")
+    finally:
+        if os.path.exists(temp_js):
+            os.remove(temp_js)
 
     # 4. ソースコードリポジトリ (root -> main) のコミット & プッシュ
     print("\n--- [4/5] Committing & Pushing Source Code (main) ---")
