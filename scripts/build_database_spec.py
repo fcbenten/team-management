@@ -789,8 +789,11 @@ def main():
 
     output_path = r"d:\app\TeamManagement\docs\FC_Benten_データベーステーブル仕様書.xlsx"
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    wb.save(output_path)
-    print(f"Successfully saved to: {output_path}")
+    try:
+        wb.save(output_path)
+        print(f"Successfully saved to: {output_path}")
+    except PermissionError:
+        print(f"WARNING: {output_path} is currently locked (opened in Excel). Skipped overwrite.")
 
 if __name__ == "__main__":
     main()

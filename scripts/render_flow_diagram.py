@@ -457,13 +457,17 @@ def generate_diagram_image():
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(HTML_CONTENT)
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1400, "height": 840})
-        page.goto(f"file:///{html_path.replace(os.sep, '/')}")
-        page.wait_for_timeout(300)
-        page.screenshot(path=png_path, full_page=True)
-        browser.close()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch()
+            page = browser.new_page(viewport={"width": 1400, "height": 840})
+            page.goto(f"file:///{html_path.replace(os.sep, '/')}")
+            page.wait_for_timeout(300)
+            page.screenshot(path=png_path, full_page=True)
+            browser.close()
+    finally:
+        if os.path.exists(html_path):
+            os.remove(html_path)
 
     print(f"Diagram image generated: {png_path}")
     return png_path

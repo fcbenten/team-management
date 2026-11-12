@@ -1013,8 +1013,11 @@ def run_generate():
     output_gdrive = r"H:\マイドライブ\app\TeamManagement\FC_Benten_チーム管理システム_画面機能仕様書.xlsx"
 
     print(f"Saving to local docs: {output_docs}...")
-    wb.save(output_docs)
-    print("Local save OK.")
+    try:
+        wb.save(output_docs)
+        print("Local save OK.")
+    except PermissionError:
+        print(f"WARNING: {output_docs} is currently locked (opened in Excel). Skipped overwrite.")
 
     if os.path.exists(r"H:\マイドライブ\app\TeamManagement"):
         print(f"Saving to Google Drive: {output_gdrive}...")

@@ -433,11 +433,15 @@ def render_all_screen_flows(output_dir="d:/app/TeamManagement/docs/flow_images")
             with open(html_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
-            page.set_viewport_size({"width": 1440, "height": 1100})
-            page.goto(f"file:///{os.path.abspath(html_path)}")
-            page.wait_for_selector(".diagram-wrapper")
-            wrapper = page.query_selector(".diagram-wrapper")
-            wrapper.screenshot(path=png_path)
+            try:
+                page.set_viewport_size({"width": 1440, "height": 1100})
+                page.goto(f"file:///{os.path.abspath(html_path)}")
+                page.wait_for_selector(".diagram-wrapper")
+                wrapper = page.query_selector(".diagram-wrapper")
+                wrapper.screenshot(path=png_path)
+            finally:
+                if os.path.exists(html_path):
+                    os.remove(html_path)
             
             generated_images[scr_id] = png_path
             print(f"[{scr_id}] Generated: {png_path}")
