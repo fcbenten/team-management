@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 create_grid_flow_builder.py
-FC Benten チーム管理システム 方眼紙グリッド (列幅2.0固定) システムデータフロー図シート生成ビルダー
-（Supabase PostgreSQL 17 + Supabase Storage + Google Calendar API アーキテクチャ Ver 2.0.0 対応版）
+FC Benten チーム管理システム 方眼紙グリッド (列幅2.0固定) システム相関図シート生成ビルダー
+（GitHub Pages PWA + Supabase PostgreSQL 17 Tokyo + Google Apps Script アーキテクチャ Ver 2.0.0 対応版）
 """
 import os
 import openpyxl
@@ -18,19 +18,20 @@ from render_flow_diagram import generate_diagram_image
 
 def build_grid_flow_sheet(wb):
     """
-    データ保存・連携フロー図シートを生成する。
+    システム相関図（システム構成・通信相関図）シートを生成する。
     """
-    ws = wb.create_sheet(title="【データ保存フロー図】", index=1)
+    ws = wb.create_sheet(title="【システム相関図】", index=1)
     ws.views.sheetView[0].showGridLines = True
     set_grid_columns(ws, GRID_TOTAL_COLS, GRID_COL_WIDTH)
 
     # 1. タイトルバー
-    merge_and_style(ws, 1, 1, 1, GRID_TOTAL_COLS, value="FC Benten チーム管理システム データ保存・連携フロー図 (Ver 2.0.0)",
-                     font=f_title, fill=fill_navy, alignment=Alignment(horizontal="left", vertical="center", indent=1))
+    merge_and_style(ws, 1, 1, 1, GRID_TOTAL_COLS,
+                    value="FC Benten チーム管理システム システム構成・通信相関図 (System Architecture & Interactions)",
+                    font=f_title, fill=fill_navy, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[1].height = 30
 
     merge_and_style(ws, 2, 1, 2, GRID_TOTAL_COLS,
-                    value="ユーザーの画面操作（SPA）からSupabase PostgREST API (0.3秒応答) を経由し、PostgreSQL 17・Supabase Storage・Googleカレンダーへデータが高速永続化される流れ",
+                    value="GitHub Pages (PWA静的ホスティング) ＋ Supabase (PostgreSQL 17 Tokyo) ＋ Google Apps Script 特権代行ハイブリッド基盤",
                     font=Font(name="Meiryo UI", size=9.5, color="EFF6FF"), fill=fill_navy,
                     alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[2].height = 20
@@ -38,10 +39,10 @@ def build_grid_flow_sheet(wb):
     curr_r = 4
 
     # =========================================================================
-    # 1. 全体データ保存・連携フロー図（ビジュアルダイアグラム画像）
+    # 1. システム全体相関図（ビジュアルダイアグラム画像）
     # =========================================================================
     merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                    value="1. 全体データ保存・連携フロー図（画面 ➔ Supabase PostgREST API ➔ PostgreSQL 17 / Storage）",
+                    value="1. システム全体相関図（ユーザー端末 ⇄ GitHub Pages ⇄ Supabase Tokyo ⇄ GAS ⇄ Google カレンダー）",
                     font=f_sec_h1, fill=fill_blue_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
@@ -63,238 +64,178 @@ def build_grid_flow_sheet(wb):
     curr_r += 1  # 空白行
 
     # =========================================================================
-    # 2. 主要4大業務のデータ保存ブロック線図（方眼紙セル図解）
+    # 2. サーバー・ホスティング配置一覧表
     # =========================================================================
     merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                    value="2. 主要4大業務のデータ保存ブロック線図（PostgREST直接通信による0.3秒超高速永続化）",
-                    font=f_sec_h1, fill=fill_green_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
+                    value="2. サーバー・ホスティング配置一覧（各サーバーの所在・稼働資産・役割定義）",
+                    font=f_sec_h1, fill=fill_blue_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
-    # スタイル定義
-    fill_flow_screen = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid") # 薄青
-    fill_flow_arrow = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")  # 極薄青
-    fill_flow_api = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")    # 薄緑
-    fill_flow_db = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")     # 薄黄
-    f_flow_box = Font(name="Meiryo UI", size=9, bold=True, color="0F172A")
-    f_flow_arr = Font(name="Meiryo UI", size=8.5, bold=True, color="2563EB")
-    f_flow_arr2 = Font(name="Meiryo UI", size=8.5, bold=True, color="059669")
+    headers_server = [
+        ("No", 1, 3, al_center),
+        ("サーバー / サービス名", 4, 15, al_center),
+        ("ホスティング環境 / リージョン", 16, 28, al_center),
+        ("稼働資産 / エンドポイントURL", 29, 45, al_center),
+        ("役割・担当機能", 46, 64, al_center),
+        ("特徴・技術仕様", 65, 80, al_center)
+    ]
+    for h, sc, ec, al in headers_server:
+        merge_and_style(ws, curr_r, sc, curr_r, ec, value=h, font=f_th, fill=fill_navy, alignment=al, border=border_th)
+    ws.row_dimensions[curr_r].height = 24
+    curr_r += 1
 
-    block_flows = [
-        (
-            "【試合結果の登録・保存】",
-            "SCR04: 試合結果入力\n[保存ボタン] クリック時",
-            "──(HTTPS POST)──▶\nREST payload: JSON",
-            "Supabase PostgREST API\n【/rest/v1/matches】\n【/rest/v1/score_logs】",
-            "──(SQL INSERT)──▶\n所要時間: 約0.1〜0.2秒",
-            "🗄️ PostgreSQL (Tokyo Region)\n・『matches』テーブル (試合サマリー行)\n・『score_logs』テーブル (得失点・カード詳細ログ)"
-        ),
-        (
-            "【出欠ワンタップ登録 ＆ 集計】",
-            "SCR07: スケジュール\n[出欠○/×/△] タップ時",
-            "──(0秒楽観UI更新)──▶\n非同期バックグラウンド送信",
-            "Supabase PostgREST ＆ CalAPI\n【/rest/v1/attendance】\nGoogle Calendar API v3",
-            "──(UPSERT / Patch)──▶\nDB & カレンダー完全同期",
-            "🗄️ PostgreSQL『attendance』テーブル\n📅 Google カレンダー (イベント出席者リスト)\n※ 画面上は0秒で即時ボタン反転＆人数更新"
-        ),
-        (
-            "【不在備品持参の代理解決】",
-            "SCR08: 備品管理\n[代理解決確定] クリック時",
-            "──(HTTPS POST)──▶\n担当者割当ペイロード",
-            "Supabase PostgREST API\n【/rest/v1/equipment_event_logs】\nRLSポリシー自動検証",
-            "──(SQL INSERT)──▶\n所要時間: 約0.08秒",
-            "🗄️ PostgreSQL『equipment_event_logs』\n・持参担当者・ステータスを即時記録\n※ ホーム＆備品画面の不在アラートが即座に消去"
-        ),
-        (
-            "【メンバー更新 ＆ 所持備品引継ぎ】",
-            "SCR10: メンバー管理\n[更新 / 退部確定] クリック時",
-            "──(HTTPS PATCH)──▶\n部員更新・備品引継ぎJSON",
-            "Supabase PostgREST API\n【/rest/v1/members】\n【/rest/v1/equipment_items】",
-            "──(SQL UPDATE)──▶\n整合性保証・アトミック更新",
-            "🗄️ PostgreSQL (Tokyo Region)\n・『members』(プロフ/役職/OBフラグ)\n・『equipment_items』(新保管者への即時引き継ぎ)"
-        )
+    servers_data = [
+        ("1", "ユーザー端末\n(Client)", "スマートフォン (iOS / Android)\nPC ブラウザ", "ローカルストレージ\nService Worker (sw.js)",
+         "・SPA画面の0秒レンダリング\n・出欠・掲示板の楽観的UI更新\n・Supabase JWT認証セッション管理",
+         "・ホーム画面追加でフルスクリーンPWA起動\n・Network First 戦略でオフライン起動支援\n・ブラウザからSupabaseへ直接REST通信"),
+        ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(GitHub 米国/グローバルCDN)", "https://fcbenten.github.io/team-management/\n(gh-pages ブランチ)",
+         "・PWA静的資産の即時配信\n・index.html (HTML/CSS/JSバンドル)\n・manifest.json / アイコン画像",
+         "・HTTPS GET による超高速配信 (0.05〜0.1秒)\n・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・Git push と連動した自動更新"),
+        ("3", "BaaS クラウド\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
+         "・全業務データの高速永続化 (90%以上の全通信)\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
+         "・東京リージョン配置による爆速応答 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護\n・JWT Bearer トークンによる即時認証"),
+        ("4", "特権代行サーバー\n(Google Apps Script)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App (固定デプロイID)\n・api_events.js / api_auth.js\n・calendar_service.js / supabase_service.js",
+         "・ブラウザから直接叩けないGoogle特権APIの代行\n・チーム共有カレンダーの予定一括取得・同期\n・Google OAuth 2.0 認可コード交換",
+         "・旧スプレッドシート処理を全廃し純API化\n・OAuth Client Secret を Script Properties に安全隔離\n・固定デプロイID (URL不変) による安定稼働"),
+        ("5", "外部クラウド\n(Google Workspace)", "Google Cloud Platform\nGlobal", "・FC Benten チーム共有 Google カレンダー\n・Google OAuth 2.0 認証基盤",
+         "・カレンダー予定データの原本保持\n・出席者ステータス (Accepted/Declined) の同期\n・初回Googleアカウント連携時の本人確認",
+         "・Google Calendar API v3 (OAuth 2.0 連携)\n・チームメンバー全員のGoogleカレンダーとリアルタイム同期")
     ]
 
-    for title, b_screen, arr1, b_api, arr2, b_db in block_flows:
-        # タイトル行
-        merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value=title,
-                        font=Font(name="Meiryo UI", size=9.5, bold=True, color="1E3A8A"),
-                        fill=fill_bg_light, alignment=Alignment(horizontal="left", vertical="center", indent=1))
-        ws.row_dimensions[curr_r].height = 20
+    for s_idx, s in enumerate(servers_data):
+        fill_curr = fill_even if s_idx % 2 == 0 else fill_odd
+        line_cnt = max(len(s[1].split('\n')), len(s[3].split('\n')), len(s[4].split('\n')), len(s[5].split('\n')))
+        ws.row_dimensions[curr_r].height = max(26, line_cnt * 16 + 6)
+        cols = [
+            (1, 3, s[0], f_td_bold, al_top_center),
+            (4, 15, s[1], f_td_bold, al_top_left),
+            (16, 28, s[2], f_td, al_top_left),
+            (29, 45, s[3], f_td_code, al_top_left),
+            (46, 64, s[4], f_td, al_top_left),
+            (65, 80, s[5], f_td, al_top_left)
+        ]
+        for sc, ec, val, fnt, al in cols:
+            merge_and_style(ws, curr_r, sc, curr_r, ec, value=val, font=fnt, fill=fill_curr, alignment=al)
         curr_r += 1
 
-        # ブロック図行 (高さ48px)
-        merge_and_style(ws, curr_r, 1, curr_r + 1, 22, value=b_screen, font=f_flow_box, fill=fill_flow_screen, alignment=al_center)
-        merge_and_style(ws, curr_r, 23, curr_r + 1, 31, value=arr1, font=f_flow_arr, fill=fill_flow_arrow, alignment=al_center)
-        merge_and_style(ws, curr_r, 32, curr_r + 1, 49, value=b_api, font=f_flow_box, fill=fill_flow_api, alignment=al_center)
-        merge_and_style(ws, curr_r, 50, curr_r + 1, 58, value=arr2, font=f_flow_arr2, fill=fill_flow_arrow, alignment=al_center)
-        merge_and_style(ws, curr_r, 59, curr_r + 1, 80, value=b_db, font=f_flow_box, fill=fill_flow_db, alignment=al_center)
-
-        ws.row_dimensions[curr_r].height = 24
-        ws.row_dimensions[curr_r + 1].height = 24
-        curr_r += 2
-
-        curr_r += 1  # ブロック間の余白行
+    curr_r += 1  # 空白行
 
     # =========================================================================
-    # 3. 機能別データ保存・連携フロー詳細表
+    # 3. サーバー間・クライアント間 通信プロトコル相関表
     # =========================================================================
     merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                    value="3. 機能別データ保存・連携フロー詳細一覧表（全画面・全エンドポイント完全網羅）",
+                    value="3. サーバー間・クライアント間 通信プロトコル相関表（通信経路・プロトコル・認証・応答速度）",
                     font=f_sec_h1, fill=fill_navy, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
-    COLS_FLOW = [
-        ("No", 1, 3, al_top_center),
-        ("画面ID / 機能名", 4, 15, al_top_left),
-        ("保存タイミング / トリガー", 16, 27, al_top_left),
-        ("通信API / エンドポイント", 28, 42, al_top_left),
-        ("保存先テーブル / ストレージ", 43, 60, al_top_left),
-        ("保存データ ＆ 連携動作 (0.3秒応答)", 61, 80, al_top_left)
+    headers_comm = [
+        ("通信ID", 1, 5, al_center),
+        ("送信元 (From) ➔ 送信先 (To)", 6, 21, al_center),
+        ("プロトコル / 方式", 22, 31, al_center),
+        ("認証・認可方式", 32, 43, al_center),
+        ("主な送受信データ", 44, 58, al_center),
+        ("応答速度目安", 59, 68, al_center),
+        ("対象画面・機能", 69, 80, al_center)
     ]
-
-    for h_name, start_c, end_c, _ in COLS_FLOW:
-        merge_and_style(ws, curr_r, start_c, curr_r, end_c, value=h_name,
-                        font=f_th, fill=fill_navy, alignment=al_center, border=border_th)
-    ws.row_dimensions[curr_r].height = 26
+    for h, sc, ec, al in headers_comm:
+        merge_and_style(ws, curr_r, sc, curr_r, ec, value=h, font=f_th, fill=fill_navy, alignment=al, border=border_th)
+    ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
-    flow_data = [
+    comms_data = [
+        ("COMM-01", "ユーザー端末 ➔ GitHub Pages", "HTTPS GET\n(Static CDN)", "認証なし (公開静的配信)",
+         "PWAバンドル資産 (index.html, manifest.json, sw.js, アイコン)", "0.05〜0.1秒\n(超高速)", "初回アクセス・画面リロード\n(全画面共通)"),
+        ("COMM-02\n★主通信★", "ユーザー端末 ⇄ Supabase PostgREST", "HTTPS Direct REST\n(GET/POST/PATCH/DELETE)", "Supabase JWT (Bearer Token)\n＋ Row Level Security (RLS)",
+         "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "0.1〜0.3秒\n(超高速 爆速化)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
+        ("COMM-03", "ユーザー端末 ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
+         "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "0.2〜0.4秒\n(高速CDN)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
+        ("COMM-04", "ユーザー端末 ⇄ Google Apps Script", "HTTPS POST\n(JSON RPC / Bridge)", "なし (関数名＋引数ペイロード)\nOAuth 認可コード",
+         "Google カレンダー予定一括取得要求、OAuth 認可コード交換ペイロード", "0.8〜1.2秒\n(Google基盤依存)", "SCR01: 初回Googleアカウント連携\nSCR07: 予定作成・同期"),
+        ("COMM-05", "Google Apps Script ⇄ Google カレンダー", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
+         "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: スケジュール同期\n公式チームカレンダーへの予定書き込み"),
+        ("COMM-06", "Google Apps Script ⇄ Supabase DB", "HTTPS REST\n(PATCH / POST)", "Supabase Service Role Key\n(特権内部APIキー)",
+         "system_user_tokens (Google OAuth リフレッシュトークンの暗号化永続化)", "0.2〜0.3秒\n(内部REST通信)", "SCR01: Google OAuth 初回連携時のトークン自動保管")
+    ]
+
+    for c_idx, c in enumerate(comms_data):
+        fill_curr = fill_even if c_idx % 2 == 0 else fill_odd
+        line_cnt = max(len(c[1].split('\n')), len(c[3].split('\n')), len(c[4].split('\n')), len(c[5].split('\n')), len(c[6].split('\n')))
+        ws.row_dimensions[curr_r].height = max(26, line_cnt * 16 + 6)
+        cols = [
+            (1, 5, c[0], f_td_bold, al_top_center),
+            (6, 21, c[1], f_td_bold, al_top_left),
+            (22, 31, c[2], f_td_code, al_top_left),
+            (33, 43, c[3], f_td, al_top_left),
+            (44, 58, c[4], f_td, al_top_left),
+            (59, 68, c[5], f_td_bold, al_top_center),
+            (69, 80, c[6], f_td, al_top_left)
+        ]
+        for sc, ec, val, fnt, al in cols:
+            merge_and_style(ws, curr_r, sc, curr_r, ec, value=val, font=fnt, fill=fill_curr, alignment=al)
+        curr_r += 1
+
+    curr_r += 1  # 空白行
+
+    # =========================================================================
+    # 4. 新アーキテクチャの設計思想とセキュリティ・高速化の仕組み
+    # =========================================================================
+    merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
+                    value="4. 新アーキテクチャの設計思想・高速化およびセキュリティ設計",
+                    font=f_sec_h1, fill=fill_green_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
+    ws.row_dimensions[curr_r].height = 24
+    curr_r += 1
+
+    design_blocks = [
         (
-            "SCR01: ログイン",
-            "ログインボタン クリック時",
-            "GET /rest/v1/members?email=eq...",
-            "【PostgreSQL】『members』",
-            "メールアドレスとSHA-256パスワードハッシュを直接照合。認証成功時にセッション情報をlocalStorageへ保存 (所要時間: 約0.1秒)。"
+            "① 0.3秒爆速化のメカニズム (Supabase Direct 通信)",
+            "【旧GAS・スプレッドシート時代】\n"
+            "ブラウザ ➔ GASサーバー (起動2秒) ➔ Google Drive API ➔ スプレッドシート3ファイル直列読込 (3.4秒) ＝ 合計 6〜7秒 の大きな待機時間が発生していた。\n\n"
+            "【新アーキテクチャ (Ver 2.0.0)】\n"
+            "東京リージョン (ap-northeast-1) に配置された Supabase PostgREST へ、端末ブラウザから直接 HTTPS 通信を実行。\n"
+            "多段中継を完全排除したことで、全CRUD操作（出欠、試合、掲示板、備品、名簿）が 0.1〜0.3 秒で完了する超高速レスポンスを実現。"
         ),
         (
-            "SCR01: 初回登録",
-            "登録完了ボタン クリック時",
-            "PATCH /rest/v1/members?member_id=eq...",
-            "【PostgreSQL】『members』",
-            "初回設定パスワードのSHA-256ハッシュおよびGoogle連携トークン・連携日時を該当部員行へ直接更新保存。"
+            "② Row Level Security (RLS) によるデータベース層での認可保護",
+            "【クライアント直接通信に伴うセキュリティ担保】\n"
+            "ブラウザからDBへ直接接続する構成をとるため、認可制御はアプリ層ではなく PostgreSQL の Row Level Security (RLS) で物理強制。\n\n"
+            "【厳格なポリシー定義】\n"
+            "・members: 代表・副代表のみ編集・追加可能。一般部員は自身のプロフィール情報のみ更新可能。\n"
+            "・attendance: ログインユーザー本人の member_id のみ出欠の登録・変更が可能。\n"
+            "・bulletin_posts: 全部員が自由に起票・共同編集可能 (Wikiスタイル)。削除は起票者または代表のみ。\n"
+            "※ 万が一フロントエンドのコードが改ざんされても、不正な通信は PostgreSQL エンジンが拒否。"
         ),
         (
-            "SCR03: 試合結果",
-            "詳細モーダル内 削除ボタン クリック時",
-            "DELETE /rest/v1/matches?match_id=eq...",
-            "【PostgreSQL】『matches』\n【PostgreSQL】『score_logs』",
-            "指定試合IDをmatchesテーブルから削除。外部キー ON DELETE CASCADE により紐付くscore_logsも一括連動削除。"
+            "③ 特権操作の局所化とシークレット完全隔離 (GAS特権代行)",
+            "【最小特権アーキテクチャ】\n"
+            "Google カレンダーの更新や Google OAuth 認可コード交換など、「秘密鍵 (Client Secret) を要する特権処理」のみを Google Apps Script に限定。\n\n"
+            "【機密情報の保護】\n"
+            "Google OAuth Client Secret や Supabase サービスロールキーは、コード内・Gitリポジトリに一切保持せず、GAS の Script Properties に永続保管。\n"
+            "クライアント端末には一切秘密鍵を露出させず、安全な API 仲介を実現。"
         ),
         (
-            "SCR04: 試合入力",
-            "試合結果保存ボタン クリック時",
-            "POST /rest/v1/matches\nPOST /rest/v1/score_logs",
-            "【PostgreSQL】『matches』\n【PostgreSQL】『score_logs』",
-            "1. 試合基本情報（日付・相手・得失点・会場・MOM・出席者）をmatchesテーブルへ登録。\n2. 各得点・カードログを一括でscore_logsへ登録。"
-        ),
-        (
-            "SCR07: スケジュール",
-            "出欠（○/×/△）ボタン クリック時",
-            "POST /rest/v1/attendance (UPSERT)\nPATCH Google Calendar API",
-            "【PostgreSQL】『attendance』\n【外部】Googleカレンダー イベント",
-            "0秒楽観的UI更新を行い、PostgreSQL attendanceテーブルへ出欠登録。同時にGoogleカレンダーのイベント参加者ステータスを非同期同期。"
-        ),
-        (
-            "SCR07: 予定作成",
-            "予定保存ボタン クリック時",
-            "POST Google Calendar API v3",
-            "【外部】Googleカレンダー イベント",
-            "タイトル、日時、種別（TR/TRM/公式戦）、会場、ゲスト参加者を指定してチーム共有Googleカレンダーへ新規イベント登録/更新。"
-        ),
-        (
-            "SCR07: 予定削除",
-            "予定削除ボタン クリック時",
-            "DELETE Google Calendar API v3\nDELETE /rest/v1/attendance",
-            "【外部】Googleカレンダー イベント\n【PostgreSQL】『attendance』",
-            "Googleカレンダーから該当予定を完全削除し、紐付くattendanceレコードも連動クリア。"
-        ),
-        (
-            "SCR08: 備品管理",
-            "代理解決確定ボタン クリック時",
-            "POST /rest/v1/equipment_event_logs",
-            "【PostgreSQL】『equipment_event_logs』",
-            "指定活動日・備品に対し、代理持参を引き受けた部員の割当レコードを追記。向こう7日間の不在アラートを即時解消。"
-        ),
-        (
-            "SCR08: 備品台帳",
-            "登録保存ボタン クリック時",
-            "POST / PATCH /rest/v1/equipment_items",
-            "【PostgreSQL】『equipment_items』",
-            "現物管理ID（EQP-xxx）、品目コード、現在の保管部員ID、個別備考を台帳テーブルへ新規登録または更新。"
-        ),
-        (
-            "SCR08: 備品削除",
-            "備品削除ボタン クリック時",
-            "DELETE /rest/v1/equipment_items?item_id=...",
-            "【PostgreSQL】『equipment_items』",
-            "廃棄・紛失等の対象備品レコードを台帳テーブルから削除。"
-        ),
-        (
-            "SCR09: 活動記録",
-            "投稿実行ボタン クリック時",
-            "POST / PATCH /rest/v1/bulletin_posts",
-            "【PostgreSQL】『bulletin_posts』",
-            "記事ID、カテゴリ、タイトル、本文、作成者ID、作成日時、ピン留めフラグを直接保存。ホーム最上部アナウンスと連動。"
-        ),
-        (
-            "SCR09: 既読確認",
-            "掲示板カード タップ時",
-            "POST /rest/v1/bulletin_reads (ON CONFLICT IGNORE)",
-            "【PostgreSQL】『bulletin_reads』",
-            "閲覧部員IDと閲覧日時を既読テーブルへサイレント登録。一意制約(post_id, member_id)により二重登録を完全防止。"
-        ),
-        (
-            "SCR09: コメント",
-            "コメント送信ボタン クリック時",
-            "POST /rest/v1/bulletin_comments",
-            "【PostgreSQL】『bulletin_comments』",
-            "投稿ID、コメント本文、作成者部員ID、投稿日時を即座に登録。スレッドを即時再描画。"
-        ),
-        (
-            "SCR10: メンバー管理",
-            "部員情報更新ボタン クリック時",
-            "PATCH /rest/v1/members?member_id=eq...",
-            "【PostgreSQL】『members』",
-            "部員ID、氏名、背番号、ポジション、役職、生年月日、電話番号、メールアドレスをテーブルへ直接高速更新。"
-        ),
-        (
-            "SCR10: メンバー削除",
-            "削除確定ボタン クリック時",
-            "PATCH /rest/v1/members (is_past=TRUE)\nPATCH /rest/v1/equipment_items",
-            "【PostgreSQL】『members』\n【PostgreSQL】『equipment_items』",
-            "1. membersテーブルの該当部員の `is_past` を TRUE に更新（過去戦績を保持しつつ一覧から除外）。\n2. 所持備品がある場合は新保管者へ引き継ぎ更新。"
-        ),
-        (
-            "SCR11: プロフィール",
-            "アバター写真 ファイル選択時",
-            "POST /storage/v1/object/member-avatars/...\nPATCH /rest/v1/members (avatar_url)",
-            "【Supabase Storage】member-avatars\n【PostgreSQL】『members』",
-            "画像をSupabase Storageのmember-avatarsバケットへ直接アップロード。取得した公開CDN URLをmembersテーブルのavatar_urlに反映。"
-        ),
-        (
-            "SCR11: 通知設定",
-            "通知方法ラジオ 選択変更時",
-            "PATCH /rest/v1/members?member_id=eq...",
-            "【PostgreSQL】『members』",
-            "通知種別（Push/LINE/両方/なし）およびPush購読JSON・項目別通知設定をmembersテーブルへ即時自動保存。"
+            "④ PWA ＆ Service Worker による二層オフライン保護",
+            "【グラウンド・遠征先での安定稼働】\n"
+            "GitHub Pages CDN から配信される静的PWAアセットは、Service Worker (sw.js) により端末内にローカルキャッシュ。\n\n"
+            "【オフライン・電波微弱環境への対応】\n"
+            "電波の届きにくいグラウンドや体育館でも、アプリ自体は 0.0 秒で瞬時に起動。\n"
+            "出欠タップや掲示板ピン留めなどは「0秒楽観的UIレンダリング」により画面を即座に更新し、通信復帰後にバックグラウンドで自動同期。"
         )
     ]
 
-    for idx, row in enumerate(flow_data, 1):
-        sc_name, timing, api_name, target_db, detail = row
-        row_fill = fill_odd if (idx % 2 == 1) else fill_even
-
-        merge_and_style(ws, curr_r, 1, curr_r, 3, value=idx, font=f_td, fill=row_fill, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 4, curr_r, 15, value=sc_name, font=f_td_bold, fill=row_fill, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 16, curr_r, 27, value=timing, font=f_td, fill=row_fill, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 28, curr_r, 42, value=api_name, font=f_td_code, fill=row_fill, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 43, curr_r, 60, value=target_db, font=Font(name="Meiryo UI", size=8.5, bold=True, color="1E3A8A"), fill=row_fill, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 61, curr_r, 80, value=detail, font=f_td, fill=row_fill, alignment=al_top_left)
-
-        max_lines = max(len(detail.split("\n")), len(target_db.split("\n")), len(timing.split("\n")), len(api_name.split("\n")))
-        ws.row_dimensions[curr_r].height = max(26, max_lines * 18)
+    for title, desc in design_blocks:
+        merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value=title,
+                        font=f_sec_h2, fill=fill_bg_light, alignment=Alignment(horizontal="left", vertical="center", indent=1))
+        ws.row_dimensions[curr_r].height = 22
         curr_r += 1
 
-    print("Data Flow Sheet successfully built with embedded diagram image & cell block diagrams.")
+        line_cnt = len(desc.split('\n'))
+        ws.row_dimensions[curr_r].height = max(24, line_cnt * 16 + 8)
+        merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value=desc,
+                        font=f_td, fill=fill_odd, alignment=al_top_left)
+        curr_r += 1
+        curr_r += 1  # 余白行
+
+    print("System Architecture & Interaction Sheet successfully built.")
+    return ws

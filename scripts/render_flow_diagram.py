@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 render_flow_diagram.py
-Playwrightを用いて高精細なデータ保存フロー図（PNG画像）を生成するスクリプト
-（Supabase PostgreSQL 17 + Supabase Storage + Google Calendar API アーキテクチャ対応版）
+Playwrightを用いて高精細なシステム構成・通信相関図（PNG画像）を生成するスクリプト
+（GitHub Pages PWA + Supabase PostgreSQL 17 Tokyo + Google Apps Script ハイブリッドアーキテクチャ）
 """
 import os
 from playwright.sync_api import sync_playwright
@@ -15,431 +15,431 @@ HTML_CONTENT = """<!DOCTYPE html>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-    background: #0F172A;
+    background: #0B1120;
     color: #F8FAFC;
-    padding: 30px;
+    padding: 24px;
     width: 1400px;
+    height: 840px;
   }
+  
+  /* ヘッダー */
   .header {
-    text-align: center;
-    margin-bottom: 25px;
-    padding-bottom: 15px;
-    border-bottom: 2px solid #334155;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #1E293B;
+    padding-bottom: 14px;
+    margin-bottom: 18px;
   }
-  .header h1 {
-    font-size: 26px;
+  .header-left h1 {
+    font-size: 24px;
     font-weight: 800;
     color: #38BDF8;
-    letter-spacing: 0.05em;
-    margin-bottom: 6px;
-  }
-  .header p {
-    font-size: 13px;
-    color: #94A3B8;
-  }
-  
-  .diagram-container {
+    letter-spacing: 0.03em;
     display: flex;
-    justify-content: space-between;
-    align-items: stretch;
-    gap: 20px;
-    position: relative;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-left p {
+    font-size: 12.5px;
+    color: #94A3B8;
+    margin-top: 4px;
+  }
+  .header-badge {
+    background: #0369A1;
+    color: #E0F2FE;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    text-transform: uppercase;
   }
   
-  /* カラム共通 */
-  .column {
+  /* メイングリッド: 3カラム構成 */
+  .diagram-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr 340px;
+    gap: 20px;
+    height: 640px;
+  }
+  
+  /* 共通カラム */
+  .zone-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  /* カードコンテナ */
+  .node-card {
+    background: #1E293B;
+    border: 1px solid #334155;
     border-radius: 12px;
     padding: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
     display: flex;
     flex-direction: column;
+    position: relative;
   }
-  .col-title {
-    font-size: 14px;
-    font-weight: bold;
-    padding: 8px 12px;
-    border-radius: 8px;
-    text-align: center;
-    margin-bottom: 14px;
-    letter-spacing: 0.05em;
-  }
-  
-  /* 左カラム: SPAクライアント */
-  .col-client {
-    flex: 1.1;
-    background: #1E293B;
-    border: 1px solid #3B82F6;
-  }
-  .col-client .col-title {
-    background: linear-gradient(135deg, #1D4ED8, #3B82F6);
-    color: #FFFFFF;
-  }
-  
-  /* 中央カラム: APIレイヤー */
-  .col-gas {
-    flex: 0.95;
-    background: #1E293B;
-    border: 1px solid #10B981;
-  }
-  .col-gas .col-title {
-    background: linear-gradient(135deg, #047857, #10B981);
-    color: #FFFFFF;
-  }
-  
-  /* 右カラム: Supabase DB & ストレージ */
-  .col-storage {
-    flex: 1.35;
-    background: #1E293B;
-    border: 1px solid #8B5CF6;
-  }
-  .col-storage .col-title {
-    background: linear-gradient(135deg, #6D28D9, #8B5CF6);
-    color: #FFFFFF;
-  }
-  
-  /* カード・ノードスタイル */
-  .flow-card {
-    background: #0F172A;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    border-left: 4px solid #64748B;
-    font-size: 11px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  }
-  .flow-card:last-child { margin-bottom: 0; }
-  
-  .card-screen { border-left-color: #38BDF8; }
-  .card-api { border-left-color: #34D399; }
-  .card-db { border-left-color: #F59E0B; }
-  .card-storage { border-left-color: #A78BFA; }
-  .card-calendar { border-left-color: #60A5FA; }
-  
-  .flow-card-header {
+  .node-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #334155;
   }
-  .card-title {
-    font-weight: bold;
-    font-size: 12px;
-    color: #F1F5F9;
-  }
-  .badge {
-    font-size: 9px;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-  }
-  .badge-trigger { background: #0369A1; color: #E0F2FE; }
-  .badge-api { background: #065F46; color: #D1FAE5; }
-  .badge-table { background: #B45309; color: #FEF3C7; }
-  .badge-storage { background: #6D28D9; color: #EDE9FE; }
-  .badge-external { background: #1E40AF; color: #DBEAFE; }
-  
-  .card-desc {
-    color: #94A3B8;
-    line-height: 1.4;
-    font-size: 10.5px;
-  }
-  .arrow-inline {
-    display: inline-block;
-    color: #38BDF8;
-    font-weight: bold;
-    margin: 0 4px;
-  }
-  
-  /* コネクタ列 */
-  .connector {
+  .node-title {
+    font-size: 15px;
+    font-weight: 800;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    width: 48px;
+    gap: 8px;
   }
-  .connector-text {
+  .node-badge {
     font-size: 10px;
-    font-weight: bold;
-    color: #38BDF8;
-    background: #0F172A;
-    padding: 6px 4px;
+    font-weight: 700;
+    padding: 3px 8px;
     border-radius: 6px;
-    border: 1px solid #334155;
-    text-align: center;
-    line-height: 1.3;
-    margin: 8px 0;
-  }
-  .conn-arrow {
-    font-size: 20px;
-    color: #38BDF8;
-    margin: 4px 0;
   }
   
-  /* フッター凡例 */
-  .legend-box {
-    margin-top: 20px;
-    padding: 12px 18px;
-    background: #1E293B;
+  /* クライアント端末 (Sky Blue) */
+  .border-client { border-top: 4px solid #0284C7; }
+  .text-client { color: #38BDF8; }
+  .badge-client { background: #075985; color: #E0F2FE; }
+  
+  /* GitHub Pages (Emerald Green) */
+  .border-gh { border-top: 4px solid #059669; }
+  .text-gh { color: #34D399; }
+  .badge-gh { background: #064E3B; color: #D1FAE5; }
+  
+  /* Supabase (Purple / Violet) */
+  .border-supabase { border-top: 4px solid #7C3AED; }
+  .text-supabase { color: #A78BFA; }
+  .badge-supabase { background: #4C1D95; color: #EDE9FE; }
+  
+  /* Google Apps Script (Amber) */
+  .border-gas { border-top: 4px solid #D97706; }
+  .text-gas { color: #FBBF24; }
+  .badge-gas { background: #78350F; color: #FEF3C7; }
+
+  /* Google Workspace (Blue) */
+  .border-google { border-top: 4px solid #2563EB; }
+  .text-google { color: #60A5FA; }
+  .badge-google { background: #1E3A8A; color: #DBEAFE; }
+
+  /* ノード内リスト */
+  .node-item {
+    background: #0F172A;
     border-radius: 8px;
-    border: 1px solid #334155;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
+    padding: 9px 11px;
+    margin-bottom: 8px;
+    font-size: 11.5px;
+    border-left: 3px solid #64748B;
   }
-  .legend-items {
-    display: flex;
-    gap: 18px;
-  }
-  .legend-item {
+  .node-item:last-child { margin-bottom: 0; }
+  .item-title {
+    font-weight: 700;
+    color: #F1F5F9;
+    margin-bottom: 3px;
     display: flex;
     align-items: center;
     gap: 6px;
   }
-  .color-dot {
+  .item-desc {
+    color: #94A3B8;
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+
+  /* 通信連携カード（中央エリア上部＆各ノード間） */
+  .comm-bar {
+    background: #0F172A;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .comm-id {
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .comm-name {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #E2E8F0;
+  }
+  .comm-speed {
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #10B981;
+    background: #064E3B;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* 矢印コネクタ行 */
+  .arrow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #38BDF8;
+    padding: 4px 0;
+  }
+
+  /* フッター凡例 */
+  .footer-legend {
+    margin-top: 14px;
+    background: #1E293B;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+  .legend-pills {
+    display: flex;
+    gap: 16px;
+  }
+  .legend-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #CBD5E1;
+  }
+  .dot {
     width: 10px;
     height: 10px;
-    border-radius: 2px;
+    border-radius: 50%;
   }
+  .dot-fast { background: #10B981; }
+  .dot-auth { background: #A78BFA; }
+  .dot-gas { background: #FBBF24; }
+  .dot-gh { background: #38BDF8; }
 </style>
 </head>
 <body>
 
+<!-- ヘッダー -->
 <div class="header">
-  <h1>FC BENTEN チーム管理システム データ保存・連携フロー図 (Ver 2.0.0)</h1>
-  <p>SPA画面からSupabase PostgREST API (0.3秒応答) を経由し、PostgreSQL 17 (Tokyo)・Supabase Storage・Googleカレンダーへデータが高速永続化される流れ</p>
+  <div class="header-left">
+    <h1>FC BENTEN チーム管理システム 全体システム構成・通信相関図</h1>
+    <p>GitHub Pages (PWA配信) ＋ Supabase (PostgreSQL 17 Tokyo) ＋ Google Apps Script ハイブリッド通信アーキテクチャ</p>
+  </div>
+  <div class="header-badge">Architecture Ver 2.0.0</div>
 </div>
 
-<div class="diagram-container">
-  
-  <!-- カラム1: SPA画面 -->
-  <div class="column col-client">
-    <div class="col-title">1. SPA画面 (操作トリガー)</div>
-    
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR01: ログイン・初回登録</span>
-        <span class="badge badge-trigger">クリック時</span>
-      </div>
-      <div class="card-desc">
-        ・ログインボタン押下 <span class="arrow-inline">➔</span> members照合 (0.1s)<br>
-        ・登録完了ボタン押下 <span class="arrow-inline">➔</span> パスワードハッシュ登録
-      </div>
-    </div>
+<!-- メイングリッド -->
+<div class="diagram-grid">
 
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR04: 試合結果入力</span>
-        <span class="badge badge-trigger">クリック時</span>
+  <!-- ==================== カラム1: ユーザー端末 (Client) ==================== -->
+  <div class="zone-col">
+    <div class="node-card border-client" style="height: 100%;">
+      <div class="node-header">
+        <div class="node-title text-client">
+          <span>📱</span> 1. ユーザー端末 (Client)
+        </div>
+        <div class="node-badge badge-client">SPA / PWA</div>
       </div>
-      <div class="card-desc">
-        ・試合結果保存ボタン押下<br>
-        <span class="arrow-inline">➔</span> matches ＆ score_logs トランザクション保存
-      </div>
-    </div>
 
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR07: スケジュール・出欠</span>
-        <span class="badge badge-trigger">ワンタップ</span>
+      <div class="node-item" style="border-left-color: #0284C7;">
+        <div class="item-title">📱 端末環境 & PWA エンジン</div>
+        <div class="item-desc">
+          ・iPhone (iOS Safari) / Android (Chrome) / PC<br>
+          ・ホーム画面追加でフルスクリーンネイティブ起動<br>
+          ・Service Worker (sw.js) による0秒オフライン起動
+        </div>
       </div>
-      <div class="card-desc">
-        ・出欠（○/×/△）ボタン押下 <span class="arrow-inline">➔</span> 0秒楽観的UI＋attendance保存<br>
-        ・予定保存ボタン押下 <span class="arrow-inline">➔</span> Googleカレンダー予定同期
-      </div>
-    </div>
 
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR08: 備品管理・代理解決</span>
-        <span class="badge badge-trigger">クリック時</span>
+      <div class="node-item" style="border-left-color: #38BDF8;">
+        <div class="item-title">⚡ 0秒楽観的UIレンダリング (Optimistic UI)</div>
+        <div class="item-desc">
+          ・出欠ボタンタップ、掲示板ピン留め、削除時など<br>
+          ・通信結果を待たずに画面側を0.0秒で先行即時更新<br>
+          ・非同期バックグラウンドでサーバーへ自動同期
+        </div>
       </div>
-      <div class="card-desc">
-        ・代理解決確定ボタン押下 <span class="arrow-inline">➔</span> equipment_event_logs割当<br>
-        ・現物登録・保管者変更 <span class="arrow-inline">➔</span> equipment_items即時更新
-      </div>
-    </div>
 
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR09: 活動記録・掲示板</span>
-        <span class="badge badge-trigger">投稿/タップ</span>
+      <div class="node-item" style="border-left-color: #0284C7;">
+        <div class="item-title">🔐 セキュアローカルストレージ</div>
+        <div class="item-desc">
+          ・localStorage (Supabase JWT セッションキー)<br>
+          ・ログイン認証状態の永続保持 (30日間持続)<br>
+          ・オフライン時の一時キャッシュ保持
+        </div>
       </div>
-      <div class="card-desc">
-        ・投稿実行ボタン押下 <span class="arrow-inline">➔</span> bulletin_posts保存<br>
-        ・記事タップ <span class="arrow-inline">➔</span> bulletin_reads既読 / コメント登録
-      </div>
-    </div>
 
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR10: メンバー管理</span>
-        <span class="badge badge-trigger">クリック時</span>
-      </div>
-      <div class="card-desc">
-        ・部員プロフ更新 <span class="arrow-inline">➔</span> members行直接更新<br>
-        ・退部確定 <span class="arrow-inline">➔</span> is_past=true ＆ 所持備品引継ぎ
-      </div>
-    </div>
-
-    <div class="flow-card card-screen">
-      <div class="flow-card-header">
-        <span class="card-title">SCR11: 設定 (マイページ)</span>
-        <span class="badge badge-trigger">選択変更時</span>
-      </div>
-      <div class="card-desc">
-        ・写真選択時 <span class="arrow-inline">➔</span> member-avatarsバケットアップロード<br>
-        ・通知設定変更 <span class="arrow-inline">➔</span> notify_settings即時保存
+      <div class="node-item" style="border-left-color: #38BDF8; margin-top: auto;">
+        <div class="item-title">🎯 クライアント直接通信 (Direct Client)</div>
+        <div class="item-desc">
+          旧来の「GASを経由した直列通信」を完全撤廃し、90%以上のDB読み書きをブラウザからSupabaseへ直接実行。
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- コネクタ 1 -->
-  <div class="connector">
-    <div class="conn-arrow">➔</div>
-    <div class="connector-text">HTTPS<br>REST<br>(JSON)<br>0.3s</div>
-    <div class="conn-arrow">➔</div>
+  <!-- ==================== カラム2: ホスティング ＆ BaaS クラウド ==================== -->
+  <div class="zone-col">
+    <!-- 上段: GitHub Pages -->
+    <div class="node-card border-gh" style="flex: 0.85;">
+      <div class="node-header">
+        <div class="node-title text-gh">
+          <span>🌐</span> 2. Webホスティング (GitHub Pages)
+        </div>
+        <div class="node-badge badge-gh">Global CDN (gh-pages)</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="node-item" style="border-left-color: #059669;">
+          <div class="item-title">📦 静的PWAアセット配信</div>
+          <div class="item-desc">
+            ・index.html (HTML/CSS/JSバンドル)<br>
+            ・manifest.json (PWA定義・アイコン)<br>
+            ・URL: fcbenten.github.io/team-management
+          </div>
+        </div>
+        <div class="node-item" style="border-left-color: #34D399;">
+          <div class="item-title">🚀 高速CDN ＆ 自動キャッシュ</div>
+          <div class="item-desc">
+            ・HTTPS GET 通信 (所要時間: 0.05〜0.1秒)<br>
+            ・Network-First 戦略で最新版を即時配信<br>
+            ・GitHub gh-pages ブランチから直接配信
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下段: Supabase Cloud (Main Data Center) -->
+    <div class="node-card border-supabase" style="flex: 1.65;">
+      <div class="node-header">
+        <div class="node-title text-supabase">
+          <span>⚡</span> 3. Supabase Cloud (東京リージョン ap-northeast-1)
+        </div>
+        <div class="node-badge badge-supabase">BaaS / 0.1〜0.3秒 爆速</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+        <div class="node-item" style="border-left-color: #7C3AED;">
+          <div class="item-title">🚀 PostgREST API エンジン</div>
+          <div class="item-desc">
+            ・RESTful JSON API 自動生成 (/rest/v1/*)<br>
+            ・超低遅延レスポンス: 0.1〜0.3秒<br>
+            ・JWT Bearer トークンによる瞬時認証
+          </div>
+        </div>
+        <div class="node-item" style="border-left-color: #A78BFA;">
+          <div class="item-title">🛡️ Row Level Security (RLS)</div>
+          <div class="item-desc">
+            ・PostgreSQL層での行レベル認可制御<br>
+            ・代表/役員/部員の書き込み権限をDBで物理強制<br>
+            ・他者の不正な改ざんをDBレベルで完全遮断
+          </div>
+        </div>
+      </div>
+
+      <div class="node-item" style="border-left-color: #7C3AED;">
+        <div class="item-title">🗄️ PostgreSQL 17.11 リレーショナルデータベース (全10テーブル)</div>
+        <div class="item-desc" style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
+          <div>・members (部員名簿・認証ハッシュ・役職)<br>・matches / score_logs (試合・得点・警告)<br>・attendance (出欠回答・ステータス)</div>
+          <div>・equipment_master / items / event_logs (備品・当番)<br>・bulletin_posts / reads / comments (活動記録・掲示板)<br>・system_user_tokens (Google OAuthトークン)</div>
+        </div>
+      </div>
+
+      <div class="node-item" style="border-left-color: #A78BFA; margin-top: auto;">
+        <div class="item-title">🖼️ Supabase Storage (CDN画像ストレージ)</div>
+        <div class="item-desc">
+          ・member-avatars バケット: メンバーの顔写真・プロフィールアイコン画像を直接配信・アップロード (HTTPS)
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- カラム2: 通信・APIレイヤー -->
-  <div class="column col-gas">
-    <div class="col-title">2. 通信・APIレイヤー</div>
-
-    <div class="flow-card card-api">
-      <div class="flow-card-header">
-        <span class="card-title">PostgREST REST API</span>
-        <span class="badge badge-api">Supabase Engine</span>
+  <!-- ==================== カラム3: 特権代行 ＆ 外部連携 ==================== -->
+  <div class="zone-col">
+    <!-- 上段: Google Apps Script -->
+    <div class="node-card border-gas" style="flex: 1.15;">
+      <div class="node-header">
+        <div class="node-title text-gas">
+          <span>⚙️</span> 4. Google Apps Script (GAS)
+        </div>
+        <div class="node-badge badge-gas">特権代行サーバー</div>
       </div>
-      <div class="card-desc">
-        PostgreSQLテーブルと直結したHTTPS/RESTエンドポイント。0.1〜0.3秒の極小レイテンシでJSONを直接返却。
+
+      <div class="node-item" style="border-left-color: #D97706;">
+        <div class="item-title">🔒 特権操作に特化したAPI代行</div>
+        <div class="item-desc">
+          ・旧スプレッドシート処理を全撤廃し純API化<br>
+          ・ブラウザから直接叩けないGoogle特権APIの代行<br>
+          ・固定デプロイID (URL不変) による安定稼働
+        </div>
+      </div>
+
+      <div class="node-item" style="border-left-color: #FBBF24;">
+        <div class="item-title">📅 api_events.js & calendar_service.js</div>
+        <div class="item-desc">
+          ・Google Calendar API v3 連携<br>
+          ・予定の一括取得・更新・出席者同期<br>
+          ・PWAからのPOSTリクエストを仲介
+        </div>
+      </div>
+
+      <div class="node-item" style="border-left-color: #D97706;">
+        <div class="item-title">🔑 api_auth.js & GasSupabaseService</div>
+        <div class="item-desc">
+          ・Google OAuth 2.0 認可コード交換<br>
+          ・Script Properties に秘密情報を安全隔離<br>
+          ・Supabase DB へOAuthトークンを暗号化保管
+        </div>
       </div>
     </div>
 
-    <div class="flow-card card-api">
-      <div class="flow-card-header">
-        <span class="card-title">Row Level Security (RLS)</span>
-        <span class="badge badge-api">アクセス制御</span>
+    <!-- 下段: Google Workspace / External API -->
+    <div class="node-card border-google" style="flex: 0.85;">
+      <div class="node-header">
+        <div class="node-title text-google">
+          <span>☁️</span> 5. Google Workspace / API
+        </div>
+        <div class="node-badge badge-google">External Cloud</div>
       </div>
-      <div class="card-desc">
-        anon / authenticated ロールに対する各テーブルごとのアクセス権限制御。
-      </div>
-    </div>
 
-    <div class="flow-card card-api">
-      <div class="flow-card-header">
-        <span class="card-title">Supabase Storage API</span>
-        <span class="badge badge-api">画像CDN</span>
+      <div class="node-item" style="border-left-color: #2563EB;">
+        <div class="item-title">📅 Google カレンダー (チーム共有)</div>
+        <div class="item-desc">
+          ・公式チームカレンダーの予定データ原本<br>
+          ・練習、TRM、公式戦のスケジュール管理<br>
+          ・出席者ステータス (Accepted/Declined) 反映
+        </div>
       </div>
-      <div class="card-desc">
-        プロフィール写真バイナリのアップロード・署名不要グローバルCDN高速配信。
-      </div>
-    </div>
 
-    <div class="flow-card card-api">
-      <div class="flow-card-header">
-        <span class="card-title">Google Calendar API (v3)</span>
-        <span class="badge badge-api">外部連携</span>
-      </div>
-      <div class="card-desc">
-        チーム共有カレンダーの予定一括取得、出席者ステータス (Yes/No/Maybe) の双方向同期。
-      </div>
-    </div>
-  </div>
-
-  <!-- コネクタ 2 -->
-  <div class="connector">
-    <div class="conn-arrow">➔</div>
-    <div class="connector-text">Direct<br>SQL /<br>CDN<br>50ms</div>
-    <div class="conn-arrow">➔</div>
-  </div>
-
-  <!-- カラム3: 永続ストレージ -->
-  <div class="column col-storage">
-    <div class="col-title">3. データベース & クラウドストレージ (Supabase Tokyo)</div>
-
-    <div class="flow-card card-db">
-      <div class="flow-card-header">
-        <span class="card-title">【members】 メンバー名簿</span>
-        <span class="badge badge-table">PostgreSQL 17</span>
-      </div>
-      <div class="card-desc">
-        選手・役員・スタッフ基本情報、背番号、役職、認証ハッシュ、通知設定、OBアーカイブ
-      </div>
-    </div>
-
-    <div class="flow-card card-db">
-      <div class="flow-card-header">
-        <span class="card-title">【matches ＆ score_logs】 試合・詳細ログ</span>
-        <span class="badge badge-table">PostgreSQL 17</span>
-      </div>
-      <div class="card-desc">
-        試合サマリー、スコア、勝敗、時系列得失点ログ、アシスト、警告カード、MOM
-      </div>
-    </div>
-
-    <div class="flow-card card-db">
-      <div class="flow-card-header">
-        <span class="card-title">【attendance】 予定出欠</span>
-        <span class="badge badge-table">PostgreSQL 17</span>
-      </div>
-      <div class="card-desc">
-        活動ごとの部員出欠回答 (yes/no/maybe)、理由コメント、車出し台数管理
-      </div>
-    </div>
-
-    <div class="flow-card card-db">
-      <div class="flow-card-header">
-        <span class="card-title">【equipment_master / items / event_logs】 備品管理</span>
-        <span class="badge badge-table">PostgreSQL 17</span>
-      </div>
-      <div class="card-desc">
-        品目定義・必須ルールマスタ、現物台帳・保管担当者、活動別当番割当・代理持参記録
-      </div>
-    </div>
-
-    <div class="flow-card card-db">
-      <div class="flow-card-header">
-        <span class="card-title">【bulletin_posts / reads / comments】 掲示板</span>
-        <span class="badge badge-table">PostgreSQL 17</span>
-      </div>
-      <div class="card-desc">
-        活動記録・Wiki記事、ホームピン留め、部員別既読追跡、コメントスレッド
-      </div>
-    </div>
-
-    <div class="flow-card card-storage">
-      <div class="flow-card-header">
-        <span class="card-title">【member-avatars】 プロフィール画像</span>
-        <span class="badge badge-storage">Supabase Storage</span>
-      </div>
-      <div class="card-desc">
-        部員アバター画像（PNG/JPEG）。グローバルCDN直結配信で50ms未満の超高速表示。
-      </div>
-    </div>
-
-    <div class="flow-card card-calendar">
-      <div class="flow-card-header">
-        <span class="card-title">Google カレンダー (CALENDAR_ID)</span>
-        <span class="badge badge-external">外部サービス</span>
-      </div>
-      <div class="card-desc">
-        チーム共有カレンダー: 練習・試合・イベントの日時、会場、Google予定詳細
+      <div class="node-item" style="border-left-color: #60A5FA;">
+        <div class="item-title">🔐 Google OAuth 2.0 認証基盤</div>
+        <div class="item-desc">
+          ・初回Googleアカウント連携時の本人確認<br>
+          ・カレンダー編集スコープの認可トークン発行
+        </div>
       </div>
     </div>
   </div>
 
 </div>
 
-<div class="legend-box">
-  <span style="font-weight:bold; color:#E2E8F0;">凡例 / データ種別:</span>
-  <div class="legend-items">
-    <div class="legend-item"><span class="color-dot" style="background:#38BDF8;"></span> SPA画面 (PWA)</div>
-    <div class="legend-item"><span class="color-dot" style="background:#34D399;"></span> PostgREST API / Storage API</div>
-    <div class="legend-item"><span class="color-dot" style="background:#F59E0B;"></span> PostgreSQL テーブル (全10種)</div>
-    <div class="legend-item"><span class="color-dot" style="background:#A78BFA;"></span> Supabase Storage</div>
-    <div class="legend-item"><span class="color-dot" style="background:#60A5FA;"></span> Googleカレンダー</div>
+<!-- フッター: 通信プロトコル凡例 -->
+<div class="footer-legend">
+  <div style="font-weight: 700; color: #F1F5F9;">【サーバー間・クライアント間 通信凡例】</div>
+  <div class="legend-pills">
+    <div class="legend-pill"><span class="dot dot-fast"></span> <b>①〜③ クライアント直接通信:</b> HTTPS REST / Storage <b>(0.1〜0.3秒 超高速) ★全通信の90%★</b></div>
+    <div class="legend-pill"><span class="dot dot-gas"></span> <b>④〜⑤ 特権代行通信:</b> HTTPS POST ➔ Google Calendar API <b>(~0.8〜1.2秒)</b></div>
+    <div class="legend-pill"><span class="dot dot-auth"></span> <b>⑥ トークン永続化通信:</b> GAS ➔ Supabase <b>(暗号化保管)</b></div>
   </div>
-  <span style="color:#94A3B8;">※詳細は別冊『FC_Benten_データベーステーブル仕様書.xlsx』参照</span>
 </div>
 
 </body>
@@ -450,7 +450,7 @@ def generate_diagram_image():
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     docs_dir = os.path.join(base_dir, "docs")
     os.makedirs(docs_dir, exist_ok=True)
-    
+
     html_path = os.path.join(docs_dir, "flow_diagram_fitted.html")
     png_path = os.path.join(docs_dir, "flow_diagram_fitted.png")
 

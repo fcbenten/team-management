@@ -20,8 +20,8 @@ def run_generate():
     print("Building Cover Sheet...")
     build_grid_cover_sheet(wb)
 
-    # 2. データ保存・連携フロー図
-    print("Building Data Flow Sheet...")
+    # 2. システム相関図（システム構成・通信相関図）
+    print("Building System Architecture & Interaction Sheet...")
     build_grid_flow_sheet(wb)
 
     # ==============================================================================

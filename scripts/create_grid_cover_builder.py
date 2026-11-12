@@ -31,9 +31,9 @@ def build_grid_cover_sheet(wb):
     # 文書基本情報 (Row 4〜7)
     doc_meta = [
         ("対象システム", "FC Benten チーム管理システム (TeamManagement)", "初版作成日", "2026/11/04"),
-        ("システム種別", "SPA Webアプリケーション (PWA対応 / Supabase DB連携)", "最終改定日", "2026/11/10"),
-        ("開発・運用基盤", "Supabase (PostgreSQL 17 Tokyo) + GitHub Pages (PWA) + Google Calendar API", "文書バージョン", "Ver 2.0.0 (Supabase移行・DB完全分離版)"),
-        ("管理リポジトリ", "d:\\app\\TeamManagement / fcbenten.github.io/team-management", "ステータス", "本番移行中 (Active)")
+        ("システム種別", "SPA Webアプリケーション (PWA対応 / Supabase DB連携)", "最終改定日", "2026/11/12"),
+        ("開発・運用基盤", "Supabase (PostgreSQL 17 Tokyo) + GitHub Pages (PWA) + Google Apps Script", "文書バージョン", "Ver 2.1.0 (システム相関図・通信プロトコル仕様刷新版)"),
+        ("管理リポジトリ", "d:\\app\\TeamManagement / fcbenten.github.io/team-management", "ステータス", "本番運用中 (Active)")
     ]
     curr_r = 4
     for row in doc_meta:
