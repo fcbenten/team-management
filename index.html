@@ -104,10 +104,11 @@
      <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
      <!-- =========================================
-       CSSファイルの読み込み
+       CSS スタイルシート
        ========================================= -->
-     <!-- 共通デザイン・変数 -->
+     <!-- 共通デザイン・変数・レイアウト -->
      <style>
+/* ../css/base.css */
 /* =========================================
    ✨ サイト全体の大枠・レイアウト・変数
    ========================================= */
@@ -837,8 +838,10 @@ body {
     box-sizing: border-box;
   }
 }
+
 </style>
      <style>
+/* ../css/common.css */
 /* =========================================
    🧩 共通コンポーネント
    ========================================= */
@@ -2366,8 +2369,10 @@ html.no-scroll {
     padding: 1px 4px;
   }
 }
+
 </style>
      <style>
+/* ../css/layout.css */
 /* =========================================
    🏠 メイン画面 (index.html) 専用スタイル
    ========================================= */
@@ -2775,11 +2780,12 @@ html.no-scroll {
 .force-auth-logout-link:hover {
   color: var(--text-heading);
 }
-</style>
 
+</style>
 
      <!-- 各画面専用デザイン -->
      <style>
+/* ../css/home.css */
 /* =========================================
    ホーム画面（ダッシュボード）専用スタイル
    ※ サイト全体のグレー文字基調・クリーンデザインに完全統一
@@ -3034,9 +3040,10 @@ html.no-scroll {
   color: var(--text-muted);
   line-height: 1.4;
 }
-</style>
 
+</style>
      <style>
+/* ../css/login.css */
 /* =========================================
    🔑 ログイン画面専用 (view_login.html)
    ========================================= */
@@ -3171,9 +3178,10 @@ html.no-scroll {
 .oauth-btn-full {
   width: 100%;
 }
-</style>
 
+</style>
      <style>
+/* ../css/results.css */
 /* =========================================
    📄 ページヘッダー＆フィルター
    ========================================= */
@@ -3927,8 +3935,10 @@ html.no-scroll {
     justify-content: flex-start;
   }
 }
+
 </style>
      <style>
+/* ../css/input.css */
 /* =========================================
    📝 入力・修正フォーム
    ========================================= */
@@ -4114,8 +4124,10 @@ html.no-scroll {
   background-color: #fef08a;
   color: #854d0e;
 }
+
 </style>
      <style>
+/* ../css/ranking.css */
 /* =========================================
    👑 ランキング画面用スタイル（新カードUI & PC4列グリッド）
    ========================================= */
@@ -4533,8 +4545,10 @@ html.no-scroll {
     max-width: 280px !important;
   }
 }
+
 </style>
      <style>
+/* ../css/personal.css */
 /* =========================================
    📊 スタッツ（個人成績）テーブル用スタイル
    ========================================= */
@@ -5476,8 +5490,10 @@ th.sort-active .sort-icon {
     font-size: 0.74rem;
   }
 }
+
 </style>
      <style>
+/* ../css/schedule.css */
 /* =========================================
    套 迢ｬ閾ｪ繧ｫ繝ｬ繝ｳ繝繝ｼ・・ｺ亥ｮ壹Μ繧ｹ繝育畑繧ｹ繧ｿ繧､繝ｫ
    ========================================= */
@@ -7462,8 +7478,10 @@ th.sort-active .sort-icon {
   cursor: wait !important;
   opacity: 0.85;
 }
+
 </style>
      <style>
+/* ../css/members.css */
 /* =========================================
    👥 メンバー管理画面 (view_members.html) スタイル
    ========================================= */
@@ -8798,9 +8816,10 @@ a.btn-member-modal-save:hover {
 .text-muted-meta {
   color: #94a3b8 !important;
 }
-</style>
 
+</style>
      <style>
+/* ../css/equipment.css */
 /* =========================================
    備品管理画面 スタイル (css_equipment.html)
    ※ アプリ共通のデザインシステム・変数（css.html / css_common.html）に完全準拠
@@ -9764,9 +9783,10 @@ a.btn-member-modal-save:hover {
   margin-top: 8px;
   line-height: 1.5;
 }
-</style>
 
+</style>
      <style>
+/* ../css/bulletin.css */
 /* =========================================
    📢 活動記録・チーム掲示板 スタイル (css_bulletin.html)
    ========================================= */
@@ -10808,8 +10828,8 @@ textarea.comment-textarea:active {
     justify-content: center;
   }
 }
-</style>
 
+</style>
 </head>
 
 <body>
@@ -13430,12 +13450,9 @@ textarea.comment-textarea:active {
        ※DOM（HTML）が構築された後に動かすため、Bodyの末尾に配置
        ========================================= -->
      <!-- Supabase データベース直結サービスクライアント -->
-     <!-- =========================================
-     js_supabase.html
-     FC Benten Supabase REST API 直結サービスクライアント
-     ========================================= -->
-<script>
-  (function () {
+     <script>
+// ../js/supabase.js
+(function () {
     'use strict';
 
     // 1. Supabase 設定
@@ -15708,9 +15725,11 @@ textarea.comment-textarea:active {
     });
 
   })();
+
 </script>
      <!-- 共通スクリプトの読み込み -->
      <script>
+// ../js/common.js
 // ==========================================
 // 🛠 共通ユーティリティ関数群 (js_common)
 // ==========================================
@@ -16400,10 +16419,11 @@ if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') 
 window.lockBodyScroll = lockBodyScroll;
 window.unlockBodyScroll = unlockBodyScroll;
 window.updateScrollbarWidth = updateScrollbarWidth;
-</script>
 
+</script>
      <script>
-  // =========================================
+// ../js/main.js
+// =========================================
   // 🌐 アプリケーション全体の状態管理と初期化
   // =========================================
 
@@ -19178,8 +19198,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
     });
   }
+
 </script>
      <script>
+// ../js/home.js
 // =========================================
 // ホーム画面（ダッシュボード）制御ロジック
 // =========================================
@@ -19817,9 +19839,10 @@ window.renderHomeSeasonStats = renderHomeSeasonStats;
 window.renderHomeNextEvent = renderHomeNextEvent;
 window.renderHomeRecentMatch = renderHomeRecentMatch;
 window.renderHomePlayerHeader = function() {};
-</script>
 
+</script>
      <script>
+// ../js/results.js
 // =========================================
 // 📊 試合結果一覧・モーダルの制御
 // =========================================
@@ -20253,8 +20276,10 @@ function goToEditMatch() {
   
   if (typeof renderLogs === 'function') renderLogs();
 }
+
 </script>
      <script>
+// ../js/input.js
 // =========================================
 // 📝 入力・編集・保存機能
 // =========================================
@@ -20763,6 +20788,7 @@ function handleInputBack() {
 
 </script>
      <script>
+// ../js/ranking.js
 // =========================================
 // 👑 ランキング機能 & 成績集計の共通ロジック
 // =========================================
@@ -21219,9 +21245,11 @@ function toggleRankList(type) {
   window.rankExpanded[type] = !window.rankExpanded[type];
   filterAndRenderRankings();
 }
+
 </script>
      <script>
-  // =========================================
+// ../js/personal.js
+// =========================================
   // 👤 個人スタッツ機能
   // =========================================
 
@@ -21921,8 +21949,10 @@ function toggleRankList(type) {
       document.body.classList.remove('no-scroll');
     }
   }
+
 </script>
      <script>
+// ../js/schedule.js
 // =========================================
 // 予定・カレンダー機能 (Schedule View)
 // =========================================
@@ -23920,9 +23950,10 @@ document.addEventListener('click', function (e) {
     closeEventDetailMenu();
   }
 });
-</script>
 
+</script>
      <script>
+// ../js/members.js
 /**
  * ==========================================
  * 👥 js_members.html
@@ -25629,9 +25660,10 @@ function escapeJsString(str) {
     .replace(/'/g, "\\'")
     .replace(/"/g, '\\"');
 }
-</script>
 
+</script>
      <script>
+// ../js/equipment.js
 /**
  * ==========================================
  * 備品管理 クライアントロジック (js_equipment.html)
@@ -26686,9 +26718,10 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
     })
     .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);
 }
-</script>
 
+</script>
      <script>
+// ../js/bulletin.js
 /**
  * ==========================================
  * 📢 活動記録・チーム掲示板 ロジック (js_bulletin.html)
@@ -28393,8 +28426,8 @@ window.renderHomeRecentBulletins = renderHomeRecentBulletins;
 window.applyBulletinPayload = applyBulletinPayload;
 window.handleSubmitBulletinComment = handleSubmitBulletinComment;
 window.handleDeleteBulletinComment = handleDeleteBulletinComment;
-</script>
 
+</script>
 
 
 
