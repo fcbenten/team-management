@@ -321,7 +321,7 @@ def build_html():
     <div style="display: flex; gap: 20px; height: 185px;">
       <!-- 左列 (幅 320px): カレンダー + 認証 -->
       <div style="width: 320px; display: flex; flex-direction: column; justify-content: space-between;">
-        <!-- カレンダー -->
+        <!-- Google カレンダー API -->
         <div class="small-box" style="border: 1.5px solid #FCA5A5; background: #FEF2F2; height: 82px;">
           <div class="icon-box" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
@@ -335,9 +335,9 @@ def build_html():
             </svg>
           </div>
           <div>
-            <div style="font-size: 14.5px; font-weight: 800; color: #991B1B;">カレンダー</div>
-            <div style="font-size: 10.5px; color: #DC2626; font-weight: 700; margin-top: 1px;">公式予定の原本データ</div>
-            <div style="font-size: 9.5px; color: #64748B; margin-top: 1px;">練習・試合・遠征マスター</div>
+            <div style="font-size: 13.5px; font-weight: 800; color: #991B1B;">Google カレンダー API</div>
+            <div style="font-size: 10px; color: #DC2626; font-weight: 700; margin-top: 1px;">Google Calendar API v3</div>
+            <div style="font-size: 9px; color: #64748B; margin-top: 1px;">公式予定の原本データ / マスター</div>
           </div>
         </div>
 
