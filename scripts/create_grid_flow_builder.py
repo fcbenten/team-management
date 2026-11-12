@@ -87,14 +87,14 @@ def build_grid_flow_sheet(wb):
 
     servers_data = [
         ("1", "ユーザー端末\n(Client)", "スマートフォン (iOS / Android)\nPC ブラウザ", "・Webアプリ (PWA / SPA)\n・LINEアプリ (部員のスマホ)",
-         "・PWA画面の0秒レンダリング・楽観的UI更新\n・Supabase JWTセッション管理\n・LINEアプリでの雨天中止/リマインド通知受信",
+         "・PWA画面の即時レンダリング・楽観的UI更新\n・Supabase JWTセッション管理\n・LINEアプリでの雨天中止/リマインド通知受信",
          "・GitHub Pages から配信され端末上で実行\n・WebアプリからSupabaseへ直接CRUD通信\n・部員個人のスマホへLINEプッシュ着信"),
         ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(gh-pages ブランチ)", "https://fcbenten.github.io/team-management/\n・index.html (HTML/CSS/JSバンドル)\n・sw.js / manifest.json",
-         "・★Webアプリ本体のホスティング・配信元★\n・ブラウザ初回アクセス時のPWA配信\n・Service Worker キャッシュによる高速ロード",
-         "・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・SupabaseではなくGitHub Pagesにアプリが載っている\n・HTTPS GET による超高速配信 (0.05〜0.1秒)"),
+         "・★Webアプリ本体のホスティング・配信元★\n・ブラウザ初回アクセス時のPWA配信\n・Service Worker キャッシュによるロード",
+         "・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・SupabaseではなくGitHub Pagesにアプリが載っている\n・HTTPS GET による静的コンテンツ配信"),
         ("3", "クラウドデータベース\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
-         "・★全業務データの保管・高速永続化 (90%以上)★\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
-         "・アプリが載る場所ではなく『データ保管庫』\n・端末のWebアプリから直接REST通信 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護"),
+         "・★全業務データの保管・永続化 (90%以上)★\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
+         "・アプリが載る場所ではなく『データ保管庫』\n・端末のWebアプリから直接REST通信\n・Row Level Security (RLS) によるDB層認可保護"),
         ("4", "特権代行 ＆ 予定管理\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App / 定期トリガー\n・Google カレンダー API v3\n・LINE Messaging API 連携基盤",
          "・カレンダー原本データの同期 ＆ 予定一括取得\n・雨天中止や前日出欠リマインドの定期トリガー実行\n・LINE Messaging API への通知リクエスト発信",
          "・Supabaseと連携しカレンダー原本とDBを相互同期\n・画面（Webアプリ）からは直接叩かずバックエンドで自律稼働\n・Script Properties で認証秘密鍵を安全に隠蔽・隔離"),
@@ -125,19 +125,18 @@ def build_grid_flow_sheet(wb):
     # 3. サーバー間・クライアント間 通信プロトコル相関表
     # =========================================================================
     merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                    value="3. サーバー間・クライアント間 通信プロトコル相関表（通信経路・プロトコル・認証・応答速度）",
+                    value="3. サーバー間・クライアント間 通信プロトコル相関表（通信経路・プロトコル・認証・送受信データ定義）",
                     font=f_sec_h1, fill=fill_navy, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
     headers_comm = [
         ("通信ID", 1, 5, al_center),
-        ("送信元 (From) ➔ 送信先 (To)", 6, 21, al_center),
-        ("プロトコル / 方式", 22, 31, al_center),
-        ("認証・認可方式", 32, 43, al_center),
-        ("主な送受信データ", 44, 58, al_center),
-        ("応答速度目安", 59, 68, al_center),
-        ("対象画面・機能", 69, 80, al_center)
+        ("送信元 (From) ➔ 送信先 (To)", 6, 23, al_center),
+        ("プロトコル / 方式", 24, 35, al_center),
+        ("認証・認可方式", 36, 48, al_center),
+        ("主な送受信データ", 49, 66, al_center),
+        ("対象画面・機能", 67, 80, al_center)
     ]
     for h, sc, ec, al in headers_comm:
         merge_and_style(ws, curr_r, sc, curr_r, ec, value=h, font=f_th, fill=fill_navy, alignment=al, border=border_th)
@@ -146,33 +145,32 @@ def build_grid_flow_sheet(wb):
 
     comms_data = [
         ("COMM-01", "GitHub Pages ➔ ユーザー端末", "HTTPS GET\n(Static CDN)", "認証なし (公開静的配信)",
-         "PWAバンドル資産 (index.html, manifest.json, sw.js, アイコン画像)", "0.05〜0.1秒\n(超高速)", "初回アクセス・画面リロード\n(Webアプリの配信)"),
+         "PWAバンドル資産 (index.html, manifest.json, sw.js, アイコン画像)", "初回アクセス・画面リロード\n(Webアプリの配信)"),
         ("COMM-02\n★主通信★", "ユーザー端末 [Webアプリ] ⇄ Supabase", "HTTPS Direct REST\n(GET/POST/PATCH/DELETE)", "Supabase JWT (Bearer Token)\n＋ Row Level Security (RLS)",
-         "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "0.1〜0.3秒\n(超高速 爆速化)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
+         "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
         ("COMM-03", "ユーザー端末 [Webアプリ] ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
-         "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "0.2〜0.4秒\n(高速CDN)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
+         "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
         ("COMM-04", "Supabase ⇄ Google サービス (GAS)", "HTTPS Direct / Webhook", "Service Role Key / API Key",
-         "Google カレンダー予定原本とDBの双方向同期、特権予定更新", "0.4〜0.8秒\n(クラウド間同期)", "カレンダー予定原本の自動同期\n定期トリガー・特権処理"),
+         "Google カレンダー予定原本とDBの双方向同期、特権予定更新", "カレンダー予定原本の自動同期\n定期トリガー・特権処理"),
         ("COMM-05", "Google Apps Script ⇄ Google カレンダー", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
-         "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: チーム公式カレンダーの原本同期"),
+         "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "SCR07: チーム公式カレンダーの原本同期"),
         ("COMM-06", "Google Apps Script ➔ LINE Platform", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\n(Bearer認証)",
-         "雨天中止連絡、前日出欠未回答リマインド、重要掲示板アナウンスのプッシュ送信", "0.3〜0.5秒\n(LINEサーバー送信)", "雨天中止時・出欠リマインド時"),
+         "雨天中止連絡、前日出欠未回答リマインド、重要掲示板アナウンスのプッシュ送信", "雨天中止時・出欠リマインド時"),
         ("COMM-07", "LINE Platform ➔ ユーザー端末 [LINEアプリ]", "LINE Push\n(APNs / FCM)", "LINE アカウント紐付け",
-         "部員個人のスマートフォン（LINEアプリ）へのプッシュ通知着信", "即時着信\n(リアルタイム)", "部員のスマホ通知画面")
+         "部員個人のスマートフォン（LINEアプリ）へのプッシュ通知着信", "部員のスマホ通知画面")
     ]
 
     for c_idx, c in enumerate(comms_data):
         fill_curr = fill_even if c_idx % 2 == 0 else fill_odd
-        line_cnt = max(len(c[1].split('\n')), len(c[3].split('\n')), len(c[4].split('\n')), len(c[5].split('\n')), len(c[6].split('\n')))
+        line_cnt = max(len(c[1].split('\n')), len(c[2].split('\n')), len(c[3].split('\n')), len(c[4].split('\n')), len(c[5].split('\n')))
         ws.row_dimensions[curr_r].height = max(26, line_cnt * 16 + 6)
         cols = [
             (1, 5, c[0], f_td_bold, al_top_center),
-            (6, 21, c[1], f_td_bold, al_top_left),
-            (22, 31, c[2], f_td_code, al_top_left),
-            (33, 43, c[3], f_td, al_top_left),
-            (44, 58, c[4], f_td, al_top_left),
-            (59, 68, c[5], f_td_bold, al_top_center),
-            (69, 80, c[6], f_td, al_top_left)
+            (6, 23, c[1], f_td_bold, al_top_left),
+            (24, 35, c[2], f_td_code, al_top_left),
+            (36, 48, c[3], f_td, al_top_left),
+            (49, 66, c[4], f_td, al_top_left),
+            (67, 80, c[5], f_td, al_top_left)
         ]
         for sc, ec, val, fnt, al in cols:
             merge_and_style(ws, curr_r, sc, curr_r, ec, value=val, font=fnt, fill=fill_curr, alignment=al)
@@ -181,22 +179,22 @@ def build_grid_flow_sheet(wb):
     curr_r += 1  # 空白行
 
     # =========================================================================
-    # 4. 新アーキテクチャの設計思想とセキュリティ・高速化の仕組み
+    # 4. 新アーキテクチャの設計思想とセキュリティ設計
     # =========================================================================
     merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                    value="4. 新アーキテクチャの設計思想・高速化およびセキュリティ設計",
+                    value="4. 新アーキテクチャの設計思想・高レスポンスおよびセキュリティ設計",
                     font=f_sec_h1, fill=fill_green_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
     design_blocks = [
         (
-            "① 0.3秒爆速化のメカニズム (Supabase Direct 通信)",
-            "【旧GAS・スプレッドシート時代】\n"
-            "ブラウザ ➔ GASサーバー (起動2秒) ➔ Google Drive API ➔ スプレッドシート3ファイル直列読込 (3.4秒) ＝ 合計 6〜7秒 の大きな待機時間が発生していた。\n\n"
+            "① 直接REST通信アーキテクチャ (Supabase Direct 通信)",
+            "【旧GAS・スプレッドシート構成】\n"
+            "ブラウザ ➔ GASサーバー ➔ Google Drive API ➔ スプレッドシート3ファイル直列読込 という多段中継により、処理遅延が発生していた。\n\n"
             "【新アーキテクチャ (Ver 2.0.0)】\n"
             "東京リージョン (ap-northeast-1) に配置された Supabase PostgREST へ、端末ブラウザから直接 HTTPS 通信を実行。\n"
-            "多段中継を完全排除したことで、全CRUD操作（出欠、試合、掲示板、備品、名簿）が 0.1〜0.3 秒で完了する超高速レスポンスを実現。"
+            "多段中継を完全排除したことで、全CRUD操作（出欠、試合、掲示板、備品、名簿）において高レスポンスな通信を実現。"
         ),
         (
             "② Row Level Security (RLS) によるデータベース層での認可保護",
@@ -217,12 +215,12 @@ def build_grid_flow_sheet(wb):
             "クライアント端末には一切秘密鍵を露出させず、安全な API 仲介を実現。"
         ),
         (
-            "④ PWA ＆ Service Worker による二層オフライン保護",
+            "④ PWA ＆ Service Worker によるオフライン耐性",
             "【グラウンド・遠征先での安定稼働】\n"
             "GitHub Pages CDN から配信される静的PWAアセットは、Service Worker (sw.js) により端末内にローカルキャッシュ。\n\n"
             "【オフライン・電波微弱環境への対応】\n"
-            "電波の届きにくいグラウンドや体育館でも、アプリ自体は 0.0 秒で瞬時に起動。\n"
-            "出欠タップや掲示板ピン留めなどは「0秒楽観的UIレンダリング」により画面を即座に更新し、通信復帰後にバックグラウンドで自動同期。"
+            "電波の届きにくいグラウンドや体育館でも、アプリ自体は端末キャッシュから瞬時に起動。\n"
+            "出欠タップや掲示板ピン留めなどは楽観的UIレンダリングにより画面を即座に更新し、通信復帰後にバックグラウンドで自動同期。"
         ),
         (
             "⑤ WEBアプリの所在と各サービスの明確な役割分担（GitHub Pages・Supabase・Google・LINE）",
@@ -231,7 +229,7 @@ def build_grid_flow_sheet(wb):
             "Supabase にアプリが載っているわけではありません。ユーザーがスマホやPCでアクセスすると、GitHub Pages からアプリが端末へ配信・キャッシュされ、端末のブラウザ上でアプリが実行されます。\n\n"
             "【Supabase の役割（クラウドデータベース）】\n"
             "Supabase はアプリの置き場ではなく、端末で動くWebアプリから直接接続する『クラウドデータベース（PostgreSQL 17 / Auth / Storage）』です。\n"
-            "出欠、試合記録、掲示板、名簿、備品などの全データを 0.1〜0.3 秒の超高速で直接読み書きします。\n\n"
+            "出欠、試合記録、掲示板、名簿、備品などの全データを直接REST通信でセキュアに読み書きします。\n\n"
             "【Google サービスとの通信（Webアプリ ⇄ Google）】\n"
             "カレンダー予定の同期やGoogleアカウント連携は、端末の『Webアプリ』から直接『Google サービス（GAS ＆ Google カレンダー）』へ通信して実行します。\n"
             "Supabase の認証やストレージがカレンダーと通信することはありません。\n\n"

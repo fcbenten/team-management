@@ -1,21 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 render_flow_diagram.py
-ユーザーのサンプル図（画像3）のレイアウト・接続関係を100%忠実に再現した最新システム相関図:
-1. ロゴ刷新:
-   - LINE アプリ: ユーザー提供の公式アプリアイコン (logo_line_app.png)
-   - Google Apps Script: ユーザー提供の公式4色扇形ロゴ (logo_gas.png)
-   - LINE Messaging API: 従来の緑吹き出し公式ロゴ (そのまま)
-2. 接続関係（大箱か小箱か）の完全再現:
-   - GitHub Pages (小箱) ➔ WEB アプリ (小箱) [オレンジ点線]
-   - WEB アプリ (小箱) ⇄ supabase (【大箱】の左外枠に直結！) [太い双方向矢印]
-   - WEB アプリ (小箱) ➔ Google カレンダー (【小箱】) [放射状直線矢印]
-   - WEB アプリ (小箱) ➔ Google 認証 (【小箱】) [放射状直線矢印]
-   - GAS (【小箱】) ➔ Google カレンダー (【小箱】) [Google大箱内連携矢印]
-   - GAS (【小箱】) ➔ LINE Messaging API (【小箱】) [大箱跨ぎ垂直矢印]
-   - WEB アプリ (小箱) ⇄ LINE Messaging API (【小箱】) [双方向直線矢印]
-   - LINE Messaging API (【小箱】) ➔ LINE アプリ (【小箱】) [水平直線矢印]
-3. Excel表幅（列80・1560px）に完全に合わせたフルサイズ描画 (1560 × 760)
+ユーザーの指摘を全面的に反映した最新システム相関図:
+1. LINE大箱の右側の余計な箱（「部員のスマホへ自動着信！」緑枠）を完全削除。
+   - ユーザーのサンプル図（画像3）通り、「API」小箱のみのシンプルで正確な構成に。
+2. 「0.1s~0.3sの超高速」等の過剰な速度アピール文言を全廃:
+   - DB: 「PostgreSQL 17 / 業務データ全般 (CRUD)」
+   - WEB アプリ: 「ブラウザ実行 / ホーム画面起動」「Supabase Direct CRUD 通信」
+   - ストレージ: 「写真保存 (CDN配信)」
+3. ユーザーのサンプル図通りの明確な結線（大箱接続 vs 小箱接続）とロゴ配置を維持。
 """
 import os
 import base64
@@ -154,12 +147,12 @@ def build_html():
     <path d="M 1110 350 L 1084 325" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
 
     <!-- 6. GAS (【小箱】) ➔ LINE Messaging API (【小箱】) [大箱跨ぎの垂直下向き矢印] -->
-    <path d="M 1280 435 V 545" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+    <path d="M 1150 435 V 545" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
 
     <!-- 7. WEB アプリ (小箱) ⇄ LINE Messaging API (【小箱】) [双方向直線矢印] -->
     <path d="M 672 355 L 752 570" stroke="#EA580C" stroke-width="2.5" fill="none" marker-start="url(#arr-orange-rev)" marker-end="url(#arr-orange)"/>
 
-    <!-- 8. LINE Messaging API (【小箱】) ➔ LINE アプリ (【小箱】) [完全な水平直線！] -->
+    <!-- 8. LINE Messaging API (【小箱】) ➔ LINE アプリ (【小箱】) [水平直線！] -->
     <path d="M 754 615 H 676" stroke="#EA580C" stroke-width="3" fill="none" marker-end="url(#arr-orange)"/>
   </svg>
 
@@ -200,7 +193,7 @@ def build_html():
         <span class="badge" style="background: #475569; color: #FFFFFF; font-size: 9.5px;">クライアント環境</span>
       </div>
 
-      <!-- 小箱1: WEB アプリ (大きめ) -->
+      <!-- 小箱1: WEB アプリ (過剰な速度表記を削除) -->
       <div style="background: #FFFFFF; border: 2.5px solid #0284C7; border-radius: 14px; padding: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08); height: 285px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
@@ -217,9 +210,9 @@ def build_html():
             </div>
           </div>
           <div style="font-size: 11px; color: #64748B; line-height: 1.7; border-top: 1px solid #F1F5F9; padding-top: 10px;">
-            <div>・ブラウザ実行 / ホーム画面0秒起動</div>
+            <div>・ブラウザ実行 / ホーム画面起動</div>
             <div>・出欠、スコア入力、掲示板、名簿</div>
-            <div>・Supabase Direct CRUD (0.1〜0.3s)</div>
+            <div>・Supabase Direct CRUD 通信</div>
           </div>
         </div>
         <div style="background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 8px; padding: 6px 10px; text-align: center; font-size: 10px; color: #0369A1; font-weight: 700;">
@@ -256,7 +249,7 @@ def build_html():
       <span style="font-size: 11px; color: #64748B; font-weight: 700;">東京リージョン (ap-northeast-1)</span>
     </div>
 
-    <!-- 小箱3つ: 認証 / DB / ストレージ -->
+    <!-- 小箱3つ: 認証 / DB / ストレージ (速度誇張を全廃) -->
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; height: 90px;">
       <!-- 認証 -->
       <div class="small-box" style="border: 1.5px solid #D1FAE5; background: #F0FDF4;">
@@ -273,7 +266,7 @@ def build_html():
         </div>
       </div>
 
-      <!-- DB -->
+      <!-- DB (速度アピール削除) -->
       <div class="small-box" style="border: 2px solid #10B981; background: #ECFDF5; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);">
         <div class="icon-box" style="background: #D1FAE5;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -285,11 +278,11 @@ def build_html():
         <div>
           <div style="font-size: 14px; font-weight: 800; color: #065F46;">DB</div>
           <div style="font-size: 10px; color: #047857; font-weight: 800; margin-top: 1px;">PostgreSQL 17</div>
-          <div style="font-size: 9px; color: #059669; font-weight: 700; margin-top: 1px;">0.1〜0.3s 超高速CRUD</div>
+          <div style="font-size: 9px; color: #64748B; margin-top: 1px;">業務データ全般 (CRUD)</div>
         </div>
       </div>
 
-      <!-- ストレージ -->
+      <!-- ストレージ (速度誇張削除) -->
       <div class="small-box" style="border: 1.5px solid #D1FAE5; background: #F0FDF4;">
         <div class="icon-box" style="background: #ECFDF5;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -300,7 +293,7 @@ def build_html():
         <div>
           <div style="font-size: 14px; font-weight: 800; color: #065F46;">ストレージ</div>
           <div style="font-size: 10px; color: #047857; font-weight: 700; margin-top: 1px;">member-avatars</div>
-          <div style="font-size: 9px; color: #64748B; margin-top: 1px;">写真保存 (CDN高速配信)</div>
+          <div style="font-size: 9px; color: #64748B; margin-top: 1px;">写真保存 (CDN配信)</div>
         </div>
       </div>
     </div>
@@ -383,9 +376,10 @@ def build_html():
 
   <!-- ========================================================
        5. LINE (大箱・右下)
+       ※余計な右側バナーを完全削除し、ユーザーのサンプル図通りAPI小箱のみに純化
        ======================================================== -->
   <div class="big-box" style="top: 505px; left: 740px; width: 780px; height: 165px; padding: 14px 20px; border: 2px solid #06C755; background: #F0FDF4;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1.5px solid #BBF7D0; padding-bottom: 5px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1.5px solid #BBF7D0; padding-bottom: 5px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="#06C755">
           <path d="M12 3C6.48 3 2 6.58 2 11c0 2.87 1.9 5.39 4.75 6.78-.21.78-.77 2.83-.88 3.27-.14.54.2.53.42.39.29-.19 3.96-2.7 4.54-3.11.39.05.78.08 1.17.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
@@ -395,25 +389,17 @@ def build_html():
       <span class="badge" style="background: #06C755; color: #FFFFFF; font-size: 9.5px;">公式アカウント通知基盤</span>
     </div>
 
-    <!-- 小箱: API (Messaging API のロゴはそのまま) -->
-    <div class="small-box" style="border: 1.5px solid #BBF7D0; background: #FFFFFF; height: 95px; justify-content: space-between; padding: 12px 18px;">
-      <div style="display: flex; align-items: center; gap: 14px;">
-        <!-- MessagingApiのロゴはそのまま (緑吹き出し) -->
-        <div class="icon-box" style="background: #06C755;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF">
-            <path d="M12 3C6.48 3 2 6.58 2 11c0 2.87 1.9 5.39 4.75 6.78-.21.78-.77 2.83-.88 3.27-.14.54.2.53.42.39.29-.19 3.96-2.7 4.54-3.11.39.05.78.08 1.17.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
-          </svg>
-        </div>
-        <div>
-          <div style="font-size: 15.5px; font-weight: 800; color: #065F46;">API</div>
-          <div style="font-size: 11px; color: #059669; font-weight: 700; margin-top: 1px;">LINE Messaging API</div>
-          <div style="font-size: 9.5px; color: #64748B; margin-top: 1px;">クラウド通知サーバーレスAPI (Webhook)</div>
-        </div>
+    <!-- 小箱: API (余計なバナーなし・Messaging API のロゴはそのまま) -->
+    <div class="small-box" style="border: 1.5px solid #BBF7D0; background: #FFFFFF; height: 95px; width: 440px; padding: 14px 18px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.06);">
+      <div class="icon-box" style="background: #06C755;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF">
+          <path d="M12 3C6.48 3 2 6.58 2 11c0 2.87 1.9 5.39 4.75 6.78-.21.78-.77 2.83-.88 3.27-.14.54.2.53.42.39.29-.19 3.96-2.7 4.54-3.11.39.05.78.08 1.17.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
+        </svg>
       </div>
-
-      <div style="background: #DCFCE7; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 10px 16px; text-align: right; flex-shrink: 0;">
-        <div style="font-size: 12.5px; font-weight: 800; color: #15803D;">部員のスマホへ自動着信！</div>
-        <div style="font-size: 10px; color: #166534; margin-top: 2px;">雨天中止の緊急一斉通知 ／ 前日出欠リマインド</div>
+      <div>
+        <div style="font-size: 16px; font-weight: 800; color: #065F46;">API</div>
+        <div style="font-size: 11px; color: #059669; font-weight: 700; margin-top: 1px;">LINE Messaging API</div>
+        <div style="font-size: 9.5px; color: #64748B; margin-top: 2px;">雨天中止・出欠リマインドの公式通知配信</div>
       </div>
     </div>
   </div>
