@@ -16044,6 +16044,83 @@ window.handleError = handleError;
 window.setFieldError = setFieldError;
 window.clearFieldError = clearFieldError;
 
+/**
+ * メンバー情報が変更（追加・更新・復帰・削除）された際に、
+ * 全画面のグローバル名簿キャッシュおよびマッピングを即時同期・更新する
+ * @param {Array} roster - 最新の管理者用名簿（全部員、OB含む）
+ */
+function syncUpdatedMemberList(roster) {
+  if (!Array.isArray(roster) || roster.length === 0) return;
+
+  // 1. 管理者名簿（全部員、OB含む）
+  window.adminMemberList = roster;
+  try { localStorage.setItem('fcb_cached_admin_roster', JSON.stringify(roster)); } catch (e) {}
+
+  // 2. 通常名簿（現役・休部中のみ、OBは除外）
+  const activeRoster = roster.filter(m => !m.isPast && m.memberType !== 'PAST' && m.role !== 'OB');
+  window.scheduleRoster = activeRoster;
+  try { localStorage.setItem('fcb_cached_roster', JSON.stringify(activeRoster)); } catch (e) {}
+
+  // 3. 各種マッピング辞書（playerNumberMap, playerPositionsMap, playerAvatarMap, nameToMember）を更新
+  window.playerNumberMap = window.playerNumberMap || {};
+  window.playerPositionsMap = window.playerPositionsMap || {};
+  window.playerAvatarMap = window.playerAvatarMap || {};
+  window.playerAvatars = window.playerAvatars || {};
+  window.nameToMember = window.nameToMember || {};
+
+  roster.forEach(m => {
+    if (!m || !m.name) return;
+    const numVal = (m.number !== null && m.number !== '' && !isNaN(m.number)) ? Number(m.number) : null;
+    if (numVal !== null) {
+      window.playerNumberMap[m.name] = numVal;
+    }
+    if (m.position) {
+      window.playerPositionsMap[m.name] = m.position;
+    }
+    if (m.avatarUrl) {
+      window.playerAvatarMap[m.name] = m.avatarUrl;
+      window.playerAvatars[m.name] = m.avatarUrl;
+    }
+    window.nameToMember[m.name] = m;
+  });
+
+  // 4. initialFullData の整合性維持
+  if (window.initialFullData) {
+    window.initialFullData.adminRoster = roster;
+    window.initialFullData.roster = activeRoster;
+    if (window.initialFullData.playerNumbers) {
+      Object.assign(window.initialFullData.playerNumbers, window.playerNumberMap);
+    }
+    if (window.initialFullData.playerPositions) {
+      Object.assign(window.initialFullData.playerPositions, window.playerPositionsMap);
+    }
+  }
+
+  // 5. ランキング用の基本選手リスト（window.teamStatsData）も最新の現役部員で同期
+  if (Array.isArray(window.teamStatsData)) {
+    window.teamStatsData = activeRoster.map(m => ({ name: m.name, number: m.number, position: m.position }));
+  }
+
+  // 6. スケジュール出欠候補などの更新
+  if (typeof updateScheduleMemberListOptions === 'function') {
+    updateScheduleMemberListOptions(activeRoster);
+  }
+
+  // 7. メンバー一覧画面の再描画
+  if (typeof renderMembersList === 'function') {
+    renderMembersList(window.adminMemberList);
+  }
+
+  // 8. ランキングとスタッツ（個人成績）の再集計・再描画
+  if (typeof filterAndRenderRankings === 'function') {
+    filterAndRenderRankings();
+  }
+  if (typeof filterAndRenderPersonalStats === 'function') {
+    filterAndRenderPersonalStats();
+  }
+}
+window.syncUpdatedMemberList = syncUpdatedMemberList;
+
 // ==========================================
 // 全画面共通 汎用カスタム確認/通知ダイアログ
 // ==========================================
@@ -18198,6 +18275,12 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       if (typeof filterAndRenderRankings === 'function') filterAndRenderRankings();
     }
 
+    // スタッツ（個人成績）タブに切り替えた場合は描画を確実に実行
+    if (tabName === 'personal') {
+      if (typeof populatePersonalSeasonFilter === 'function') populatePersonalSeasonFilter();
+      if (typeof filterAndRenderPersonalStats === 'function') filterAndRenderPersonalStats();
+    }
+
     // ホームタブに切り替えた場合は最新描画を実行
     if (tabName === 'home' && typeof initHomeView === 'function') {
       initHomeView();
@@ -18378,6 +18461,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       } else if (tabName === 'ranking') {
         if (typeof populateRankingSeasonFilter === 'function') populateRankingSeasonFilter();
         if (typeof filterAndRenderRankings === 'function') filterAndRenderRankings();
+      } else if (tabName === 'personal') {
+        if (typeof populatePersonalSeasonFilter === 'function') populatePersonalSeasonFilter();
+        if (typeof filterAndRenderPersonalStats === 'function') filterAndRenderPersonalStats();
       } else if (tabName === 'members') {
         if (typeof initMembersView === 'function') {
           const list = (window.adminMemberList && window.adminMemberList.length > 0) ? window.adminMemberList : window.scheduleRoster;
@@ -20807,6 +20893,12 @@ function aggregateAttendanceFromBatch(season, category) {
     }
   };
 
+  const rosterList = (window.scheduleRoster && window.scheduleRoster.length > 0)
+    ? window.scheduleRoster
+    : (window.adminMemberList || []);
+  if (Array.isArray(rosterList)) {
+    rosterList.forEach(m => { if (m && m.name) checkAndAdd(m.name); });
+  }
   if (window.playerNumberMap) {
     Object.keys(window.playerNumberMap).forEach(checkAndAdd);
   }
@@ -21193,13 +21285,29 @@ function toggleRankList(type) {
     const statsMap = {};
 
     // 1. まず名簿データをもとに全選手の枠を用意する（OB・退団選手・特殊枠は除外）
+    const rosterList = (window.scheduleRoster && window.scheduleRoster.length > 0)
+      ? window.scheduleRoster
+      : (window.adminMemberList || []);
+    if (Array.isArray(rosterList)) {
+      rosterList.forEach(m => {
+        if (!m || !m.name) return;
+        const trimmed = String(m.name).trim();
+        if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前') {
+          if (typeof isPastMember === 'function' ? !isPastMember(trimmed) : true) {
+            statsMap[trimmed] = { name: trimmed, games: 0, goals: 0, assists: 0, mom: 0 };
+          }
+        }
+      });
+    }
     if (window.playerNumberMap) {
       Object.keys(window.playerNumberMap).forEach(name => {
         const trimmed = String(name || '').trim();
         // OG、助っ人、CSVのヘッダー行（"名前"等）、OBを除外
         if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前') {
           if (typeof isPastMember === 'function' ? !isPastMember(trimmed) : true) {
-            statsMap[trimmed] = { name: trimmed, games: 0, goals: 0, assists: 0, mom: 0 };
+            if (!statsMap[trimmed]) {
+              statsMap[trimmed] = { name: trimmed, games: 0, goals: 0, assists: 0, mom: 0 };
+            }
           }
         }
       });
@@ -25041,12 +25149,16 @@ function handleSaveMemberSubmit(e) {
 
       if (res && res.success) {
         if (res.roster) {
-          window.adminMemberList = res.roster;
-          window.scheduleRoster = res.roster;
-          if (typeof updateScheduleMemberListOptions === 'function') {
-            updateScheduleMemberListOptions(res.roster);
+          if (typeof syncUpdatedMemberList === 'function') {
+            syncUpdatedMemberList(res.roster);
+          } else {
+            window.adminMemberList = res.roster;
+            window.scheduleRoster = res.roster;
+            if (typeof updateScheduleMemberListOptions === 'function') {
+              updateScheduleMemberListOptions(res.roster);
+            }
+            renderMembersList(window.adminMemberList);
           }
-          renderMembersList(window.adminMemberList);
         }
         closeModalById('memberEditModal');
         if (res.emailChanged && res.savedEmail) {
@@ -25178,12 +25290,16 @@ async function handleRestoreMember(memberName) {
     .withSuccessHandler(res => {
       if (res && res.success) {
         if (res.roster) {
-          window.adminMemberList = res.roster;
-          window.scheduleRoster = res.roster;
-          if (typeof updateScheduleMemberListOptions === 'function') {
-            updateScheduleMemberListOptions(res.roster);
+          if (typeof syncUpdatedMemberList === 'function') {
+            syncUpdatedMemberList(res.roster);
+          } else {
+            window.adminMemberList = res.roster;
+            window.scheduleRoster = res.roster;
+            if (typeof updateScheduleMemberListOptions === 'function') {
+              updateScheduleMemberListOptions(res.roster);
+            }
+            renderMembersList(window.adminMemberList);
           }
-          renderMembersList(window.adminMemberList);
         }
       } else {
         showAppAlert({ title: '復帰エラー', message: '復帰処理に失敗しました: ' + (res && res.error ? res.error : ''), isError: true });
@@ -25294,12 +25410,16 @@ function executeMemberDeletePermanently() {
       if (res && res.success) {
         setDeleteFormStatus('削除が完了しました。', 'success');
         if (res.roster) {
-          window.adminMemberList = res.roster;
-          window.scheduleRoster = res.roster;
-          if (typeof updateScheduleMemberListOptions === 'function') {
-            updateScheduleMemberListOptions(res.roster);
+          if (typeof syncUpdatedMemberList === 'function') {
+            syncUpdatedMemberList(res.roster);
+          } else {
+            window.adminMemberList = res.roster;
+            window.scheduleRoster = res.roster;
+            if (typeof updateScheduleMemberListOptions === 'function') {
+              updateScheduleMemberListOptions(res.roster);
+            }
+            renderMembersList(window.adminMemberList);
           }
-          renderMembersList(window.adminMemberList);
         }
         setTimeout(() => {
           closeModalById('memberDeleteModal');
