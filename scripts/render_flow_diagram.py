@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 render_flow_diagram.py
-Playwrightを用いて、ユーザー指定の構成図スタイル（実機イラスト、コンテナ境界、ビジネスロジックカード、
-赤い通信矢印、下部スペック表）に準拠した高精細システム構成図・相関図（PNG画像）を生成するスクリプト。
+ユーザー指定のモダン・ミニマルなアーキテクチャ図（白背景、すっきりしたカード、
+アプリユーザー ➔ PWA ➔ Supabase ➔ Google Cloud の直感的な連携図）を生成するスクリプト。
 """
 import os
 from playwright.sync_api import sync_playwright
@@ -15,605 +15,394 @@ HTML_CONTENT = """<!DOCTYPE html>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-    background: #E2E8F0;
-    color: #1E293B;
-    padding: 24px;
-    width: 1400px;
-    height: 980px;
+    background: #FFFFFF;
+    color: #1F2937;
+    padding: 36px 48px;
+    width: 1280px;
+    height: 720px;
   }
 
-  /* 最外枠キャンバス */
-  .canvas {
-    background: #EDF2F7;
-    border: 2px solid #CBD5E1;
-    border-radius: 12px;
-    padding: 20px 24px 16px 24px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  }
-
-  /* タイトルヘッダー */
-  .diagram-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    border-bottom: 2px solid #94A3B8;
-    padding-bottom: 10px;
-    margin-bottom: 16px;
-  }
-  .title-group h1 {
-    font-size: 24px;
-    font-weight: 900;
-    color: #0F172A;
-    letter-spacing: 0.02em;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .title-group p {
-    font-size: 12px;
-    color: #475569;
-    margin-top: 3px;
-    font-weight: 600;
-  }
-  .version-badge {
-    background: #0284C7;
-    color: #FFFFFF;
-    font-size: 11px;
+  /* タイトル */
+  .title {
+    font-size: 26px;
     font-weight: 800;
-    padding: 4px 12px;
-    border-radius: 6px;
+    color: #111827;
+    margin-bottom: 30px;
+    letter-spacing: -0.02em;
   }
 
-  /* メインエリア: 上段の各ゾーン */
-  .zones-container {
-    display: grid;
-    grid-template-columns: 320px 1fr 340px;
-    gap: 18px;
-    height: 640px;
-    position: relative;
-  }
-
-  /* グループコンテナ共通（タブ付きフォルダ風ボックス） */
-  .group-box {
-    border-radius: 8px;
-    position: relative;
-    padding: 16px;
-    box-shadow: 2px 3px 8px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-  }
-  .box-tab {
-    position: absolute;
-    top: -14px;
-    left: 16px;
-    padding: 3px 14px;
-    font-size: 13px;
-    font-weight: 900;
-    border-radius: 6px 6px 0 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    letter-spacing: 0.03em;
-  }
-  .box-subtitle {
-    font-size: 11px;
-    font-weight: 700;
-    color: #64748B;
-    margin-top: -2px;
-    margin-bottom: 12px;
-  }
-
-  /* 1. Client 側 (Light Green) */
-  .box-client {
-    background: #F0FDF4;
-    border: 2px solid #22C55E;
-  }
-  .box-client .box-tab {
-    background: #22C55E;
-    color: #FFFFFF;
-  }
-
-  /* 2. Web Hosting 側 (Light Cyan) */
-  .box-hosting {
-    background: #F0F9FF;
-    border: 2px solid #0EA5E9;
-  }
-  .box-hosting .box-tab {
-    background: #0EA5E9;
-    color: #FFFFFF;
-  }
-
-  /* 3. BaaS / Database 側 (Light Yellow / Amber) */
-  .box-server {
-    background: #FFFDF0;
-    border: 2px solid #F59E0B;
-  }
-  .box-server .box-tab {
-    background: #F59E0B;
-    color: #FFFFFF;
-  }
-
-  /* 4. 特権代行 ＆ 外部連携 側 (Light Purple / Indigo) */
-  .box-external {
-    background: #FAF5FF;
-    border: 2px solid #A855F7;
-  }
-  .box-external .box-tab {
-    background: #A855F7;
-    color: #FFFFFF;
-  }
-
-  /* 3Dカード（ビジネスロジック・機能ブロック風） */
-  .logic-card {
-    background: linear-gradient(180deg, #FFFFFF 0%, #F1F5F9 100%);
-    border: 1px solid #CBD5E1;
-    border-radius: 6px;
-    padding: 7px 10px;
-    margin-bottom: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
-    font-size: 11.5px;
-    font-weight: 700;
-    color: #0F172A;
+  /* メイングリッドコンテナ */
+  .diagram-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
-  }
-  .logic-card-code {
-    font-size: 9.5px;
-    color: #64748B;
-    font-family: monospace;
-    font-weight: normal;
+    gap: 16px;
+    height: 560px;
   }
 
-  /* 通信矢印（太い赤矢印線 ＆ 赤文字バッジ） */
-  .comm-arrow-badge {
-    background: #DC2626;
-    color: #FFFFFF;
-    font-size: 10.5px;
-    font-weight: 900;
-    padding: 4px 10px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
-  }
-  .comm-arrow-label {
-    font-size: 11px;
-    font-weight: 800;
-    color: #991B1B;
-    background: #FEE2E2;
-    padding: 2px 6px;
-    border-radius: 3px;
-    border: 1px solid #FCA5A5;
-  }
-
-  /* イラストコンテナ */
-  .illustration-center {
+  /* ユーザーゾーン */
+  .user-zone {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    width: 120px;
   }
-  .device-caption {
-    font-size: 11px;
-    font-weight: 800;
-    color: #1E293B;
-    margin-top: 4px;
-  }
-  .device-sub {
-    font-size: 9.5px;
-    color: #64748B;
+  .user-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-top: 10px;
   }
 
-  /* 下部スペック表（ユーザー画像の下部赤見出しスタイルに完全準拠） */
-  .specs-footer {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 16px;
-    border-top: 2px solid #CBD5E1;
-    padding-top: 14px;
-    margin-top: 8px;
+  /* 矢印コネクタ */
+  .arrow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9CA3AF;
   }
-  .spec-col {
+
+  /* カード共通 */
+  .arch-card {
+    background: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
+    border-radius: 18px;
+    padding: 26px 20px;
+    height: 540px;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+    position: relative;
   }
-  .spec-header {
-    color: #B91C1C;
-    font-size: 12.5px;
-    font-weight: 900;
-    border-bottom: 2px solid #DC2626;
-    padding-bottom: 4px;
-    margin-bottom: 6px;
-    letter-spacing: 0.02em;
+
+  /* カード1: モバイルアプリ (PWA) */
+  .card-pwa {
+    width: 280px;
+    align-items: center;
+    background: #FAFAFA;
   }
-  .spec-content {
-    font-size: 10.5px;
-    color: #334155;
-    line-height: 1.45;
+
+  /* カード2: Supabase */
+  .card-supabase {
+    width: 320px;
+    align-items: center;
   }
-  .spec-content b {
-    color: #0F172A;
+
+  /* カード3: Google Cloud */
+  .card-google {
+    width: 290px;
+    align-items: center;
+  }
+
+  /* カードヘッダー（ロゴ） */
+  .card-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 22px;
+    height: 36px;
+  }
+  .brand-text {
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  /* カード内アイテム（機能ブロック） */
+  .feature-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .feature-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .icon-green {
+    background: #ECFDF5;
+    color: #10B981;
+    border: 1px solid #A7F3D0;
+  }
+  .icon-blue {
+    background: #EFF6FF;
+    color: #3B82F6;
+    border: 1px solid #BFDBFE;
+  }
+  .icon-amber {
+    background: #FFFBEB;
+    color: #F59E0B;
+    border: 1px solid #FDE68A;
+  }
+
+  .feature-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #111827;
+  }
+  .feature-sub {
+    font-size: 11.5px;
+    color: #6B7280;
+    margin-top: 1px;
+  }
+  .feature-desc {
+    font-size: 10px;
+    color: #9CA3AF;
+    margin-top: 2px;
+  }
+
+  /* 縦矢印（カード内） */
+  .item-down-arrow {
+    color: #D1D5DB;
+    margin: 4px 0 8px 0;
   }
 </style>
 </head>
 <body>
 
-<div class="canvas">
+<div class="title">アーキテクチャ</div>
 
-  <!-- ヘッダー -->
-  <div class="diagram-header">
-    <div class="title-group">
-      <h1>FC BENTEN チーム管理システム システム構成・通信相関図</h1>
-      <p>ユーザー端末 (PWA) ＋ GitHub Pages (CDN) ＋ Supabase (PostgreSQL 17 Tokyo) ＋ Google Apps Script 特権代行</p>
-    </div>
-    <div class="version-badge">System Architecture Ver 2.1.0</div>
+<div class="diagram-container">
+
+  <!-- ==================== 1. アプリユーザー ==================== -->
+  <div class="user-zone">
+    <!-- 3人ユーザーシルエット SVG (参考画像準拠) -->
+    <svg width="84" height="84" viewBox="0 0 84 84" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Back Left Person -->
+      <circle cx="27" cy="30" r="11" fill="#111827"/>
+      <path d="M12 58 C12 48 20 46 27 46 C34 46 42 48 42 58 Z" fill="#111827"/>
+      <!-- Back Right Person -->
+      <circle cx="57" cy="30" r="11" fill="#111827"/>
+      <path d="M42 58 C42 48 50 46 57 46 C64 46 72 48 72 58 Z" fill="#111827"/>
+      <!-- Front Center Person -->
+      <circle cx="42" cy="36" r="13" fill="#000000"/>
+      <path d="M22 68 C22 56 32 54 42 54 C52 54 62 56 62 68 Z" fill="#000000"/>
+    </svg>
+    <div class="user-label">アプリユーザー</div>
   </div>
 
-  <!-- メイン構成ゾーン (上段) -->
-  <div class="zones-container">
+  <!-- 矢印: ユーザー ➔ アプリ -->
+  <div class="arrow-connector">
+    <svg width="40" height="24" viewBox="0 0 40 24" fill="none">
+      <path d="M4 12 H34 M26 4 L34 12 L26 20" stroke="#9CA3AF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
 
-    <!-- ========================================================
-         1. Client 側 (ユーザー端末)
-         ======================================================== -->
-    <div class="group-box box-client">
-      <div class="box-tab">📱 Client 側</div>
-      <div class="box-subtitle">ユーザー端末 (スマートフォン / タブレット / PC)</div>
+  <!-- ==================== 2. モバイルアプリ (PWA) ==================== -->
+  <div class="arch-card card-pwa">
+    <!-- スマホアイコン (参考画像準拠) -->
+    <div style="margin-top: 10px; margin-bottom: 16px;">
+      <svg width="70" height="110" viewBox="0 0 70 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="5" y="4" width="60" height="102" rx="12" fill="#000000" stroke="#374151" stroke-width="2"/>
+        <rect x="8" y="12" width="54" height="82" rx="4" fill="#FFFFFF"/>
+        <rect x="26" y="7" width="18" height="3" rx="1.5" fill="#4B5563"/>
+        <circle cx="35" cy="99" r="3" fill="#D1D5DB"/>
+        <!-- 画面内UI線 -->
+        <rect x="13" y="18" width="22" height="4" rx="1" fill="#0284C7"/>
+        <rect x="13" y="26" width="44" height="14" rx="2" fill="#E0F2FE"/>
+        <rect x="13" y="44" width="44" height="8" rx="2" fill="#F3F4F6"/>
+        <rect x="13" y="55" width="44" height="8" rx="2" fill="#F3F4F6"/>
+        <rect x="13" y="66" width="20" height="16" rx="2" fill="#ECFDF5"/>
+        <rect x="37" y="66" width="20" height="16" rx="2" fill="#FEF3C7"/>
+      </svg>
+    </div>
 
-      <!-- デバイスイラスト (PC + スマートフォン) -->
-      <div class="illustration-center" style="margin: 6px 0 12px 0;">
-        <svg width="180" height="95" viewBox="0 0 180 95" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- PC Monitor -->
-          <rect x="25" y="5" width="85" height="55" rx="4" fill="#0F172A" stroke="#334155" stroke-width="2"/>
-          <rect x="29" y="9" width="77" height="47" rx="2" fill="#38BDF8"/>
-          <!-- Browser Mockup in Monitor -->
-          <rect x="29" y="9" width="77" height="8" fill="#0284C7"/>
-          <circle cx="34" cy="13" r="1.5" fill="#EF4444"/>
-          <circle cx="39" cy="13" r="1.5" fill="#F59E0B"/>
-          <circle cx="44" cy="13" r="1.5" fill="#10B981"/>
-          <!-- App content lines -->
-          <rect x="33" y="21" width="30" height="5" rx="1" fill="#FFFFFF"/>
-          <rect x="33" y="29" width="69" height="18" rx="1" fill="#E0F2FE"/>
-          <!-- Monitor Stand -->
-          <path d="M60 60 L75 60 L78 72 L57 72 Z" fill="#64748B"/>
-          <rect x="50" y="72" width="35" height="4" rx="1" fill="#475569"/>
-          <!-- Keyboard -->
-          <polygon points="35,80 100,80 105,87 30,87" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1"/>
-          <!-- Smartphone (PWA) -->
-          <rect x="120" y="16" width="36" height="68" rx="6" fill="#0F172A" stroke="#475569" stroke-width="2"/>
-          <rect x="123" y="22" width="30" height="52" rx="2" fill="#0284C7"/>
-          <!-- Phone screen app content -->
-          <rect x="125" y="26" width="26" height="6" rx="1" fill="#38BDF8"/>
-          <rect x="125" y="35" width="26" height="12" rx="1" fill="#E0F2FE"/>
-          <rect x="125" y="50" width="12" height="10" rx="1" fill="#34D399"/>
-          <rect x="139" y="50" width="12" height="10" rx="1" fill="#FBBF24"/>
-          <circle cx="138" cy="19" r="1.2" fill="#94A3B8"/>
-          <circle cx="138" cy="79" r="2" fill="#64748B"/>
+    <div style="font-size: 17px; font-weight: 800; color: #111827; margin-bottom: 12px;">Webアプリ (PWA)</div>
+
+    <!-- 技術スタック (Flutterロゴのポジション) -->
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 24px;">
+      <!-- PWA/HTML5 Icon -->
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2 L3 6 L4.5 17 L12 22 L19.5 17 L21 6 Z" fill="#0284C7"/>
+        <path d="M12 4 L18.5 7.5 L17.5 16 L12 19.5 Z" fill="#38BDF8"/>
+        <text x="12" y="15" font-size="8" font-weight="900" fill="#FFFFFF" text-anchor="middle">SPA</text>
+      </svg>
+      <span style="font-size: 15px; font-weight: 700; color: #374151;">Vanilla JS (SPA)</span>
+    </div>
+
+    <!-- 配信プラットフォーム (App Store / Google Play のポジション) -->
+    <div style="margin-top: auto; width: 100%; border-top: 1px solid #E5E7EB; padding-top: 16px; text-align: center;">
+      <div style="font-size: 12px; font-weight: 700; color: #4B5563; margin-bottom: 12px;">配信プラットフォーム</div>
+      <div style="display: flex; justify-content: center; align-items: center; gap: 18px;">
+        <!-- GitHub Pages Icon & Text -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <rect width="24" height="24" rx="6" fill="#0F172A"/>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C7.58 4 4 7.58 4 12C4 15.54 6.29 18.53 9.47 19.59C9.87 19.66 10.02 19.42 10.02 19.21C10.02 19.02 10.01 18.39 10.01 17.72C8 18.09 7.46 17.18 7.3 16.73C7.21 16.5 6.82 15.79 6.48 15.6C6.2 15.45 5.8 15.08 6.47 15.07C7.1 15.06 7.55 15.65 7.7 15.89C8.42 17.11 9.57 16.77 10.03 16.56C10.1 16.04 10.31 15.68 10.54 15.48C8.75 15.28 6.87 14.59 6.87 11.51C6.87 10.63 7.18 9.92 7.69 9.36C7.61 9.16 7.33 8.33 7.77 7.23C7.77 7.23 8.44 7.02 9.99 8.06C10.63 7.88 11.32 7.79 12.01 7.79C12.7 7.79 13.39 7.88 14.03 8.06C15.58 7.01 16.25 7.23 16.25 7.23C16.69 8.33 16.41 9.16 16.33 9.36C16.84 9.92 17.15 10.63 17.15 11.51C17.15 14.6 15.26 15.28 13.47 15.48C13.76 15.73 14.01 16.21 14.01 16.96C14.01 18.04 14 18.91 14 19.21C14 19.42 14.15 19.67 14.55 19.59C17.71 18.53 20 15.53 20 12C20 7.58 16.42 4 12 4Z" fill="#FFFFFF"/>
+          </svg>
+          <span style="font-size: 10px; font-weight: 700; color: #4B5563;">GitHub Pages</span>
+        </div>
+        <!-- PWA / Home Screen Icon & Text -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+            <rect width="24" height="24" rx="6" fill="#0284C7"/>
+            <path d="M6 12 L12 6 L18 12 M8 10.5 V17 H16 V10.5" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span style="font-size: 10px; font-weight: 700; color: #4B5563;">ホーム画面 (PWA)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分岐矢印: アプリ ⇄ Supabase (3分岐コネクタ) -->
+  <div style="width: 50px; height: 380px; display: flex; align-items: center; position: relative;">
+    <svg width="50" height="380" viewBox="0 0 50 380" fill="none">
+      <!-- 幹（中央） -->
+      <path d="M 0 190 H 46" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 40 185 L 47 190 L 40 195" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 上ブランチ (認証へ) -->
+      <path d="M 18 190 V 65 C 18 55 24 55 34 55 H 46" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 40 50 L 47 55 L 40 60" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 下ブランチ (ストレージへ) -->
+      <path d="M 18 190 V 315 C 18 325 24 325 34 325 H 46" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+      <path d="M 40 320 L 47 325 L 40 330" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- 左向き矢印 (双方向通信) -->
+      <path d="M 7 185 L 0 190 L 7 195" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- ==================== 3. Supabase ==================== -->
+  <div class="arch-card card-supabase">
+    <!-- Supabase 公式ロゴヘッダー (参考画像準拠) -->
+    <div class="card-brand">
+      <svg width="28" height="28" viewBox="0 0 109 113" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M63.7076 110.284C60.8481 113.885 55.0502 111.912 54.9624 107.314L53.9738 55.5768H99.1026C106.597 55.5768 110.745 64.1956 106.012 70.157L63.7076 110.284Z" fill="#3ECF8E"/>
+        <path d="M45.297 2.71607C48.1565 -0.884784 53.9544 1.08779 54.0422 5.68607L54.4093 57.4232H10.268C2.77333 57.4232 -1.37464 48.8044 3.35808 42.843L45.297 2.71607Z" fill="#3ECF8E"/>
+      </svg>
+      <span class="brand-text" style="color: #111827;">supabase</span>
+    </div>
+
+    <!-- 1. 認証 (Auth) -->
+    <div class="feature-item">
+      <div class="feature-icon-box icon-green">
+        <!-- 鍵アイコン -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="11" width="14" height="10" rx="3" stroke="#10B981" stroke-width="2"/>
+          <path d="M8 11 V7 C8 4.79 9.79 3 12 3 C14.21 3 16 4.79 16 7 V11" stroke="#10B981" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="16" r="1.5" fill="#10B981"/>
         </svg>
-        <div class="device-caption">FC Benten PWA (Single Page App)</div>
-        <div class="device-sub">iPhone (Safari) / Android (Chrome) / PC ブラウザ</div>
       </div>
-
-      <!-- クライアント内部モジュール -->
-      <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; border: 1px solid #DCFCE7; margin-bottom: 8px;">
-        <div style="font-size: 11px; font-weight: 800; color: #15803D; margin-bottom: 4px;">■ クライアント実行環境・機能</div>
-        <div style="font-size: 10.5px; color: #374151; line-height: 1.5;">
-          ・<b>HTML5 / CSS3 / Vanilla JS (ES6+)</b> SPA構造<br>
-          ・<b>Service Worker (sw.js)</b> によるオフライン保護<br>
-          ・<b>0秒楽観的UI更新</b> (出欠・掲示板・削除先行反映)<br>
-          ・<b>LocalStorage</b> (Supabase JWT認証セッション保持)
-        </div>
-      </div>
-
-      <!-- 画面チェック機能・帳票ブロック風 -->
-      <div class="logic-card" style="border-left: 4px solid #10B981;">
-        <span>ログイン・名簿照合認証</span>
-        <span class="logic-card-code">SCR01 / SCR11</span>
-      </div>
-      <div class="logic-card" style="border-left: 4px solid #10B981;">
-        <span>出欠ワンタップ回答 (○/×/△)</span>
-        <span class="logic-card-code">SCR07 (0秒更新)</span>
-      </div>
-      <div class="logic-card" style="border-left: 4px solid #10B981;">
-        <span>試合スコア・得点者入力</span>
-        <span class="logic-card-code">SCR04 / SCR03</span>
-      </div>
-      <div class="logic-card" style="border-left: 4px solid #10B981;">
-        <span>活動記録・チーム掲示板</span>
-        <span class="logic-card-code">SCR09 (Wiki共同編集)</span>
-      </div>
-      <div class="logic-card" style="border-left: 4px solid #10B981;">
-        <span>備品台帳・7日先不在アラート</span>
-        <span class="logic-card-code">SCR08 (代理解決)</span>
-      </div>
+      <div class="feature-title">認証</div>
+      <div class="feature-sub">(Auth)</div>
+      <div class="feature-desc">パスワード認証 / JWT保持</div>
     </div>
 
-    <!-- ========================================================
-         2. 中央: Web Hosting ＆ BaaS / Database 側 (Supabase Tokyo)
-         ======================================================== -->
-    <div style="display: flex; flex-direction: column; gap: 14px;">
-
-      <!-- 上段: GitHub Pages (Web Hosting) -->
-      <div class="group-box box-hosting" style="flex: 0.38;">
-        <div class="box-tab">🌐 Web Hosting 側</div>
-        <div class="box-subtitle">GitHub Pages Global CDN (静的配信サーバー)</div>
-
-        <div style="display: flex; align-items: center; justify-content: space-between;">
-          <div style="display: flex; align-items: center; gap: 14px;">
-            <!-- Cloud Icon SVG -->
-            <svg width="60" height="42" viewBox="0 0 60 42" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M46 36 H14 C7.37 36 2 30.63 2 24 C2 17.86 6.63 12.8 12.63 12.08 C14.37 5.17 20.61 0 28 0 C36.84 0 44 7.16 44 16 C44 16.68 43.96 17.35 43.88 18.01 C50.72 18.66 56 24.38 56 31.43 C56 38.37 50.37 44 43.43 44" fill="#0284C7" opacity="0.15"/>
-              <path d="M44 32 H14 C8.48 32 4 27.52 4 22 C4 16.9 7.82 12.69 12.8 12.07 C14.33 5.92 19.86 1.33 26.4 1.33 C34.2 1.33 40.6 7.4 41 15.15 C46.7 15.7 51 20.5 51 26.33 C51 32.22 46.22 37 40.33 37" stroke="#0284C7" stroke-width="2.5" fill="#E0F2FE"/>
-              <path d="M26 15 L26 27 M21 22 L26 27 L31 22" stroke="#0369A1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <div>
-              <div style="font-size: 13px; font-weight: 800; color: #0369A1;">https://fcbenten.github.io/team-management/</div>
-              <div style="font-size: 10.5px; color: #475569; margin-top: 2px;">
-                ・ホスティング配信ブランチ: <b>gh-pages</b> (ソースコード main と完全分離)<br>
-                ・配信資産: <b>index.html</b> (860KB) / <b>sw.js</b> / <b>manifest.json</b> / アイコン画像
-              </div>
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <span class="comm-arrow-badge">HTTPS GET</span>
-            <div style="font-size: 9.5px; color: #0284C7; font-weight: bold; margin-top: 3px;">応答速度: 約0.05〜0.1秒</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 下段: Supabase Cloud (Database & Storage) -->
-      <div class="group-box box-server" style="flex: 1;">
-        <div class="box-tab">🗄️ Database & BaaS 側 (Supabase Cloud)</div>
-        <div class="box-subtitle">東京リージョン (ap-northeast-1) / PostgreSQL 17.11 ＋ PostgREST API ＋ Storage</div>
-
-        <!-- サーバー内部構成 (グリッドレイアウト) -->
-        <div style="display: grid; grid-template-columns: 190px 1fr 140px; gap: 14px; height: 100%;">
-
-          <!-- 左列: ビジネスロジック / テーブル群 (ユーザー図の棚卸・入荷・出荷風) -->
-          <div style="display: flex; flex-direction: column;">
-            <div style="font-size: 11px; font-weight: 800; color: #B45309; margin-bottom: 6px;">■ 業務リレーショナルテーブル</div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>メンバー名簿</span><span class="logic-card-code">members</span>
-            </div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>予定出欠管理</span><span class="logic-card-code">attendance</span>
-            </div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>試合結果・戦績</span><span class="logic-card-code">matches</span>
-            </div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>得点・警告ログ</span><span class="logic-card-code">score_logs</span>
-            </div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>活動記録・掲示板</span><span class="logic-card-code">bulletin_posts</span>
-            </div>
-            <div class="logic-card" style="border-left: 4px solid #F59E0B;">
-              <span>備品台帳・当番</span><span class="logic-card-code">equipment_*</span>
-            </div>
-          </div>
-
-          <!-- 中央列: サーバー内部機能 (Framework / RLS / 通信暗号化) -->
-          <div style="display: flex; flex-direction: column; justify-content: space-between;">
-            <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; border: 1px solid #FDE68A;">
-              <div style="font-size: 11px; font-weight: 800; color: #92400E; margin-bottom: 4px;">■ PostgREST API エンジン</div>
-              <div style="font-size: 10.5px; color: #451A03; line-height: 1.45;">
-                ・<b>Direct HTTPS REST通信</b> (全通信の90%以上)<br>
-                ・<b>JWT Bearer Token</b> による0秒認証照合<br>
-                ・<b>Row Level Security (RLS)</b> DB物理認可<br>
-                ・所要時間: <b>0.1〜0.3秒 (旧GAS比 20倍爆速)</b>
-              </div>
-            </div>
-
-            <div style="background: #FFFFFF; border-radius: 6px; padding: 10px; border: 1px solid #FDE68A; margin-top: 8px;">
-              <div style="font-size: 11px; font-weight: 800; color: #92400E; margin-bottom: 4px;">■ オブジェクトストレージ</div>
-              <div style="font-size: 10.5px; color: #451A03; line-height: 1.45;">
-                ・バケット名: <b>member-avatars</b><br>
-                ・メンバーの顔写真・アイコン画像の直接CDN配信<br>
-                ・アップロード時: クライアント直接HTTPS POST
-              </div>
-            </div>
-
-            <!-- 赤矢印ラベル（端末からの直接通信） -->
-            <div style="margin-top: 8px; text-align: center;">
-              <span class="comm-arrow-badge" style="background: #DC2626;">
-                ◀ Direct HTTPS REST (0.1〜0.3s) ▶
-              </span>
-              <div style="font-size: 9.5px; color: #991B1B; font-weight: bold; margin-top: 2px;">★ 全業務データ直接読み書き ★</div>
-            </div>
-          </div>
-
-          <!-- 右列: サーバーラック ＆ DB円柱イラスト -->
-          <div class="illustration-center" style="justify-content: space-around;">
-            <!-- Server Rack SVG -->
-            <svg width="75" height="95" viewBox="0 0 75 95" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="5" width="65" height="85" rx="4" fill="#1E293B" stroke="#475569" stroke-width="2"/>
-              <!-- Server Trays -->
-              <rect x="10" y="12" width="55" height="12" rx="2" fill="#334155"/>
-              <circle cx="16" cy="18" r="2" fill="#22C55E"/>
-              <circle cx="23" cy="18" r="2" fill="#38BDF8"/>
-              <line x1="32" y1="18" x2="60" y2="18" stroke="#64748B" stroke-width="2"/>
-
-              <rect x="10" y="28" width="55" height="12" rx="2" fill="#334155"/>
-              <circle cx="16" cy="34" r="2" fill="#22C55E"/>
-              <circle cx="23" cy="34" r="2" fill="#22C55E"/>
-              <line x1="32" y1="34" x2="60" y2="34" stroke="#64748B" stroke-width="2"/>
-
-              <rect x="10" y="44" width="55" height="12" rx="2" fill="#334155"/>
-              <circle cx="16" cy="50" r="2" fill="#22C55E"/>
-              <circle cx="23" cy="50" r="2" fill="#F59E0B"/>
-              <line x1="32" y1="50" x2="60" y2="50" stroke="#64748B" stroke-width="2"/>
-
-              <rect x="10" y="60" width="55" height="12" rx="2" fill="#334155"/>
-              <circle cx="16" cy="66" r="2" fill="#22C55E"/>
-              <circle cx="23" cy="66" r="2" fill="#38BDF8"/>
-              <line x1="32" y1="66" x2="60" y2="66" stroke="#64748B" stroke-width="2"/>
-
-              <rect x="10" y="76" width="55" height="8" rx="2" fill="#0F172A"/>
-            </svg>
-            <div class="device-caption" style="font-size: 10px;">Cloud Server</div>
-
-            <!-- Database Cylinder SVG -->
-            <svg width="75" height="70" viewBox="0 0 75 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <!-- Cylinder base layer 3 -->
-              <path d="M10 40 C10 48 65 48 65 40 L65 52 C65 60 10 60 10 52 Z" fill="#D97706" stroke="#B45309" stroke-width="1.5"/>
-              <!-- Cylinder base layer 2 -->
-              <path d="M10 26 C10 34 65 34 65 26 L65 38 C65 46 10 46 10 38 Z" fill="#F59E0B" stroke="#B45309" stroke-width="1.5"/>
-              <!-- Cylinder top layer 1 -->
-              <path d="M10 12 C10 20 65 20 65 12 L65 24 C65 32 10 32 10 24 Z" fill="#FDE68A" stroke="#B45309" stroke-width="1.5"/>
-              <!-- Top ellipse -->
-              <ellipse cx="37.5" cy="12" rx="27.5" ry="8" fill="#FEF3C7" stroke="#B45309" stroke-width="1.5"/>
-              <text x="37.5" y="15" font-size="8.5" font-weight="bold" fill="#78350F" text-anchor="middle">PostgreSQL</text>
-            </svg>
-            <div class="device-caption" style="font-size: 10px;">PostgreSQL 17</div>
-          </div>
-
-        </div>
-
-      </div>
-
+    <!-- 縦矢印 -->
+    <div class="item-down-arrow">
+      <svg width="12" height="18" viewBox="0 0 12 18" fill="none">
+        <path d="M6 0 V14 M2 10 L6 14 L10 10" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
 
-    <!-- ========================================================
-         3. 右側: 特権代行 Server ＆ 外部連携 側 (Google Cloud)
-         ======================================================== -->
-    <div style="display: flex; flex-direction: column; gap: 14px;">
-
-      <!-- 上段: Google Apps Script (特権代行) -->
-      <div class="group-box box-external" style="flex: 1.15;">
-        <div class="box-tab">⚙️ Application Server 側</div>
-        <div class="box-subtitle">Google Apps Script (GAS) サーバーレス特権代行</div>
-
-        <!-- スクリプトアイコン ＆ 説明 -->
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;">
-          <svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="45" height="45" rx="8" fill="#7C3AED"/>
-            <path d="M12 15 L20 22.5 L12 30" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="22" y1="30" x2="32" y2="30" stroke="#FDE68A" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <div>
-            <div style="font-size: 12.5px; font-weight: 800; color: #6D28D9;">GAS Web API (固定デプロイ)</div>
-            <div style="font-size: 10px; color: #64748B;">旧スプシ処理を全廃した特権代行API</div>
-          </div>
-        </div>
-
-        <div class="logic-card" style="border-left: 4px solid #A855F7;">
-          <span>カレンダー予定取得・同期</span>
-          <span class="logic-card-code">api_events.js</span>
-        </div>
-        <div class="logic-card" style="border-left: 4px solid #A855F7;">
-          <span>Google OAuth 2.0 コード交換</span>
-          <span class="logic-card-code">api_auth.js</span>
-        </div>
-        <div class="logic-card" style="border-left: 4px solid #A855F7;">
-          <span>カレンダーAPI仲介</span>
-          <span class="logic-card-code">calendar_service.js</span>
-        </div>
-        <div class="logic-card" style="border-left: 4px solid #A855F7;">
-          <span>OAuthトークンDB保管</span>
-          <span class="logic-card-code">supabase_service.js</span>
-        </div>
-
-        <div style="background: #FFFFFF; border-radius: 6px; padding: 8px; border: 1px solid #E9D5FF; margin-top: auto;">
-          <div style="font-size: 10.5px; font-weight: 800; color: #6D28D9;">🔐 Script Properties 安全隔離</div>
-          <div style="font-size: 9.5px; color: #4B5563; line-height: 1.4;">
-            Google OAuth Client Secret および Supabase Service Key をサーバー環境変数へ隠蔽しコードから完全除去。
-          </div>
-        </div>
+    <!-- 2. データベース (Database) -->
+    <div class="feature-item">
+      <div class="feature-icon-box icon-green">
+        <!-- DB円柱アイコン -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <ellipse cx="12" cy="6" rx="8" ry="3" stroke="#10B981" stroke-width="2"/>
+          <path d="M4 6 V12 C4 13.66 7.58 15 12 15 C16.42 15 20 13.66 20 12 V6" stroke="#10B981" stroke-width="2"/>
+          <path d="M4 12 V18 C4 19.66 7.58 21 12 21 C16.42 21 20 19.66 20 18 V12" stroke="#10B981" stroke-width="2"/>
+        </svg>
       </div>
-
-      <!-- 下段: Google Workspace (外部カレンダー原本) -->
-      <div class="group-box" style="flex: 0.85; background: #EFF6FF; border: 2px solid #3B82F6;">
-        <div class="box-tab" style="background: #3B82F6; color: #FFFFFF;">☁️ External Cloud 側</div>
-        <div class="box-subtitle">Google Workspace (外部公式サービス)</div>
-
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-          <!-- Calendar Icon SVG -->
-          <svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="5" y="8" width="35" height="32" rx="6" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
-            <rect x="5" y="8" width="35" height="10" rx="6" fill="#2563EB"/>
-            <line x1="14" y1="4" x2="14" y2="10" stroke="#1E40AF" stroke-width="3" stroke-linecap="round"/>
-            <line x1="31" y1="4" x2="31" y2="10" stroke="#1E40AF" stroke-width="3" stroke-linecap="round"/>
-            <!-- Grid dots -->
-            <rect x="11" y="23" width="5" height="4" rx="1" fill="#93C5FD"/>
-            <rect x="20" y="23" width="5" height="4" rx="1" fill="#2563EB"/>
-            <rect x="29" y="23" width="5" height="4" rx="1" fill="#93C5FD"/>
-            <rect x="11" y="31" width="5" height="4" rx="1" fill="#93C5FD"/>
-            <rect x="20" y="31" width="5" height="4" rx="1" fill="#93C5FD"/>
-            <rect x="29" y="31" width="5" height="4" rx="1" fill="#10B981"/>
-          </svg>
-          <div>
-            <div style="font-size: 12px; font-weight: 800; color: #1E40AF;">Google カレンダー (原本)</div>
-            <div style="font-size: 10px; color: #4B5563;">FC Benten チーム共有カレンダー</div>
-          </div>
-        </div>
-
-        <div style="font-size: 10px; color: #1E3A8A; line-height: 1.45; background: #FFFFFF; border-radius: 6px; padding: 8px; border: 1px solid #BFDBFE;">
-          ・練習、TRM、公式戦の予定原本<br>
-          ・出欠状況 (Accepted/Declined) 反映<br>
-          ・Google OAuth 2.0 による本人確認
-        </div>
-
-        <div style="margin-top: 6px; text-align: right;">
-          <span class="comm-arrow-label">Google API v3 (OAuth 2.0)</span>
-        </div>
-      </div>
-
+      <div class="feature-title">データベース</div>
+      <div class="feature-sub">(Database)</div>
+      <div class="feature-desc">PostgreSQL 17 / PostgREST (0.1〜0.3s)</div>
     </div>
 
+    <!-- 縦矢印 -->
+    <div class="item-down-arrow">
+      <svg width="12" height="18" viewBox="0 0 12 18" fill="none">
+        <path d="M6 0 V14 M2 10 L6 14 L10 10" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- 3. ストレージ (Storage) -->
+    <div class="feature-item">
+      <div class="feature-icon-box icon-green">
+        <!-- ドキュメント/画像アイコン -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <path d="M14 2 H6 C4.9 2 4 2.9 4 4 V20 C4 21.1 4.9 22 6 22 H18 C19.1 22 20 21.1 20 20 V8 L14 2 Z" stroke="#10B981" stroke-width="2"/>
+          <path d="M14 2 V8 H20" stroke="#10B981" stroke-width="2"/>
+          <circle cx="10" cy="14" r="2" fill="#10B981"/>
+          <path d="M6 19 L9 15 L12 18 L15 14 L18 18" stroke="#10B981" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="feature-title">ストレージ</div>
+      <div class="feature-sub">(Storage)</div>
+      <div class="feature-desc">プロフィール画像の保存 (CDN)</div>
+    </div>
   </div>
 
-  <!-- 下部スペック一覧表（ユーザー画像の下部赤見出しスタイルに完全準拠） -->
-  <div class="specs-footer">
-    <div class="spec-col">
-      <div class="spec-header">ホスティング基盤</div>
-      <div class="spec-content">
-        <b>GitHub Pages (Global CDN)</b><br>
-        配信ブランチ: gh-pages<br>
-        URL: fcbenten.github.io/team-management<br>
-        Network-First キャッシュ自動更新
-      </div>
+  <!-- 双方向水平矢印: Supabase ⇄ Google Cloud (参考画像準拠) -->
+  <div class="arrow-connector">
+    <svg width="48" height="24" viewBox="0 0 48 24" fill="none">
+      <path d="M6 12 H42 M14 4 L6 12 L14 20 M34 4 L42 12 L34 20" stroke="#9CA3AF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <!-- ==================== 4. Google Cloud / 特権代行 ==================== -->
+  <div class="arch-card card-google">
+    <!-- Google Cloud ロゴヘッダー (Firebaseロゴのポジション) -->
+    <div class="card-brand">
+      <!-- Google 4-color Cloud Icon -->
+      <svg width="32" height="26" viewBox="0 0 32 26" fill="none">
+        <path d="M25 21 H9 C5.13 21 2 17.87 2 14 C2 10.42 4.7 7.48 8.2 7.05 C9.2 3.02 12.8 0 17.2 0 C22.4 0 26.6 4.18 26.6 9.33 C26.6 9.73 26.58 10.12 26.53 10.5 C29.6 11.2 32 13.9 32 17.15 C32 21 28.9 21 25 21 Z" fill="#4285F4"/>
+        <path d="M17.2 0 C15.5 0 13.9 0.45 12.5 1.25 L16.8 12.5 H26.6 C26.6 4.18 22.4 0 17.2 0 Z" fill="#EA4335" opacity="0.9"/>
+        <path d="M12.5 1.25 C9.8 2.8 8.2 5.7 8.2 7.05 L13 14 L16.8 12.5 L12.5 1.25 Z" fill="#FBBC05"/>
+        <path d="M26.6 9.33 C26.6 9.73 26.58 10.12 26.53 10.5 L19 15 L25 21 C28.9 21 32 18.5 32 17.15 C32 13.9 29.6 11.2 26.6 9.33 Z" fill="#34A853"/>
+      </svg>
+      <span class="brand-text" style="color: #374151; font-size: 19px;">Google Cloud</span>
     </div>
-    <div class="spec-col">
-      <div class="spec-header">データベース基盤</div>
-      <div class="spec-content">
-        <b>Supabase (PostgreSQL 17.11)</b><br>
-        リージョン: 東京 (ap-northeast-1)<br>
-        PostgREST 直接通信 (0.1〜0.3秒)<br>
-        Row Level Security (RLS) 認可保護
+
+    <!-- 1. 実行処理 (CloudFunctionsのポジション) -->
+    <div class="feature-item">
+      <div class="feature-icon-box icon-blue">
+        <!-- 実行関数 / コードアイコン (Cloud Functions 風) -->
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="4" width="20" height="16" rx="6" fill="#2563EB"/>
+          <path d="M8 12 L10 10 M8 12 L10 14" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M16 12 L14 10 M16 12 L14 14" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="1" fill="#FFFFFF"/>
+        </svg>
       </div>
+      <div class="feature-title">実行処理</div>
+      <div class="feature-sub">(Google Apps Script)</div>
+      <div class="feature-desc">特権代行 / カレンダー同期・OAuth交換</div>
     </div>
-    <div class="spec-col">
-      <div class="spec-header">フロントエンド技術</div>
-      <div class="spec-content">
-        <b>Pure HTML5 / CSS3 / Vanilla JS</b><br>
-        Single Page Application (SPA)<br>
-        0秒楽観的UIレンダリング<br>
-        Service Worker (sw.js) PWA起動
-      </div>
+
+    <!-- 縦矢印 -->
+    <div class="item-down-arrow">
+      <svg width="12" height="18" viewBox="0 0 12 18" fill="none">
+        <path d="M6 0 V14 M2 10 L6 14 L10 10" stroke="#9CA3AF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     </div>
-    <div class="spec-col">
-      <div class="spec-header">特権代行サーバー</div>
-      <div class="spec-content">
-        <b>Google Apps Script (GAS)</b><br>
-        固定デプロイID (URL不変運用)<br>
-        Google Calendar API v3 連携<br>
-        Script Properties 秘密鍵安全隔離
+
+    <!-- 2. チームカレンダー (Cloud Messagingのポジション) -->
+    <div class="feature-item">
+      <div class="feature-icon-box icon-amber">
+        <!-- Google カレンダーアイコン -->
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="5" width="18" height="16" rx="3" fill="#FFFFFF" stroke="#EA4335" stroke-width="2"/>
+          <rect x="3" y="5" width="18" height="5" rx="2" fill="#EA4335"/>
+          <line x1="8" y1="2" x2="8" y2="6" stroke="#4B5563" stroke-width="2" stroke-linecap="round"/>
+          <line x1="16" y1="2" x2="16" y2="6" stroke="#4B5563" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="8" cy="13" r="1.2" fill="#3B82F6"/>
+          <circle cx="12" cy="13" r="1.2" fill="#3B82F6"/>
+          <circle cx="16" cy="13" r="1.2" fill="#3B82F6"/>
+          <circle cx="8" cy="17" r="1.2" fill="#3B82F6"/>
+          <circle cx="12" cy="17" r="1.2" fill="#10B981"/>
+        </svg>
       </div>
-    </div>
-    <div class="spec-col">
-      <div class="spec-header">外部連携クラウド</div>
-      <div class="spec-content">
-        <b>Google Workspace</b><br>
-        チーム共有 Google カレンダー<br>
-        Google OAuth 2.0 認証基盤<br>
-        iCal 形式予定・出欠ステータス同期
-      </div>
+      <div class="feature-title">チームカレンダー</div>
+      <div class="feature-sub">(Google Calendar API)</div>
+      <div class="feature-desc">練習・試合予定の原本同期</div>
     </div>
   </div>
 
@@ -637,7 +426,7 @@ def generate_diagram_image():
     try:
         with sync_playwright() as p:
             browser = p.chromium.launch()
-            page = browser.new_page(viewport={"width": 1400, "height": 980})
+            page = browser.new_page(viewport={"width": 1280, "height": 720})
             page.goto(f"file:///{html_path.replace(os.sep, '/')}")
             page.wait_for_timeout(300)
             page.screenshot(path=png_path, full_page=True)

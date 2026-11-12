@@ -52,11 +52,11 @@ def build_grid_flow_sheet(wb):
     if os.path.exists(png_path):
         img = Image(png_path)
         img.width = 1180
-        img.height = 826
+        img.height = 663
         ws.add_image(img, f"A{curr_r}")
 
     # 画像の高さに合わせて行の高さを確保
-    image_rows = 42
+    image_rows = 34
     for r in range(curr_r, curr_r + image_rows):
         ws.row_dimensions[r].height = 20
     curr_r += image_rows
