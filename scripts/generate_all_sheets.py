@@ -1017,7 +1017,13 @@ def run_generate():
         wb.save(output_docs)
         print("Local save OK.")
     except PermissionError:
-        print(f"WARNING: {output_docs} is currently locked (opened in Excel). Skipped overwrite.")
+        print(f"WARNING: {output_docs} is currently locked (opened in Excel).")
+        alt_docs = r"d:\app\TeamManagement\docs\FC_Benten_チーム管理システム_画面機能仕様書_最新版.xlsx"
+        try:
+            wb.save(alt_docs)
+            print(f"Saved to alternative local path: {alt_docs}")
+        except Exception as e:
+            pass
 
     if os.path.exists(r"H:\マイドライブ\app\TeamManagement"):
         print(f"Saving to Google Drive: {output_gdrive}...")
