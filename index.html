@@ -7661,11 +7661,15 @@ th.sort-active .sort-icon {
 .badge-role {
   display: inline-flex;
   align-items: center;
-  font-size: 0.70rem;
-  font-weight: 600;
-  padding: 1px 7px;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
   border-radius: 4px;
+  letter-spacing: 0.3px;
+  line-height: 1.3;
   white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .badge-role-daihyo,
@@ -7680,12 +7684,15 @@ th.sort-active .sort-icon {
 .badge-pos {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   font-size: 0.68rem;
   font-weight: 700;
   padding: 1px 6px;
   border-radius: 4px;
   letter-spacing: 0.3px;
   line-height: 1.3;
+  white-space: nowrap;
+  box-sizing: border-box;
 }
 
 .badge-pos-fp {
@@ -21253,8 +21260,8 @@ function toggleRankList(type) {
     currentPersonalStats = Object.values(statsMap).filter(p => typeof isPastMember === 'function' ? !isPastMember(p.name) : true);
 
     // 選択されたシーズンのカレンダー出欠データソース
-    const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season]) 
-      ? window.calendarAttendanceCache[season] 
+    const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season])
+      ? window.calendarAttendanceCache[season]
       : window.calendarAttendanceData;
     const pMap = (attSource && attSource.players) ? attSource.players : {};
 
@@ -21653,8 +21660,8 @@ function toggleRankList(type) {
     let catStat = null;
 
     // 選択されたシーズンのカレンダー出欠データを検索
-    const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season]) 
-      ? window.calendarAttendanceCache[season] 
+    const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season])
+      ? window.calendarAttendanceCache[season]
       : window.calendarAttendanceData;
 
     if (attSource && attSource.players) {
