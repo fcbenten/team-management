@@ -51,12 +51,12 @@ def build_grid_flow_sheet(wb):
     png_path = generate_diagram_image()
     if os.path.exists(png_path):
         img = Image(png_path)
-        img.width = 1180
-        img.height = 620
+        img.width = 1560
+        img.height = 760
         ws.add_image(img, f"A{curr_r}")
 
-    # 画像の高さに合わせて行の高さを確保
-    image_rows = 31
+    # 画像の高さに合わせて行の高さを確保 (760px = 20px * 38行)
+    image_rows = 38
     for r in range(curr_r, curr_r + image_rows):
         ws.row_dimensions[r].height = 20
     curr_r += image_rows
@@ -88,16 +88,16 @@ def build_grid_flow_sheet(wb):
     servers_data = [
         ("1", "ユーザー端末\n(Client)", "スマートフォン (iOS / Android)\nPC ブラウザ", "・Webアプリ (PWA / SPA)\n・LINEアプリ (部員のスマホ)",
          "・PWA画面の0秒レンダリング・楽観的UI更新\n・Supabase JWTセッション管理\n・LINEアプリでの雨天中止/リマインド通知受信",
-         "・GitHub Pages から配信され端末上で実行\n・WebアプリからSupabaseおよびGoogleへ直接通信\n・部員個人のスマホへLINEプッシュ着信"),
+         "・GitHub Pages から配信され端末上で実行\n・WebアプリからSupabaseへ直接CRUD通信\n・部員個人のスマホへLINEプッシュ着信"),
         ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(gh-pages ブランチ)", "https://fcbenten.github.io/team-management/\n・index.html (HTML/CSS/JSバンドル)\n・sw.js / manifest.json",
          "・★Webアプリ本体のホスティング・配信元★\n・ブラウザ初回アクセス時のPWA配信\n・Service Worker キャッシュによる高速ロード",
          "・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・SupabaseではなくGitHub Pagesにアプリが載っている\n・HTTPS GET による超高速配信 (0.05〜0.1秒)"),
         ("3", "クラウドデータベース\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
          "・★全業務データの保管・高速永続化 (90%以上)★\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
          "・アプリが載る場所ではなく『データ保管庫』\n・端末のWebアプリから直接REST通信 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護"),
-        ("4", "特権代行 ＆ 予定管理\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App (固定デプロイID)\n・Google カレンダー API v3\n・Google OAuth 2.0 認証基盤",
-         "・ブラウザから直接叩けないGoogle特権APIの代行\n・チーム共有カレンダーの予定一括取得・同期\n・LINE通知・プッシュ通知の自動配信トリガー",
-         "・端末のWebアプリと直接通信 (予定同期・OAuth)\n・OAuth Client Secret を Script Properties に安全隔離\n・Supabaseとは通信せずWebアプリの要求を代行"),
+        ("4", "特権代行 ＆ 予定管理\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App / 定期トリガー\n・Google カレンダー API v3\n・LINE Messaging API 連携基盤",
+         "・カレンダー原本データの同期 ＆ 予定一括取得\n・雨天中止や前日出欠リマインドの定期トリガー実行\n・LINE Messaging API への通知リクエスト発信",
+         "・Supabaseと連携しカレンダー原本とDBを相互同期\n・画面（Webアプリ）からは直接叩かずバックエンドで自律稼働\n・Script Properties で認証秘密鍵を安全に隠蔽・隔離"),
         ("5", "通知配信プラットフォーム\n(LINE Platform)", "LINE Corporation\nGlobal Cloud", "LINE Messaging API\n(FC Benten 公式アカウント)",
          "・雨天中止などの緊急一斉通知\n・活動前日の出欠未回答者リマインド配信\n・重要アナウンスのプッシュ着信",
          "・GASからWebhook経由で通知発信\n・部員のスマートフォン(LINEアプリ)へ直接プッシュ着信\n・メールよりも圧倒的に高い即時確認率")
@@ -151,8 +151,8 @@ def build_grid_flow_sheet(wb):
          "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "0.1〜0.3秒\n(超高速 爆速化)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
         ("COMM-03", "ユーザー端末 [Webアプリ] ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
          "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "0.2〜0.4秒\n(高速CDN)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
-        ("COMM-04", "ユーザー端末 [Webアプリ] ⇄ Google サービス", "HTTPS POST\n(JSON RPC / Bridge)", "なし (関数名＋引数ペイロード)\nOAuth 認可コード",
-         "Google カレンダー予定一括取得・同期要求、OAuth 認可コード交換", "0.8〜1.2秒\n(Google基盤依存)", "SCR01: 初回Googleアカウント連携\nSCR07: 予定作成・同期"),
+        ("COMM-04", "Supabase ⇄ Google サービス (GAS)", "HTTPS Direct / Webhook", "Service Role Key / API Key",
+         "Google カレンダー予定原本とDBの双方向同期、特権予定更新", "0.4〜0.8秒\n(クラウド間同期)", "カレンダー予定原本の自動同期\n定期トリガー・特権処理"),
         ("COMM-05", "Google Apps Script ⇄ Google カレンダー", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
          "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: チーム公式カレンダーの原本同期"),
         ("COMM-06", "Google Apps Script ➔ LINE Platform", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\n(Bearer認証)",
