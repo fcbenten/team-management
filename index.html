@@ -1315,6 +1315,52 @@ select:focus, input:focus, textarea:focus {
 }
 .modal-overlay.active { display: flex !important; }
 
+/* 全画面共通 汎用ダイアログ (appConfirm / appAlert) */
+.app-dialog-overlay {
+  z-index: 10000 !important;
+}
+
+.app-dialog-icon-wrap {
+  margin: 0 auto 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--primary);
+}
+
+.app-dialog-icon-wrap.is-danger {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: var(--danger) !important;
+}
+
+.app-dialog-icon-wrap.is-success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: var(--success) !important;
+}
+
+.app-dialog-icon {
+  font-size: 28px;
+}
+
+.app-dialog-message {
+  white-space: pre-line;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+
+.app-dialog-footer-center {
+  justify-content: center;
+}
+
+.app-dialog-btn-single {
+  min-width: 120px;
+  flex: none;
+}
+
 @media (max-width: 767px) {
   .modal-overlay {
     padding: max(16px, env(safe-area-inset-top, 0px) + 8px) 12px max(16px, env(safe-area-inset-bottom, 0px) + 8px) !important;
@@ -2764,6 +2810,12 @@ html.no-scroll {
   align-items: start;
 }
 
+.home-column-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 @media (min-width: 840px) {
   .home-grid-layout {
     grid-template-columns: 1fr 1fr;
@@ -3049,6 +3101,75 @@ html.no-scroll {
 .login-register-link:hover {
   text-decoration: underline;
   opacity: 0.85;
+}
+
+/* Google連携中ローディングカード */
+.oauth-loading-card {
+  display: none;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.oauth-loading-subtitle {
+  margin-bottom: 24px;
+}
+
+.oauth-loading-spinner {
+  margin: 0 auto 20px;
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(37, 99, 235, 0.2);
+  border-top-color: var(--primary, #2563eb);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.oauth-loading-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}
+
+/* Google連携後パスワード設定カード */
+.oauth-password-card {
+  display: none;
+}
+
+.oauth-alert-margin {
+  margin-bottom: 20px;
+}
+
+.oauth-account-box {
+  background: var(--bg-body, #f8fafc);
+  padding: 12px 16px;
+  border-radius: var(--radius, 8px);
+  border: 1px solid var(--border-color, #e2e8f0);
+  margin-bottom: 16px;
+}
+
+.oauth-account-badge {
+  font-size: 0.76rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.oauth-account-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-heading, #1e293b);
+}
+
+.oauth-account-email {
+  font-size: 0.85rem;
+  color: var(--text-muted, #475569);
+}
+
+.oauth-global-msg {
+  margin-bottom: 16px;
+}
+
+.oauth-btn-full {
+  width: 100%;
 }
 </style>
 
@@ -8562,6 +8683,12 @@ a.btn-member-modal-save:hover {
   line-height: 1.5;
 }
 
+.member-delete-warning-text {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
 /* 左右均等ボタン配置 (キャンセル / 削除を実行: 50% 50%) */
 .delete-modal-footer {
   display: grid !important;
@@ -9182,6 +9309,10 @@ a.btn-member-modal-save:hover {
   transition: all 0.15s ease;
 }
 
+.btn-equipment-danger-link .material-symbols-outlined {
+  font-size: 18px;
+}
+
 .btn-equipment-danger-link:hover {
   background: #fef2f2;
   color: #b91c1c;
@@ -9615,6 +9746,23 @@ a.btn-member-modal-save:hover {
     flex: 1 !important;
     justify-content: center !important;
   }
+}
+
+/* 備品削除確認モーダル固有スタイル */
+.delete-confirm-icon-wrap.is-danger-icon {
+  background: #fef2f2 !important;
+  border-color: #fee2e2 !important;
+  color: var(--danger, #dc2626) !important;
+}
+
+.delete-confirm-icon-wrap.is-danger-icon .material-symbols-outlined {
+  font-size: 36px;
+}
+
+.equipment-delete-warning-text {
+  display: block;
+  margin-top: 8px;
+  line-height: 1.5;
 }
 </style>
 
@@ -10687,7 +10835,7 @@ textarea.comment-textarea:active {
 <!-- =========================================
      トースト通知（廃止）
      ========================================= -->
-<div id="app-toast" style="display: none !important;" aria-hidden="true"></div>
+<div id="app-toast" class="hidden" aria-hidden="true"></div>
 
 <!-- =========================================
      プロフィール確認・パスワード変更モーダル
@@ -10879,14 +11027,14 @@ textarea.comment-textarea:active {
 <!-- =========================================
      全画面共通 汎用カスタム確認ダイアログ (confirm 代替)
      ========================================= -->
-<div id="appConfirmModal" class="modal-overlay" style="display: none; z-index: 10000;" onclick="appConfirmModalCancel(event)">
+<div id="appConfirmModal" class="modal-overlay app-dialog-overlay" onclick="appConfirmModalCancel(event)">
   <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
     <div class="modal-body logout-modal-body">
-      <div id="appConfirmIconWrap" style="margin: 0 auto 12px; display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: var(--primary);">
-        <span id="appConfirmIcon" class="material-symbols-outlined" style="font-size: 28px;">help_outline</span>
+      <div id="appConfirmIconWrap" class="app-dialog-icon-wrap">
+        <span id="appConfirmIcon" class="material-symbols-outlined app-dialog-icon">help_outline</span>
       </div>
       <div id="appConfirmTitle" class="logout-modal-title">確認</div>
-      <div id="appConfirmMessage" class="logout-modal-desc" style="white-space: pre-line; line-height: 1.6; margin-top: 6px;"></div>
+      <div id="appConfirmMessage" class="logout-modal-desc app-dialog-message"></div>
     </div>
     <div class="modal-footer logout-modal-footer">
       <button type="button" id="appConfirmBtnCancel" class="btn-cancel-action logout-btn" onclick="handleAppConfirmResult(false)">キャンセル</button>
@@ -10898,17 +11046,17 @@ textarea.comment-textarea:active {
 <!-- =========================================
      全画面共通 汎用カスタム通知ダイアログ (alert 代替)
      ========================================= -->
-<div id="appAlertModal" class="modal-overlay" style="display: none; z-index: 10000;" onclick="appAlertModalClose(event)">
+<div id="appAlertModal" class="modal-overlay app-dialog-overlay" onclick="appAlertModalClose(event)">
   <div class="modal-content profile-modal-content logout-modal-content" onclick="event.stopPropagation()">
     <div class="modal-body logout-modal-body">
-      <div id="appAlertIconWrap" style="margin: 0 auto 12px; display: flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba(59, 130, 246, 0.1); color: var(--primary);">
-        <span id="appAlertIcon" class="material-symbols-outlined" style="font-size: 28px;">info</span>
+      <div id="appAlertIconWrap" class="app-dialog-icon-wrap">
+        <span id="appAlertIcon" class="material-symbols-outlined app-dialog-icon">info</span>
       </div>
       <div id="appAlertTitle" class="logout-modal-title">お知らせ</div>
-      <div id="appAlertMessage" class="logout-modal-desc" style="white-space: pre-line; line-height: 1.6; margin-top: 6px;"></div>
+      <div id="appAlertMessage" class="logout-modal-desc app-dialog-message"></div>
     </div>
-    <div class="modal-footer logout-modal-footer" style="justify-content: center;">
-      <button type="button" id="appAlertBtnOk" class="btn-primary-action logout-btn" style="min-width: 120px;" onclick="closeAppAlertModal()">閉じる</button>
+    <div class="modal-footer logout-modal-footer app-dialog-footer-center">
+      <button type="button" id="appAlertBtnOk" class="btn-primary-action logout-btn app-dialog-btn-single" onclick="closeAppAlertModal()">閉じる</button>
     </div>
   </div>
 </div>
@@ -11064,7 +11212,7 @@ textarea.comment-textarea:active {
        ログイン画面（SPAカード切り替えオーバーレイ）
        Gmailアドレス・パスワード認証、ログイン状態保持、新規登録リンク
        ========================================= -->
-<div id="loginScreen" class="auth-container login-overlay" style="display: none;">
+<div id="loginScreen" class="auth-container login-overlay">
 
   <!-- ログインカード -->
   <div id="loginCard" class="auth-card">
@@ -11101,28 +11249,28 @@ textarea.comment-textarea:active {
   </div>
 
   <!-- Google連携中ローディングオーバーレイ -->
-  <div id="oauthLoadingOverlay" class="auth-card" style="display: none; text-align: center; padding: 40px 24px;">
+  <div id="oauthLoadingOverlay" class="auth-card oauth-loading-card">
     <div class="auth-title">FC Benten</div>
-    <div class="auth-subtitle" style="margin-bottom: 24px;">Googleアカウント連携処理中</div>
-    <div class="spinner" style="margin: 0 auto 20px; width: 36px; height: 36px; border: 3px solid rgba(37,99,235,0.2); border-top-color: #2563eb; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-    <div id="oauthLoadingText" style="font-size: 0.9rem; color: var(--text-muted);">カレンダー連携情報を同期しています...</div>
+    <div class="auth-subtitle oauth-loading-subtitle">Googleアカウント連携処理中</div>
+    <div class="spinner oauth-loading-spinner"></div>
+    <div id="oauthLoadingText" class="oauth-loading-text">カレンダー連携情報を同期しています...</div>
   </div>
 
   <!-- Google連携成功後の初期パスワード設定カード -->
-  <div id="oauthPasswordCard" class="auth-card" style="display: none;">
+  <div id="oauthPasswordCard" class="auth-card oauth-password-card">
     <div class="auth-title">FC Benten</div>
     <div class="auth-subtitle">Google連携完了・パスワード設定</div>
 
-    <div class="alert-box alert-success" style="margin-bottom: 20px;">
+    <div class="alert-box alert-success oauth-alert-margin">
       Googleカレンダーとの連携が完了しました！<br>
       今後は設定するパスワードでアプリにログインできます。
     </div>
 
     <form id="oauthPasswordForm" novalidate onsubmit="handleOAuthPasswordSubmit(event)" autocomplete="off" class="login-text-left">
-      <div class="form-group" style="background: #f8fafc; padding: 12px 16px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 16px;">
-        <div style="font-size: 0.76rem; color: #64748b; font-weight: bold; margin-bottom: 4px;">連携アカウント</div>
-        <div id="oauthTargetName" style="font-size: 0.95rem; font-weight: bold; color: #1e293b;"></div>
-        <div id="oauthTargetEmail" style="font-size: 0.85rem; color: #475569;"></div>
+      <div class="form-group oauth-account-box">
+        <div class="oauth-account-badge">連携アカウント</div>
+        <div id="oauthTargetName" class="oauth-account-name"></div>
+        <div id="oauthTargetEmail" class="oauth-account-email"></div>
       </div>
 
       <div class="form-group">
@@ -11137,9 +11285,9 @@ textarea.comment-textarea:active {
         <div id="err-oauthConfirmPwInput" class="field-error-msg hidden"></div>
       </div>
 
-      <div id="oauthPwGlobalMsg" class="alert-box alert-error hidden" style="margin-bottom: 16px;"></div>
+      <div id="oauthPwGlobalMsg" class="alert-box alert-error hidden oauth-global-msg"></div>
 
-      <button type="submit" id="oauthPwSubmitBtn" class="btn" style="width: 100%;">設定完了してログイン</button>
+      <button type="submit" id="oauthPwSubmitBtn" class="btn oauth-btn-full">設定完了してログイン</button>
     </form>
   </div>
 </div>
@@ -11156,7 +11304,7 @@ textarea.comment-textarea:active {
            </div>
            
            <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
-           <div class="sidebar-mobile-user" id="headerUserInfoMobile" style="display: none;">
+           <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
              <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
                <span class="material-symbols-outlined" id="headerUserIcon">person</span>
                <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
@@ -11261,7 +11409,7 @@ textarea.comment-textarea:active {
       <div class="home-section-header">
         <div class="home-section-title">
           <span class="material-symbols-outlined text-muted">leaderboard</span>
-          <span id="homeSeasonTitle">2026年度 チーム戦績</span>
+          <span id="homeSeasonTitle">今シーズン チーム戦績</span>
         </div>
       </div>
 
@@ -11412,7 +11560,7 @@ textarea.comment-textarea:active {
       </div>
 
       <!-- 右カラム: 直近の試合結果 ＆ 最新の活動記録 -->
-      <div class="home-column-wrap" style="display: flex; flex-direction: column; gap: 20px;">
+      <div class="home-column-wrap">
         <!-- 直近の試合結果カード（スコア一覧と同一の試合結果カード形式） -->
         <div class="card-box home-section-card" id="homeRecentMatchSection">
           <div class="home-section-header">
@@ -11437,7 +11585,7 @@ textarea.comment-textarea:active {
         <div class="card-box home-section-card" id="homeRecentBulletinSection">
           <div class="home-section-header">
             <div class="home-section-title">
-              <span class="material-symbols-outlined text-muted" style="font-size: 18px;">article</span>
+              <span class="material-symbols-outlined text-muted">article</span>
               最新の活動記録
             </div>
             <a class="home-section-link" onclick="switchTab('bulletin')">活動記録 &rarr;</a>
@@ -12102,7 +12250,7 @@ textarea.comment-textarea:active {
         <!-- カレンダー操作ヘッダー -->
         <div class="cal-nav-row">
           <button class="cal-nav-btn" onclick="changeCalMonth(-1)">&lt;</button>
-          <div id="calMonthTitle" class="cal-month-title">2026年 8月</div>
+          <div id="calMonthTitle" class="cal-month-title"></div>
           <button class="cal-nav-btn" onclick="changeCalMonth(1)">&gt;</button>
           <button class="cal-today-btn" onclick="jumpCalToday()">今日</button>
         </div>
@@ -12696,7 +12844,7 @@ textarea.comment-textarea:active {
         <div class="delete-confirm-title" id="memberDeleteNameTitle">登録を削除しますか？</div>
         <div class="delete-confirm-desc" id="memberDeleteDesc">
           このメンバーの登録（連絡先・アカウント情報）を完全に削除します。<br>
-          <span class="text-xs text-muted" style="display:block;margin-top:8px;line-height:1.5;">
+          <span class="text-xs text-muted member-delete-warning-text">
             ※過去の試合結果や得点記録は残りますが、選手名は「不明」と表示されます。<br>
             ※記録に名前を残したい場合は、削除ではなく在籍ステータスを「OB」に変更してください。
           </span>
@@ -12977,7 +13125,7 @@ textarea.comment-textarea:active {
     <div class="modal-footer equipment-modal-footer">
       <div class="equipment-modal-footer-left">
         <button type="button" id="btnDeleteEquipment" class="btn-equipment-danger-link hidden" onclick="openEquipmentDeleteConfirmModal()">
-          <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+          <span class="material-symbols-outlined">delete</span>
           <span>備品を削除</span>
         </button>
       </div>
@@ -12995,13 +13143,13 @@ textarea.comment-textarea:active {
 <div id="equipmentDeleteModal" class="modal-overlay" onclick="closeEquipmentDeleteModal(event)">
   <div class="modal-content equipment-modal-content delete-confirm-content" onclick="event.stopPropagation()">
     <div class="modal-body delete-confirm-body text-center">
-      <div class="delete-confirm-icon-wrap" style="background:#fef2f2; border-color:#fee2e2; color:#dc2626;">
-        <span class="material-symbols-outlined" style="font-size:36px;">delete</span>
+      <div class="delete-confirm-icon-wrap is-danger-icon">
+        <span class="material-symbols-outlined">delete</span>
       </div>
       <div class="delete-confirm-title" id="equipmentDeleteTitle">備品を削除しますか？</div>
       <div class="delete-confirm-desc" id="equipmentDeleteDesc">
         「<span id="equipmentDeleteTargetName" class="font-bold"></span>」を管理リストから削除します。<br>
-        <span class="text-xs text-muted" style="display:block;margin-top:8px;line-height:1.5;">
+        <span class="text-xs text-muted equipment-delete-warning-text">
           ※削除すると元に戻せません。<br>
           ※現物の廃棄や紛失など、備品の管理を終了する場合に実行してください。
         </span>
@@ -13136,8 +13284,8 @@ textarea.comment-textarea:active {
     <div class="modal-header">
       <div class="bulletin-detail-header-badges">
         <span id="bdmCategoryBadge" class="category-badge"></span>
-        <span id="bdmPinnedBadge" class="bulletin-pinned-pill hidden" style="display: none;">
-          <span class="material-symbols-outlined" style="font-size:14px;">push_pin</span>
+        <span id="bdmPinnedBadge" class="bulletin-pinned-pill hidden">
+          <span class="material-symbols-outlined">push_pin</span>
           ホーム固定中
         </span>
       </div>
@@ -16050,33 +16198,23 @@ function showAppConfirm(options) {
       okBtn.textContent = okText;
       if (isDanger) {
         okBtn.className = 'btn-primary-action logout-btn logout-btn-danger';
-        okBtn.style.background = '#dc2626';
-        okBtn.style.color = '#ffffff';
       } else {
         okBtn.className = 'btn-primary-action logout-btn';
-        okBtn.style.background = '';
-        okBtn.style.color = '';
       }
     }
     if (cancelBtn) cancelBtn.textContent = cancelText;
     if (iconEl) iconEl.textContent = icon;
     if (iconWrap) {
-      if (isDanger) {
-        iconWrap.style.background = 'rgba(239, 68, 68, 0.1)';
-        iconWrap.style.color = '#ef4444';
-      } else {
-        iconWrap.style.background = 'rgba(59, 130, 246, 0.1)';
-        iconWrap.style.color = 'var(--primary)';
-      }
+      iconWrap.className = isDanger ? 'app-dialog-icon-wrap is-danger' : 'app-dialog-icon-wrap';
     }
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
   });
 }
 
 function handleAppConfirmResult(result) {
   const modal = document.getElementById('appConfirmModal');
-  if (modal) modal.style.display = 'none';
+  if (modal) modal.classList.remove('active');
   if (appConfirmResolver) {
     const fn = appConfirmResolver;
     appConfirmResolver = null;
@@ -16137,22 +16275,16 @@ function showAppAlert(options) {
     if (okBtn) okBtn.textContent = okText;
     if (iconEl) iconEl.textContent = icon;
     if (iconWrap) {
-      if (isError) {
-        iconWrap.style.background = 'rgba(239, 68, 68, 0.1)';
-        iconWrap.style.color = '#ef4444';
-      } else {
-        iconWrap.style.background = 'rgba(59, 130, 246, 0.1)';
-        iconWrap.style.color = 'var(--primary)';
-      }
+      iconWrap.className = isError ? 'app-dialog-icon-wrap is-danger' : 'app-dialog-icon-wrap';
     }
 
-    modal.style.display = 'flex';
+    modal.classList.add('active');
   });
 }
 
 function closeAppAlertModal() {
   const modal = document.getElementById('appAlertModal');
-  if (modal) modal.style.display = 'none';
+  if (modal) modal.classList.remove('active');
   if (appAlertResolver) {
     const fn = appAlertResolver;
     appAlertResolver = null;
@@ -17533,12 +17665,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     
     if (u && u.name) {
       if (pcNameText) pcNameText.textContent = u.name;
-      if (pcInfo) pcInfo.style.display = 'flex';
-      if (mobileInfo) mobileInfo.style.display = 'block';
+      if (mobileInfo) mobileInfo.classList.remove('hidden');
     } else {
       if (pcNameText) pcNameText.textContent = 'プロフィール';
-      if (pcInfo) pcInfo.style.display = 'flex';
-      if (mobileInfo) mobileInfo.style.display = 'none';
+      if (mobileInfo) mobileInfo.classList.add('hidden');
     }
 
     try { if (typeof renderHomePlayerHeader === 'function') renderHomePlayerHeader(); } catch (e) {}
