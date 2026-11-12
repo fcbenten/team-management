@@ -52,7 +52,7 @@ def build_grid_flow_sheet(wb):
     if os.path.exists(png_path):
         img = Image(png_path)
         img.width = 1180
-        img.height = 663
+        img.height = 661
         ws.add_image(img, f"A{curr_r}")
 
     # 画像の高さに合わせて行の高さを確保
@@ -96,11 +96,11 @@ def build_grid_flow_sheet(wb):
          "・全業務データの高速永続化 (90%以上の全通信)\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
          "・東京リージョン配置による爆速応答 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護\n・JWT Bearer トークンによる即時認証"),
         ("4", "特権代行サーバー\n(Google Apps Script)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App (固定デプロイID)\n・api_events.js / api_auth.js\n・calendar_service.js / supabase_service.js",
-         "・ブラウザから直接叩けないGoogle特権APIの代行\n・チーム共有カレンダーの予定一括取得・同期\n・Google OAuth 2.0 認可コード交換",
+         "・ブラウザから直接叩けないGoogle特権APIの代行\n・チーム共有カレンダーの予定一括取得・同期\n・LINE通知・プッシュ通知の自動配信トリガー",
          "・旧スプレッドシート処理を全廃し純API化\n・OAuth Client Secret を Script Properties に安全隔離\n・固定デプロイID (URL不変) による安定稼働"),
-        ("5", "外部クラウド\n(Google Workspace)", "Google Cloud Platform\nGlobal", "・FC Benten チーム共有 Google カレンダー\n・Google OAuth 2.0 認証基盤",
-         "・カレンダー予定データの原本保持\n・出席者ステータス (Accepted/Declined) の同期\n・初回Googleアカウント連携時の本人確認",
-         "・Google Calendar API v3 (OAuth 2.0 連携)\n・チームメンバー全員のGoogleカレンダーとリアルタイム同期")
+        ("5", "外部連携・通知\n(Google / LINE)", "Google Cloud / LINE Platform\nGlobal", "・FC Benten チーム共有 Google カレンダー\n・LINE Messaging API (公式アカウント)\n・Web Push API (ブラウザプッシュ)",
+         "・カレンダー予定データの原本保持\n・出席者ステータス (Accepted/Declined) の同期\n・雨天中止・出欠未回答・活動連絡の自動配信",
+         "・Google Calendar API v3 (OAuth 2.0 連携)\n・LINE公式アカウントから部員のLINEへダイレクト配信\n・DB更新をトリガーとした通知発信")
     ]
 
     for s_idx, s in enumerate(servers_data):
@@ -156,7 +156,9 @@ def build_grid_flow_sheet(wb):
         ("COMM-05", "Google Apps Script ⇄ Google カレンダー", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
          "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: スケジュール同期\n公式チームカレンダーへの予定書き込み"),
         ("COMM-06", "Google Apps Script ⇄ Supabase DB", "HTTPS REST\n(PATCH / POST)", "Supabase Service Role Key\n(特権内部APIキー)",
-         "system_user_tokens (Google OAuth リフレッシュトークンの暗号化永続化)", "0.2〜0.3秒\n(内部REST通信)", "SCR01: Google OAuth 初回連携時のトークン自動保管")
+         "system_user_tokens (Google OAuth リフレッシュトークンの暗号化永続化)", "0.2〜0.3秒\n(内部REST通信)", "SCR01: Google OAuth 初回連携時のトークン自動保管"),
+        ("COMM-07", "Google Apps Script ➔ LINE / Push", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\nVAPID認証キー",
+         "雨天中止連絡、前日出欠未回答リマインド、重要掲示板アナウンス", "0.3〜0.5秒\n(外部API送信)", "SCR07 (出欠リマインド)\nSCR09 (掲示板重要連絡)")
     ]
 
     for c_idx, c in enumerate(comms_data):
@@ -221,6 +223,14 @@ def build_grid_flow_sheet(wb):
             "【オフライン・電波微弱環境への対応】\n"
             "電波の届きにくいグラウンドや体育館でも、アプリ自体は 0.0 秒で瞬時に起動。\n"
             "出欠タップや掲示板ピン留めなどは「0秒楽観的UIレンダリング」により画面を即座に更新し、通信復帰後にバックグラウンドで自動同期。"
+        ),
+        (
+            "⑤ 外部連携・通知の疎結合設計（認証・ストレージの独立とDBトリガーの局所化）",
+            "【認証・ストレージの独立】\n"
+            "Supabase の「認証 (Auth)」および「ストレージ (Storage)」は、PWAクライアントとの直接通信のみで完結し、外部サービス（GoogleやLINE）とは一切通信しない完全独立構成。\n\n"
+            "【データベースを起点とした外部連携】\n"
+            "外部サービス（Google カレンダー API / LINE Messaging API / Web Push）と連携するのは「データベース (Database)」の変更（予定作成、出欠回答、雨天中止連絡）のみ。\n"
+            "実行処理（GAS / Webhook）を介して、チームカレンダーの原本同期や、部員のLINEへの自動プッシュ配信が安全・確実に実行される疎結合アーキテクチャ。"
         )
     ]
 
