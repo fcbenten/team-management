@@ -14145,21 +14145,6 @@ textarea.comment-textarea:active {
         }
 
         console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
-
-        // 3. バックグラウンドで GAS（スプレッドシート）にも同期（待たせない）
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'saveMatchData',
-              args: [payload]
-            })
-          }).catch(e => console.warn('[MatchSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[MatchSync] Kick failed:', syncErr);
-        }
-
         return "保存が完了しました！";
       },
 
@@ -14592,18 +14577,6 @@ textarea.comment-textarea:active {
           if (insErr) throw insErr;
         }
 
-        // バックグラウンドで GAS (03.備品管理SS) にも非同期同期（待たせない）
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiSaveEquipmentItem',
-              args: [payload, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[SaveEquipmentSync] GAS sync warning:', e));
-        } catch (syncErr) {}
-
         const now = new Date();
         const updatedAtStr = `${now.getFullYear()}/${('0' + (now.getMonth() + 1)).slice(-2)}/${('0' + now.getDate()).slice(-2)} ${('0' + now.getHours()).slice(-2)}:${('0' + now.getMinutes()).slice(-2)}`;
 
@@ -14630,18 +14603,6 @@ textarea.comment-textarea:active {
 
         const { error } = await sb.from('equipment_items').delete().eq('item_id', cleanId);
         if (error) throw error;
-
-        // バックグラウンドで GAS にも非同期同期
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiDeleteEquipmentItem',
-              args: [cleanId, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[DeleteEquipmentSync] GAS sync warning:', e));
-        } catch (syncErr) {}
 
         return { success: true, message: '備品を削除しました。' };
       },
@@ -14686,18 +14647,6 @@ textarea.comment-textarea:active {
 
         const { error } = await sb.from('equipment_event_logs').upsert(logData);
         if (error) throw error;
-
-        // バックグラウンドで GAS にも非同期同期
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiResolveEquipmentAlert',
-              args: [payload, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[ResolveEquipmentSync] GAS sync warning:', e));
-        } catch (syncErr) {}
 
         return { success: true, message: '持参担当の解決を記録しました。' };
       },
@@ -14832,20 +14781,6 @@ textarea.comment-textarea:active {
           }
         }
 
-        // バックグラウンドで GAS (スプレッドシート) にも安全に非同期通知 (待たせない)
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiSaveMember',
-              args: [payload, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[MemberSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[MemberSync] Kick failed:', syncErr);
-        }
-
         // 最新の管理者名簿を取得して即返却
         const latestRosterRes = await this.getAdminMemberList();
         return {
@@ -14859,7 +14794,7 @@ textarea.comment-textarea:active {
       },
 
       /**
-       * メンバー削除 (OB・退団化) (Supabase Direct: 0.1秒, 非同期GAS同期)
+       * メンバー削除 (OB・退団化) (Supabase Direct: 0.1秒)
        */
       async deleteMember(target, actorEmail, actorName) {
         const sb = getClient();
@@ -14889,20 +14824,6 @@ textarea.comment-textarea:active {
         }
 
         console.log(`⚡ [Supabase] Member marked as PAST/OB: ${targetName}`);
-
-        // バックグラウンドで GAS (スプレッドシート) にも安全に非同期通知 (待たせない)
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiDeleteMember',
-              args: [{ name: targetName, email: targetEmail }, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[MemberDeleteSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[MemberDeleteSync] Kick failed:', syncErr);
-        }
 
         // 最新の管理者名簿を取得して返却
         const latestRosterRes = await this.getAdminMemberList();
@@ -14950,20 +14871,6 @@ textarea.comment-textarea:active {
         } else {
           const { error } = await sb.from('members').delete().eq('name', targetName);
           if (error) throw error;
-        }
-
-        // 非同期でスプレッドシートからも物理削除を同期
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiDeleteMember',
-              args: [{ name: targetName, email: targetEmail }, actorEmail, actorName]
-            })
-          }).catch(e => console.warn('[MemberPermanentDeleteSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[MemberPermanentDeleteSync] Kick failed:', syncErr);
         }
 
         const latestRosterRes = await this.getAdminMemberList();
@@ -15195,20 +15102,6 @@ textarea.comment-textarea:active {
 
         if (updateErr) throw updateErr;
 
-        // 非同期でスプレッドシートにもパスワード更新を通知
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiChangePassword',
-              args: [member.email || member.name, inputOldPw, inputNewPw]
-            })
-          }).catch(e => console.warn('[ChangePwSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[ChangePwSync] Kick failed:', syncErr);
-        }
-
         return {
           success: true,
           message: 'パスワードを更新しました。'
@@ -15261,20 +15154,6 @@ textarea.comment-textarea:active {
           .eq('member_id', member.member_id);
 
         if (updateErr) throw updateErr;
-
-        // 非同期でスプレッドシートにも登録通知
-        try {
-          fetch(GAS_ENDPOINT_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-            body: JSON.stringify({
-              functionName: 'apiRegisterMember',
-              args: [cleanEmail, inputPw]
-            })
-          }).catch(e => console.warn('[RegisterMemberSync] GAS sync warning:', e));
-        } catch (syncErr) {
-          console.warn('[RegisterMemberSync] Kick failed:', syncErr);
-        }
 
         const user = {
           name: member.name,
