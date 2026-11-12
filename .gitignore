@@ -16,8 +16,16 @@ __pycache__/
 Thumbs.db
 *.log
 *.tmp
+*.bak
+*.swp
+*~
 
-# Intermediate HTML files generated during spec rendering
+# Microsoft Office temporary lock files
+~$*
+~$*.xlsx
+
+# Intermediate / temporary build artifacts
+temp_check.js
 docs/flow_diagram_fitted.html
 docs/flow_images/*.html
 
