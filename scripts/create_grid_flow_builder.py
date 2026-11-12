@@ -52,11 +52,11 @@ def build_grid_flow_sheet(wb):
     if os.path.exists(png_path):
         img = Image(png_path)
         img.width = 1180
-        img.height = 661
+        img.height = 676
         ws.add_image(img, f"A{curr_r}")
 
     # 画像の高さに合わせて行の高さを確保
-    image_rows = 34
+    image_rows = 35
     for r in range(curr_r, curr_r + image_rows):
         ws.row_dimensions[r].height = 20
     curr_r += image_rows
@@ -86,21 +86,21 @@ def build_grid_flow_sheet(wb):
     curr_r += 1
 
     servers_data = [
-        ("1", "ユーザー端末\n(Client)", "スマートフォン (iOS / Android)\nPC ブラウザ", "ローカルストレージ\nService Worker (sw.js)",
-         "・SPA画面の0秒レンダリング\n・出欠・掲示板の楽観的UI更新\n・Supabase JWT認証セッション管理",
-         "・ホーム画面追加でフルスクリーンPWA起動\n・Network First 戦略でオフライン起動支援\n・ブラウザからSupabaseへ直接REST通信"),
-        ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(GitHub 米国/グローバルCDN)", "https://fcbenten.github.io/team-management/\n(gh-pages ブランチ)",
-         "・PWA静的資産の即時配信\n・index.html (HTML/CSS/JSバンドル)\n・manifest.json / アイコン画像",
-         "・HTTPS GET による超高速配信 (0.05〜0.1秒)\n・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・Git push と連動した自動更新"),
-        ("3", "BaaS クラウド\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
-         "・全業務データの高速永続化 (90%以上の全通信)\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
-         "・東京リージョン配置による爆速応答 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護\n・JWT Bearer トークンによる即時認証"),
-        ("4", "特権代行サーバー\n(Google Apps Script)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App (固定デプロイID)\n・api_events.js / api_auth.js\n・calendar_service.js / supabase_service.js",
+        ("1", "ユーザー端末\n(Client)", "スマートフォン (iOS / Android)\nPC ブラウザ", "・Webアプリ (PWA / SPA)\n・LINEアプリ (部員のスマホ)",
+         "・PWA画面の0秒レンダリング・楽観的UI更新\n・Supabase JWTセッション管理\n・LINEアプリでの雨天中止/リマインド通知受信",
+         "・GitHub Pages から配信され端末上で実行\n・WebアプリからSupabaseおよびGoogleへ直接通信\n・部員個人のスマホへLINEプッシュ着信"),
+        ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(gh-pages ブランチ)", "https://fcbenten.github.io/team-management/\n・index.html (HTML/CSS/JSバンドル)\n・sw.js / manifest.json",
+         "・★Webアプリ本体のホスティング・配信元★\n・ブラウザ初回アクセス時のPWA配信\n・Service Worker キャッシュによる高速ロード",
+         "・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・SupabaseではなくGitHub Pagesにアプリが載っている\n・HTTPS GET による超高速配信 (0.05〜0.1秒)"),
+        ("3", "クラウドデータベース\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
+         "・★全業務データの保管・高速永続化 (90%以上)★\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
+         "・アプリが載る場所ではなく『データ保管庫』\n・端末のWebアプリから直接REST通信 (0.1〜0.3秒)\n・Row Level Security (RLS) によるDB層認可保護"),
+        ("4", "特権代行 ＆ 予定管理\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App (固定デプロイID)\n・Google カレンダー API v3\n・Google OAuth 2.0 認証基盤",
          "・ブラウザから直接叩けないGoogle特権APIの代行\n・チーム共有カレンダーの予定一括取得・同期\n・LINE通知・プッシュ通知の自動配信トリガー",
-         "・旧スプレッドシート処理を全廃し純API化\n・OAuth Client Secret を Script Properties に安全隔離\n・固定デプロイID (URL不変) による安定稼働"),
-        ("5", "外部連携・通知\n(Google / LINE)", "Google Cloud / LINE Platform\nGlobal", "・FC Benten チーム共有 Google カレンダー\n・LINE Messaging API (公式アカウント)\n・Web Push API (ブラウザプッシュ)",
-         "・カレンダー予定データの原本保持\n・出席者ステータス (Accepted/Declined) の同期\n・雨天中止・出欠未回答・活動連絡の自動配信",
-         "・Google Calendar API v3 (OAuth 2.0 連携)\n・LINE公式アカウントから部員のLINEへダイレクト配信\n・DB更新をトリガーとした通知発信")
+         "・端末のWebアプリと直接通信 (予定同期・OAuth)\n・OAuth Client Secret を Script Properties に安全隔離\n・Supabaseとは通信せずWebアプリの要求を代行"),
+        ("5", "通知配信プラットフォーム\n(LINE Platform)", "LINE Corporation\nGlobal Cloud", "LINE Messaging API\n(FC Benten 公式アカウント)",
+         "・雨天中止などの緊急一斉通知\n・活動前日の出欠未回答者リマインド配信\n・重要アナウンスのプッシュ着信",
+         "・GASからWebhook経由で通知発信\n・部員のスマートフォン(LINEアプリ)へ直接プッシュ着信\n・メールよりも圧倒的に高い即時確認率")
     ]
 
     for s_idx, s in enumerate(servers_data):
@@ -145,20 +145,20 @@ def build_grid_flow_sheet(wb):
     curr_r += 1
 
     comms_data = [
-        ("COMM-01", "ユーザー端末 ➔ GitHub Pages", "HTTPS GET\n(Static CDN)", "認証なし (公開静的配信)",
-         "PWAバンドル資産 (index.html, manifest.json, sw.js, アイコン)", "0.05〜0.1秒\n(超高速)", "初回アクセス・画面リロード\n(全画面共通)"),
-        ("COMM-02\n★主通信★", "ユーザー端末 ⇄ Supabase PostgREST", "HTTPS Direct REST\n(GET/POST/PATCH/DELETE)", "Supabase JWT (Bearer Token)\n＋ Row Level Security (RLS)",
+        ("COMM-01", "GitHub Pages ➔ ユーザー端末", "HTTPS GET\n(Static CDN)", "認証なし (公開静的配信)",
+         "PWAバンドル資産 (index.html, manifest.json, sw.js, アイコン画像)", "0.05〜0.1秒\n(超高速)", "初回アクセス・画面リロード\n(Webアプリの配信)"),
+        ("COMM-02\n★主通信★", "ユーザー端末 [Webアプリ] ⇄ Supabase", "HTTPS Direct REST\n(GET/POST/PATCH/DELETE)", "Supabase JWT (Bearer Token)\n＋ Row Level Security (RLS)",
          "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "0.1〜0.3秒\n(超高速 爆速化)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
-        ("COMM-03", "ユーザー端末 ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
+        ("COMM-03", "ユーザー端末 [Webアプリ] ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
          "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "0.2〜0.4秒\n(高速CDN)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
-        ("COMM-04", "ユーザー端末 ⇄ Google Apps Script", "HTTPS POST\n(JSON RPC / Bridge)", "なし (関数名＋引数ペイロード)\nOAuth 認可コード",
-         "Google カレンダー予定一括取得要求、OAuth 認可コード交換ペイロード", "0.8〜1.2秒\n(Google基盤依存)", "SCR01: 初回Googleアカウント連携\nSCR07: 予定作成・同期"),
+        ("COMM-04", "ユーザー端末 [Webアプリ] ⇄ Google サービス", "HTTPS POST\n(JSON RPC / Bridge)", "なし (関数名＋引数ペイロード)\nOAuth 認可コード",
+         "Google カレンダー予定一括取得・同期要求、OAuth 認可コード交換", "0.8〜1.2秒\n(Google基盤依存)", "SCR01: 初回Googleアカウント連携\nSCR07: 予定作成・同期"),
         ("COMM-05", "Google Apps Script ⇄ Google カレンダー", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
-         "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: スケジュール同期\n公式チームカレンダーへの予定書き込み"),
-        ("COMM-06", "Google Apps Script ⇄ Supabase DB", "HTTPS REST\n(PATCH / POST)", "Supabase Service Role Key\n(特権内部APIキー)",
-         "system_user_tokens (Google OAuth リフレッシュトークンの暗号化永続化)", "0.2〜0.3秒\n(内部REST通信)", "SCR01: Google OAuth 初回連携時のトークン自動保管"),
-        ("COMM-07", "Google Apps Script ➔ LINE / Push", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\nVAPID認証キー",
-         "雨天中止連絡、前日出欠未回答リマインド、重要掲示板アナウンス", "0.3〜0.5秒\n(外部API送信)", "SCR07 (出欠リマインド)\nSCR09 (掲示板重要連絡)")
+         "Google カレンダー予定イベント (日時、場所、タイトル、出席者Accepted/Declined)", "0.4〜0.6秒\n(Google内部通信)", "SCR07: チーム公式カレンダーの原本同期"),
+        ("COMM-06", "Google Apps Script ➔ LINE Platform", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\n(Bearer認証)",
+         "雨天中止連絡、前日出欠未回答リマインド、重要掲示板アナウンスのプッシュ送信", "0.3〜0.5秒\n(LINEサーバー送信)", "雨天中止時・出欠リマインド時"),
+        ("COMM-07", "LINE Platform ➔ ユーザー端末 [LINEアプリ]", "LINE Push\n(APNs / FCM)", "LINE アカウント紐付け",
+         "部員個人のスマートフォン（LINEアプリ）へのプッシュ通知着信", "即時着信\n(リアルタイム)", "部員のスマホ通知画面")
     ]
 
     for c_idx, c in enumerate(comms_data):
@@ -225,12 +225,18 @@ def build_grid_flow_sheet(wb):
             "出欠タップや掲示板ピン留めなどは「0秒楽観的UIレンダリング」により画面を即座に更新し、通信復帰後にバックグラウンドで自動同期。"
         ),
         (
-            "⑤ 外部連携・通知の疎結合設計（認証・ストレージの独立とDBトリガーの局所化）",
-            "【認証・ストレージの独立】\n"
-            "Supabase の「認証 (Auth)」および「ストレージ (Storage)」は、PWAクライアントとの直接通信のみで完結し、外部サービス（GoogleやLINE）とは一切通信しない完全独立構成。\n\n"
-            "【データベースを起点とした外部連携】\n"
-            "外部サービス（Google カレンダー API / LINE Messaging API / Web Push）と連携するのは「データベース (Database)」の変更（予定作成、出欠回答、雨天中止連絡）のみ。\n"
-            "実行処理（GAS / Webhook）を介して、チームカレンダーの原本同期や、部員のLINEへの自動プッシュ配信が安全・確実に実行される疎結合アーキテクチャ。"
+            "⑤ WEBアプリの所在と各サービスの明確な役割分担（GitHub Pages・Supabase・Google・LINE）",
+            "【Webアプリはどこにあるか？】\n"
+            "Webアプリ本体（HTML / CSS / JavaScript / PWAバンドル）がホスティングされているのは『GitHub Pages』です。\n"
+            "Supabase にアプリが載っているわけではありません。ユーザーがスマホやPCでアクセスすると、GitHub Pages からアプリが端末へ配信・キャッシュされ、端末のブラウザ上でアプリが実行されます。\n\n"
+            "【Supabase の役割（クラウドデータベース）】\n"
+            "Supabase はアプリの置き場ではなく、端末で動くWebアプリから直接接続する『クラウドデータベース（PostgreSQL 17 / Auth / Storage）』です。\n"
+            "出欠、試合記録、掲示板、名簿、備品などの全データを 0.1〜0.3 秒の超高速で直接読み書きします。\n\n"
+            "【Google サービスとの通信（Webアプリ ⇄ Google）】\n"
+            "カレンダー予定の同期やGoogleアカウント連携は、端末の『Webアプリ』から直接『Google サービス（GAS ＆ Google カレンダー）』へ通信して実行します。\n"
+            "Supabase の認証やストレージがカレンダーと通信することはありません。\n\n"
+            "【LINE通知の流れ（LINE ➔ ユーザーのスマホ）】\n"
+            "雨天中止や出欠リマインドが発生すると、GAS から LINE Messaging API を経由して、部員のスマートフォン内の『LINE アプリ』へ直接プッシュ通知が届きます。"
         )
     ]
 
