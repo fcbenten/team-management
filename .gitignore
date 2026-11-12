@@ -9,7 +9,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Local IDE & OS files
+# Local IDE & AI Agent files
+.agents/
 .vscode/
 .DS_Store
 Thumbs.db
