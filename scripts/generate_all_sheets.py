@@ -971,12 +971,18 @@ def run_generate():
         },
         {
             "type": "area",
-            "name": "通知受け取り設定 (個別選択)",
-            "desc": "雨天中止連絡や出欠リマインドの受け取り手段選択領域",
+            "name": "通知受け取り設定 (個別選択・LINE連携・Web Push)",
+            "desc": "雨天中止連絡や出欠リマインドの受け取り手段選択、LINE公式アカウント連携コード発行・解除、端末Web Push有効化および通知設定保存領域",
             "items": [
-                ("通知方法ラジオ選択", "notifyTypeRadioGroup", "ラジオボタングループ", "必須", "スマホプッシュ通知", "「スマホプッシュ通知」「LINE通知」「両方受け取る」「通知なし」から各自が希望の受信先を自由に選択。"),
-                ("ブラウザ通知許可ボタン", "enablePushBtn", "ボタン", "-", "通知を有効にする", "タップでブラウザのNotification API許可ダイアログを起動。Pushトークンを発行してサーバーへ保存。"),
-                ("メッセージ表示領域 (通知設定)", "err-settingsPush", "インラインアラート", "-", "非表示", "ブラウザ通知がブロックされている場合の警告メッセージを表示する領域。")
+                ("LINE/Pushステータスバッジ", "notifBadgeLine / notifBadgePush", "ステータスバッジ", "-", "自動判定", "LINE連携状態（未連携/連携済み）およびブラウザ通知許可状態（許可済み/ブロック中/未許可/非対応端末）を一覧表示。"),
+                ("通知方法ラジオ選択", "profileNotifType", "ラジオボタングループ", "必須", "スマホプッシュ通知", "「LINE通知」「スマホプッシュ通知」「両方受け取る」「通知を受け取らない」から各自が希望の受信先を選択。"),
+                ("LINE公式アカウント連携ボタン", "btnProfileLineConnect", "ボタン", "-", "LINE公式アカウントと連携", "15分間有効の連携コード（FCB-XXXX）を発行し、コピーおよび入力済み「LINEを開く」リンク・連携確認エリアを表示。"),
+                ("LINE連携コード表示・操作エリア", "profileLineCodeBox", "連携ボックス", "-", "コード発行後に表示", "発行済みコード（profileLineCodeText）、コピーボタン、入力済み公式LINE起動リンク（btnProfileLineOpenOa）、連携確認ボタンを表示。"),
+                ("LINE連携済み表示・解除ボタン", "profileLineLinkedArea / btnProfileLineUnlink", "ステータス・ボタン", "-", "連携済み時に表示", "LINE連携済み状態を表示し、「連携解除」押下で members.line_user_id をクリアする。"),
+                ("ブラウザ通知有効化ボタン", "notifActionPushWrap 内ボタン", "ボタン", "-", "この端末の通知を有効化", "タップでNotification API許可およびSupabaseWebPush.subscribeAndSaveを実行し、購読情報をサーバーへ保存。"),
+                ("受け取る通知項目チェックボックス", "notifItemEmergency / notifItemAttendance / notifItemBulletin", "チェックボックス", "-", "すべてON", "緊急・中止連絡、出欠リマインド、チーム掲示板の更新それぞれについて通知受け取り対象をON/OFF設定。"),
+                ("通知設定を保存ボタン", "btnSaveNotificationSettings", "ボタン", "-", "通知設定を保存", "選択中の通知方法および受け取る通知項目をSupabaseのmembersテーブルへ保存。"),
+                ("メッセージ表示領域 (通知設定)", "notifSaveMsg", "インラインメッセージ", "-", "非表示", "コード発行結果・連携確認結果・設定保存結果およびエラーメッセージを表示。")
             ]
         },
         {
@@ -997,11 +1003,20 @@ def run_generate():
          "共通カスタム確認モーダル（showAppConfirm）で『プロフィール写真を削除しますか？』を表示。OK選択後にアバター画像を削除し、名簿へ即時反映。",
          "handleProfileImageDelete()", "共通カスタム確認モーダル ＆ 即時削除"),
         ("通知方法ラジオ選択", "選択変更時",
-         "ラジオ選択が切り替わった瞬間に、GAS API（apiSaveNotificationSetting）へ送信し名簿シートの通知設定列を更新。失敗時は共通カスタム通知ダイアログ表示。",
-         "apiSaveNotificationSetting(type, token)", "即時自動保存"),
-        ("ブラウザ通知許可ボタン", "クリック時",
-         "Notification.requestPermission() を実行。ブロック時は設定案内ダイアログ（showAppAlert）を表示。",
-         "subscribePushNotification()", "ブラウザPush通知登録"),
+         "通知方法に応じたアクション領域（LINE連携エリア／端末Push許可エリア）の表示を即時切り替え。",
+         "handleNotifTypeChange(val)", "未設定アクションの動的ガイド表示"),
+        ("LINE公式アカウント連携ボタン", "クリック時",
+         "SupabaseLinePush.issueLinkCode により15分有効の連携コード（FCB-XXXX）を発行し、profileLineCodeBox に入力済みLINE起動リンク（https://line.me/R/oaMessage/@377avqrr/?コード）と共に表示。",
+         "handleLineConnectClick()", "アプリ内からシームレスにLINE友だち追加・連携コード送信"),
+        ("LINE連携確認 / 連携解除ボタン", "クリック時",
+         "「連携確認」は getLineLinkStatus でWebhook紐づけ完了を確認してバッジ更新、「連携解除」は unlinkLine で members.line_user_id を初期化。",
+         "handleProfileLineRefresh() / handleProfileLineUnlink()", "LINE紐づけ状態の即時反映と再テスト対応"),
+        ("ブラウザ通知有効化ボタン", "クリック時",
+         "SupabaseWebPush.subscribeAndSave を実行し、ブラウザ通知許可とVAPID Push購読情報をDBへ保存。拒否時は設定案内ダイアログ（showAppAlert）を表示。",
+         "handlePushPermissionRequest()", "ブラウザWeb Push通知登録"),
+        ("通知設定を保存ボタン", "クリック時",
+         "通知方法と通知対象項目を apiSaveNotificationSettings 経由でSupabase members テーブルへ保存し、localStorage も同期。",
+         "handleSaveNotificationSettings()", "DB保存と状態メッセージ表示"),
         ("ログアウトボタン", "クリック時",
          "ログアウト確認モーダルを表示。OK選択後にlocalStorage内の fcb_auth_user を消去し、ログイン画面を表示。",
          "executeLogout()", "セッション破棄 ＆ ログイン画面遷移")
@@ -1010,7 +1025,7 @@ def run_generate():
         ("E11-01", "アバター写真アップロード", "ファイル選択時", "画像以外のファイル形式、または10MBを超える巨大ファイルの場合", "メッセージ表示領域 (プロフィール)", "「画像ファイル（JPG/PNG）を選択してください（10MB以下）。」", "適切な画像ファイルを選択"),
         ("E11-02", "アバター写真アップロード", "ファイル選択時", "Google Driveへの画像保存APIが失敗した場合", "メッセージ表示領域", "「アバター画像の保存に失敗しました。通信環境をご確認ください。」", "通信復帰後に再アップロード"),
         ("E11-03", "ブラウザ通知許可ボタン", "クリック時", "ブラウザ側で通知が明示的にブロック・拒否されている場合", "メッセージ表示領域 (通知設定)", "「ブラウザの設定で通知がブロックされています。ブラウザの設定から通知を許可してください。」", "ブラウザのサイト設定で通知許可をONにする"),
-        ("E11-04", "通知方法ラジオ選択", "選択変更時", "スプレッドシートへの通知設定更新APIが失敗した場合", "メッセージ表示領域", "「通知設定の保存に失敗しました。」", "再選択を実行")
+        ("E11-04", "通知設定を保存ボタン", "クリック時", "Supabaseへの通知設定更新APIが失敗した場合", "メッセージ表示領域 (通知設定)", "「通知設定の保存に失敗しました」または通信エラーメッセージ", "通信確認後に再保存を実行")
     ]
 
     print("Building SCR11...")

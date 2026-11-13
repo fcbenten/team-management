@@ -1062,6 +1062,7 @@
             u.notificationType = s.notificationType || 'none';
             u.lineLinked = !!s.lineLinked;
             u.pushLinked = !!s.pushLinked;
+            u.lineLinkCode = s.linkCode || '';
             u.notifySettings = s.notifySettings || { emergency: true, attendance: true, bulletin: true };
             try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch(e) {}
             
@@ -1078,6 +1079,7 @@
             if (itemBul) itemBul.checked = u.notifySettings.bulletin !== false;
             updateNotificationBadges();
             handleNotifTypeChange(u.notificationType);
+            syncProfileLineUi();
           }
         })
         .apiGetNotificationSettings(u.name, u.email);
@@ -1123,11 +1125,48 @@
     }
   }
 
+  function setProfileNotifMsg(msg, isSuccess = true) {
+    const msgEl = document.getElementById('notifSaveMsg');
+    if (!msgEl) return;
+    if (!msg) {
+      msgEl.textContent = '';
+      msgEl.className = 'notif-status-msg hidden';
+      return;
+    }
+    msgEl.textContent = msg;
+    msgEl.className = 'notif-status-msg ' + (isSuccess ? 'success' : 'error');
+    msgEl.classList.remove('hidden');
+  }
+
+  function syncProfileLineUi() {
+    const u = window.currentUser || {};
+    const isLinked = !!u.lineLinked;
+    const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
+    const linkedArea = document.getElementById('profileLineLinkedArea');
+    const codeBox = document.getElementById('profileLineCodeBox');
+    const codeText = document.getElementById('profileLineCodeText');
+    const openOaLink = document.getElementById('btnProfileLineOpenOa');
+
+    if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
+    if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
+
+    if (!isLinked && u.lineLinkCode) {
+      if (codeText) codeText.textContent = u.lineLinkCode;
+      if (openOaLink) {
+        openOaLink.href = (window.SupabaseLinePush && window.SupabaseLinePush.getLineOaMessageUrl)
+          ? window.SupabaseLinePush.getLineOaMessageUrl(u.lineLinkCode)
+          : `https://line.me/R/oaMessage/%40377avqrr/?${encodeURIComponent(u.lineLinkCode)}`;
+      }
+      if (codeBox) codeBox.classList.remove('hidden');
+    } else if (codeBox) {
+      codeBox.classList.add('hidden');
+    }
+  }
+
   /**
    * 通知タイプ変更時のアクション表示制御
    */
   function handleNotifTypeChange(val) {
-    const u = window.currentUser || {};
     const radios = document.querySelectorAll('input[name="profileNotifType"]');
     radios.forEach(r => {
       const card = r.closest('.notif-radio-card');
@@ -1150,23 +1189,17 @@
 
     if (targetBox) targetBox.classList.remove('opacity-50');
 
-    let showLineAction = false;
-    let showPushAction = false;
-
     const isPushGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
-    const isLineLinked = !!u.lineLinked;
-
-    if (val === 'line' || val === 'both') {
-      if (!isLineLinked) showLineAction = true;
-    }
-
-    if (val === 'push' || val === 'both') {
-      if (!isPushGranted) showPushAction = true;
-    }
+    const showLineAction = (val === 'line' || val === 'both');
+    const showPushAction = (val === 'push' || val === 'both') && !isPushGranted;
 
     if (lineWrap) {
-      if (showLineAction) lineWrap.classList.remove('hidden');
-      else lineWrap.classList.add('hidden');
+      if (showLineAction) {
+        lineWrap.classList.remove('hidden');
+        syncProfileLineUi();
+      } else {
+        lineWrap.classList.add('hidden');
+      }
     }
 
     if (pushWrap) {
@@ -1181,17 +1214,45 @@
   }
 
   /**
-   * 端末のプッシュ通知許可リクエスト
+   * 端末のプッシュ通知許可リクエスト＆Web Push購読保存
    */
-  function handlePushPermissionRequest() {
+  async function handlePushPermissionRequest() {
     if (typeof Notification === 'undefined') {
       showAppAlert({ title: '非対応環境', message: 'お使いのブラウザ・端末はプッシュ通知に対応していません。', icon: 'notifications_off' });
       return;
     }
 
+    const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'push';
+
+    if (window.SupabaseWebPush && typeof window.SupabaseWebPush.subscribeAndSave === 'function') {
+      try {
+        await window.SupabaseWebPush.subscribeAndSave(window.currentUser || {});
+        if (window.currentUser) {
+          window.currentUser.pushLinked = true;
+          try { localStorage.setItem('fcb_auth_user', JSON.stringify(window.currentUser)); } catch (e) {}
+        }
+        updateNotificationBadges();
+        handleNotifTypeChange(currentVal);
+        setProfileNotifMsg('この端末のプッシュ通知を有効化しました', true);
+        if (typeof window.refreshHomePushMockState === 'function') {
+          window.refreshHomePushMockState();
+        }
+      } catch (err) {
+        updateNotificationBadges();
+        handleNotifTypeChange(currentVal);
+        const msg = err && err.message ? err.message : 'プッシュ通知の有効化に失敗しました。';
+        const isDenied = (typeof Notification !== 'undefined' && Notification.permission === 'denied');
+        showAppAlert({
+          title: isDenied ? '通知ブロック' : '通知設定エラー',
+          message: msg,
+          isError: true
+        });
+      }
+      return;
+    }
+
     Notification.requestPermission().then(permission => {
       updateNotificationBadges();
-      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'push';
       handleNotifTypeChange(currentVal);
 
       if (permission === 'denied') {
@@ -1203,10 +1264,120 @@
   }
 
   /**
-   * LINE公式アカウント連携クリック
+   * LINE公式アカウント連携コード発行
    */
-  function handleLineConnectClick() {
-    showAppAlert({ title: 'LINE連携の案内', message: 'チーム公式LINEアカウントを開設次第、こちらから友だち追加を行うことで、出欠リマインドや緊急連絡をLINEトークで直接受け取れるようになります。', icon: 'chat' });
+  async function handleLineConnectClick() {
+    const u = window.currentUser;
+    if (!u || !window.SupabaseLinePush) {
+      showAppAlert({ title: 'LINE連携エラー', message: 'LINE連携モジュールが読み込まれていません。ページを再読み込みしてください。', isError: true });
+      return;
+    }
+
+    const btn = document.getElementById('btnProfileLineConnect');
+    const prevHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'コード発行中...';
+    }
+
+    try {
+      const res = await window.SupabaseLinePush.issueLinkCode(u);
+      u.lineLinked = false;
+      u.lineLinkCode = res.code;
+      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+
+      syncProfileLineUi();
+      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
+      handleNotifTypeChange(currentVal);
+      setProfileNotifMsg(`連携コード「${res.code}」を発行しました。「LINEを開く（入力済み）」から公式LINEへ送信してください。`, true);
+      if (typeof window.refreshHomeLineMockState === 'function') {
+        window.refreshHomeLineMockState(false);
+      }
+    } catch (err) {
+      setProfileNotifMsg(err && err.message ? err.message : '連携コードの発行に失敗しました。', false);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = prevHtml;
+      }
+    }
+  }
+
+  /**
+   * LINE連携コードコピー
+   */
+  async function handleProfileLineCopyCode() {
+    const codeText = document.getElementById('profileLineCodeText');
+    const code = codeText ? codeText.textContent.trim() : '';
+    if (!code) return;
+    try {
+      await navigator.clipboard.writeText(code);
+      setProfileNotifMsg(`連携コード「${code}」をコピーしました。公式LINEトークに貼り付けて送信してください。`, true);
+    } catch (e) {
+      setProfileNotifMsg(`連携コード「${code}」を公式LINEトークへ送信してください。`, true);
+    }
+  }
+
+  /**
+   * LINE連携状態を再確認
+   */
+  async function handleProfileLineRefresh() {
+    const u = window.currentUser;
+    if (!u || !window.SupabaseLinePush) return;
+
+    try {
+      const status = await window.SupabaseLinePush.getLineLinkStatus(u);
+      u.lineLinked = !!status.linked;
+      u.lineLinkCode = status.linked ? '' : (status.linkCode || '');
+      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+
+      updateNotificationBadges();
+      syncProfileLineUi();
+      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
+      handleNotifTypeChange(currentVal);
+      if (typeof window.refreshHomeLineMockState === 'function') {
+        window.refreshHomeLineMockState(false);
+      }
+
+      if (status.linked) {
+        setProfileNotifMsg('LINE公式アカウントとの連携が完了しました。', true);
+      } else {
+        setProfileNotifMsg('まだ連携が完了していません。公式LINEトークにコードを送信後、再度「連携確認」を押してください。', false);
+      }
+    } catch (err) {
+      setProfileNotifMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', false);
+    }
+  }
+
+  /**
+   * LINE公式アカウント連携解除
+   */
+  async function handleProfileLineUnlink() {
+    const u = window.currentUser;
+    if (!u || !window.SupabaseLinePush) return;
+
+    const btn = document.getElementById('btnProfileLineUnlink');
+    if (btn) btn.disabled = true;
+
+    try {
+      await window.SupabaseLinePush.unlinkLine(u);
+      u.lineLinked = false;
+      u.lineLinkCode = '';
+      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+
+      updateNotificationBadges();
+      syncProfileLineUi();
+      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
+      handleNotifTypeChange(currentVal);
+      if (typeof window.refreshHomeLineMockState === 'function') {
+        window.refreshHomeLineMockState(false);
+      }
+      setProfileNotifMsg('LINE公式アカウントの連携を解除しました。', true);
+    } catch (err) {
+      setProfileNotifMsg(err && err.message ? err.message : '連携解除に失敗しました。', false);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
   }
 
   /**
@@ -1284,6 +1455,9 @@
   window.handleNotifTypeChange = handleNotifTypeChange;
   window.handlePushPermissionRequest = handlePushPermissionRequest;
   window.handleLineConnectClick = handleLineConnectClick;
+  window.handleProfileLineCopyCode = handleProfileLineCopyCode;
+  window.handleProfileLineRefresh = handleProfileLineRefresh;
+  window.handleProfileLineUnlink = handleProfileLineUnlink;
   window.handleSaveNotificationSettings = handleSaveNotificationSettings;
 
   /**

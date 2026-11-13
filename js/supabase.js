@@ -1115,6 +1115,57 @@
       },
 
       /**
+       * 通知設定取得 (0.1s Direct)
+       */
+      async getNotificationSettings(userName, userEmail) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const u = window.currentUser || {};
+        const memberId = (u.id || u.memberId || '').trim();
+        const targetEmail = (userEmail || u.email || '').trim().toLowerCase();
+        const targetName = (userName || u.name || '').trim();
+
+        let query = sb.from('members').select('member_id, notification_type, line_user_id, push_subscription, notify_settings');
+        if (memberId) {
+          query = query.eq('member_id', memberId);
+        } else if (targetEmail) {
+          query = query.eq('email', targetEmail);
+        } else if (targetName) {
+          query = query.eq('name', targetName);
+        } else {
+          throw new Error('対象ユーザーを特定できません。');
+        }
+
+        const { data, error } = await query.limit(1);
+        if (error) throw error;
+        const row = (data && data[0]) || null;
+        if (!row) throw new Error('メンバー情報が見つかりません。');
+
+        let parsed = {};
+        if (row.notify_settings) {
+          try { parsed = JSON.parse(row.notify_settings); } catch (e) {}
+        }
+
+        const hasValidCode = !!(parsed.linkCode && Number(parsed.linkCodeExpiresAt || 0) > Date.now());
+        return {
+          success: true,
+          settings: {
+            notificationType: row.notification_type || 'none',
+            lineLinked: !!(row.line_user_id && String(row.line_user_id).trim()),
+            pushLinked: !!(row.push_subscription && String(row.push_subscription).trim()),
+            linkCode: hasValidCode ? parsed.linkCode : '',
+            linkCodeExpiresAt: hasValidCode ? Number(parsed.linkCodeExpiresAt) : 0,
+            notifySettings: {
+              emergency: parsed.emergency !== false,
+              attendance: parsed.attendance !== false,
+              bulletin: parsed.bulletin !== false
+            }
+          }
+        };
+      },
+
+      /**
        * 通知設定保存 (0.1s Direct)
        */
       async saveNotificationSettings(payload, userName, userEmail) {
@@ -1125,9 +1176,23 @@
         const targetEmail = (userEmail || u.email || '').trim().toLowerCase();
         const targetName = (userName || u.name || '').trim();
 
+        let existingParsed = {};
+        try {
+          const curRes = await this.getNotificationSettings(targetName, targetEmail);
+          if (curRes && curRes.settings && curRes.settings.linkCode) {
+            existingParsed.linkCode = curRes.settings.linkCode;
+            existingParsed.linkCodeExpiresAt = curRes.settings.linkCodeExpiresAt;
+          }
+        } catch (e) {}
+
+        const mergedSettings = {
+          ...existingParsed,
+          ...(payload.settings || payload.notifySettings || {})
+        };
+
         const updateObj = {
           notification_type: payload.type || payload.notificationType || 'none',
-          notify_settings: JSON.stringify(payload.settings || payload.notifySettings || {}),
+          notify_settings: JSON.stringify(mergedSettings),
           updated_at: new Date().toISOString()
         };
         if (payload.lineUserId !== undefined) updateObj.line_user_id = payload.lineUserId;
@@ -2076,6 +2141,14 @@
             if (prop === 'apiDeleteProfileImage') {
               console.log('⚡ [Bypass] apiDeleteProfileImage routed to Supabase Direct (0.1s)');
               SupabaseService.deleteProfileImage(args[0])
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiGetNotificationSettings') {
+              console.log('⚡ [Bypass] apiGetNotificationSettings routed to Supabase Direct (0.1s)');
+              SupabaseService.getNotificationSettings(args[0], args[1])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;

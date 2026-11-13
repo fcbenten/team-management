@@ -158,6 +158,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   transition: all 0.15s ease;
 }
 .btn-notif-line {
@@ -173,6 +174,107 @@
 }
 .btn-notif-push:hover {
   background: #0369a1;
+}
+.profile-line-code-box {
+  margin: 8px 0 6px;
+  padding: 8px 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+}
+.profile-line-code-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.profile-line-code-label {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: #166534;
+}
+.profile-line-code-val {
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #15803d;
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+}
+.profile-line-code-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.profile-line-sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: auto !important;
+  height: 30px !important;
+  padding: 0 9px !important;
+  font-size: 0.73rem !important;
+  font-weight: 600 !important;
+  border-radius: 5px !important;
+  cursor: pointer;
+}
+.profile-line-open-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #06c755;
+  border: 1px solid #06c755;
+  border-radius: 5px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.profile-line-open-link:hover {
+  background: #05b34c;
+  border-color: #05b34c;
+}
+.profile-line-sub-btn .material-symbols-outlined,
+.profile-line-open-link .material-symbols-outlined {
+  font-size: 15px;
+}
+.profile-line-linked-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.profile-line-linked-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #15803d;
+}
+.profile-line-linked-label .material-symbols-outlined {
+  font-size: 17px;
+}
+.profile-line-unlink-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 6px;
+  cursor: pointer;
+}
+.profile-line-unlink-btn:hover {
+  color: #dc2626;
+  text-decoration: underline;
 }
 .notif-target-box {
   padding: 10px 12px;
