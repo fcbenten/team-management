@@ -1382,16 +1382,22 @@ select:focus, input:focus, textarea:focus {
   }
 }
 
-/* モーダルのコンテンツ本体（白い枠組み） */
+/* モーダルのコンテンツ本体（白い枠組み：ヘッダー／フッター固定・ボディのみ縦スクロール） */
 .modal-content {
   background: var(--bg-card) !important; border-radius: var(--radius) !important;
-  width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 0 !important;
+  width: 100%; max-width: 500px; max-height: 90vh; padding: 0 !important;
+  display: flex; flex-direction: column; overflow: hidden;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
   border: 1px solid var(--border-color) !important;
   color: var(--text-main) !important;
-  overscroll-behavior: contain !important;
-  overscroll-behavior-y: contain !important;
-  -webkit-overflow-scrolling: touch;
+}
+
+.modal-content > form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 @media (max-width: 767px) {
@@ -1401,9 +1407,23 @@ select:focus, input:focus, textarea:focus {
 }
 
 .modal-header {
+  flex-shrink: 0;
   padding: 20px 24px; border-bottom: 1px solid var(--border-color) !important;
   display: flex; justify-content: space-between; align-items: center;
   background-color: #ffffff;
+}
+
+.modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain !important;
+  overscroll-behavior-y: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-footer {
+  flex-shrink: 0;
 }
 
 .modal-section { padding: 20px 24px; border-bottom: 1px solid var(--border-color) !important; }
@@ -2923,7 +2943,7 @@ html.no-scroll {
   border-radius: 6px !important;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 8px !important;
+  margin-bottom: 0 !important;
 }
 .btn-logout:hover {
   background: #fef2f2 !important;
@@ -3956,7 +3976,10 @@ html.no-scroll {
    ========================================= */
 #matchDetailModal .modal-content {
   max-width: 500px;
-  padding: 24px 20px !important;
+}
+
+.modal-match-body {
+  padding: 0;
 }
 
 .modal-match-header {
@@ -5785,17 +5808,17 @@ th.sort-active .sort-icon {
    👤 スタッツ モーダル専用スタイル
    ========================================= */
 #playerModalOverlay .modal-content {
-  padding: 24px !important;
+  padding: 0 !important;
   display: flex !important;
   flex-direction: column;
   max-height: 90vh !important;
 }
 
 #playerModalOverlay .modal-header {
-  padding: 0 0 12px 0;
-  margin-bottom: 12px;
-  background-color: transparent;
-  border-bottom: none !important;
+  padding: 16px 20px;
+  margin-bottom: 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--border-color) !important;
 }
 
 #playerModalOverlay .modal-section {
@@ -5818,6 +5841,8 @@ th.sort-active .sort-icon {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
   margin-bottom: 0 !important;
 }
 
@@ -11840,9 +11865,6 @@ textarea.comment-textarea:active {
         <span class="material-symbols-outlined profile-settings-nav-arrow">chevron_right</span>
       </button>
     </div>
-    <div class="modal-footer profile-modal-footer">
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
-    </div>
   </div>
 </div>
 
@@ -12003,10 +12025,9 @@ textarea.comment-textarea:active {
       </div>
     </div>
     <div class="modal-footer profile-modal-footer">
-      <button type="button" class="btn btn-logout w-full mb-8" onclick="openLogoutModal(event)">
+      <button type="button" class="btn btn-logout w-full" onclick="openLogoutModal(event)">
         <span class="material-symbols-outlined mr-2">logout</span>ログアウト
       </button>
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserSettingsModal(event)">閉じる</button>
     </div>
   </div>
 </div>
@@ -12070,76 +12091,81 @@ textarea.comment-textarea:active {
      ========================================= -->
 <div id="matchDetailModal" class="modal-overlay" onclick="closeMatchDetailModal(event)">
   <div class="modal-content">
-    <!-- モーダルヘッダー -->
-    <div class="modal-match-header">
-      <div class="modal-match-header-left">
-        <div class="modal-match-header-row">
-          <span id="modalCategory" class="category-badge"></span>
-          <span id="modalDate" class="text-muted modal-match-date"></span>
-        </div>
-        <div id="modalLocationRow" class="modal-match-location-row hidden">
-          <span class="material-symbols-outlined modal-loc-icon">location_on</span>
-          <span id="modalLocation"></span>
-        </div>
-      </div>
-      <div class="modal-match-header-right">
-        <button type="button" class="modal-close" onclick="closeMatchDetailModal(event)">&times;</button>
-      </div>
+    <!-- 最上部固定ヘッダー -->
+    <div class="modal-header">
+      <div class="modal-title font-bold">試合結果詳細</div>
+      <button type="button" class="modal-close" onclick="closeMatchDetailModal(event)">&times;</button>
     </div>
 
-    <!-- スコアボード -->
-    <div class="modal-score-board">
-      <div class="modal-score-row">
-        <div class="team-name team-name-left">FC Benten</div>
-        <div id="modalScoreBox" class="modal-score-box">
-          <span id="modalMyScore"></span>
-          <span class="score-hyphen">-</span>
-          <span id="modalOppScore"></span>
-        </div>
-        <div id="modalOpponent" class="team-name team-name-right"></div>
-      </div>
-      <div id="modalHalfScores" class="modal-half-scores">
-        <div class="modal-half-row">
-          <div class="half-col-left">前半</div>
-          <div class="half-col-center" id="modalHalf1stVal">0 - 0</div>
-          <div class="half-col-right"></div>
-        </div>
-        <div class="modal-half-row">
-          <div class="half-col-left">後半</div>
-          <div class="half-col-center" id="modalHalf2ndVal">0 - 0</div>
-          <div class="half-col-right"></div>
-        </div>
-        <div id="modalHalfExtRow" class="hidden modal-half-row">
-          <div class="half-col-left">延長</div>
-          <div class="half-col-center" id="modalHalfExtVal">0 - 0</div>
-          <div class="half-col-right"></div>
+    <div class="modal-body modal-match-body">
+      <!-- 試合基本情報ヘッダー -->
+      <div class="modal-match-header">
+        <div class="modal-match-header-left">
+          <div class="modal-match-header-row">
+            <span id="modalCategory" class="category-badge"></span>
+            <span id="modalDate" class="text-muted modal-match-date"></span>
+          </div>
+          <div id="modalLocationRow" class="modal-match-location-row hidden">
+            <span class="material-symbols-outlined modal-loc-icon">location_on</span>
+            <span id="modalLocation"></span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- MOM表示エリア -->
-    <div class="modal-section">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">emoji_events</span>MOM
+      <!-- スコアボード -->
+      <div class="modal-score-board">
+        <div class="modal-score-row">
+          <div class="team-name team-name-left">FC Benten</div>
+          <div id="modalScoreBox" class="modal-score-box">
+            <span id="modalMyScore"></span>
+            <span class="score-hyphen">-</span>
+            <span id="modalOppScore"></span>
+          </div>
+          <div id="modalOpponent" class="team-name team-name-right"></div>
+        </div>
+        <div id="modalHalfScores" class="modal-half-scores">
+          <div class="modal-half-row">
+            <div class="half-col-left">前半</div>
+            <div class="half-col-center" id="modalHalf1stVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+          <div class="modal-half-row">
+            <div class="half-col-left">後半</div>
+            <div class="half-col-center" id="modalHalf2ndVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+          <div id="modalHalfExtRow" class="hidden modal-half-row">
+            <div class="half-col-left">延長</div>
+            <div class="half-col-center" id="modalHalfExtVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+        </div>
       </div>
-      <div id="modalMom" class="modal-section-content"></div>
-    </div>
 
-    <!-- 参加者エリア -->
-    <div class="modal-section">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">group</span>参加者
+      <!-- MOM表示エリア -->
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">emoji_events</span>MOM
+        </div>
+        <div id="modalMom" class="modal-section-content"></div>
       </div>
-      <div id="modalAttended" class="modal-section-content"></div>
-    </div>
 
-    <!-- 試合ログエリア -->
-    <div class="modal-section modal-section-last">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">history</span>試合ログ
+      <!-- 参加者エリア -->
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">group</span>参加者
+        </div>
+        <div id="modalAttended" class="modal-section-content"></div>
       </div>
-      <div id="modalLogs"></div>
-      <div id="modalNoLogs" class="empty-state hidden">記録はありません</div>
+
+      <!-- 試合ログエリア -->
+      <div class="modal-section modal-section-last">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">history</span>試合ログ
+        </div>
+        <div id="modalLogs"></div>
+        <div id="modalNoLogs" class="empty-state hidden">記録はありません</div>
+      </div>
     </div>
 
     <!-- モーダルフッター -->
@@ -13254,7 +13280,7 @@ textarea.comment-textarea:active {
       </div>
 
       <!-- スクロール可能な詳細コンテンツエリア -->
-      <div class="scrollable-section">
+      <div class="modal-body scrollable-section">
         
         <!-- 個人成績サマリー（参加数、得点など） -->
         <div class="modal-section">
@@ -13481,7 +13507,7 @@ textarea.comment-textarea:active {
       </div>
 
       <!-- スクロール可能な詳細コンテンツ本体 -->
-      <div class="event-modal-body">
+      <div class="modal-body event-modal-body">
         
         <!-- 日付 -->
         <div class="event-detail-row">
@@ -13591,7 +13617,7 @@ textarea.comment-textarea:active {
         <input type="hidden" id="eeIsDuplicate" value="0">
         <input type="hidden" id="eeOriginalDate" value="">
         <input type="hidden" id="eeOriginalTitle" value="">
-        <div class="event-modal-body">
+        <div class="modal-body event-modal-body">
           <!-- 予定タイトル入力ブロック -->
           <div class="form-group mb-12">
             <label class="form-label font-bold text-sm">タイトル <span class="text-danger">*</span></label>
@@ -13657,7 +13683,7 @@ textarea.comment-textarea:active {
         </div>
 
         <!-- 操作フッター（削除・キャンセル・保存） -->
-        <div class="event-modal-footer">
+        <div class="modal-footer event-modal-footer">
           <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">
             <span class="material-symbols-outlined">delete</span><span>削除</span>
           </button>
@@ -13680,7 +13706,7 @@ textarea.comment-textarea:active {
         <div class="font-bold text-lg text-danger">予定の削除</div>
         <button class="modal-close" onclick="closeDeleteConfirmModal(event)">&times;</button>
       </div>
-      <div class="event-modal-body confirm-modal-body text-center">
+      <div class="modal-body event-modal-body confirm-modal-body text-center">
         <div class="confirm-icon-box mb-12"><span class="material-symbols-outlined">warning</span></div>
         <div id="deleteConfirmTargetText" class="font-bold mb-8 text-base">この予定を削除しますか？</div>
         <div class="text-sm text-muted">※ Google カレンダーから完全に削除されます。<br>この操作は取り消せません。</div>
@@ -14043,7 +14069,6 @@ textarea.comment-textarea:active {
       </div>
       <div class="modal-footer member-modal-footer">
         <div class="member-modal-footer-right">
-          <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
           <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
             <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
             <span>テストユーザー登録画面を開く</span>
@@ -14355,7 +14380,8 @@ textarea.comment-textarea:active {
     <form id="bulletinPostForm" onsubmit="handleBulletinPostSubmit(event)">
       <input type="hidden" id="bulletinEditPostId" value="">
       
-      <div class="modal-section">
+      <div class="modal-body">
+        <div class="modal-section">
         <!-- カテゴリ選択 -->
         <div class="form-group mb-16">
           <label class="form-label" for="bulletinCategorySelect">カテゴリ <span class="text-danger">*</span></label>
@@ -14399,10 +14425,11 @@ textarea.comment-textarea:active {
         </div>
       </div>
 
-      <!-- 送信ステータスメッセージ -->
-      <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
+        <!-- 送信ステータスメッセージ -->
+        <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
+      </div>
 
-      <div class="bulletin-modal-footer flex-between">
+      <div class="modal-footer bulletin-modal-footer flex-between">
         <div class="bulletin-edit-actions-left">
           <button type="button" id="btnBulletinEditDelete" class="bdm-action-btn btn-delete-action hidden" onclick="handleBulletinEditDelete()">
             <span class="material-symbols-outlined text-sm">delete</span>
@@ -14436,7 +14463,8 @@ textarea.comment-textarea:active {
       <button type="button" class="modal-close" onclick="closeBulletinDetailModalForce()">&times;</button>
     </div>
 
-    <div class="modal-section bulletin-detail-body">
+    <div class="modal-body">
+      <div class="modal-section bulletin-detail-body">
       <!-- タイトル -->
       <h2 id="bdmTitle" class="bulletin-detail-title"></h2>
 
@@ -14541,8 +14569,10 @@ textarea.comment-textarea:active {
       </div>
     </div>
 
+    </div>
+
     <!-- 操作フッター（全モーダル統一配置：左＝削除、右＝主要操作） -->
-    <div class="bulletin-modal-footer flex-between">
+    <div class="modal-footer bulletin-modal-footer flex-between">
       <div class="bulletin-detail-actions-left">
         <button type="button" id="btnBdmDelete" class="bdm-action-btn btn-delete-action" onclick="handleBdmDelete()">
           <span class="material-symbols-outlined">delete</span>
@@ -22515,7 +22545,10 @@ function openMatchDetail(matchId) {
   }
   
   // モーダルを表示して背景のスクロールを無効化する
-  document.getElementById('matchDetailModal').classList.add('active');
+  const detailModal = document.getElementById('matchDetailModal');
+  detailModal.classList.add('active');
+  const bodyEl = detailModal.querySelector('.modal-match-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   document.body.classList.add('no-scroll');
 }
 
@@ -22526,7 +22559,7 @@ function openMatchDetail(matchId) {
  */
 function closeMatchDetailModal(e) {
   // モーダルのコンテンツ部分をクリックした場合は閉じない
-  if (e && e.target && e.target.closest('.modal-content') && !e.target.classList.contains('modal-close')) { 
+  if (e && e.target && e.target.closest('.modal-content') && !e.target.closest('.modal-close')) { 
     return; 
   }
   document.getElementById('matchDetailModal').classList.remove('active');
@@ -24262,13 +24295,16 @@ function toggleRankList(type) {
     }
 
     // モーダルを表示
-    document.getElementById('playerModalOverlay').classList.add('active');
+    const playerOverlay = document.getElementById('playerModalOverlay');
+    playerOverlay.classList.add('active');
     if (typeof lockBodyScroll === 'function') {
       lockBodyScroll();
     } else {
       document.body.classList.add('no-scroll');
     }
     // スクロール位置を一番上に戻す
+    const bodyEl = playerOverlay.querySelector('.modal-body');
+    if (bodyEl) bodyEl.scrollTop = 0;
     setTimeout(() => { historyContainer.scrollTop = 0; }, 10);
   }
 
@@ -27916,7 +27952,7 @@ function closeModalById(modalId) {
         e.preventDefault();
         return;
       }
-      const scrollable = modal.querySelector('.modal-content') || modal;
+      const scrollable = modal.querySelector('.modal-body') || modal.querySelector('.modal-content') || modal;
       const isAtTop = scrollable.scrollTop <= 0;
       const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
       if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom) || e.target === modal) {
@@ -27935,7 +27971,7 @@ function closeModalById(modalId) {
         return;
       }
       // 内部スクロール要素を取得
-      const scrollable = modal.querySelector('.modal-content');
+      const scrollable = modal.querySelector('.modal-body') || modal.querySelector('.modal-content');
       if (!scrollable) {
         if (e.cancelable) e.preventDefault();
         return;
@@ -29518,6 +29554,8 @@ function openBulletinCreateModal(linkedEvent = null) {
   populateBulletinEventSelect(linkedEvent ? linkedEvent.id : '');
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
@@ -29549,6 +29587,8 @@ function openBulletinEditModal(post) {
   populateBulletinEventSelect(post.eventId || '');
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
@@ -29780,7 +29820,7 @@ function setupBulletinCommentInputEvents() {
   // 2. カーソルがあたっている時のホイールスクロールを親モーダルへ透過
   inputEl.addEventListener('wheel', (e) => {
     const isScrollable = inputEl.scrollHeight > inputEl.clientHeight;
-    const modalContent = inputEl.closest('.modal-content') || document.querySelector('.bulletin-detail-modal');
+    const modalContent = inputEl.closest('.modal-body') || inputEl.closest('.modal-content') || document.querySelector('.bulletin-detail-modal');
     if (!isScrollable && modalContent) {
       modalContent.scrollTop += e.deltaY;
     } else if (modalContent) {
@@ -29980,6 +30020,8 @@ function openBulletinDetailModal(post, openReaders = false) {
   markPostAsReadIfUnread(post);
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
