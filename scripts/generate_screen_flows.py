@@ -695,6 +695,7 @@ def render_all_screen_flows(output_dir="d:/app/TeamManagement/docs/flow_images")
 
     from render_screen_flow import generate_flow_html
     from render_swimlane_flow import build_scr01_swimlane_html
+    from render_swimlane_generic import build_generic_swimlane_html, SWIMLANE_SPECS
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -704,12 +705,12 @@ def render_all_screen_flows(output_dir="d:/app/TeamManagement/docs/flow_images")
             html_path = os.path.join(output_dir, f"flow_{scr_id}.html")
             png_path = os.path.join(output_dir, f"flow_{scr_id}.png")
 
-            if scr_id == "SCR01":
-                html_content = build_scr01_swimlane_html()
+            if scr_id == "SCR01" or scr_id in SWIMLANE_SPECS:
+                html_content = build_scr01_swimlane_html() if scr_id == "SCR01" else build_generic_swimlane_html(SWIMLANE_SPECS[scr_id])
                 with open(html_path, "w", encoding="utf-8") as f:
                     f.write(html_content)
                 try:
-                    page.set_viewport_size({"width": 1720, "height": 1200})
+                    page.set_viewport_size({"width": 1720, "height": 1400})
                     page.goto(f"file:///{os.path.abspath(html_path)}")
                     page.wait_for_selector(".edge-label")
                     page.wait_for_timeout(200)
