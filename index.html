@@ -2522,6 +2522,28 @@ html.no-scroll {
   color: #15803d;
   border: 1px solid #bbf7d0;
 }
+.notif-status-badge.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #15803d;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.notif-status-badge.badge-verified .material-symbols-outlined {
+  font-size: 16px;
+  color: #16a34a;
+}
+.notif-guide-text {
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 6px;
+}
 .notif-radio-desc {
   font-size: 0.73rem;
   color: var(--text-muted);
@@ -2643,25 +2665,54 @@ html.no-scroll {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-heading, #334155);
 }
 .profile-line-linked-label .material-symbols-outlined {
   font-size: 17px;
+  color: #06c755;
 }
 .profile-line-unlink-btn {
-  border: none;
-  background: transparent;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 600;
-  padding: 4px 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .profile-line-unlink-btn:hover {
   color: #dc2626;
-  text-decoration: underline;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.profile-line-msg {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: center;
+}
+.profile-line-msg.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.profile-line-msg.error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.profile-line-msg.info {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
 }
 .notif-target-box {
   padding: 10px 12px;
@@ -11770,8 +11821,8 @@ textarea.comment-textarea:active {
         <div id="notifActionArea" class="notif-action-area mb-12 hidden">
           <div id="notifActionLineWrap" class="hidden">
             <div id="profileLineUnlinkedArea">
-              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full mb-6" onclick="handleLineConnectClick()">
-                <span class="material-symbols-outlined mr-2">add_link</span>LINE公式アカウントと連携
+              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full" onclick="handleLineConnectClick()">
+                <span class="material-symbols-outlined">add_link</span>LINE公式アカウントと連携
               </button>
               <div id="profileLineCodeBox" class="profile-line-code-box hidden">
                 <div class="profile-line-code-row">
@@ -11782,28 +11833,29 @@ textarea.comment-textarea:active {
                   <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineCopyCode()">
                     <span class="material-symbols-outlined">content_copy</span>コピー
                   </button>
-                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/oaMessage/%40377avqrr/" target="_blank" rel="noopener noreferrer">
-                    <span class="material-symbols-outlined">open_in_new</span>LINEを開く（入力済み）
+                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">open_in_new</span><span id="btnProfileLineOpenLabel">公式LINEを開く</span>
                   </a>
                   <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineRefresh()">
                     <span class="material-symbols-outlined">refresh</span>連携確認
                   </button>
                 </div>
               </div>
-              <div class="text-2xs text-muted text-center" id="profileLineGuideText">※ボタンを押して連携コードを発行し、「LINEを開く」から公式LINEへそのまま送信してください。</div>
+              <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、公式LINEへ送信してください。</div>
             </div>
             <div id="profileLineLinkedArea" class="profile-line-linked-row hidden">
               <span class="profile-line-linked-label">
-                <span class="material-symbols-outlined">check_circle</span>LINE公式アカウント連携済み
+                <span class="material-symbols-outlined">chat</span>公式LINE 接続中（@377avqrr）
               </span>
               <button type="button" id="btnProfileLineUnlink" class="profile-line-unlink-btn" onclick="handleProfileLineUnlink()">連携解除</button>
             </div>
+            <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
           </div>
           <div id="notifActionPushWrap" class="hidden">
-            <button type="button" class="btn-notif-action btn-notif-push w-full mb-6" onclick="handlePushPermissionRequest()">
-              <span class="material-symbols-outlined mr-2">notifications</span>この端末の通知を有効化
+            <button type="button" class="btn-notif-action btn-notif-push w-full" onclick="handlePushPermissionRequest()">
+              <span class="material-symbols-outlined">notifications</span>この端末の通知を有効化
             </button>
-            <div class="text-2xs text-muted text-center" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
+            <div class="notif-guide-text" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
           </div>
         </div>
 
@@ -12350,9 +12402,9 @@ textarea.comment-textarea:active {
               <span class="material-symbols-outlined">content_copy</span>
               <span>コピー</span>
             </button>
-            <a id="btnHomeLineOpenOa" class="home-line-open-btn" href="https://line.me/R/oaMessage/%40377avqrr/" target="_blank" rel="noopener noreferrer">
+            <a id="btnHomeLineOpenOa" class="home-line-open-btn" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
               <span class="material-symbols-outlined">open_in_new</span>
-              <span>LINEを開く（入力済み）</span>
+              <span id="btnHomeLineOpenLabel">公式LINEを開く</span>
             </a>
           </div>
         </div>
@@ -17163,6 +17215,11 @@ textarea.comment-textarea:active {
 
     const LINE_BOT_BASIC_ID = '@377avqrr';
 
+    function isMobileBrowser() {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+      return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    }
+
     function getLineFriendUrl() {
       return `https://line.me/R/ti/p/${encodeURIComponent(LINE_BOT_BASIC_ID)}`;
     }
@@ -17172,10 +17229,16 @@ textarea.comment-textarea:active {
       return code ? `${base}?${encodeURIComponent(code)}` : base;
     }
 
+    function getLineOpenUrl(code) {
+      return isMobileBrowser() ? getLineOaMessageUrl(code) : getLineFriendUrl();
+    }
+
     window.SupabaseLinePush = {
       LINE_BOT_BASIC_ID,
+      isMobileBrowser,
       getLineFriendUrl,
       getLineOaMessageUrl,
+      getLineOpenUrl,
       getLineLinkStatus,
       issueLinkCode,
       unlinkLine,
@@ -18935,6 +18998,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       msgEl.textContent = '';
       msgEl.className = 'notif-status-msg hidden';
     }
+    setProfileLineMsg('');
 
     // サーバーから最新設定を取得（非同期で同期）
     if (typeof google !== 'undefined' && google.script && google.script.run && (u.name || u.email)) {
@@ -18979,8 +19043,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const lineBadge = document.getElementById('notifBadgeLine');
     if (lineBadge) {
       if (u.lineLinked) {
-        lineBadge.textContent = '連携済み';
-        lineBadge.className = 'notif-status-badge badge-green';
+        lineBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>連携済み</span>';
+        lineBadge.className = 'notif-status-badge badge-verified';
       } else {
         lineBadge.textContent = '未連携';
         lineBadge.className = 'notif-status-badge badge-gray';
@@ -18992,8 +19056,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (pushBadge) {
       if (typeof Notification !== 'undefined') {
         if (Notification.permission === 'granted') {
-          pushBadge.textContent = '許可済み';
-          pushBadge.className = 'notif-status-badge badge-green';
+          pushBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>許可済み</span>';
+          pushBadge.className = 'notif-status-badge badge-verified';
         } else if (Notification.permission === 'denied') {
           pushBadge.textContent = 'ブロック中';
           pushBadge.className = 'notif-status-badge badge-gray';
@@ -19021,24 +19085,58 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     msgEl.classList.remove('hidden');
   }
 
+  function setProfileLineMsg(msg, type = 'info') {
+    const msgEl = document.getElementById('profileLineStatusMsg');
+    if (!msgEl) return;
+    if (!msg) {
+      msgEl.textContent = '';
+      msgEl.className = 'profile-line-msg hidden';
+      return;
+    }
+    msgEl.textContent = msg;
+    msgEl.className = 'profile-line-msg ' + (type === 'success' || type === 'error' ? type : 'info');
+    msgEl.classList.remove('hidden');
+  }
+
+  function isLineMobileEnv() {
+    if (window.SupabaseLinePush && typeof window.SupabaseLinePush.isMobileBrowser === 'function') {
+      return window.SupabaseLinePush.isMobileBrowser();
+    }
+    return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || '');
+  }
+
   function syncProfileLineUi() {
     const u = window.currentUser || {};
     const isLinked = !!u.lineLinked;
+    const isMobile = isLineMobileEnv();
     const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
     const linkedArea = document.getElementById('profileLineLinkedArea');
     const codeBox = document.getElementById('profileLineCodeBox');
     const codeText = document.getElementById('profileLineCodeText');
     const openOaLink = document.getElementById('btnProfileLineOpenOa');
+    const openOaLabel = document.getElementById('btnProfileLineOpenLabel');
+    const guideEl = document.getElementById('profileLineGuideText');
 
     if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
     if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
 
+    if (guideEl) {
+      guideEl.textContent = isMobile
+        ? '※ボタンを押して連携コードを発行し、「LINEを開く（入力済み）」から公式LINEへそのまま送信してください。'
+        : '※PCからは「公式LINEを開く（QR表示）」でスマホから友だち追加し、発行した連携コードをコピーして公式LINEトークへ送信してください。';
+    }
+
     if (!isLinked && u.lineLinkCode) {
       if (codeText) codeText.textContent = u.lineLinkCode;
       if (openOaLink) {
-        openOaLink.href = (window.SupabaseLinePush && window.SupabaseLinePush.getLineOaMessageUrl)
-          ? window.SupabaseLinePush.getLineOaMessageUrl(u.lineLinkCode)
-          : `https://line.me/R/oaMessage/%40377avqrr/?${encodeURIComponent(u.lineLinkCode)}`;
+        openOaLink.href = (window.SupabaseLinePush && window.SupabaseLinePush.getLineOpenUrl)
+          ? window.SupabaseLinePush.getLineOpenUrl(u.lineLinkCode)
+          : (isMobile
+            ? `https://line.me/R/oaMessage/%40377avqrr/?${encodeURIComponent(u.lineLinkCode)}`
+            : 'https://line.me/R/ti/p/%40377avqrr');
+      }
+      if (openOaLabel) {
+        openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
       }
       if (codeBox) codeBox.classList.remove('hidden');
     } else if (codeBox) {
@@ -19172,12 +19270,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       syncProfileLineUi();
       const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
       handleNotifTypeChange(currentVal);
-      setProfileNotifMsg(`連携コード「${res.code}」を発行しました。「LINEを開く（入力済み）」から公式LINEへ送信してください。`, true);
+      const issuedMsg = isLineMobileEnv()
+        ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、戻ってから「連携確認」を押してください。`
+        : `コード「${res.code}」を発行しました。「コピー」してからスマホの公式LINEトークへ送信し、「連携確認」を押してください。`;
+      setProfileLineMsg(issuedMsg, 'success');
       if (typeof window.refreshHomeLineMockState === 'function') {
         window.refreshHomeLineMockState(false);
       }
     } catch (err) {
-      setProfileNotifMsg(err && err.message ? err.message : '連携コードの発行に失敗しました。', false);
+      setProfileLineMsg(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -19195,9 +19296,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
-      setProfileNotifMsg(`連携コード「${code}」をコピーしました。公式LINEトークに貼り付けて送信してください。`, true);
+      setProfileLineMsg(`コード「${code}」をコピーしました。公式LINEトークに貼り付けて送信してください。`, 'success');
     } catch (e) {
-      setProfileNotifMsg(`連携コード「${code}」を公式LINEトークへ送信してください。`, true);
+      setProfileLineMsg(`コード「${code}」を公式LINEトークへ送信してください。`, 'info');
     }
   }
 
@@ -19223,12 +19324,12 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
 
       if (status.linked) {
-        setProfileNotifMsg('LINE公式アカウントとの連携が完了しました。', true);
+        setProfileLineMsg('公式LINEとの連携を確認しました。', 'success');
       } else {
-        setProfileNotifMsg('まだ連携が完了していません。公式LINEトークにコードを送信後、再度「連携確認」を押してください。', false);
+        setProfileLineMsg('まだ連携が確認できていません。公式LINEトークへコード送信後に再度お試しください。', 'error');
       }
     } catch (err) {
-      setProfileNotifMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', false);
+      setProfileLineMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
     }
   }
 
@@ -19255,9 +19356,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       if (typeof window.refreshHomeLineMockState === 'function') {
         window.refreshHomeLineMockState(false);
       }
-      setProfileNotifMsg('LINE公式アカウントの連携を解除しました。', true);
+      setProfileLineMsg('公式LINEとの連携を解除しました。', 'info');
     } catch (err) {
-      setProfileNotifMsg(err && err.message ? err.message : '連携解除に失敗しました。', false);
+      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -21791,8 +21892,13 @@ async function refreshHomeLineMockState(showMessage) {
       if (!status.linked && status.linkCode) {
         codeText.textContent = status.linkCode;
         const openOaLink = document.getElementById('btnHomeLineOpenOa');
-        if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
-          openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(status.linkCode);
+        const openOaLabel = document.getElementById('btnHomeLineOpenLabel');
+        const isMobile = window.SupabaseLinePush.isMobileBrowser ? window.SupabaseLinePush.isMobileBrowser() : false;
+        if (openOaLink && window.SupabaseLinePush.getLineOpenUrl) {
+          openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(status.linkCode);
+        }
+        if (openOaLabel) {
+          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
         }
         codeBox.classList.remove('hidden');
       } else {
@@ -21830,11 +21936,21 @@ async function handleHomeIssueLineCode() {
     const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
     if (codeText) codeText.textContent = res.code;
     const openOaLink = document.getElementById('btnHomeLineOpenOa');
-    if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
-      openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(res.code);
+    const openOaLabel = document.getElementById('btnHomeLineOpenLabel');
+    const isMobile = window.SupabaseLinePush.isMobileBrowser ? window.SupabaseLinePush.isMobileBrowser() : false;
+    if (openOaLink && window.SupabaseLinePush.getLineOpenUrl) {
+      openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(res.code);
+    }
+    if (openOaLabel) {
+      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
     }
     if (codeBox) codeBox.classList.remove('hidden');
-    setHomeLineFeedback(`コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`, 'success');
+    setHomeLineFeedback(
+      isMobile
+        ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`
+        : `コード「${res.code}」を発行しました。「コピー」して公式LINEトークへ送信（未追加なら「公式LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
+      'success'
+    );
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
   } finally {
