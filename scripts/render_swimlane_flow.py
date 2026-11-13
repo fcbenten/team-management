@@ -28,12 +28,12 @@ def build_scr01_swimlane_html():
     background: #FFFFFF;
     color: #0F172A;
     padding: 12px;
-    width: 1720px;
+    width: 1884px;
   }
 
   .diagram-container {
     position: relative;
-    width: 1696px;
+    width: 1860px;
     border: 1.5px solid #CBD5E1;
     border-radius: 12px;
     background: #F8FAFC;
@@ -71,11 +71,11 @@ def build_scr01_swimlane_html():
     border-radius: 2px;
   }
 
-  /* 5列スイムレーングリッド: 345 + 300 + 250 + 295 + 250 + 55*4 = 1440 + 220 = 1660px */
+  /* 5列スイムレーングリッド: 345 + 300 + 250 + 295 + 250 + 96*4 = 1440 + 384 = 1824px */
   .lanes-grid {
     display: grid;
     grid-template-columns: 345px 300px 250px 295px 250px;
-    gap: 55px;
+    gap: 96px;
     position: relative;
     z-index: 2;
   }
@@ -335,7 +335,8 @@ def build_scr01_swimlane_html():
       <div class="legend-item"><div class="legend-line" style="background:#2563EB;"></div><span>通常処理・参照 (JS/GAS)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#059669;"></div><span>Supabase Direct バイパス (GAS不要)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#D97706;"></div><span>画面内カード表示・切替 (SPA)</span></div>
-      <div class="legend-item"><div class="legend-line" style="background:#7C3AED;"></div><span>他画面・外部遷移 / コールバック復帰</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#7C3AED; border-top: 2px dashed #7C3AED; height:0;"></div><span>他画面・外部遷移 / コールバック復帰</span></div>
+      <div class="legend-item"><span style="color:#475569; font-weight:900;">◀─▶</span><span>双方向(参照/同期) / ─▶ 単方向(更新/遷移)</span></div>
     </div>
   </div>
 
@@ -464,7 +465,7 @@ def build_scr01_swimlane_html():
     <!-- ======================================================
          3列目: GAS (バックエンドAPI)
          ====================================================== -->
-    <div class="lane lane-gas">
+    <div class="lane lane-gas" id="lane-gas">
       <div class="lane-header">3. GAS (バックエンドAPI)</div>
       <div class="lane-body">
         <div class="node-item node-gas" id="g-exchange" style="position:absolute; top: 696px; left: 0; right: 0;">
@@ -478,7 +479,7 @@ def build_scr01_swimlane_html():
     <!-- ======================================================
          4列目: DB / 外部API
          ====================================================== -->
-    <div class="lane lane-db">
+    <div class="lane lane-db" id="lane-db">
       <div class="lane-header">4. DB / 外部API</div>
       <div class="lane-body">
         <div class="node-item node-ext" id="d-local" style="position:absolute; top: 14px; left: 0; right: 0;">
@@ -524,7 +525,7 @@ def build_scr01_swimlane_html():
     <!-- ======================================================
          5列目: 他画面など
          ====================================================== -->
-    <div class="lane lane-other">
+    <div class="lane lane-other" id="lane-other">
       <div class="lane-header">5. 他画面など</div>
       <div class="lane-body">
         <!-- SCR02 ホーム画面 -->
@@ -591,7 +592,7 @@ def build_scr01_swimlane_html():
     alignCenterY('j-login', 't-login-btn');
     alignCenterY('j-to-precheck', 't-oauth-link');
     alignCenterY('j-precheck-submit', 't-precheck-btn');
-    alignCenterY('n-google-auth', 't-precheck-btn');
+    alignCenterY('n-google-auth', 'j-precheck-submit');
     alignCenterY('j-back-login', 't-back-login');
     alignCenterY('j-callback', 't-callback');
     alignCenterY('g-exchange', 't-callback');
@@ -668,6 +669,9 @@ def build_scr01_swimlane_html():
     }
 
     const laneScreen = getBox('lane-screen');
+    const laneGas = getBox('lane-gas');
+    const laneDb = getBox('lane-db');
+    const laneOther = getBox('lane-other');
     const cardLogin = getBox('card-login');
     const cardPrecheck = getBox('card-precheck');
     const cardPw = getBox('card-pw');
@@ -721,14 +725,14 @@ def build_scr01_swimlane_html():
     addLabel('保持確認', gExchange.cx, yLocalCheck, '#1E40AF', '#93C5FD');
 
     // 2b. セッション有効時 ➔ SCR02 ホーム画面 (localStorage直下の水平直線トラック)
-    const trackHome1Y = dLocal.bottom + 18;
+    const trackHome1Y = dLocal.bottom + 24;
     addPath(orthoPath([
       [jInit.right + 2, jInit.cy + 14],
       [jInit.right + 24, jInit.cy + 14],
       [jInit.right + 24, trackHome1Y],
       [nHome.left - 2, trackHome1Y]
     ], 8), '#7C3AED', 'arr-purple');
-    addLabel('セッション有効時', (col4Right + nHome.left) / 2, trackHome1Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
+    addLabel('セッション有効時', dLocal.cx, trackHome1Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
     // 2c. ★セッション未保持時 ➔ カードA (#loginCard) へ表示 (jInit底辺から出て青い矢印に一切重ならない!)
     const step1DropY = jInit.bottom + 12;
@@ -750,14 +754,14 @@ def build_scr01_swimlane_html():
     addLabel('Direct認証照合', gExchange.cx, yLoginBypass, '#065F46', '#6EE7B7', '#ECFDF5');
 
     // 3b. 認証成功 ➔ SCR02 ホーム画面 (trackHome1Y に平行な上側トラック)
-    const trackHome2Y = dMembers.top - 16;
+    const trackHome2Y = dMembers.top - 22;
     addPath(orthoPath([
       [jLogin.right + 2, jLogin.cy - 14],
       [jLogin.right + 24, jLogin.cy - 14],
       [jLogin.right + 24, trackHome2Y],
       [nHome.left - 2, trackHome2Y]
     ], 8), '#7C3AED', 'arr-purple');
-    addLabel('認証成功', (col4Right + nHome.left) / 2, trackHome2Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
+    addLabel('認証成功', dMembers.cx, trackHome2Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
     // 3c. 「初めての方はこちら」 ➔ カードB (#oauthPreCheckCard) へ切替 (底辺から出て青い矢印と完全非接触!)
     const step2DropY = jToPrecheck.bottom + 12;
@@ -773,27 +777,28 @@ def build_scr01_swimlane_html():
     // =========================================================
     // 4. カードB: メアド事前チェック & OAuth遷移 / 戻る
     // =========================================================
-    const xMemberBus1 = gExchange.right + 16;      // 最左: J4 ➔ members上寄り
-    const xMemberBus2 = gExchange.right + 36;      // 中央: G1 ➔ members中下寄り
-    const xMemberBus3 = col4Left - 14;             // 最右: J7 ➔ members最下寄り
+    const xMemberBus1 = laneGas.right + 18;                        // 最左: J4 ➔ members上寄り
+    const xMemberBus2 = (laneGas.right + laneDb.left) / 2;         // 中央: G1 ➔ members底辺中央
+    const xMemberBus3 = laneDb.left - 18;                          // 最右: J7 ➔ members下寄り
 
-    const yMemberEnter1 = dMembers.bottom - 38;
-    const yMemberEnter2 = dMembers.bottom - 22;
-    const yMemberEnter3 = dMembers.bottom - 8;
+    const yMemberEnter1 = dMembers.bottom - 34;
+    const yMemberEnter3 = dMembers.bottom - 14;
+    const yMemberTokenHoriz = dMembers.bottom + 54;
 
     // 4a. 事前メアド照合: JS(precheck) ◀──▶ members (完全直交・非交差!)
+    const yPrecheckBypass = Math.max(jPrecheckSubmit.top + 14, jPrecheckSubmit.cy - 12);
     addPath(orthoPath([
-      [jPrecheckSubmit.right + 2, jPrecheckSubmit.cy - 12],
-      [xMemberBus1, jPrecheckSubmit.cy - 12],
+      [jPrecheckSubmit.right + 2, yPrecheckBypass],
+      [xMemberBus1, yPrecheckBypass],
       [xMemberBus1, yMemberEnter1],
       [dMembers.left - 2, yMemberEnter1]
     ], 8), '#059669', 'arr-green', 'arr-green-rev', null, 2.4);
-    addLabel('Direct事前名簿照合', gExchange.cx, jPrecheckSubmit.cy - 12, '#065F46', '#6EE7B7', '#ECFDF5');
+    addLabel('Direct事前名簿照合', gExchange.cx, yPrecheckBypass, '#065F46', '#6EE7B7', '#ECFDF5');
 
     // 4b. 登録済み確認後 ➔ Googleアカウント認可画面 (真横一線の水平破線!)
-    const yGoogleAuthLine = nGoogleAuth.cy + 6;
+    const yGoogleAuthLine = Math.min(jPrecheckSubmit.cy + 12, jPrecheckSubmit.bottom - 14, nGoogleAuth.bottom - 14);
     addPath(`M ${jPrecheckSubmit.right + 2} ${yGoogleAuthLine} L ${nGoogleAuth.left - 2} ${yGoogleAuthLine}`, '#7C3AED', 'arr-purple', null, '6 3');
-    addLabel('login_hint指定 外部認可遷移', dGoogleOAuth.cx, yGoogleAuthLine - 13, '#5B21B6', '#DDD6FE', '#F5F3FF');
+    addLabel('login_hint指定 外部認可遷移', dGoogleOAuth.cx, yGoogleAuthLine, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
     // 4c. 「ログイン画面へ戻る」 ➔ カードA (カードB直下の通路を通り1列目左端から戻る)
     const leftReturnX = laneScreen.left + 11;
@@ -826,14 +831,15 @@ def build_scr01_swimlane_html():
     addPath(`M ${jCallback.right + 2} ${jCallback.cy} L ${gExchange.left - 2} ${jCallback.cy}`, '#2563EB', 'arr-blue', 'arr-blue-rev');
     addPath(`M ${gExchange.right + 2} ${gExchange.cy + 10} L ${dGoogleOAuth.left - 2} ${gExchange.cy + 10}`, '#2563EB', 'arr-blue', 'arr-blue-rev');
 
-    // 6b. GAS ➔ members
+    // 6b. GAS ➔ members (d-members下部の空域を通って底辺中央へ入るため縦線と非干渉)
     addPath(orthoPath([
       [gExchange.right + 2, gExchange.cy - 12],
       [xMemberBus2, gExchange.cy - 12],
-      [xMemberBus2, yMemberEnter2],
-      [dMembers.left - 2, yMemberEnter2]
+      [xMemberBus2, yMemberTokenHoriz],
+      [dMembers.cx, yMemberTokenHoriz],
+      [dMembers.cx, dMembers.bottom - 1]
     ], 8), '#2563EB', 'arr-blue');
-    addLabel('token保存 / 名簿照合', xMemberBus2, 575, '#1E40AF', '#93C5FD');
+    addLabel('token保存 / 名簿照合', (xMemberBus2 + dMembers.cx) / 2, yMemberTokenHoriz, '#1E40AF', '#93C5FD');
 
     // 6c. 未設定時 ➔ カードC (#oauthPasswordCard) へ切替 (底辺から出て青い矢印と完全非接触!)
     const step3DropY = jCallback.bottom + 12;
@@ -846,8 +852,8 @@ def build_scr01_swimlane_html():
     ], 7), '#D97706', 'arr-amber', null, null, 2.5);
     addLabel('未設定時 カードC切替', gutter12MidX, (step3DropY + cardPw.top + 16) / 2, '#B45309', '#FDE68A', '#FEF3C7');
 
-    // 6d. 設定済時 ➔ SCR02 ホーム画面 (4-5列間55px通路の中央を上る)
-    const gutter45X = (col4Right + nHome.left) / 2;
+    // 6d. 設定済時 ➔ SCR02 ホーム画面 (4-5列間92px通路の中央を上る)
+    const gutter45X = (laneDb.right + laneOther.left) / 2;
     const trackHome3Y = gExchange.bottom + 24;
     addPath(orthoPath([
       [jCallback.right + 2, jCallback.cy + 18],
@@ -903,7 +909,7 @@ def generate_prototype():
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1720, "height": 1200})
+        page = browser.new_page(viewport={"width": 1920, "height": 1200})
         page.goto(f"file:///{html_path.replace(os.sep, '/')}")
         page.wait_for_selector(".edge-label")
         page.wait_for_timeout(200)

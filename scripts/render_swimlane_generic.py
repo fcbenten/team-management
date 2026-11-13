@@ -16,12 +16,12 @@ COMMON_SWIMLANE_CSS = """
     background: #FFFFFF;
     color: #0F172A;
     padding: 12px;
-    width: 1720px;
+    width: 1884px;
   }
 
   .diagram-container {
     position: relative;
-    width: 1696px;
+    width: 1860px;
     border: 1.5px solid #CBD5E1;
     border-radius: 12px;
     background: #F8FAFC;
@@ -59,11 +59,11 @@ COMMON_SWIMLANE_CSS = """
     border-radius: 2px;
   }
 
-  /* 5列スイムレーングリッド: 345 + 300 + 250 + 295 + 250 + 55*4 = 1660px */
+  /* 5列スイムレーングリッド: 345 + 300 + 250 + 295 + 250 + 96*4 = 1824px */
   .lanes-grid {
     display: grid;
     grid-template-columns: 345px 300px 250px 295px 250px;
-    gap: 55px;
+    gap: 96px;
     position: relative;
     z-index: 2;
   }
@@ -859,7 +859,11 @@ window.addEventListener('load', () => {{
       }}
 
       gasTargets.forEach((tg, idx) => {{
-        const startY = gR.cy + (gasTargets.length > 1 ? (idx === 0 ? -10 : 10) : 0);
+        const tgR = rect(document.getElementById(tg.to));
+        let startY = gR.cy + (gasTargets.length > 1 ? (idx === 0 ? -10 : 10) : 0);
+        if (gasTargets.length === 1 && tgR.cy >= gR.top + 14 && tgR.cy <= gR.bottom - 14) {{
+          startY = tgR.cy;
+        }}
         if (!dbWiresByTarget[tg.to]) dbWiresByTarget[tg.to] = [];
         dbWiresByTarget[tg.to].push({{
           sourceRect: gR,
@@ -925,6 +929,7 @@ window.addEventListener('load', () => {{
   }});
 
   // 7. Route all DB/Ext incoming wires cleanly with planar monotonic track ordering in Gutter 3-4
+  const preparedDbWires = [];
   Object.keys(dbWiresByTarget).forEach((targetId, dIdx) => {{
     const targetEl = document.getElementById(targetId);
     const dR = rect(targetEl);
@@ -937,6 +942,7 @@ window.addEventListener('load', () => {{
 
     wires.forEach((w, i) => {{
       w.entryY = wires.length > 1 ? usableTop + i * stepY : dR.cy;
+      w.dR = dR;
     }});
 
     const downWires = wires.filter(w => (w.clearL3Y ?? w.startY) <= w.entryY);
@@ -944,16 +950,17 @@ window.addEventListener('load', () => {{
 
     // Assign monotonic non-crossing vertical tracks in Gutter 3-4
     downWires.forEach((w, k) => {{
-      const frac = (downWires.length === 1) ? 0.65 : (0.85 - (k / Math.max(1, downWires.length - 1)) * 0.45);
+      const frac = (downWires.length === 1) ? 0.90 : (0.90 - (k / Math.max(1, downWires.length - 1)) * 0.34);
       w.trackX = g34Left + g34Width * frac;
     }});
     upWires.forEach((w, k) => {{
-      const frac = (upWires.length === 1) ? 0.35 : (0.15 + (k / Math.max(1, upWires.length - 1)) * 0.40);
+      const frac = (upWires.length === 1) ? 0.14 : (0.06 + (k / Math.max(1, upWires.length - 1)) * 0.16);
       w.trackX = g34Left + g34Width * frac;
     }});
 
     wires.forEach((w, i) => {{
       const yCross = w.clearL3Y ?? w.startY;
+      w.yCross = yCross;
       const pts = [[w.startX, w.startY]];
       if (w.isBypass && Math.abs(yCross - w.startY) > 2) {{
         const xJog = g23MidX + (i % 2 === 0 ? -6 : 6);
@@ -961,24 +968,63 @@ window.addEventListener('load', () => {{
       }}
       if (Math.abs(yCross - w.entryY) <= 4) {{
         pts.push([dR.left - 2, yCross]);
+        w.hasVSeg = false;
       }} else {{
         pts.push([w.trackX, yCross], [w.trackX, w.entryY], [dR.left - 2, w.entryY]);
+        w.hasVSeg = true;
       }}
       addPath(orthoPath(pts, 7), w.color, w.marker, null, w.width, w.markerStart || null);
-
-      // Place label cleanly centered inside Gutter 3-4 (away from GAS card right edge when vertically clear)
-      let lblX = lane3.cx;
-      let lblY = yCross;
-      if (!w.isBypass) {{
-        lblX = g34Left + g34Width * 0.5;
-        if (Math.abs(w.entryY - yCross) > 22 && isYClearInLane(w.entryY, gBoxes, 8)) {{
-          lblY = w.entryY;
-        }} else {{
-          lblY = yCross;
-        }}
-      }}
-      addLabel(w.label, lblX, lblY, w.labelStyle[0], w.labelStyle[1], w.labelStyle[2]);
+      preparedDbWires.push(w);
     }});
+  }});
+
+  // Pick clear horizontal segments for labels so they never cross Gutter 3-4 vertical tracks
+  const g34VTracks = preparedDbWires
+    .filter(w => w.hasVSeg)
+    .map(w => ({{
+      x: w.trackX,
+      yMin: Math.min(w.yCross, w.entryY),
+      yMax: Math.max(w.yCross, w.entryY),
+      w
+    }}));
+
+  function bestClearInterval(xMin, xMax, y, excludeW) {{
+    const blockers = g34VTracks
+      .filter(t => t.w !== excludeW && y >= t.yMin - 13 && y <= t.yMax + 13 && t.x > xMin && t.x < xMax)
+      .map(t => t.x)
+      .sort((a, b) => a - b);
+    const cuts = [xMin, ...blockers, xMax];
+    let best = [xMin, xMax];
+    let bestLen = -1;
+    for (let k = 0; k < cuts.length - 1; k++) {{
+      const len = cuts[k + 1] - cuts[k];
+      if (len > bestLen) {{
+        bestLen = len;
+        best = [cuts[k], cuts[k + 1]];
+      }}
+    }}
+    return {{ mid: (best[0] + best[1]) / 2, len: bestLen }};
+  }}
+
+  preparedDbWires.forEach(w => {{
+    let lblX = lane3.cx;
+    let lblY = w.yCross;
+    if (!w.isBypass) {{
+      const candidates = [];
+      if (!w.hasVSeg) {{
+        const c = bestClearInterval(w.startX + 4, w.dR.left - 4, w.yCross, w);
+        candidates.push({{ x: c.mid, y: w.yCross, score: c.len }});
+      }} else {{
+        const cStart = bestClearInterval(w.startX + 4, w.trackX - 4, w.yCross, w);
+        candidates.push({{ x: cStart.mid, y: w.yCross, score: cStart.len + (isYClearInLane(w.yCross, gBoxes, 6) ? 6 : 0) }});
+        const cEntry = bestClearInterval(w.trackX + 4, w.dR.left - 4, w.entryY, w);
+        candidates.push({{ x: cEntry.mid, y: w.entryY, score: cEntry.len }});
+      }}
+      candidates.sort((a, b) => b.score - a.score);
+      lblX = candidates[0].x;
+      lblY = candidates[0].y;
+    }}
+    addLabel(w.label, lblX, lblY, w.labelStyle[0], w.labelStyle[1], w.labelStyle[2]);
   }});
 
   // 8. Route all Orange SPA Card/Modal switches cleanly into Card's right edge (in Gutter 1-2)
