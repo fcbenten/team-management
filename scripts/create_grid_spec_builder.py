@@ -138,17 +138,17 @@ COLS_T2 = [
 # =========================================================================
 # 表3: メッセージ一覧
 # 列配分（合計80列）:
-# ID(1-5=5) / 種別(6-11=6) / 対象エリア(12-21=10) / トリガー(22-28=7) /
-# 表示条件(29-43=15) / 表示領域(44-52=9) / メッセージ文言(53-68=16) / 解除・復帰条件(69-80=12)
+# ID(1-5=5) / 種別(6-9=4) / 対象エリア(10-19=10) / トリガー(20-32=13) /
+# 表示条件(33-46=14) / 表示形式(47-53=7) / メッセージ文言(54-68=15) / 解除・復帰(69-80=12)
 # =========================================================================
 COLS_T3 = [
     ("ID", 1, 5, al_top_center),
-    ("種別", 6, 11, al_top_center),
-    ("対象エリア / 項目", 12, 21, al_top_left),
-    ("トリガー", 22, 28, al_top_center),
-    ("表示条件 / チェック内容", 29, 43, al_top_left),
-    ("表示形式 (表示領域)", 44, 52, al_top_center),
-    ("メッセージ文言", 53, 68, al_top_left),
+    ("種別", 6, 9, al_top_center),
+    ("対象エリア / 項目", 10, 19, al_top_left),
+    ("トリガー", 20, 32, al_top_left),
+    ("表示条件 / チェック内容", 33, 46, al_top_left),
+    ("表示形式", 47, 53, al_top_center),
+    ("メッセージ文言", 54, 68, al_top_left),
     ("解除・復帰 / 補足", 69, 80, al_top_left)
 ]
 
@@ -353,9 +353,9 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
     curr_r += 1
 
     LEVEL_STYLES = {
-        "info": ("info\n(無灯)", fill_odd, f_info_lvl, f_info_msg),
-        "warning": ("warning\n(黄背景)", fill_warn, f_warn_msg, f_warn_msg),
-        "error": ("error\n(赤背景)", fill_err, f_err_msg, f_err_msg),
+        "info": ("info", fill_odd, f_info_lvl, f_info_msg),
+        "warning": ("warning", fill_warn, f_warn_msg, f_warn_msg),
+        "error": ("error", fill_err, f_err_msg, f_err_msg),
     }
 
     for err in validation_errors:
@@ -368,15 +368,15 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
         lvl_label, lvl_fill, lvl_font, msg_font = LEVEL_STYLES.get(level, LEVEL_STYLES["error"])
 
         merge_and_style(ws, curr_r, 1, curr_r, 5, value=err_id, font=f_td_bold, fill=lvl_fill, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 6, curr_r, 11, value=lvl_label, font=lvl_font, fill=lvl_fill, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 12, curr_r, 21, value=target, font=f_td, fill=fill_odd, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 22, curr_r, 28, value=trigger, font=f_td, fill=fill_odd, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 29, curr_r, 43, value=rule, font=f_td, fill=fill_odd, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 44, curr_r, 52, value=disp_type, font=f_td, fill=fill_odd, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 53, curr_r, 68, value=msg, font=msg_font, fill=lvl_fill, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 6, curr_r, 9, value=lvl_label, font=lvl_font, fill=lvl_fill, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 10, curr_r, 19, value=target, font=f_td, fill=fill_odd, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 20, curr_r, 32, value=trigger, font=f_td, fill=fill_odd, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 33, curr_r, 46, value=rule, font=f_td, fill=fill_odd, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 47, curr_r, 53, value=disp_type, font=f_td, fill=fill_odd, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 54, curr_r, 68, value=msg, font=msg_font, fill=lvl_fill, alignment=al_top_left)
         merge_and_style(ws, curr_r, 69, curr_r, 80, value=recovery, font=f_td, fill=fill_odd, alignment=al_top_left)
 
-        max_len = max(len(str(rule)), len(str(msg)), len(str(recovery)))
+        max_len = max(len(str(trigger)), len(str(rule)), len(str(msg)), len(str(recovery)))
         ws.row_dimensions[curr_r].height = 36 if max_len > 36 else 26
         curr_r += 1
 
