@@ -1058,7 +1058,10 @@ function openEventDetailModal(ev) {
     const overlay = document.getElementById('eventDetailModalOverlay');
     if (overlay) {
       overlay.classList.add('active');
-      document.body.classList.add('no-scroll');
+      const bodyEl = overlay.querySelector('.modal-body');
+      if (bodyEl) bodyEl.scrollTop = 0;
+      if (typeof lockBodyScroll === 'function') lockBodyScroll();
+      else document.body.classList.add('no-scroll');
     }
   } catch (modalErr) {
     console.error('Error opening event detail modal:', modalErr);
@@ -1303,7 +1306,8 @@ function closeEventDetailModal(e) {
   const overlay = document.getElementById('eventDetailModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
-    document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
   }
 }
 
@@ -1396,7 +1400,8 @@ function openDeleteConfirmModal(payload, isFromDetailModal, displayText) {
   const overlay = document.getElementById('eventDeleteConfirmModalOverlay');
   if (overlay) {
     overlay.classList.add('active');
-    document.body.classList.add('no-scroll');
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
 }
 
@@ -1411,10 +1416,14 @@ function closeDeleteConfirmModal(e) {
   const overlay = document.getElementById('eventDeleteConfirmModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
-    const editModal = document.getElementById('eventEditModalOverlay');
-    const detailModal = document.getElementById('eventDetailModalOverlay');
-    if ((!editModal || !editModal.classList.contains('active')) && (!detailModal || !detailModal.classList.contains('active'))) {
-      document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') {
+      unlockBodyScroll();
+    } else {
+      const editModal = document.getElementById('eventEditModalOverlay');
+      const detailModal = document.getElementById('eventDetailModalOverlay');
+      if ((!editModal || !editModal.classList.contains('active')) && (!detailModal || !detailModal.classList.contains('active'))) {
+        document.body.classList.remove('no-scroll');
+      }
     }
   }
 }
@@ -1643,7 +1652,10 @@ function openEventEditModal(ev, isDuplicate, defaultDate) {
   const overlay = document.getElementById('eventEditModalOverlay');
   if (overlay) {
     overlay.classList.add('active');
-    document.body.classList.add('no-scroll');
+    const bodyEl = overlay.querySelector('.modal-body');
+    if (bodyEl) bodyEl.scrollTop = 0;
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
 }
 
@@ -1672,7 +1684,8 @@ function closeEventEditModal(e) {
   const overlay = document.getElementById('eventEditModalOverlay');
   if (overlay) {
     overlay.classList.remove('active');
-    document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
     clearFieldError('eeTitle');
     clearFieldError('eeDate');
     clearFieldError('eeGuestInput');

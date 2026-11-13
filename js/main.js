@@ -1856,7 +1856,13 @@
     if (settingsModal) settingsModal.classList.remove('active');
 
     const modal = document.getElementById('userProfileModal');
-    if (modal) modal.classList.add('active');
+    if (modal) {
+      modal.classList.add('active');
+      const bodyEl = modal.querySelector('.profile-modal-body');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    }
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
 
   /**
@@ -1868,7 +1874,8 @@
     }
     const modal = document.getElementById('userProfileModal');
     if (modal) modal.classList.remove('active');
-    document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
   }
 
   /**
@@ -1906,6 +1913,8 @@
       const bodyEl = modal.querySelector('.settings-modal-body');
       if (bodyEl) bodyEl.scrollTop = 0;
     }
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
 
   /**
@@ -1927,7 +1936,8 @@
     }
     const modal = document.getElementById('userSettingsModal');
     if (modal) modal.classList.remove('active');
-    document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
   }
 
   /**
@@ -1941,6 +1951,8 @@
     if (settingsModal) settingsModal.classList.remove('active');
     const modal = document.getElementById('logoutConfirmModal');
     if (modal) modal.classList.add('active');
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
 
   /**
@@ -1952,7 +1964,8 @@
     }
     const modal = document.getElementById('logoutConfirmModal');
     if (modal) modal.classList.remove('active');
-    document.body.classList.remove('no-scroll');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
   }
 
   /**
@@ -3047,7 +3060,8 @@
     }
 
     modal.classList.remove('hidden');
-    document.body.classList.add('no-scroll');
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    else document.body.classList.add('no-scroll');
   }
   window.openAvatarLightbox = openAvatarLightbox;
 
@@ -3062,13 +3076,8 @@
     const img = document.getElementById('avatarLightboxImg');
     if (img) img.src = '';
 
-    // 他のアクティブなモーダル（選手詳細またはプロフィールモーダル）がなければ no-scroll を解除
-    const pm = document.getElementById('playerModalOverlay');
-    const prof = document.getElementById('userProfileModal');
-    const hasOtherActiveModal = (pm && pm.classList.contains('active')) || (prof && prof.classList.contains('active'));
-    if (!hasOtherActiveModal) {
-      document.body.classList.remove('no-scroll');
-    }
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+    else document.body.classList.remove('no-scroll');
   }
   window.closeAvatarLightbox = closeAvatarLightbox;
 

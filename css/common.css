@@ -569,6 +569,7 @@ select:focus, input:focus, textarea:focus {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  touch-action: pan-y;
   overscroll-behavior: contain !important;
   overscroll-behavior-y: contain !important;
   -webkit-overflow-scrolling: touch;
@@ -698,6 +699,8 @@ body.no-scroll {
 }
 
 html.no-scroll { 
+  overflow: hidden !important;
+  overflow-y: hidden !important;
   touch-action: none; 
   overscroll-behavior: none !important;
   overscroll-behavior-y: none !important;

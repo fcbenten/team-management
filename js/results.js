@@ -333,7 +333,8 @@ function openMatchDetail(matchId) {
   detailModal.classList.add('active');
   const bodyEl = detailModal.querySelector('.modal-match-body');
   if (bodyEl) bodyEl.scrollTop = 0;
-  document.body.classList.add('no-scroll');
+  if (typeof lockBodyScroll === 'function') lockBodyScroll();
+  else document.body.classList.add('no-scroll');
 }
 
 /**
@@ -347,7 +348,8 @@ function closeMatchDetailModal(e) {
     return; 
   }
   document.getElementById('matchDetailModal').classList.remove('active');
-  document.body.classList.remove('no-scroll');
+  if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+  else document.body.classList.remove('no-scroll');
 }
 
 /**

@@ -496,12 +496,14 @@ function showAppConfirm(options) {
     }
 
     modal.classList.add('active');
+    lockBodyScroll();
   });
 }
 
 function handleAppConfirmResult(result) {
   const modal = document.getElementById('appConfirmModal');
   if (modal) modal.classList.remove('active');
+  unlockBodyScroll();
   if (appConfirmResolver) {
     const fn = appConfirmResolver;
     appConfirmResolver = null;
@@ -566,12 +568,14 @@ function showAppAlert(options) {
     }
 
     modal.classList.add('active');
+    lockBodyScroll();
   });
 }
 
 function closeAppAlertModal() {
   const modal = document.getElementById('appAlertModal');
   if (modal) modal.classList.remove('active');
+  unlockBodyScroll();
   if (appAlertResolver) {
     const fn = appAlertResolver;
     appAlertResolver = null;
@@ -687,3 +691,81 @@ if (typeof document !== 'undefined' && typeof MutationObserver !== 'undefined') 
 window.lockBodyScroll = lockBodyScroll;
 window.unlockBodyScroll = unlockBodyScroll;
 window.updateScrollbarWidth = updateScrollbarWidth;
+
+/**
+ * 全モーダル共通の背面スクロール伝播（ホイール／タッチ）完全抑止
+ */
+(function initGlobalModalScrollLock() {
+  if (typeof document === 'undefined') return;
+
+  let touchStartY = 0;
+
+  function getActiveModalOverlay() {
+    const active = document.querySelectorAll('.modal-overlay.active:not(.hidden), .avatar-lightbox-overlay:not(.hidden)');
+    return active.length > 0 ? active[active.length - 1] : null;
+  }
+
+  function findScrollableTarget(target, modalOverlay) {
+    if (!target || typeof target.closest !== 'function' || !modalOverlay) return null;
+    let cur = target;
+    while (cur && cur !== modalOverlay && cur !== document.body) {
+      if (cur.nodeType === 1) {
+        const style = window.getComputedStyle(cur);
+        const oy = style ? style.overflowY : '';
+        const isScrollStyle = oy === 'auto' || oy === 'scroll';
+        if ((isScrollStyle || cur.classList.contains('modal-body')) && cur.scrollHeight > cur.clientHeight + 1) {
+          return cur;
+        }
+      }
+      cur = cur.parentElement;
+    }
+    return null;
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (e.touches && e.touches.length === 1) {
+      touchStartY = e.touches[0].clientY;
+    }
+  }, { passive: true, capture: true });
+
+  document.addEventListener('wheel', function(e) {
+    const activeModal = getActiveModalOverlay();
+    if (!activeModal) return;
+    if (!activeModal.contains(e.target)) {
+      e.preventDefault();
+      return;
+    }
+    const scrollable = findScrollableTarget(e.target, activeModal);
+    if (!scrollable) {
+      e.preventDefault();
+      return;
+    }
+    const atTop = scrollable.scrollTop <= 0 && e.deltaY < 0;
+    const atBottom = (scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1) && e.deltaY > 0;
+    if (atTop || atBottom) {
+      e.preventDefault();
+    }
+  }, { passive: false, capture: true });
+
+  document.addEventListener('touchmove', function(e) {
+    const activeModal = getActiveModalOverlay();
+    if (!activeModal) return;
+    if (!activeModal.contains(e.target) || e.target === activeModal) {
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+    const scrollable = findScrollableTarget(e.target, activeModal);
+    if (!scrollable) {
+      if (e.cancelable) e.preventDefault();
+      return;
+    }
+    if (e.touches && e.touches.length === 1) {
+      const diffY = e.touches[0].clientY - touchStartY;
+      const atTop = scrollable.scrollTop <= 0 && diffY > 0;
+      const atBottom = (scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1) && diffY < 0;
+      if (atTop || atBottom) {
+        if (e.cancelable) e.preventDefault();
+      }
+    }
+  }, { passive: false, capture: true });
+})();
