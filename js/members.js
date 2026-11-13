@@ -142,7 +142,8 @@ function initMembersView(initialRoster) {
           container.replaceChildren();
           const errBox = document.createElement('div');
           errBox.className = 'card-box error-box text-center p-20';
-          errBox.textContent = res && res.error ? res.error : 'メンバー情報の取得に失敗しました。';
+          console.error('apiGetMemberListForAdmin error:', res);
+          errBox.textContent = getSafeErrorMessage(res, 'メンバー情報の取得に失敗しました。しばらく経ってから再度お試しください。');
           container.appendChild(errBox);
         }
       }
@@ -152,7 +153,8 @@ function initMembersView(initialRoster) {
         container.replaceChildren();
         const errBox = document.createElement('div');
         errBox.className = 'card-box error-box text-center p-20';
-        errBox.textContent = '通信エラー: ' + (err.message || '');
+        console.error('apiGetMemberListForAdmin failure:', err);
+        errBox.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
         container.appendChild(errBox);
       }
     })
@@ -1254,7 +1256,8 @@ function handleSaveMemberSubmit(e) {
           setMemberFormStatus('', '');
           document.getElementById('memberEditEmail')?.focus();
         } else {
-          setMemberFormStatus(res && res.error ? res.error : '保存処理に失敗しました。', 'error');
+          console.error('apiSaveMember error:', res);
+          setMemberFormStatus(getSafeErrorMessage(res, '保存処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       }
     })
@@ -1263,7 +1266,8 @@ function handleSaveMemberSubmit(e) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
       }
-      setMemberFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
+      console.error('apiSaveMember failure:', err);
+      setMemberFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
     })
     .apiSaveMember(payload, actorEmail, actorName);
 }
@@ -1386,11 +1390,13 @@ async function handleRestoreMember(memberName) {
           }
         }
       } else {
-        showAppAlert({ title: '復帰エラー', message: '復帰処理に失敗しました: ' + (res && res.error ? res.error : ''), isError: true });
+        console.error('handleRestoreMember error:', res);
+        showAppAlert({ title: '復帰エラー', message: getSafeErrorMessage(res, '復帰処理に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('handleRestoreMember failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiSaveMember(payload, actorEmail, actorName);
 }
@@ -1512,12 +1518,14 @@ function executeMemberDeletePermanently() {
           window.currentEditingMember = null;
         }, 500);
       } else {
-        setDeleteFormStatus(res && res.error ? res.error : '削除処理に失敗しました。', 'error');
+        console.error('apiDeleteMemberPermanently error:', res);
+        setDeleteFormStatus(getSafeErrorMessage(res, '削除処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
       }
     })
     .withFailureHandler(err => {
       if (deleteBtn) deleteBtn.disabled = false;
-      setDeleteFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
+      console.error('apiDeleteMemberPermanently failure:', err);
+      setDeleteFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
     })
     .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
 }

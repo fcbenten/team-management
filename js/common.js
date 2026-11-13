@@ -589,6 +589,40 @@ function appAlertModalClose(e) {
   }
 }
 
+/**
+ * 内部例外やDB・ネットワーク生エラーをマスクし、画面表示用の安全な日本語メッセージを返す。
+ * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg に置き換える。
+ */
+function getSafeErrorMessage(errOrMsg, fallbackMsg) {
+  var fallback = fallbackMsg || '処理に失敗しました。しばらく経ってから再度お試しください。';
+  var raw = '';
+  if (typeof errOrMsg === 'string') {
+    raw = errOrMsg;
+  } else if (errOrMsg && typeof errOrMsg === 'object') {
+    raw = errOrMsg.message || errOrMsg.error || '';
+  }
+  var msg = String(raw || '').trim();
+  if (!msg) return fallback;
+
+  // 例外クラス名・PostgRESTコード・DB制約・ネットワーク生文言・[object Object]等をマスク
+  var unsafePatterns = [
+    /\b(Exception|Error|TypeError|ReferenceError|SyntaxError|NetworkError|AbortError|PGRST\d+)\b/i,
+    /(violates |row-level security|constraint|duplicate key|foreign key|syntax error|relation "|column "|Failed to fetch|Load failed|Network request failed|timeout|ECONNREFUSED|status code \d+)/i,
+    /[A-Za-z0-9_]+\.[A-Za-z0-9_]+Error/,
+    /^\s*エラー\s*[:：]/,
+    /\[object Object\]/i
+  ];
+  for (var i = 0; i < unsafePatterns.length; i++) {
+    if (unsafePatterns[i].test(msg)) return fallback;
+  }
+
+  // 日本語（ひらがな・カタカナ・漢字）を含まない英語/記号のみのエラーは表示しない
+  if (!/[\u3040-\u30ff\u4e00-\u9faf]/.test(msg)) return fallback;
+
+  return msg;
+}
+window.getSafeErrorMessage = getSafeErrorMessage;
+
 window.showAppConfirm = showAppConfirm;
 window.handleAppConfirmResult = handleAppConfirmResult;
 window.appConfirmModalCancel = appConfirmModalCancel;

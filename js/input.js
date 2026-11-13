@@ -403,7 +403,11 @@ function submitData() {
       }
       
       if (typeof res === 'string' && res.includes('エラー')) {
-        showAppAlert({ title: '保存エラー', message: res, isError: true });
+        console.error('saveMatchData server error:', res);
+        var safeSaveMsg = (typeof getSafeErrorMessage === 'function')
+          ? getSafeErrorMessage(res, '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。')
+          : '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。';
+        showAppAlert({ title: '保存エラー', message: safeSaveMsg, isError: true });
       } else {
         
         // --- ローカルでの即時反映（ラグなし）処理 ---
@@ -464,11 +468,15 @@ function submitData() {
       }
     })
     .withFailureHandler(err => {
+      console.error('saveMatchData failure:', err);
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
       }
-      showAppAlert({ title: '通信エラー', message: '通信エラーが発生しました: ' + (err.message || err), isError: true });
+      var safeCommMsg = (typeof getSafeErrorMessage === 'function')
+        ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
+        : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
+      showAppAlert({ title: '通信エラー', message: safeCommMsg, isError: true });
     })
     .saveMatchData(payload);
 }

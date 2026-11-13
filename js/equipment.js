@@ -819,7 +819,7 @@ function handleSaveEquipmentSubmit(e) {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        showAppAlert({ title: '保存失敗', message: '備品の保存に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
+        showAppAlert({ title: '保存失敗', message: getSafeErrorMessage(res, '備品の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         return;
       }
 
@@ -838,7 +838,8 @@ function handleSaveEquipmentSubmit(e) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      showAppAlert({ title: '通信エラー', message: '保存通信エラーが発生しました: ' + (err.message || err), isError: true });
+      console.error('apiSaveEquipmentItem failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiSaveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName);
 }
@@ -932,7 +933,7 @@ function executeDeleteEquipmentPermanently() {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        showAppAlert({ title: '削除失敗', message: '備品の削除に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
+        showAppAlert({ title: '削除失敗', message: getSafeErrorMessage(res, '備品の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(function(err) {
@@ -942,7 +943,8 @@ function executeDeleteEquipmentPermanently() {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || err), isError: true });
+      console.error('apiDeleteEquipmentItem failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
 }
@@ -1034,7 +1036,8 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
           btnEl.classList.remove('btn-resolving');
           btnEl.textContent = '解決';
         }
-        showAppAlert({ title: '解決エラー', message: res ? res.error : '解決の登録に失敗しました。', isError: true });
+        console.error('apiResolveEquipmentAlert error:', res);
+        showAppAlert({ title: '解決エラー', message: getSafeErrorMessage(res, '解決の登録に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         refreshEquipmentData(true);
         return;
       }
@@ -1047,7 +1050,8 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
         btnEl.classList.remove('btn-resolving');
         btnEl.textContent = '解決';
       }
-      showAppAlert({ title: '通信エラー', message: '通信エラー: ' + (err.message || err), isError: true });
+      console.error('apiResolveEquipmentAlert failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       refreshEquipmentData(true);
     })
     .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);

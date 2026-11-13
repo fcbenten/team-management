@@ -58,15 +58,23 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '設定完了';
           }
-          showAlert((res && res.error) ? res.error : '登録処理に失敗しました。', true);
+          console.error('apiRegisterMember error:', res);
+          const safeRegErr = (typeof getSafeErrorMessage === 'function')
+            ? getSafeErrorMessage(res, '登録処理に失敗しました。しばらく経ってから再度お試しください。')
+            : '登録処理に失敗しました。しばらく経ってから再度お試しください。';
+          showAlert(safeRegErr, true);
         }
       })
       .withFailureHandler(err => {
+        console.error('apiRegisterMember failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了';
         }
-        showAlert('通信エラーが発生しました: ' + (err.message || ''), true);
+        const safeCommErr = (typeof getSafeErrorMessage === 'function')
+          ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
+          : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
+        showAlert(safeCommErr, true);
       })
       .apiRegisterMember(email, pass1);
   }

@@ -1516,7 +1516,8 @@ function executeConfirmedDelete() {
         }
       } else {
         closeDeleteConfirmModal();
-        showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
+        console.error('deleteCalendarEvent error:', res);
+        showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '予定の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -1525,7 +1526,8 @@ function executeConfirmedDelete() {
         execBtn.textContent = '削除';
       }
       closeDeleteConfirmModal();
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('deleteCalendarEvent failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .deleteCalendarEvent(payload);
 }
@@ -1911,7 +1913,8 @@ window.currentEditGuests = [];
 
         closeEventEditModal();
       } else {
-        showAppAlert({ title: '保存エラー', message: '保存に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
+        console.error('saveCalendarEvent error:', res);
+        showAppAlert({ title: '保存エラー', message: getSafeErrorMessage(res, '予定の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -1919,7 +1922,8 @@ window.currentEditGuests = [];
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
       }
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('saveCalendarEvent failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .saveCalendarEvent(payload);
 }

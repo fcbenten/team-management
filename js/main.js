@@ -507,20 +507,22 @@
         if (res && res.success && res.registered) {
           startGoogleOAuthFlow(null, res.email || email);
         } else {
+          if (!(res && res.success)) console.error('apiCheckMemberEmailForOAuth error:', res);
           setLoginFieldError(
             'oauthPreCheckEmailInput',
-            (res && res.error) ? res.error : '名簿に登録されていないメールアドレスです。'
+            getSafeErrorMessage(res, '名簿に登録されていないメールアドレスです。')
           );
         }
       })
       .withFailureHandler(err => {
+        console.error('apiCheckMemberEmailForOAuth failure:', err);
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
         }
         setLoginFieldError(
           'oauthPreCheckEmailInput',
-          '通信エラーが発生しました: ' + ((err && err.message) || '')
+          getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         );
       })
       .apiCheckMemberEmailForOAuth(email);
@@ -574,7 +576,8 @@
     if (!code) {
       if (err) {
         history.replaceState(null, '', window.location.pathname + window.location.hash);
-        showAppAlert({ title: '認証エラー', message: 'Google認証がキャンセルされたか、エラーが発生しました: ' + err, isError: true });
+        console.error('Google OAuth callback error:', err);
+        showAppAlert({ title: '認証エラー', message: 'Google認証がキャンセルされたか、認証に失敗しました。再度お試しください。', isError: true });
       }
       return false;
     }
@@ -609,13 +612,14 @@
           setLoginCardView('loginCard');
           const msg = (res && res.error === 'NOT_IN_ROSTER')
             ? '認証されたGoogleアカウント（' + (res.email || '') + '）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。'
-            : ((res && res.error) ? res.error : '連携処理に失敗しました。');
+            : getSafeErrorMessage(res, '連携処理に失敗しました。しばらく経ってから再度お試しください。');
           showAppAlert({ title: '連携エラー', message: msg, isError: true });
         }
       })
       .withFailureHandler(fetchErr => {
         setLoginCardView('loginCard');
-        showAppAlert({ title: '通信エラー', message: '連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''), isError: true });
+        console.error('apiExchangeOAuthCode failure:', fetchErr);
+        showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(fetchErr, '連携処理中に通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       })
       .apiExchangeOAuthCode(code, redirectUri);
 
@@ -685,7 +689,8 @@
           loadAppInitialData();
         } else {
           if (globalMsg) {
-            globalMsg.textContent = (res && res.error) ? res.error : '登録に失敗しました。';
+            console.error('oauth password submit error:', res);
+            globalMsg.textContent = getSafeErrorMessage(res, '登録に失敗しました。しばらく経ってから再度お試しください。');
             globalMsg.classList.remove('hidden');
             globalMsg.style.display = 'block';
           }
@@ -697,7 +702,8 @@
           submitBtn.textContent = '設定完了してログイン';
         }
         if (globalMsg) {
-          globalMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          console.error('oauth password submit failure:', err);
+          globalMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           globalMsg.classList.remove('hidden');
           globalMsg.style.display = 'block';
         }
@@ -806,18 +812,20 @@
           loadAppInitialData();
         } else {
           if (errorMsg) {
-            errorMsg.textContent = (res && res.error) ? res.error : 'ログインに失敗しました。';
+            console.error('apiLoginUser error:', res);
+            errorMsg.textContent = getSafeErrorMessage(res, 'ログインに失敗しました。メールアドレスまたはパスワードをご確認ください。');
             errorMsg.style.display = 'block';
           }
         }
       })
       .withFailureHandler(err => {
+        console.error('apiLoginUser failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
         }
         if (errorMsg) {
-          errorMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          errorMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           errorMsg.style.display = 'block';
         }
       })
@@ -979,11 +987,13 @@
         if (typeof onComplete === 'function') onComplete(true);
       })
       .withFailureHandler(err => {
+        console.error('getInitialData failure:', err);
+        const safeErrMsg = getSafeErrorMessage(err, '通信環境をご確認の上、画面を再読み込みしてください。');
         const resultsList = document.getElementById('resultsList');
         if (resultsList) {
-          resultsList.innerHTML = '<div class="card-box error-box">データの取得に失敗しました<br><span class="error-sub">' + (err.message || '') + '</span></div>';
+          resultsList.innerHTML = '<div class="card-box error-box">データの取得に失敗しました<br><span class="error-sub">' + escapeHtml(safeErrMsg) + '</span></div>';
         }
-        handleError('eventSelect', 'データ初期取得エラー: ' + (err.message || ''));
+        handleError('eventSelect', 'データ初期取得エラー: ' + safeErrMsg);
         if (typeof onComplete === 'function') onComplete(false, err);
       })
       .getInitialData(forceRefresh);
@@ -1056,11 +1066,13 @@
           newPwInput.value = '';
           confirmPwInput.value = '';
         } else {
-          setPwMsg((res && res.error) ? res.error : '更新に失敗しました。', 'error');
+          console.error('apiChangePassword error:', res);
+          setPwMsg(getSafeErrorMessage(res, '更新に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
       .withFailureHandler(err => {
-        setPwMsg('通信エラー: ' + (err.message || ''), 'error');
+        console.error('apiChangePassword failure:', err);
+        setPwMsg(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
       })
       .apiChangePassword(u.name, currentPw, newPw);
   }
@@ -1337,9 +1349,10 @@
           window.refreshHomePushMockState();
         }
       } catch (err) {
+        console.error('Push notification enable error:', err);
         updateNotificationBadges();
         handleNotifTypeChange(currentVal);
-        const msg = err && err.message ? err.message : 'プッシュ通知の有効化に失敗しました。';
+        const msg = getSafeErrorMessage(err, 'プッシュ通知の有効化に失敗しました。');
         const isDenied = (typeof Notification !== 'undefined' && Notification.permission === 'denied');
         showAppAlert({
           title: isDenied ? '通知ブロック' : '通知設定エラー',
@@ -1396,7 +1409,8 @@
         window.refreshHomeLineMockState(false);
       }
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
+      console.error('issueLinkCode failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携コードの発行に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -1447,7 +1461,8 @@
         setProfileLineMsg('まだ連携が確認できていません。LINEトークへコード送信後に再度お試しください。', 'error');
       }
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
+      console.error('getLineLinkStatus failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携状態の確認に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     }
   }
 
@@ -1476,7 +1491,8 @@
       }
       setProfileLineMsg('LINEの連携を解除しました。', 'info');
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+      console.error('unlinkLine failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携解除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -1540,11 +1556,13 @@
           if (res && res.success) {
             onComplete(true, res.message || '通知設定を保存しました');
           } else {
-            onComplete(false, (res && res.error) ? res.error : '保存に失敗しました');
+            console.error('apiSaveNotificationSettings error:', res);
+            onComplete(false, getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'));
           }
         })
         .withFailureHandler(err => {
-          onComplete(false, '通信エラー: ' + (err.message || ''));
+          console.error('apiSaveNotificationSettings failure:', err);
+          onComplete(false, getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'));
         })
         .apiSaveNotificationSettings(payload, u.name, u.email);
     } else {
@@ -1777,11 +1795,13 @@
               showAvatarStatus('プロフィール写真を保存しました', 'success');
               setTimeout(() => { showAvatarStatus('', ''); }, 3500);
             } else {
-              showAvatarStatus('保存に失敗しました: ' + (res && res.error ? res.error : '不明なエラー'), 'error');
+              console.error('apiSaveProfileImage error:', res);
+              showAvatarStatus(getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'), 'error');
             }
           })
           .withFailureHandler(err => {
-            showAvatarStatus('通信エラー: ' + (err.message || ''), 'error');
+            console.error('apiSaveProfileImage failure:', err);
+            showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
           })
           .apiSaveProfileImage(window.currentUser.name, base64);
       };
@@ -1833,11 +1853,13 @@
           showAvatarStatus('プロフィール写真を削除しました', 'success');
           setTimeout(() => { showAvatarStatus('', ''); }, 3000);
         } else {
-          showAvatarStatus('削除に失敗しました: ' + (res && res.error ? res.error : ''), 'error');
+          console.error('apiDeleteProfileImage error:', res);
+          showAvatarStatus(getSafeErrorMessage(res, '削除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
       .withFailureHandler(err => {
-        showAvatarStatus('通信エラー: ' + (err.message || ''), 'error');
+        console.error('apiDeleteProfileImage failure:', err);
+        showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
       })
       .apiDeleteProfileImage(window.currentUser.name);
   }
@@ -2134,16 +2156,18 @@
             }
           } else {
             if (statusEl) {
-              statusEl.textContent = (res && res.error) ? res.error : '認証URLの取得に失敗しました。';
+              console.error('apiGetOAuthAuthUrl error:', res);
+              statusEl.textContent = getSafeErrorMessage(res, '認証URLの取得に失敗しました。しばらく経ってから再度お試しください。');
               statusEl.className = 'form-status-msg form-status-error mb-12';
               statusEl.classList.remove('hidden');
             }
           }
         })
         .withFailureHandler(err => {
+          console.error('apiGetOAuthAuthUrl failure:', err);
           resetForceAuthBtn();
           if (statusEl) {
-            statusEl.textContent = 'エラーが発生しました: ' + (err.message || '');
+            statusEl.textContent = getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }

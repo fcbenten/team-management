@@ -652,7 +652,8 @@ function handleBulletinPostSubmit(e) {
           loadBulletinData(true);
         } else {
           if (statusEl) {
-            statusEl.textContent = 'エラー: ' + (res ? res.error : '保存に失敗しました。');
+            console.error('apiSaveBulletinPost error:', res);
+            statusEl.textContent = getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
@@ -661,7 +662,8 @@ function handleBulletinPostSubmit(e) {
       .withFailureHandler(err => {
         enableForm();
         if (statusEl) {
-          statusEl.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          console.error('apiSaveBulletinPost failure:', err);
+          statusEl.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusEl.className = 'form-status-msg form-status-error mb-12';
           statusEl.classList.remove('hidden');
         }
@@ -1325,7 +1327,8 @@ function handleSubmitBulletinComment() {
           renderBulletinComments(current.comments);
         } else {
           if (statusMsg) {
-            statusMsg.textContent = 'エラー: ' + (res ? res.error : '送信に失敗しました');
+            console.error('apiAddBulletinComment error:', res);
+            statusMsg.textContent = getSafeErrorMessage(res, '送信に失敗しました。しばらく経ってから再度お試しください。');
             statusMsg.className = 'comment-status-msg error';
             statusMsg.classList.remove('hidden');
           }
@@ -1334,7 +1337,8 @@ function handleSubmitBulletinComment() {
       .withFailureHandler(err => {
         enableBtn();
         if (statusMsg) {
-          statusMsg.textContent = '通信エラー: ' + (err.message || '');
+          console.error('apiAddBulletinComment failure:', err);
+          statusMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusMsg.className = 'comment-status-msg error';
           statusMsg.classList.remove('hidden');
         }
@@ -1510,12 +1514,14 @@ async function deleteBulletinPostById(postId, postTitle) {
         if (res && res.success) {
           loadBulletinData(true);
         } else {
-          showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : ''), isError: true });
+          console.error('apiDeleteBulletinPost error:', res);
+          showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '投稿の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
           loadBulletinData(true);
         }
       })
       .withFailureHandler(err => {
-        showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || ''), isError: true });
+        console.error('apiDeleteBulletinPost failure:', err);
+        showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
         loadBulletinData(true);
       })
       .apiDeleteBulletinPost(postId, actorName);
