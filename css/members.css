@@ -75,7 +75,8 @@
   flex-shrink: 0;
 }
 
-.btn-gcp-header-link:hover {
+.btn-gcp-header-link:hover,
+.btn-gcp-header-link.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   color: var(--primary);
@@ -83,7 +84,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.btn-gcp-header-link:active {
+.btn-gcp-header-link:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -115,14 +116,15 @@
   flex-shrink: 0;
 }
 
-.btn-add-member:hover {
+.btn-add-member:hover,
+.btn-add-member.is-touch-active {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.btn-add-member:active {
+.btn-add-member:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -487,13 +489,14 @@
   user-select: none;
 }
 
-.ob-accordion-header:hover {
+.ob-accordion-header:hover,
+.ob-accordion-header.is-touch-active {
   background: #eff6ff;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.ob-accordion-header:active {
+.ob-accordion-header:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -687,7 +690,8 @@
   transition: all 0.15s ease;
 }
 
-.btn-member-edit:hover {
+.btn-member-edit:hover,
+.btn-member-edit.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   color: var(--primary);
@@ -695,7 +699,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.btn-member-edit:active {
+.btn-member-edit:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 

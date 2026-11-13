@@ -32,13 +32,14 @@
   font-size: 17px !important;
 }
 
-.btn-create-post:hover {
+.btn-create-post:hover,
+.btn-create-post.is-touch-active {
   background-color: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.btn-create-post:active {
+.btn-create-post:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -76,14 +77,15 @@
   cursor: pointer;
 }
 
-.bulletin-post-card:hover {
+.bulletin-post-card:hover,
+.bulletin-post-card.is-touch-active {
   background: #eff6ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #bfdbfe;
 }
 
-.bulletin-post-card:active {
+.bulletin-post-card:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -93,7 +95,8 @@
   border-color: #fde68a;
 }
 
-.bulletin-post-card.is-pinned:hover {
+.bulletin-post-card.is-pinned:hover,
+.bulletin-post-card.is-pinned.is-touch-active {
   background: #fef3c7;
   border-color: #fcd34d;
 }
@@ -221,14 +224,15 @@
   color: #475569 !important;
 }
 
-.btn-card-read-summary:hover {
+.btn-card-read-summary:hover,
+.btn-card-read-summary.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   color: var(--primary);
   transform: translateY(-1px);
 }
 
-.btn-card-read-summary:active {
+.btn-card-read-summary:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -716,14 +720,15 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.home-pinned-card:hover {
+.home-pinned-card:hover,
+.home-pinned-card.is-touch-active {
   background: #fef3c7;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #fcd34d;
 }
 
-.home-pinned-card:active {
+.home-pinned-card:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -788,14 +793,15 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.home-recent-bulletin-card:hover {
+.home-recent-bulletin-card:hover,
+.home-recent-bulletin-card.is-touch-active {
   background: #eff6ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #bfdbfe;
 }
 
-.home-recent-bulletin-card:active {
+.home-recent-bulletin-card:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 

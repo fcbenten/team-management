@@ -95,14 +95,15 @@
   transition: transform 0.15s ease, background-color 0.2s ease, color 0.15s ease;
 }
 
-.home-section-link:hover {
+.home-section-link:hover,
+.home-section-link.is-touch-active {
   color: var(--primary);
   background-color: #eff6ff;
   transform: translateY(-1px);
   text-decoration: none;
 }
 
-.home-section-link:active {
+.home-section-link:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -120,13 +121,15 @@
 }
 
 .home-shared-card-wrap .schedule-agenda-card:hover,
-.home-shared-card-wrap .match-card:hover {
+.home-shared-card-wrap .match-card:hover,
+.home-shared-card-wrap .schedule-agenda-card.is-touch-active,
+.home-shared-card-wrap .match-card.is-touch-active {
   transform: translateY(-2px) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-.home-shared-card-wrap .schedule-agenda-card:active,
-.home-shared-card-wrap .match-card:active {
+.home-shared-card-wrap .schedule-agenda-card:active:not(.is-touch-active),
+.home-shared-card-wrap .match-card:active:not(.is-touch-active) {
   transform: translateY(0) !important;
 }
 
@@ -319,13 +322,14 @@
   transition: transform 0.15s ease, background-color 0.2s ease, color 0.15s ease;
 }
 
-.home-notif-tab:hover:not(.active) {
+.home-notif-tab:hover:not(.active),
+.home-notif-tab.is-touch-active:not(.active) {
   background: rgba(255, 255, 255, 0.75);
   color: var(--primary);
   transform: translateY(-1px);
 }
 
-.home-notif-tab:active:not(.active) {
+.home-notif-tab:active:not(.active):not(.is-touch-active) {
   transform: translateY(0);
 }
 

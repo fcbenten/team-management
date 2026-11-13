@@ -99,6 +99,15 @@ body {
     cursor: pointer;
     overflow: hidden;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+
+  .header-user-icon-btn:hover,
+  .header-user-icon-btn.is-touch-active {
+    background: #eff6ff;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(37, 99, 235, 0.18);
   }
 
   .header-user-icon-btn .material-symbols-outlined {
@@ -271,7 +280,17 @@ body {
     user-select: none;
   }
 
-  .nav-item:active {
+  .nav-item.is-touch-active:not(.active) {
+    background-color: #eff6ff !important;
+    color: var(--primary) !important;
+    border-radius: 8px;
+  }
+
+  .nav-item.is-touch-active .material-symbols-outlined {
+    transform: translateY(-2px);
+  }
+
+  .nav-item:active:not(.is-touch-active) {
     opacity: 0.7;
   }
 
@@ -364,10 +383,11 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
-.profile-avatar-preview-box:hover {
+.profile-avatar-preview-box:hover,
+.profile-avatar-preview-box.is-touch-active {
   border-color: var(--primary);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(37, 99, 235, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.18);
 }
 
 .profile-avatar-placeholder {
@@ -383,7 +403,7 @@ body {
   display: block;
 }
 
-.profile-avatar-preview-box:active {
+.profile-avatar-preview-box:active:not(.is-touch-active) {
   transform: scale(0.96);
 }
 
@@ -406,11 +426,18 @@ body {
   border: 1px solid #bfdbfe;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.btn-avatar-select:hover {
+.btn-avatar-select:hover,
+.btn-avatar-select.is-touch-active {
   background: #dbeafe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.14);
+}
+
+.btn-avatar-select:active:not(.is-touch-active) {
+  transform: translateY(0);
 }
 
 .btn-avatar-select .material-symbols-outlined {
@@ -430,13 +457,19 @@ body {
   border-radius: 4px;
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.2s ease, color 0.15s ease;
 }
 
-.btn-avatar-delete:hover {
+.btn-avatar-delete:hover,
+.btn-avatar-delete.is-touch-active {
   background: #fef2f2;
   color: #b91c1c;
+  transform: translateY(-1px);
   text-decoration: underline;
+}
+
+.btn-avatar-delete:active:not(.is-touch-active) {
+  transform: translateY(0);
 }
 
 .avatar-upload-status {
@@ -631,13 +664,14 @@ body {
     flex-shrink: 0;
   }
 
-  .nav-item:hover:not(.active) {
+  .nav-item:hover:not(.active),
+  .nav-item.is-touch-active:not(.active) {
     background-color: #e2e8f0 !important;
     color: var(--primary) !important;
     transform: translateX(2px);
   }
 
-  .nav-item:active:not(.active) {
+  .nav-item:active:not(.active):not(.is-touch-active) {
     transform: translateX(0);
   }
 
@@ -683,13 +717,14 @@ body {
     box-sizing: border-box;
   }
 
-  .sidebar-user-btn:hover {
+  .sidebar-user-btn:hover,
+  .sidebar-user-btn.is-touch-active {
     background: #e2e8f0;
     transform: translateY(-1px);
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
   }
 
-  .sidebar-user-btn:active {
+  .sidebar-user-btn:active:not(.is-touch-active) {
     transform: translateY(0);
   }
 
@@ -703,13 +738,14 @@ body {
     transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
   }
 
-  .logout-icon-btn:hover {
+  .logout-icon-btn:hover,
+  .logout-icon-btn.is-touch-active {
     background: #fee2e2;
     color: #dc2626 !important;
     transform: translateY(-1px);
   }
 
-  .logout-icon-btn:active {
+  .logout-icon-btn:active:not(.is-touch-active) {
     transform: translateY(0);
   }
 

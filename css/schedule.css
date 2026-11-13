@@ -110,7 +110,8 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
 
-.filter-pill-btn:hover:not(.active) {
+.filter-pill-btn:hover:not(.active),
+.filter-pill-btn.is-touch-active:not(.active) {
   background: #eff6ff;
   color: var(--primary);
   border-color: #bfdbfe;
@@ -118,7 +119,7 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-.filter-pill-btn:active:not(.active) {
+.filter-pill-btn:active:not(.active):not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -219,12 +220,13 @@
   transition: all 0.2s ease;
 }
 
-.cal-nav-btn:hover {
+.cal-nav-btn:hover,
+.cal-nav-btn.is-touch-active {
   background: #e2e8f0;
   transform: translateY(-1px);
 }
 
-.cal-nav-btn:active {
+.cal-nav-btn:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -243,14 +245,15 @@
   right: 0;
 }
 
-.cal-today-btn:hover {
+.cal-today-btn:hover,
+.cal-today-btn.is-touch-active {
   background: var(--primary);
   color: #ffffff;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-.cal-today-btn:active {
+.cal-today-btn:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -267,14 +270,15 @@
   white-space: nowrap;
 }
 
-.btn-cal-add-event:hover {
+.btn-cal-add-event:hover,
+.btn-cal-add-event.is-touch-active {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
-.btn-cal-add-event:active {
+.btn-cal-add-event:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -290,13 +294,14 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
-.btn-primary-sm:hover {
+.btn-primary-sm:hover,
+.btn-primary-sm.is-touch-active {
   background: var(--primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
-.btn-primary-sm:active {
+.btn-primary-sm:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -342,7 +347,8 @@
   overflow: hidden;
 }
 
-.cal-day-cell:hover {
+.cal-day-cell:hover,
+.cal-day-cell.is-touch-active {
   background: #eff6ff;
   box-shadow: inset 0 0 0 1px #bfdbfe;
 }
@@ -1415,14 +1421,15 @@
   transition: all 0.15s ease;
 }
 
-.btn-attend-choice:hover {
+.btn-attend-choice:hover,
+.btn-attend-choice.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.btn-attend-choice:active {
+.btn-attend-choice:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -1514,14 +1521,15 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.schedule-card-clickable:hover {
+.schedule-card-clickable:hover,
+.schedule-card-clickable.is-touch-active {
   background-color: #eff6ff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   border-color: #bfdbfe;
 }
 
-.schedule-card-clickable:active {
+.schedule-card-clickable:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -1614,12 +1622,13 @@
   transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
-.cal-event-item:hover {
+.cal-event-item:hover,
+.cal-event-item.is-touch-active {
   background: rgba(37, 99, 235, 0.14);
   transform: translateY(-1px);
 }
 
-.cal-event-item:active {
+.cal-event-item:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -1660,14 +1669,15 @@
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.same-day-tab-btn:hover {
+.same-day-tab-btn:hover,
+.same-day-tab-btn.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
 
-.same-day-tab-btn:active {
+.same-day-tab-btn:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 /* =========================================
@@ -1687,14 +1697,15 @@
   cursor: pointer;
 }
 
-.schedule-agenda-card:hover {
+.schedule-agenda-card:hover,
+.schedule-agenda-card.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 
-.schedule-agenda-card:active {
+.schedule-agenda-card:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -1713,7 +1724,8 @@
   background: #e0f2fe;
   border-color: #bae6fd;
 }
-.schedule-agenda-card.card-yes:hover {
+.schedule-agenda-card.card-yes:hover,
+.schedule-agenda-card.card-yes.is-touch-active {
   background: #bae6fd;
 }
 .schedule-agenda-card.card-yes .schedule-agenda-accent {
@@ -1729,7 +1741,8 @@
   background: #fef2f2;
   border-color: #fecaca;
 }
-.schedule-agenda-card.card-no:hover {
+.schedule-agenda-card.card-no:hover,
+.schedule-agenda-card.card-no.is-touch-active {
   background: #fee2e2;
 }
 .schedule-agenda-card.card-no .schedule-agenda-accent {
@@ -1748,7 +1761,8 @@
   background: #e2e8f0;
   border-color: #cbd5e1;
 }
-.schedule-agenda-card.card-maybe:hover {
+.schedule-agenda-card.card-maybe:hover,
+.schedule-agenda-card.card-maybe.is-touch-active {
   background: #cbd5e1;
 }
 .schedule-agenda-card.card-maybe .schedule-agenda-accent {
@@ -1763,7 +1777,8 @@
 .schedule-agenda-card.card-unanswered {
   background: #ffffff;
 }
-.schedule-agenda-card.card-unanswered:hover {
+.schedule-agenda-card.card-unanswered:hover,
+.schedule-agenda-card.card-unanswered.is-touch-active {
   background: #eff6ff;
   border-color: #bfdbfe;
 }

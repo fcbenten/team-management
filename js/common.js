@@ -769,3 +769,143 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
   }, { passive: false, capture: true });
 })();
+
+(function initGlobalTouchFeedback() {
+  if (typeof document === 'undefined' || window.__globalTouchFeedbackInitialized) return;
+  window.__globalTouchFeedbackInitialized = true;
+
+  const TOUCH_SELECTOR = [
+    '.schedule-agenda-card',
+    '.schedule-card-clickable',
+    '.result-card',
+    '.match-card',
+    '.bulletin-post-card',
+    '.home-pinned-card',
+    '.home-recent-bulletin-card',
+    '.stats-table tbody tr',
+    '.stats-table th',
+    '.cal-day-cell',
+    '.cal-event-item',
+    '.ob-accordion-header',
+    '.profile-settings-nav-btn',
+    '.notif-radio-card',
+    '.modal-back-btn',
+    '.modal-close',
+    '.header-user-icon-btn',
+    '.profile-avatar-preview-box',
+    '.btn-avatar-select',
+    '.btn-avatar-delete',
+    '.nav-item',
+    '.sidebar-user-btn',
+    '.logout-icon-btn',
+    '.sub-tab',
+    '.filter-pill-btn',
+    '.same-day-tab-btn',
+    '.home-notif-tab',
+    '.home-section-link',
+    '.btn',
+    '.btn-primary-action',
+    '.btn-cancel-action',
+    '.btn-outline',
+    '.btn-add',
+    '.btn-del',
+    '.btn-create-post',
+    '.btn-load-more',
+    '.btn-refresh-equipment',
+    '.btn-add-equipment',
+    '.btn-item-edit',
+    '.btn-banner-resolve',
+    '.btn-gcp-header-link',
+    '.btn-add-member',
+    '.btn-member-edit',
+    '.btn-member-restore',
+    '.cal-nav-btn',
+    '.cal-today-btn',
+    '.btn-cal-add-event',
+    '.btn-primary-sm',
+    '.btn-attend-choice',
+    '.btn-inline-attend',
+    '.btn-card-read-summary',
+    '.btn-linked-event-action',
+    '.bdm-action-btn',
+    '.home-line-open-btn',
+    '.home-line-copy-btn',
+    '.home-push-reset-btn',
+    '#btnSaveNotificationSettings'
+  ].join(', ');
+
+  let activeEl = null;
+  let clearTimer = null;
+  let startX = 0;
+  let startY = 0;
+  let startTime = 0;
+  let cancelledByMove = false;
+
+  function clearActiveImmediate() {
+    if (clearTimer) {
+      clearTimeout(clearTimer);
+      clearTimer = null;
+    }
+    if (activeEl) {
+      activeEl.classList.remove('is-touch-active');
+      activeEl = null;
+    }
+  }
+
+  document.addEventListener('touchstart', function(e) {
+    if (!e.touches || e.touches.length !== 1) {
+      clearActiveImmediate();
+      return;
+    }
+    const rawTarget = e.target && e.target.nodeType === 1 ? e.target : (e.target ? e.target.parentElement : null);
+    if (!rawTarget || typeof rawTarget.closest !== 'function') return;
+
+    const target = rawTarget.closest(TOUCH_SELECTOR);
+    if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true') {
+      clearActiveImmediate();
+      return;
+    }
+
+    clearActiveImmediate();
+    activeEl = target;
+    cancelledByMove = false;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    startTime = Date.now();
+    target.classList.add('is-touch-active');
+  }, { passive: true, capture: true });
+
+  document.addEventListener('touchmove', function(e) {
+    if (!activeEl || !e.touches || !e.touches.length) return;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    const dy = Math.abs(e.touches[0].clientY - startY);
+    if (dx > 10 || dy > 10) {
+      cancelledByMove = true;
+      clearActiveImmediate();
+    }
+  }, { passive: true, capture: true });
+
+  function handleTouchFinish() {
+    if (!activeEl) return;
+    if (cancelledByMove) {
+      clearActiveImmediate();
+      return;
+    }
+    const targetRef = activeEl;
+    const remaining = Math.max(0, 180 - (Date.now() - startTime));
+    clearTimer = setTimeout(function() {
+      targetRef.classList.remove('is-touch-active');
+      if (activeEl === targetRef) activeEl = null;
+      clearTimer = null;
+    }, remaining);
+  }
+
+  document.addEventListener('touchend', handleTouchFinish, { passive: true, capture: true });
+  document.addEventListener('touchcancel', clearActiveImmediate, { passive: true, capture: true });
+  document.addEventListener('scroll', function() {
+    if (activeEl) {
+      cancelledByMove = true;
+      clearActiveImmediate();
+    }
+  }, { passive: true, capture: true });
+})();

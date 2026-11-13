@@ -272,12 +272,13 @@ select:focus, input:focus, textarea:focus {
   cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   box-shadow: none !important;
 }
-.btn:hover {
+.btn:hover,
+.btn.is-touch-active {
   background-color: var(--primary-hover) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
-.btn:active {
+.btn:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -304,13 +305,14 @@ select:focus, input:focus, textarea:focus {
   text-decoration: none !important;
   white-space: nowrap !important;
 }
-.btn-primary-action:hover:not(:disabled) {
+.btn-primary-action:hover:not(:disabled),
+.btn-primary-action.is-touch-active:not(:disabled) {
   background-color: var(--primary-hover, #0369a1) !important;
   border-color: var(--primary-hover, #0369a1) !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
 }
-.btn-primary-action:active:not(:disabled) {
+.btn-primary-action:active:not(:disabled):not(.is-touch-active) {
   transform: translateY(0);
   box-shadow: none !important;
 }
@@ -341,14 +343,15 @@ select:focus, input:focus, textarea:focus {
   text-decoration: none !important;
   white-space: nowrap !important;
 }
-.btn-cancel-action:hover {
+.btn-cancel-action:hover,
+.btn-cancel-action.is-touch-active {
   background-color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
   color: #334155 !important;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
-.btn-cancel-action:active {
+.btn-cancel-action:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -358,13 +361,14 @@ select:focus, input:focus, textarea:focus {
   color: var(--text-main) !important;
   border: 1px solid var(--border-color) !important;
 }
-.btn-outline:hover {
+.btn-outline:hover,
+.btn-outline.is-touch-active {
   background-color: #eff6ff !important;
   border-color: #bfdbfe !important;
   color: var(--primary) !important;
   transform: translateY(-1px);
 }
-.btn-outline:active {
+.btn-outline:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -373,11 +377,12 @@ select:focus, input:focus, textarea:focus {
   background-color: #10b981 !important;
   color: #fff !important;
 }
-.btn-add:hover {
+.btn-add:hover,
+.btn-add.is-touch-active {
   background-color: #059669 !important;
   transform: translateY(-1px);
 }
-.btn-add:active {
+.btn-add:active:not(.is-touch-active) {
   transform: translateY(0);
 }
 
@@ -611,13 +616,25 @@ select:focus, input:focus, textarea:focus {
   display: flex; align-items: center; justify-content: center;
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.modal-close:hover {
+.modal-close:hover,
+.modal-close.is-touch-active {
   background: #f1f5f9 !important;
   color: var(--text-heading) !important;
   transform: translateY(-1px);
 }
-.modal-close:active {
+.modal-close:active:not(.is-touch-active) {
   transform: translateY(0);
+}
+
+/* タッチ操作時のグローバル反応設定（青ハイライト抑制＋モーダル/ボタン等共通） */
+.is-touch-active {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+@media (hover: none), (pointer: coarse) {
+  a, button, label, tr, [role="button"], .schedule-agenda-card, .match-card, .result-card, .bulletin-post-card, .home-pinned-card, .home-recent-bulletin-card, .cal-day-cell, .cal-event-item, .profile-settings-nav-btn, .notif-radio-card, .ob-accordion-header, .nav-item, .sub-tab, .filter-pill-btn {
+    -webkit-tap-highlight-color: transparent;
+  }
 }
 
 /* =========================================

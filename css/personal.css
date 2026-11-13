@@ -33,7 +33,8 @@
   transition: color 0.2s, background-color 0.2s;
 }
 
-.stats-table th:hover {
+.stats-table th:hover,
+.stats-table th.is-touch-active {
   color: var(--primary);
   background-color: #eff6ff;
 }
@@ -249,11 +250,12 @@
   transition: background-color 0.18s ease;
 }
 
-.stats-table tbody tr:hover {
+.stats-table tbody tr:hover,
+.stats-table tbody tr.is-touch-active {
   background-color: #eff6ff;
 }
 
-.stats-table tbody tr:active {
+.stats-table tbody tr:active:not(.is-touch-active) {
   background-color: #dbeafe;
 }
 
