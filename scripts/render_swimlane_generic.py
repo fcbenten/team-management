@@ -750,9 +750,10 @@ window.addEventListener('load', () => {{
     return !boxes.some(b => y >= b.top - pad && y <= b.bottom + pad);
   }}
 
-  function pickClearCorridorY(yPref, checkL3, checkL4) {{
+  function pickClearCorridorY(yPref, checkL3, checkL4, minY = null) {{
     const check = y => (!checkL3 || isYClearInLane(y, gBoxes, 11)) && (!checkL4 || isYClearInLane(y, dBoxes, 11));
-    if (check(yPref)) return yPref;
+    const floorY = minY !== null ? Math.max(lane4.top + 48, minY) : (lane4.top + 48);
+    if (yPref >= floorY && check(yPref)) return yPref;
     const candidates = [];
     if (dBoxes.length > 0) {{
       candidates.push(dBoxes[0].top - 22);
@@ -771,8 +772,8 @@ window.addEventListener('load', () => {{
     for (let dy = 14; dy <= 280; dy += 14) {{
       candidates.push(yPref + dy, yPref - dy);
     }}
-    const valid = candidates.filter(y => y >= lane4.top + 48 && y <= lane4.bottom - 12 && check(y));
-    if (valid.length === 0) return yPref;
+    const valid = candidates.filter(y => y >= floorY && y <= lane4.bottom - 12 && check(y));
+    if (valid.length === 0) return Math.max(yPref, floorY);
     valid.sort((a, b) => Math.abs(a - yPref) - Math.abs(b - yPref));
     return valid[0];
   }}
@@ -984,23 +985,49 @@ window.addEventListener('load', () => {{
   }});
 
   // 9. Route all Purple Other-Screen / External / Modal transitions cleanly
-  const oUsageCount = {{}};
-  otherWires.forEach((ow, idx) => {{
+  const preparedOthers = otherWires.map((ow, idx) => {{
     const oR = rect(document.getElementById(ow.targetId));
-    oUsageCount[ow.targetId] = (oUsageCount[ow.targetId] || 0) + 1;
-    const slot = oUsageCount[ow.targetId];
-    const enterY = Math.min(oR.bottom - 14, Math.max(oR.top + 16, oR.cy + (slot - 1) * 14 - 4));
-
     const startX = ow.hasRightDb ? (ow.srcR.left + ow.srcR.width * 0.72) : (ow.srcR.right + 2);
     const startY = ow.hasRightDb ? (ow.srcR.bottom + 1) : (ow.srcR.cy + (ow.offsetIdx * 10));
     const exitStubY = ow.hasRightDb ? (ow.srcR.bottom + 13) : startY;
+    const minCorridorY = ow.hasRightDb ? (ow.srcR.bottom + 8) : (lane4.top + 48);
+    const corridorY = pickClearCorridorY(ow.hasRightDb ? exitStubY : startY, true, true, minCorridorY);
+    return {{ ow, idx, oR, startX, startY, corridorY }};
+  }});
 
-    const corridorY = pickClearCorridorY(ow.hasRightDb ? exitStubY : Math.round((startY + enterY) / 2), true, true);
+  const othersByTarget = {{}};
+  preparedOthers.forEach(item => {{
+    if (!othersByTarget[item.ow.targetId]) othersByTarget[item.ow.targetId] = [];
+    othersByTarget[item.ow.targetId].push(item);
+  }});
+  Object.values(othersByTarget).forEach(list => {{
+    list.sort((a, b) => a.corridorY - b.corridorY);
+    const n = list.length;
+    list.forEach((item, slotIdx) => {{
+      const oR = item.oR;
+      if (n === 1) {{
+        item.enterY = oR.cy;
+      }} else {{
+        const usableTop = oR.top + 18;
+        const usableBot = oR.bottom - 16;
+        item.enterY = usableTop + (slotIdx / (n - 1)) * Math.max(12, usableBot - usableTop);
+      }}
+    }});
+  }});
+
+  preparedOthers.forEach(item => {{
+    const {{ ow, idx, oR, startX, startY, corridorY, enterY }} = item;
     const x45 = g45Left + 10 + ((idx * 10) % Math.max(18, g45Width - 16));
 
     const pts = [[startX, startY]];
     if (ow.hasRightDb) {{
-      pts.push([startX, corridorY]);
+      const stubY = ow.srcR.bottom + 10;
+      const dropX = lane2.right + 12 + (idx % 3) * 7;
+      if (Math.abs(stubY - corridorY) <= 4) {{
+        pts.push([startX, corridorY]);
+      }} else {{
+        pts.push([startX, stubY], [dropX, stubY], [dropX, corridorY]);
+      }}
     }} else if (Math.abs(startY - corridorY) > 3) {{
       const xStep23 = lane2.right + 14 + (idx % 3) * 8;
       pts.push([xStep23, startY], [xStep23, corridorY]);
@@ -1047,14 +1074,14 @@ SWIMLANE_SPECS = {
                 "title": "トップ警告 ＆ ポータルカード群 (#view-home)",
                 "rows": [
                     {
-                        "t": {"badge": "代理解決", "title": "備品不在「持参する」ボタン押下", "desc": "#homeTopAlertArea 内 備品持参アラート解除"},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "openEquipmentResolveModal() → apiResolveEquipmentAlert()", "desc": "Bypass: 代理持参ログ即時INSERT ＆ トップ警告バナー解除"},
-                        "targets": [{"type": "direct_db", "to": "d-eqlog", "label": "Direct代理記録INSERT (0.1s)"}]
-                    },
-                    {
                         "t": {"badge": "カードタップ", "title": "「次回活動 / 次の公式戦」カード押下", "desc": "#homeNextEventMount / #homeNextOfficialMount"},
                         "j": {"file": "js/home.js → schedule.js", "func": "openEventDetailModal(ev)", "desc": "出欠状況・参加者・持参備品をモーダル展開"},
                         "targets": [{"type": "other", "to": "o-evmodal", "label": "予定詳細モーダル起動"}]
+                    },
+                    {
+                        "t": {"badge": "代理解決", "title": "備品不在「持参する」ボタン押下", "desc": "#homeTopAlertArea 内 備品持参アラート解除"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "openEquipmentResolveModal() → apiResolveEquipmentAlert()", "desc": "Bypass: 代理持参ログ即時INSERT ＆ トップ警告バナー解除"},
+                        "targets": [{"type": "direct_db", "to": "d-eqlog", "label": "Direct代理記録INSERT (0.1s)"}]
                     },
                     {
                         "t": {"badge": "カードタップ", "title": "「直近の試合結果」カード押下", "desc": "#homeRecentMatchMount（スコア・勝敗サマリー）"},
@@ -1077,10 +1104,10 @@ SWIMLANE_SPECS = {
         "lane4_nodes": [
             {"kind": "db", "id": "d-core", "logical": "チーム主要データ一式", "physical": "members, matches, score_logs, attendance, equipment_*, bulletin_*", "anchor_rows": [0]},
             {"kind": "ext", "id": "d-gcal", "badge": "Google API", "title": "Google カレンダー API v3", "desc": "活動予定一覧・出席レスポンス原本取得", "anchor_rows": [0]},
-            {"kind": "db", "id": "d-eqlog", "logical": "備品代理持参ログ", "physical": "equipment_event_logs", "anchor_rows": [1]}
+            {"kind": "db", "id": "d-eqlog", "logical": "備品代理持参ログ", "physical": "equipment_event_logs", "anchor_rows": [2]}
         ],
         "lane5_nodes": [
-            {"id": "o-evmodal", "badge": "共通モーダル (SCR07)", "title": "予定詳細モーダル", "desc": "#eventDetailModal（出欠回答 ○/△/×・掲示板起票）", "anchor_rows": [2]},
+            {"id": "o-evmodal", "badge": "共通モーダル (SCR07)", "title": "予定詳細モーダル", "desc": "#eventDetailModal（出欠回答 ○/△/×・掲示板起票）", "anchor_rows": [1]},
             {"id": "o-mmodal", "badge": "共通モーダル (SCR03)", "title": "試合詳細モーダル", "desc": "#matchDetailModal（タイムライン・SCR04編集連携）", "anchor_rows": [3]},
             {"id": "o-bmod", "badge": "共通モーダル (SCR09)", "title": "掲示板詳細モーダル", "desc": "#bulletinDetailModal（本文・コメント・既読一覧）", "anchor_rows": [4]},
             {"id": "o-tabs", "badge": "SPAタブ遷移", "title": "SCR03〜SCR09 各画面", "desc": "結果 / ランキング / 予定 / 備品 / 掲示板へ直接移動", "anchor_rows": [5]}
@@ -1105,17 +1132,17 @@ SWIMLANE_SPECS = {
                         "targets": [{"type": "direct_cache", "to": "d-cache", "label": "追加10件参照", "bidir": True}]
                     },
                     {
-                        "t": {"badge": "新規ボタン", "title": "「新規試合結果の作成」ボタン押下", "desc": "画面上部の登録ボタン押下"},
-                        "j": {"file": "js/results.js", "func": "openNewMatchInput()", "desc": "matchLogs初期化 ＆ カレンダー予定選択モードで切替"},
-                        "targets": [{"type": "other", "to": "o-input-new", "label": "SCR04 新規登録へ遷移"}]
-                    },
-                    {
                         "t": {"badge": "カードタップ", "title": "試合結果カードタップ", "desc": ".match-card-clickable（matchId指定）"},
                         "j": {"file": "js/results.js", "func": "openMatchDetail(matchId)", "desc": "前後半スコア・タイムライン・出場選手・MOM注入"},
                         "targets": [
                             {"type": "direct_cache", "to": "d-cache", "label": "詳細タイムライン取得", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "詳細モーダル展開"}
                         ]
+                    },
+                    {
+                        "t": {"badge": "新規ボタン", "title": "「新規試合結果の作成」ボタン押下", "desc": "画面上部の登録ボタン押下"},
+                        "j": {"file": "js/results.js", "func": "openNewMatchInput()", "desc": "matchLogs初期化 ＆ カレンダー予定選択モードで切替"},
+                        "targets": [{"type": "other", "to": "o-input-new", "label": "SCR04 新規登録へ遷移"}]
                     }
                 ]
             },
@@ -1131,10 +1158,10 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "storage", "id": "d-cache", "badge": "Client Memory Cache", "title": "window.allMatchResults", "desc": "getInitialData() でロード済みの matches ＋ score_logs", "anchor_rows": [0, 1, 3]}
+            {"kind": "storage", "id": "d-cache", "badge": "Client Memory Cache", "title": "window.allMatchResults", "desc": "getInitialData() でロード済みの matches ＋ score_logs", "anchor_rows": [0, 1, 2]}
         ],
         "lane5_nodes": [
-            {"id": "o-input-new", "badge": "遷移先画面", "title": "SCR04 試合結果入力 (新規)", "desc": "カレンダー予定選択フォームを展開", "anchor_rows": [2]},
+            {"id": "o-input-new", "badge": "遷移先画面", "title": "SCR04 試合結果入力 (新規)", "desc": "カレンダー予定選択フォームを展開", "anchor_rows": [3]},
             {"id": "o-input-edit", "badge": "遷移先画面", "title": "SCR04 試合結果入力 (編集)", "desc": "対象試合スコア・得点ログ読込済みフォーム", "anchor_rows": [4]}
         ]
     },
@@ -1172,7 +1199,7 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "戻るボタン", "title": "「← スコアに戻る」押下", "desc": "入力中の編集をキャンセルして一覧へ戻る"},
                         "j": {"file": "js/input.js", "func": "handleInputBack()", "desc": "変更確認後スイッチ実行"},
-                        "targets": [{"type": "other", "to": "o-scr03-back", "label": "SCR03 一覧へ戻る"}]
+                        "targets": [{"type": "other", "to": "o-scr03", "label": "SCR03 一覧へ戻る"}]
                     }
                 ]
             }
@@ -1183,8 +1210,7 @@ SWIMLANE_SPECS = {
             {"kind": "db", "id": "d-matches", "logical": "試合結果・スタッツログ", "physical": "matches, score_logs", "anchor_rows": [2]}
         ],
         "lane5_nodes": [
-            {"id": "o-scr03", "badge": "遷移先画面", "title": "SCR03 試合結果一覧", "desc": "afterSaveSuccess() で一覧再描画後自動遷移", "anchor_rows": [2]},
-            {"id": "o-scr03-back", "badge": "遷移先画面", "title": "SCR03 試合結果一覧", "desc": "switchTab('results') で一覧復帰", "anchor_rows": [3]}
+            {"id": "o-scr03", "badge": "遷移先画面", "title": "SCR03 試合結果一覧", "desc": "afterSaveSuccess() 再描画自動遷移 ／ switchTab('results') 一覧復帰", "anchor_rows": [2, 3]}
         ]
     },
     "SCR05": {
@@ -1218,8 +1244,8 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "getInitialData() 取得済みの試合結果・現役部員マスタ", "anchor_rows": [0, 1]},
-            {"kind": "ext", "id": "d-gcal", "badge": "Google API / GAS", "title": "Google カレンダー出席集計", "desc": "GAS側 apiGetCalendarAttendance による参加日数集計", "anchor_rows": [0]}
+            {"kind": "ext", "id": "d-gcal", "badge": "Google API / GAS", "title": "Google カレンダー出席集計", "desc": "GAS側 apiGetCalendarAttendance による参加日数集計", "anchor_rows": [0]},
+            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "getInitialData() 取得済みの試合結果・現役部員マスタ", "anchor_rows": [1]}
         ],
         "lane5_nodes": [
             {"id": "o-ui", "badge": "画面状態更新", "title": "ランキング一覧カード描画", "desc": "得点 / アシスト / MOM / 参加数TOP3＆全件展開", "anchor_rows": [2]}
@@ -1256,8 +1282,8 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "OB・退団メンバー除外済み個人スタッツ情報", "anchor_rows": [0, 1]},
-            {"kind": "ext", "id": "d-gcal", "badge": "Google API / GAS", "title": "Google カレンダー出席実績", "desc": "シーズン別カレンダー参加履歴集計結果", "anchor_rows": [0]}
+            {"kind": "ext", "id": "d-gcal", "badge": "Google API / GAS", "title": "Google カレンダー出席実績", "desc": "シーズン別カレンダー参加履歴集計結果", "anchor_rows": [0]},
+            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "OB・退団メンバー除外済み個人スタッツ情報", "anchor_rows": [1]}
         ],
         "lane5_nodes": [
             {"id": "o-pmodal", "badge": "画面内モーダル", "title": "選手個人カルテモーダル", "desc": "#playerDetailModal（通算実績 ＆ 試合詳細連携）", "anchor_rows": [2]}
@@ -1369,8 +1395,8 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "db", "id": "d-eq", "logical": "備品マスタ ＆ 現物台帳", "physical": "equipment_items, equipment_master", "anchor_rows": [0, 3, 4]},
-            {"kind": "db", "id": "d-eqlog", "logical": "備品代理持参ログ", "physical": "equipment_event_logs", "anchor_rows": [1]}
+            {"kind": "db", "id": "d-eqlog", "logical": "備品代理持参ログ", "physical": "equipment_event_logs", "anchor_rows": [1]},
+            {"kind": "db", "id": "d-eq", "logical": "備品マスタ ＆ 現物台帳", "physical": "equipment_items, equipment_master", "anchor_rows": [3, 4]}
         ],
         "lane5_nodes": [
             {"id": "o-home", "badge": "連動先画面", "title": "SCR02 ホーム画面", "desc": "トップ画面の備品持参アラートカードを即時解除", "anchor_rows": [1]}
@@ -1499,7 +1525,7 @@ SWIMLANE_SPECS = {
                         "j": {"file": "js/main.js", "func": "handleAvatarUpload()", "desc": "GAS へ画像送信後 localStorage・ヘッダーアイコン即時反映"},
                         "g": {"file": "server/api (GAS)", "func": "apiSaveProfileImage(name, base64)", "desc": "Google Drive へ画像保存 ＆ 公開URL発行", "bidir": True},
                         "targets": [
-                            {"type": "gas_db", "to": "d-gdrive", "label": "Drive保存・URL発行", "bidir": True},
+                            {"type": "gas_db", "to": "d-gdrive", "label": "Drive画像保存", "bidir": True},
                             {"type": "direct_cache", "to": "d-ls", "label": "URLセッション更新"}
                         ]
                     },
