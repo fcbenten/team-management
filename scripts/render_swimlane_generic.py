@@ -479,6 +479,7 @@ def build_generic_swimlane_html(spec):
                 "tId": t_id,
                 "jId": j_id,
                 "gId": g_id,
+                "gasBidir": bool(row["g"].get("bidir")) if row.get("g") else False,
                 "tArrowLabel": row.get("t_label"),
                 "targets": row.get("targets", [])
             })
@@ -504,10 +505,11 @@ def build_generic_swimlane_html(spec):
   <div class="header-bar">
     <div class="header-title">{_esc(title)}</div>
     <div class="legend-group">
-      <div class="legend-item"><div class="legend-line" style="background:#2563EB;"></div>通常処理・参照 (JS / GAS)</div>
-      <div class="legend-item"><div class="legend-line" style="background:#16A34A;"></div>Supabase Direct バイパス (GAS不要)</div>
-      <div class="legend-item"><div class="legend-line" style="background:#D97706;"></div>画面内カード・モーダル切替 (SPA)</div>
-      <div class="legend-item"><div class="legend-line" style="background:repeating-linear-gradient(to right,#7C3AED 0,#7C3AED 5px,transparent 5px,transparent 8px);"></div>他画面・外部遷移 / モーダル起動</div>
+      <div class="legend-item" style="white-space:nowrap;"><div class="legend-line" style="background:#2563EB;"></div>通常処理・参照 (JS/GAS)</div>
+      <div class="legend-item" style="white-space:nowrap;"><div class="legend-line" style="background:#16A34A;"></div>Supabase Direct (GAS不要)</div>
+      <div class="legend-item" style="white-space:nowrap;"><div class="legend-line" style="background:#D97706;"></div>画面内カード・モーダル切替</div>
+      <div class="legend-item" style="white-space:nowrap;"><div class="legend-line" style="background:repeating-linear-gradient(to right,#7C3AED 0,#7C3AED 5px,transparent 5px,transparent 8px);"></div>他画面・モーダル遷移</div>
+      <div class="legend-item" style="white-space:nowrap;color:#475569;"><strong style="margin-right:3px;">◀─▶</strong>双方向(参照/同期) / <strong style="margin:0 3px;">─▶</strong>単方向(更新/遷移)</div>
     </div>
   </div>
 
@@ -698,7 +700,7 @@ window.addEventListener('load', () => {{
     return d;
   }}
 
-  function addPath(d, color, markerEnd, dash = null, width = 2.2) {{
+  function addPath(d, color, markerEnd, dash = null, width = 2.2, markerStart = null) {{
     const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     p.setAttribute('d', d);
     p.setAttribute('fill', 'none');
@@ -708,6 +710,7 @@ window.addEventListener('load', () => {{
     p.setAttribute('stroke-linecap', 'round');
     if (dash) p.setAttribute('stroke-dasharray', dash);
     if (markerEnd) p.setAttribute('marker-end', `url(#${{markerEnd}})`);
+    if (markerStart) p.setAttribute('marker-start', `url(#${{markerStart}})`);
     svg.appendChild(p);
   }}
 
@@ -812,8 +815,9 @@ window.addEventListener('load', () => {{
 
       const jOutY = directTargets.length > 0 ? (directIsBelowGas ? jR.cy - 11 : jR.cy + 11) : gR.cy;
       const gInY = directTargets.length > 0 ? (directIsBelowGas ? gR.cy - 8 : gR.cy + 8) : gR.cy;
+      const gasMarkerStart = e.gasBidir ? 'arr-blue' : null;
       if (Math.abs(jOutY - gInY) <= 3) {{
-        addPath(`M ${{jR.right + 2}} ${{gInY}} L ${{gR.left - 2}} ${{gInY}}`, '#2563EB', 'arr-blue');
+        addPath(`M ${{jR.right + 2}} ${{gInY}} L ${{gR.left - 2}} ${{gInY}}`, '#2563EB', 'arr-blue', null, 2.2, gasMarkerStart);
       }} else {{
         const xSplit = g23MidX - 10;
         addPath(orthoPath([
@@ -821,7 +825,7 @@ window.addEventListener('load', () => {{
           [xSplit, jOutY],
           [xSplit, gInY],
           [gR.left - 2, gInY]
-        ], 6), '#2563EB', 'arr-blue');
+        ], 6), '#2563EB', 'arr-blue', null, 2.2, gasMarkerStart);
       }}
 
       gasTargets.forEach((tg, idx) => {{
@@ -833,6 +837,7 @@ window.addEventListener('load', () => {{
           startY,
           color: '#2563EB',
           marker: 'arr-blue',
+          markerStart: tg.bidir ? 'arr-blue' : null,
           width: 2.2,
           label: tg.label,
           labelStyle: ['#1E40AF', '#93C5FD', '#EFF6FF'],
@@ -854,13 +859,15 @@ window.addEventListener('load', () => {{
         clearL3Y = pickClearCorridorY(startY, true, false);
       }}
       if (!dbWiresByTarget[tg.to]) dbWiresByTarget[tg.to] = [];
+      const arrowId = isDirectDb ? 'arr-green' : 'arr-blue';
       dbWiresByTarget[tg.to].push({{
         sourceRect: jR,
         startX: jR.right + 2,
         startY,
         clearL3Y,
         color: isDirectDb ? '#059669' : '#2563EB',
-        marker: isDirectDb ? 'arr-green' : 'arr-blue',
+        marker: arrowId,
+        markerStart: tg.bidir ? arrowId : null,
         width: isDirectDb ? 2.5 : 2.1,
         label: tg.label,
         labelStyle: isDirectDb ? ['#065F46', '#6EE7B7', '#ECFDF5'] : ['#1E40AF', '#93C5FD', '#EFF6FF'],
@@ -927,7 +934,7 @@ window.addEventListener('load', () => {{
       }} else {{
         pts.push([w.trackX, yCross], [w.trackX, w.entryY], [dR.left - 2, w.entryY]);
       }}
-      addPath(orthoPath(pts, 7), w.color, w.marker, null, w.width);
+      addPath(orthoPath(pts, 7), w.color, w.marker, null, w.width, w.markerStart || null);
 
       // Place label cleanly centered inside Gutter 3-4 (away from GAS card right edge when vertically clear)
       let lblX = lane3.cx;
@@ -1027,27 +1034,37 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期表示", "title": "ホーム初期ロード / タブ復帰", "desc": "initHomeView(data) 実行トリガー", "is_init": True},
                         "j": {"file": "js/main.js → supabase.js", "func": "getInitialData()", "desc": "Bypass: SupabaseService.getInitialData() (0.3s) ＆ BG同期"},
-                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance()", "desc": "最新カレンダー予定・出席状況のバックグラウンド同期"},
+                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance()", "desc": "最新カレンダー予定・出席状況のバックグラウンド同期", "bidir": True},
                         "targets": [
-                            {"type": "direct_db", "to": "d-core", "label": "Direct一括照会 (0.3s)"},
-                            {"type": "gas_db", "to": "d-gcal", "label": "BG予定同期"},
+                            {"type": "direct_db", "to": "d-core", "label": "Direct一括照会 (0.3s)", "bidir": True},
+                            {"type": "gas_db", "to": "d-gcal", "label": "BG予定同期", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "ホーム全カード描画"},
                         ]
                     }
                 ]
             },
             {
-                "title": "ポータルカード群 (#view-home)",
+                "title": "トップ警告 ＆ ポータルカード群 (#view-home)",
                 "rows": [
                     {
-                        "t": {"badge": "カードタップ", "title": "「次回活動」カード押下", "desc": "#homeNextEventCard（日程・備品不在警告）"},
+                        "t": {"badge": "代理解決", "title": "備品不在「持参する」ボタン押下", "desc": "#homeTopAlertArea 内 備品持参アラート解除"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "openEquipmentResolveModal() → apiResolveEquipmentAlert()", "desc": "Bypass: 代理持参ログ即時INSERT ＆ トップ警告バナー解除"},
+                        "targets": [{"type": "direct_db", "to": "d-eqlog", "label": "Direct代理記録INSERT (0.1s)"}]
+                    },
+                    {
+                        "t": {"badge": "カードタップ", "title": "「次回活動 / 次の公式戦」カード押下", "desc": "#homeNextEventMount / #homeNextOfficialMount"},
                         "j": {"file": "js/home.js → schedule.js", "func": "openEventDetailModal(ev)", "desc": "出欠状況・参加者・持参備品をモーダル展開"},
                         "targets": [{"type": "other", "to": "o-evmodal", "label": "予定詳細モーダル起動"}]
                     },
                     {
-                        "t": {"badge": "カードタップ", "title": "「最新試合結果」カード押下", "desc": "#homeLatestMatchCard（スコア・勝敗サマリー）"},
+                        "t": {"badge": "カードタップ", "title": "「直近の試合結果」カード押下", "desc": "#homeRecentMatchMount（スコア・勝敗サマリー）"},
                         "j": {"file": "js/home.js → results.js", "func": "openMatchDetail(matchId)", "desc": "得点推移・出場メンバー詳細をモーダル展開"},
                         "targets": [{"type": "other", "to": "o-mmodal", "label": "試合詳細モーダル起動"}]
+                    },
+                    {
+                        "t": {"badge": "カードタップ", "title": "「活動記録 / お知らせ」投稿押下", "desc": "#homePinnedAnnounceArea / #homeRecentBulletinMount"},
+                        "j": {"file": "js/bulletin.js", "func": "openBulletinDetailModal(post)", "desc": "ピン留め記事・最新活動記録を既読記録付きでモーダル展開"},
+                        "targets": [{"type": "other", "to": "o-bmod", "label": "掲示板詳細モーダル起動"}]
                     },
                     {
                         "t": {"badge": "リンク押下", "title": "「ランキング →」「スケジュール →」「試合結果 →」「活動記録 →」押下", "desc": "各カードおよび汎用警告エリア内遷移リンク"},
@@ -1059,12 +1076,14 @@ SWIMLANE_SPECS = {
         ],
         "lane4_nodes": [
             {"kind": "db", "id": "d-core", "logical": "チーム主要データ一式", "physical": "members, matches, score_logs, attendance, equipment_*, bulletin_*", "anchor_rows": [0]},
-            {"kind": "ext", "id": "d-gcal", "badge": "Google API", "title": "Google カレンダー API v3", "desc": "活動予定一覧・出席レスポンス原本取得", "anchor_rows": [0, 1]}
+            {"kind": "ext", "id": "d-gcal", "badge": "Google API", "title": "Google カレンダー API v3", "desc": "活動予定一覧・出席レスポンス原本取得", "anchor_rows": [0]},
+            {"kind": "db", "id": "d-eqlog", "logical": "備品代理持参ログ", "physical": "equipment_event_logs", "anchor_rows": [1]}
         ],
         "lane5_nodes": [
-            {"id": "o-evmodal", "badge": "共通モーダル (SCR07)", "title": "予定詳細モーダル", "desc": "#eventDetailModal（出欠回答 ○/△/×・掲示板起票）", "anchor_rows": [1]},
-            {"id": "o-mmodal", "badge": "共通モーダル (SCR03)", "title": "試合詳細モーダル", "desc": "#matchDetailModal（タイムライン・SCR04編集連携）", "anchor_rows": [2]},
-            {"id": "o-tabs", "badge": "SPAタブ遷移", "title": "SCR03〜SCR09 各画面", "desc": "結果 / 入力 / 予定 / 備品 / 掲示板へ直接移動", "anchor_rows": [3]}
+            {"id": "o-evmodal", "badge": "共通モーダル (SCR07)", "title": "予定詳細モーダル", "desc": "#eventDetailModal（出欠回答 ○/△/×・掲示板起票）", "anchor_rows": [2]},
+            {"id": "o-mmodal", "badge": "共通モーダル (SCR03)", "title": "試合詳細モーダル", "desc": "#matchDetailModal（タイムライン・SCR04編集連携）", "anchor_rows": [3]},
+            {"id": "o-bmod", "badge": "共通モーダル (SCR09)", "title": "掲示板詳細モーダル", "desc": "#bulletinDetailModal（本文・コメント・既読一覧）", "anchor_rows": [4]},
+            {"id": "o-tabs", "badge": "SPAタブ遷移", "title": "SCR03〜SCR09 各画面", "desc": "結果 / ランキング / 予定 / 備品 / 掲示板へ直接移動", "anchor_rows": [5]}
         ]
     },
     "SCR03": {
@@ -1078,12 +1097,12 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・絞り込み", "title": "画面表示 / 年度・大会・対戦相手検索", "desc": "seasonFilter / categoryFilter / searchFilter 変更", "is_init": True},
                         "j": {"file": "js/results.js", "func": "initMatchHistory() / filterMatchResults()", "desc": "取得済みメモリ配列から0秒抽出・先頭10件カード生成"},
-                        "targets": [{"type": "direct_cache", "to": "d-cache", "label": "メモリ配列高速抽出"}]
+                        "targets": [{"type": "direct_cache", "to": "d-cache", "label": "メモリ配列高速抽出", "bidir": True}]
                     },
                     {
                         "t": {"badge": "ページング", "title": "「さらに読み込む」ボタン押下", "desc": "#loadMoreContainer 内ボタンタップ"},
                         "j": {"file": "js/results.js", "func": "loadMoreMatches()", "desc": "表示上限を +10件 拡張し過去カードを追加描画"},
-                        "targets": [{"type": "direct_cache", "to": "d-cache", "label": "追加10件参照"}]
+                        "targets": [{"type": "direct_cache", "to": "d-cache", "label": "追加10件参照", "bidir": True}]
                     },
                     {
                         "t": {"badge": "新規ボタン", "title": "「新規試合結果の作成」ボタン押下", "desc": "画面上部の登録ボタン押下"},
@@ -1094,7 +1113,7 @@ SWIMLANE_SPECS = {
                         "t": {"badge": "カードタップ", "title": "試合結果カードタップ", "desc": ".match-card-clickable（matchId指定）"},
                         "j": {"file": "js/results.js", "func": "openMatchDetail(matchId)", "desc": "前後半スコア・タイムライン・出場選手・MOM注入"},
                         "targets": [
-                            {"type": "direct_cache", "to": "d-cache", "label": "詳細タイムライン取得"},
+                            {"type": "direct_cache", "to": "d-cache", "label": "詳細タイムライン取得", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "詳細モーダル展開"}
                         ]
                     }
@@ -1130,7 +1149,7 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・選択", "title": "対象試合プルダウン選択 / 編集復元", "desc": "#eventSelect 変更（未入力のカレンダー試合予定から引用）", "is_init": True},
                         "j": {"file": "js/input.js", "func": "onEventSelect() / updatePlayerDropdowns()", "desc": "開催日・種別・対戦相手・出席選手ドロップダウンを自動生成"},
-                        "targets": [{"type": "direct_cache", "to": "d-calcache", "label": "予定 ＆ 名簿引用"}]
+                        "targets": [{"type": "direct_cache", "to": "d-calcache", "label": "予定 ＆ 名簿引用", "bidir": True}]
                     }
                 ]
             },
@@ -1179,16 +1198,16 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期表示", "title": "タブ表示 ＆ シーズンデータ初期化", "desc": "initStats(data) / populateRankingSeasonFilter()", "is_init": True},
                         "j": {"file": "js/ranking.js", "func": "initStats() → filterAndRenderRankings()", "desc": "OB・退団メンバー除外準備 ＆ 最新シーズン選択肢生成"},
-                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance(season)", "desc": "Googleカレンダー基準のシーズン別出席数バッチ集計"},
+                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance(season)", "desc": "Googleカレンダー基準のシーズン別出席数バッチ集計", "bidir": True},
                         "targets": [
-                            {"type": "direct_cache", "to": "d-mem", "label": "試合・名簿参照"},
-                            {"type": "gas_db", "to": "d-gcal", "label": "出席実績取得"}
+                            {"type": "direct_cache", "to": "d-mem", "label": "試合・名簿参照", "bidir": True},
+                            {"type": "gas_db", "to": "d-gcal", "label": "出席実績取得", "bidir": True}
                         ]
                     },
                     {
                         "t": {"badge": "条件切替", "title": "シーズン / 大会種別フィルター変更", "desc": "得点王・アシスト王・MOM・最多出場を動的集計"},
                         "j": {"file": "js/ranking.js", "func": "aggregateStatsFromMatches() / renderRankingsWithData()", "desc": "isPastMember() 判定でOB完全除外し各TOP3カード生成"},
-                        "targets": [{"type": "direct_cache", "to": "d-mem", "label": "クライアント即時集計"}]
+                        "targets": [{"type": "direct_cache", "to": "d-mem", "label": "クライアント即時集計", "bidir": True}]
                     },
                     {
                         "t": {"badge": "開閉操作", "title": "「もっと見る / 折りたたむ」押下", "desc": "各ランキングカード下部のアコーディオン操作"},
@@ -1217,16 +1236,16 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・タブ切替", "title": "画面表示 / シーズン・種別切替", "desc": "switchTab('personal') ＆ フィルター変更", "is_init": True},
                         "j": {"file": "js/personal.js", "func": "filterAndRenderPersonalStats()", "desc": "現役部員全員の出場・得点・アシスト・MOM・参加率集計"},
-                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance(season)", "desc": "シーズン別カレンダー出欠実績データの補完取得"},
+                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance(season)", "desc": "シーズン別カレンダー出欠実績データの補完取得", "bidir": True},
                         "targets": [
-                            {"type": "direct_cache", "to": "d-mem", "label": "名簿・試合ログ参照"},
-                            {"type": "gas_db", "to": "d-gcal", "label": "出席分母取得"}
+                            {"type": "direct_cache", "to": "d-mem", "label": "名簿・試合ログ参照", "bidir": True},
+                            {"type": "gas_db", "to": "d-gcal", "label": "出席分母取得", "bidir": True}
                         ]
                     },
                     {
                         "t": {"badge": "並び替え", "title": "テーブル見出し列タップ", "desc": "背番号 / 出場 / 得点 / アシスト / MOM / 参加率"},
                         "j": {"file": "js/personal.js", "func": "sortPersonalStats() → renderPersonalTable()", "desc": "選択キーで昇順/降順ソートして一覧テーブル即時再描画"},
-                        "targets": [{"type": "direct_cache", "to": "d-mem", "label": "クライアント即時ソート"}]
+                        "targets": [{"type": "direct_cache", "to": "d-mem", "label": "クライアント即時ソート", "bidir": True}]
                     },
                     {
                         "t": {"badge": "行タップ", "title": "選手行タップ（カルテ起動）", "desc": "現役選手個人の成績履歴モーダルを表示"},
@@ -1255,7 +1274,7 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・切替", "title": "画面表示 / 月移動・サブタブ切替", "desc": "renderCalendar / renderAgendaList / フィルター適用", "is_init": True},
                         "j": {"file": "js/schedule.js → supabase.js", "func": "initScheduleView() / apiGetMemberListForLogin()", "desc": "Bypass: members名簿補完 ＋ 予定・自出欠バッジ描画"},
-                        "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct名簿参照"}]
+                        "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct名簿参照", "bidir": True}]
                     },
                     {
                         "t": {"badge": "出欠ボタン", "title": "出欠回答（〇/△/×）タップ", "desc": "リスト上・モーダル内のワンタップ出欠更新"},
@@ -1316,7 +1335,7 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・更新", "title": "画面表示 / データリフレッシュ", "desc": "initEquipmentView() → refreshEquipmentData()", "is_init": True},
                         "j": {"file": "js/equipment.js → supabase.js", "func": "apiGetEquipmentData()", "desc": "Bypass: SupabaseService.getEquipmentData() ＋ 7日間不在判定"},
-                        "targets": [{"type": "direct_db", "to": "d-eq", "label": "Direct台帳・ログ一括取得"}]
+                        "targets": [{"type": "direct_db", "to": "d-eq", "label": "Direct台帳・ログ一括取得", "bidir": True}]
                     },
                     {
                         "t": {"badge": "代理解決", "title": "不在アラート「解決 / 代理引受」押下", "desc": "向こう7日以内の保管者不在イベントを誰でも解消可能"},
@@ -1368,13 +1387,13 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期・絞り込み", "title": "画面表示 / カテゴリ・検索切替", "desc": "initBulletinTab() / setBulletinCategoryFilter()", "is_init": True},
                         "j": {"file": "js/bulletin.js → supabase.js", "func": "loadBulletinData() / renderBulletinTimeline()", "desc": "Bypass: 投稿一覧・コメント・既読ログ参照 ＆ 未読数バッジ更新"},
-                        "targets": [{"type": "direct_db", "to": "d-posts", "label": "Directフィード一括取得"}]
+                        "targets": [{"type": "direct_db", "to": "d-posts", "label": "Directフィード一括取得", "bidir": True}]
                     },
                     {
                         "t": {"badge": "カードタップ", "title": "投稿カードタップ（閲覧・既読記録）", "desc": "詳細モーダル展開 ＋ 未読時は自動既読マーキング"},
                         "j": {"file": "js/bulletin.js → supabase.js", "func": "openBulletinDetailModal() → apiMarkBulletinPostRead()", "desc": "Bypass: bulletin_reads 自動記録 ＆ 既読者/コメント読込"},
                         "targets": [
-                            {"type": "direct_db", "to": "d-reads", "label": "Direct既読記録 ＆ コメント照会"},
+                            {"type": "direct_db", "to": "d-reads", "label": "Direct既読記録 ＆ コメント照会", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "詳細モーダル展開"}
                         ]
                     }
@@ -1424,7 +1443,7 @@ SWIMLANE_SPECS = {
                         "t": {"badge": "初期・権限制御", "title": "画面アクセス時 ロール判定 ＆ 一覧取得", "desc": "代表・副代表以外は警告表示しホームへ自動強制リダイレクト", "is_init": True},
                         "j": {"file": "js/members.js → supabase.js", "func": "initMembersView() → apiGetMemberListForAdmin()", "desc": "Bypass: 現役・休部・OB全部員データ一括取得（0.1s）"},
                         "targets": [
-                            {"type": "direct_db", "to": "d-members", "label": "Direct全部員照会"},
+                            {"type": "direct_db", "to": "d-members", "label": "Direct全部員照会", "bidir": True},
                             {"type": "other", "to": "o-home", "label": "一般部員はSCR02へ遮断遷移"}
                         ]
                     },
@@ -1465,23 +1484,22 @@ SWIMLANE_SPECS = {
     "SCR11": {
         "scr_id": "SCR11",
         "title": "SCR11 マイプロフィール・通知設定：処理・遷移スイムレーン相関図",
-        "lane1_title": "1. 設定モーダル (view_common.html)",
+        "lane1_title": "1. プロフィール・設定モーダル (view_common.html)",
         "cards": [
             {
-                "title": "プロフィール・アバター・通知設定 (#profileModal)",
+                "title": "プロフィール確認・アバター (#userProfileModal)",
                 "rows": [
                     {
-                        "t": {"badge": "モーダル起動", "title": "ヘッダーアバタータップ（設定起動）", "desc": "ログイン中ユーザー情報 ＆ 通知設定読込", "is_init": True},
-                        "j": {"file": "js/main.js", "func": "openUserProfileModal()", "desc": "氏名/背番号表示 ＋ 通知手段・PW入力欄初期化"},
-                        "g": {"file": "server/api (GAS)", "func": "apiGetNotificationSettings()", "desc": "現在の通知手段設定取得"},
-                        "targets": [{"type": "gas_db", "to": "d-members", "label": "設定取得"}]
+                        "t": {"badge": "モーダル起動", "title": "ヘッダーアバタータップ（プロフィール起動）", "desc": "ログイン中ユーザー情報・背番号・アバター描画", "is_init": True},
+                        "j": {"file": "js/main.js", "func": "openUserProfileModal()", "desc": "保持中の認証セッション情報からプロフィール項目を描画"},
+                        "targets": [{"type": "direct_cache", "to": "d-ls", "label": "セッション情報参照", "bidir": True}]
                     },
                     {
                         "t": {"badge": "画像保存", "title": "アバター画像選択（256x256圧縮送信）", "desc": "Canvasリサイズ後 Base64 画像アップロード"},
                         "j": {"file": "js/main.js", "func": "handleAvatarUpload()", "desc": "GAS へ画像送信後 localStorage・ヘッダーアイコン即時反映"},
-                        "g": {"file": "server/api (GAS)", "func": "apiSaveProfileImage(name, base64)", "desc": "Google Drive へ画像保存 ＆ 公開URL発行"},
+                        "g": {"file": "server/api (GAS)", "func": "apiSaveProfileImage(name, base64)", "desc": "Google Drive へ画像保存 ＆ 公開URL発行", "bidir": True},
                         "targets": [
-                            {"type": "gas_db", "to": "d-gdrive", "label": "Drive保存"},
+                            {"type": "gas_db", "to": "d-gdrive", "label": "Drive保存・URL発行", "bidir": True},
                             {"type": "direct_cache", "to": "d-ls", "label": "URLセッション更新"}
                         ]
                     },
@@ -1491,12 +1509,25 @@ SWIMLANE_SPECS = {
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct画像URLクリア"}]
                     },
                     {
+                        "t": {"badge": "設定遷移", "title": "「設定（歯車）」ボタン押下", "desc": "#btnOpenUserSettings ➔ 通知・PW設定モーダルへ切替"},
+                        "j": {"file": "js/main.js → supabase.js", "func": "openUserSettingsModal() → apiGetNotificationSettings()", "desc": "Bypass: 通知手段設定をDirect読込し設定画面を展開"},
+                        "targets": [
+                            {"type": "direct_db", "to": "d-members", "label": "Direct通知設定取得 (0.1s)", "bidir": True},
+                            {"type": "card_switch", "to_card": 1, "label": "設定モーダルへ切替"}
+                        ]
+                    }
+                ]
+            },
+            {
+                "title": "通知設定・PW変更・ログアウト (#userSettingsModal)",
+                "rows": [
+                    {
                         "t": {"badge": "通知/PW保存", "title": "通知設定変更 / 「PW変更」押下", "desc": "apiSaveNotificationSettings / apiChangePassword"},
                         "j": {"file": "js/main.js → supabase.js", "func": "apiSaveNotificationSettings() / apiChangePassword()", "desc": "Bypass: members.notify_settings / password_hash 直接更新"},
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct設定・PW更新 (0.1s)"}]
                     },
                     {
-                        "t": {"badge": "ログアウト", "title": "「ログアウト」ボタン押下 ➔ 確認OK", "desc": "認証セッション破棄 ＆ ログイン画面へ復帰"},
+                        "t": {"badge": "ログアウト", "title": "「ログアウト」ボタン押下 ➔ 確認OK", "desc": "#logoutConfirmModal 確定 ➔ ログイン画面へ復帰"},
                         "j": {"file": "js/main.js", "func": "logout()", "desc": "localStorage (fcb_auth_user) 消去 ＆ 画面初期化"},
                         "targets": [
                             {"type": "direct_cache", "to": "d-ls", "label": "fcb_auth_user 消去"},
@@ -1507,12 +1538,12 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "db", "id": "d-members", "logical": "メンバー名簿・通知設定", "physical": "members (avatar_url / notify_settings / password_hash)", "anchor_rows": [0, 2, 3]},
+            {"kind": "storage", "id": "d-ls", "badge": "Browser Storage", "title": "localStorage (fcb_auth_user)", "desc": "ユーザー情報参照・アバターURL更新・ログアウト時の消去", "anchor_rows": [0]},
             {"kind": "ext", "id": "d-gdrive", "badge": "Google API / Drive", "title": "Google Drive ストレージ", "desc": "プロフィールアバター画像のアップロード保存先", "anchor_rows": [1]},
-            {"kind": "storage", "id": "d-ls", "badge": "Browser Storage", "title": "localStorage (fcb_auth_user)", "desc": "アバターURL更新・ログアウト時のセッション完全消去", "anchor_rows": [1, 4]}
+            {"kind": "db", "id": "d-members", "logical": "メンバー名簿・通知設定", "physical": "members (avatar_url / notify_settings / password_hash)", "anchor_rows": [3, 4]}
         ],
         "lane5_nodes": [
-            {"id": "o-scr01", "badge": "遷移先画面", "title": "SCR01 ログイン画面", "desc": "未ログイン状態へ復帰（#loginCard 表示）", "anchor_rows": [4]}
+            {"id": "o-scr01", "badge": "遷移先画面", "title": "SCR01 ログイン画面", "desc": "未ログイン状態へ復帰（#loginCard 表示）", "anchor_rows": [5]}
         ]
     }
 }
