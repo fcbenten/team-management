@@ -1097,7 +1097,7 @@
     const lineBadge = document.getElementById('notifBadgeLine');
     if (lineBadge) {
       if (u.lineLinked) {
-        lineBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>連携済み</span>';
+        lineBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>連携済</span>';
         lineBadge.className = 'notif-status-badge badge-verified';
       } else {
         lineBadge.textContent = '未連携';
@@ -1110,7 +1110,7 @@
     if (pushBadge) {
       if (typeof Notification !== 'undefined') {
         if (Notification.permission === 'granted') {
-          pushBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>許可済み</span>';
+          pushBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>許可済</span>';
           pushBadge.className = 'notif-status-badge badge-verified';
         } else if (Notification.permission === 'denied') {
           pushBadge.textContent = 'ブロック中';
@@ -1164,7 +1164,6 @@
     const isLinked = !!u.lineLinked;
     const isMobile = isLineMobileEnv();
     const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
-    const linkedArea = document.getElementById('profileLineLinkedArea');
     const codeBox = document.getElementById('profileLineCodeBox');
     const codeText = document.getElementById('profileLineCodeText');
     const openOaLink = document.getElementById('btnProfileLineOpenOa');
@@ -1172,12 +1171,11 @@
     const guideEl = document.getElementById('profileLineGuideText');
 
     if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
-    if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
 
     if (guideEl) {
       guideEl.textContent = isMobile
-        ? '※ボタンを押して連携コードを発行し、「LINEを開く（入力済み）」から公式LINEへそのまま送信してください。'
-        : '※PCからは「公式LINEを開く（QR表示）」でスマホから友だち追加し、発行した連携コードをコピーして公式LINEトークへ送信してください。';
+        ? '※ボタンを押して連携コードを発行し、「LINEを開く（入力済み）」からLINEトークへそのまま送信してください。'
+        : '※PCからは「LINEを開く（QR表示）」でスマホから友だち追加し、発行した連携コードをコピーしてLINEトークへ送信してください。';
     }
 
     if (!isLinked && u.lineLinkCode) {
@@ -1190,7 +1188,7 @@
             : 'https://line.me/R/ti/p/%40377avqrr');
       }
       if (openOaLabel) {
-        openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+        openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
       }
       if (codeBox) codeBox.classList.remove('hidden');
     } else if (codeBox) {
@@ -1199,9 +1197,10 @@
   }
 
   /**
-   * 通知タイプ変更時のアクション表示制御
+   * 通知タイプ変更時のアクション表示制御（選択カード直下に配置）
    */
   function handleNotifTypeChange(val) {
+    const u = window.currentUser || {};
     const radios = document.querySelectorAll('input[name="profileNotifType"]');
     radios.forEach(r => {
       const card = r.closest('.notif-radio-card');
@@ -1211,13 +1210,16 @@
       }
     });
 
-    const actionArea = document.getElementById('notifActionArea');
     const lineWrap = document.getElementById('notifActionLineWrap');
     const pushWrap = document.getElementById('notifActionPushWrap');
     const targetBox = document.getElementById('notifTargetBox');
+    const cardLine = document.getElementById('notifCardLine');
+    const cardPush = document.getElementById('notifCardPush');
+    const cardBoth = document.getElementById('notifCardBoth');
 
     if (val === 'none') {
-      if (actionArea) actionArea.classList.add('hidden');
+      if (lineWrap) lineWrap.classList.add('hidden');
+      if (pushWrap) pushWrap.classList.add('hidden');
       if (targetBox) targetBox.classList.add('opacity-50');
       return;
     }
@@ -1225,11 +1227,15 @@
     if (targetBox) targetBox.classList.remove('opacity-50');
 
     const isPushGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
-    const showLineAction = (val === 'line' || val === 'both');
+    const showLineAction = (val === 'line' || val === 'both') && !u.lineLinked;
     const showPushAction = (val === 'push' || val === 'both') && !isPushGranted;
 
     if (lineWrap) {
       if (showLineAction) {
+        const anchor = (val === 'both' && cardBoth) ? cardBoth : cardLine;
+        if (anchor && anchor.nextElementSibling !== lineWrap) {
+          anchor.insertAdjacentElement('afterend', lineWrap);
+        }
         lineWrap.classList.remove('hidden');
         syncProfileLineUi();
       } else {
@@ -1238,13 +1244,17 @@
     }
 
     if (pushWrap) {
-      if (showPushAction) pushWrap.classList.remove('hidden');
-      else pushWrap.classList.add('hidden');
-    }
-
-    if (actionArea) {
-      if (showLineAction || showPushAction) actionArea.classList.remove('hidden');
-      else actionArea.classList.add('hidden');
+      if (showPushAction) {
+        const anchor = (val === 'both' && cardBoth)
+          ? (showLineAction && lineWrap ? lineWrap : cardBoth)
+          : cardPush;
+        if (anchor && anchor.nextElementSibling !== pushWrap) {
+          anchor.insertAdjacentElement('afterend', pushWrap);
+        }
+        pushWrap.classList.remove('hidden');
+      } else {
+        pushWrap.classList.add('hidden');
+      }
     }
   }
 
@@ -1299,7 +1309,7 @@
   }
 
   /**
-   * LINE公式アカウント連携コード発行
+   * LINE連携コード発行
    */
   async function handleLineConnectClick() {
     const u = window.currentUser;
@@ -1326,7 +1336,7 @@
       handleNotifTypeChange(currentVal);
       const issuedMsg = isLineMobileEnv()
         ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、戻ってから「連携確認」を押してください。`
-        : `コード「${res.code}」を発行しました。「コピー」してからスマホの公式LINEトークへ送信し、「連携確認」を押してください。`;
+        : `コード「${res.code}」を発行しました。「コピー」してからスマホのLINEトークへ送信し、「連携確認」を押してください。`;
       setProfileLineMsg(issuedMsg, 'success');
       if (typeof window.refreshHomeLineMockState === 'function') {
         window.refreshHomeLineMockState(false);
@@ -1350,9 +1360,9 @@
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
-      setProfileLineMsg(`コード「${code}」をコピーしました。公式LINEトークに貼り付けて送信してください。`, 'success');
+      setProfileLineMsg(`コード「${code}」をコピーしました。LINEトークに貼り付けて送信してください。`, 'success');
     } catch (e) {
-      setProfileLineMsg(`コード「${code}」を公式LINEトークへ送信してください。`, 'info');
+      setProfileLineMsg(`コード「${code}」をLINEトークへ送信してください。`, 'info');
     }
   }
 
@@ -1378,43 +1388,12 @@
       }
 
       if (status.linked) {
-        setProfileLineMsg('公式LINEとの連携を確認しました。', 'success');
+        setProfileLineMsg('');
       } else {
-        setProfileLineMsg('まだ連携が確認できていません。公式LINEトークへコード送信後に再度お試しください。', 'error');
+        setProfileLineMsg('まだ連携が確認できていません。LINEトークへコード送信後に再度お試しください。', 'error');
       }
     } catch (err) {
       setProfileLineMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
-    }
-  }
-
-  /**
-   * LINE公式アカウント連携解除
-   */
-  async function handleProfileLineUnlink() {
-    const u = window.currentUser;
-    if (!u || !window.SupabaseLinePush) return;
-
-    const btn = document.getElementById('btnProfileLineUnlink');
-    if (btn) btn.disabled = true;
-
-    try {
-      await window.SupabaseLinePush.unlinkLine(u);
-      u.lineLinked = false;
-      u.lineLinkCode = '';
-      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
-
-      updateNotificationBadges();
-      syncProfileLineUi();
-      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
-      handleNotifTypeChange(currentVal);
-      if (typeof window.refreshHomeLineMockState === 'function') {
-        window.refreshHomeLineMockState(false);
-      }
-      setProfileLineMsg('公式LINEとの連携を解除しました。', 'info');
-    } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
-    } finally {
-      if (btn) btn.disabled = false;
     }
   }
 
@@ -1495,7 +1474,6 @@
   window.handleLineConnectClick = handleLineConnectClick;
   window.handleProfileLineCopyCode = handleProfileLineCopyCode;
   window.handleProfileLineRefresh = handleProfileLineRefresh;
-  window.handleProfileLineUnlink = handleProfileLineUnlink;
   window.handleSaveNotificationSettings = handleSaveNotificationSettings;
 
   /**

@@ -79,9 +79,37 @@
                 <span class="notif-type-name">LINE通知</span>
                 <span class="notif-status-badge badge-gray" id="notifBadgeLine">未連携</span>
               </div>
-              <div class="notif-radio-desc">公式LINEの個別トークで受信</div>
+              <div class="notif-radio-desc">LINEの個別トークで受信</div>
             </div>
           </label>
+
+          <!-- LINE連携のインラインアクションエリア（選択カード直下に動的配置） -->
+          <div id="notifActionLineWrap" class="notif-action-area hidden">
+            <div id="profileLineUnlinkedArea">
+              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full" onclick="handleLineConnectClick()">
+                <span class="material-symbols-outlined">add_link</span>LINEと連携する
+              </button>
+              <div id="profileLineCodeBox" class="profile-line-code-box hidden">
+                <div class="profile-line-code-row">
+                  <span class="profile-line-code-label">連携コード（15分間有効）:</span>
+                  <code id="profileLineCodeText" class="profile-line-code-val">FCB-0000</code>
+                </div>
+                <div class="profile-line-code-btns">
+                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineCopyCode()">
+                    <span class="material-symbols-outlined">content_copy</span>コピー
+                  </button>
+                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">open_in_new</span><span id="btnProfileLineOpenLabel">LINEを開く</span>
+                  </a>
+                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineRefresh()">
+                    <span class="material-symbols-outlined">refresh</span>連携確認
+                  </button>
+                </div>
+              </div>
+              <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、LINEトークへ送信してください。</div>
+            </div>
+            <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
+          </div>
 
           <label class="notif-radio-card" id="notifCardPush">
             <input type="radio" name="profileNotifType" value="push" onchange="handleNotifTypeChange(this.value)">
@@ -94,6 +122,14 @@
               <div class="notif-radio-desc">スマホ画面上部のバナーで直接受信</div>
             </div>
           </label>
+
+          <!-- 端末プッシュ許可のインラインアクションエリア（選択カード直下に動的配置） -->
+          <div id="notifActionPushWrap" class="notif-action-area hidden">
+            <button type="button" class="btn-notif-action btn-notif-push w-full" onclick="handlePushPermissionRequest()">
+              <span class="material-symbols-outlined">notifications</span>この端末の通知を有効化
+            </button>
+            <div class="notif-guide-text" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
+          </div>
 
           <label class="notif-radio-card" id="notifCardBoth">
             <input type="radio" name="profileNotifType" value="both" onchange="handleNotifTypeChange(this.value)">
@@ -116,48 +152,6 @@
               <div class="notif-radio-desc">アプリを開いた時のみ確認</div>
             </div>
           </label>
-        </div>
-
-        <!-- 端末許可・LINE連携のアクションボタンエリア -->
-        <div id="notifActionArea" class="notif-action-area mb-12 hidden">
-          <div id="notifActionLineWrap" class="hidden">
-            <div id="profileLineUnlinkedArea">
-              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full" onclick="handleLineConnectClick()">
-                <span class="material-symbols-outlined">add_link</span>LINE公式アカウントと連携
-              </button>
-              <div id="profileLineCodeBox" class="profile-line-code-box hidden">
-                <div class="profile-line-code-row">
-                  <span class="profile-line-code-label">連携コード（15分間有効）:</span>
-                  <code id="profileLineCodeText" class="profile-line-code-val">FCB-0000</code>
-                </div>
-                <div class="profile-line-code-btns">
-                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineCopyCode()">
-                    <span class="material-symbols-outlined">content_copy</span>コピー
-                  </button>
-                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
-                    <span class="material-symbols-outlined">open_in_new</span><span id="btnProfileLineOpenLabel">公式LINEを開く</span>
-                  </a>
-                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineRefresh()">
-                    <span class="material-symbols-outlined">refresh</span>連携確認
-                  </button>
-                </div>
-              </div>
-              <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、公式LINEへ送信してください。</div>
-            </div>
-            <div id="profileLineLinkedArea" class="profile-line-linked-row hidden">
-              <span class="profile-line-linked-label">
-                <span class="material-symbols-outlined">chat</span>公式LINE 接続中（@377avqrr）
-              </span>
-              <button type="button" id="btnProfileLineUnlink" class="profile-line-unlink-btn" onclick="handleProfileLineUnlink()">連携解除</button>
-            </div>
-            <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
-          </div>
-          <div id="notifActionPushWrap" class="hidden">
-            <button type="button" class="btn-notif-action btn-notif-push w-full" onclick="handlePushPermissionRequest()">
-              <span class="material-symbols-outlined">notifications</span>この端末の通知を有効化
-            </button>
-            <div class="notif-guide-text" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
-          </div>
         </div>
 
         <!-- 通知対象項目のチェックボックス -->

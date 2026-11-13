@@ -268,41 +268,6 @@
 .profile-line-open-link .material-symbols-outlined {
   font-size: 15px;
 }
-.profile-line-linked-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.profile-line-linked-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-heading, #334155);
-}
-.profile-line-linked-label .material-symbols-outlined {
-  font-size: 17px;
-  color: #06c755;
-}
-.profile-line-unlink-btn {
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: var(--text-muted);
-  font-size: 0.73rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.profile-line-unlink-btn:hover {
-  color: #dc2626;
-  border-color: #fecaca;
-  background: #fef2f2;
-}
 .profile-line-msg {
   margin-top: 8px;
   padding: 6px 10px;

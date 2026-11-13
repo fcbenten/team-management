@@ -735,7 +735,7 @@ async function refreshHomePushMockState() {
     badgeEl.textContent = '購読済み';
     badgeEl.className = 'home-push-status-badge status-active';
   } else if (env.permission === 'granted') {
-    badgeEl.textContent = '許可済み（未購読）';
+    badgeEl.textContent = '許可済（未購読）';
     badgeEl.className = 'home-push-status-badge status-warn';
   } else {
     badgeEl.textContent = '未有効化';
@@ -869,7 +869,7 @@ async function refreshHomeLineMockState(showMessage) {
   try {
     const status = await window.SupabaseLinePush.getLineLinkStatus(window.currentUser);
     if (badgeEl && window.homeNotifMockTab === 'line') {
-      badgeEl.textContent = status.linked ? 'LINE連携済み' : 'LINE未連携';
+      badgeEl.textContent = status.linked ? 'LINE連携済' : 'LINE未連携';
       badgeEl.className = 'home-push-status-badge ' + (status.linked ? 'status-active' : 'status-idle');
     }
     if (unlinkBtn) unlinkBtn.classList.toggle('hidden', !status.linked);
@@ -877,7 +877,7 @@ async function refreshHomeLineMockState(showMessage) {
       if (status.linked && status.lineUserId) {
         const lid = status.lineUserId;
         const masked = lid.length > 12 ? lid.slice(0, 6) + '...' + lid.slice(-4) : lid;
-        infoEl.textContent = `連携済み LINE ID: ${masked} (${status.name})`;
+        infoEl.textContent = `連携済 LINE ID: ${masked} (${status.name})`;
         infoEl.classList.remove('hidden');
       } else {
         infoEl.textContent = '';
@@ -894,7 +894,7 @@ async function refreshHomeLineMockState(showMessage) {
           openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(status.linkCode);
         }
         if (openOaLabel) {
-          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
         }
         codeBox.classList.remove('hidden');
       } else {
@@ -904,8 +904,8 @@ async function refreshHomeLineMockState(showMessage) {
     if (showMessage) {
       setHomeLineFeedback(
         status.linked
-          ? `${status.name} さんの LINE アカウントと連携済みです。「LINE テスト送信」を試せます。`
-          : 'まだ LINE 未連携です。連携コードを発行して公式LINEのトークへ送信してください。',
+          ? `${status.name} さんの LINE アカウントと連携済です。「LINE テスト送信」を試せます。`
+          : 'まだ LINE 未連携です。連携コードを発行してLINEトークへ送信してください。',
         status.linked ? 'success' : 'info'
       );
     }
@@ -938,13 +938,13 @@ async function handleHomeIssueLineCode() {
       openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(res.code);
     }
     if (openOaLabel) {
-      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
     }
     if (codeBox) codeBox.classList.remove('hidden');
     setHomeLineFeedback(
       isMobile
         ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`
-        : `コード「${res.code}」を発行しました。「コピー」して公式LINEトークへ送信（未追加なら「公式LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
+        : `コード「${res.code}」を発行しました。「コピー」してLINEトークへ送信（未追加なら「LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
       'success'
     );
   } catch (err) {
@@ -960,9 +960,9 @@ async function handleHomeCopyLineCode() {
   if (!code) return;
   try {
     await navigator.clipboard.writeText(code);
-    setHomeLineFeedback(`連携コード「${code}」をコピーしました。公式LINEのトークに貼り付けて送信してください。`, 'success');
+    setHomeLineFeedback(`連携コード「${code}」をコピーしました。LINEトークに貼り付けて送信してください。`, 'success');
   } catch (e) {
-    setHomeLineFeedback(`コード「${code}」をそのまま公式LINEへ送信してください。`, 'info');
+    setHomeLineFeedback(`コード「${code}」をそのままLINEトークへ送信してください。`, 'info');
   }
 }
 
@@ -983,7 +983,7 @@ async function handleHomeSendTestLinePush() {
     const title = (titleEl && titleEl.value.trim()) || 'FC Benten LINE テスト通知';
     const body = (bodyEl && bodyEl.value.trim()) || '個人トーク宛てのテスト通知です。';
     const res = await window.SupabaseLinePush.sendTestLinePush({ title, body });
-    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。公式LINEトークをご確認ください。`, 'success');
+    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。LINEトークをご確認ください。`, 'success');
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : 'LINE テスト送信に失敗しました。', 'error');
   } finally {
