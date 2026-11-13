@@ -350,13 +350,7 @@
       }
 
       // 参加数（PC専用列）
-      const gamesCell = clone.querySelector('.col-games .stat-num-box');
-      if (gamesCell) {
-        gamesCell.textContent = p.games;
-        if (p.games > 0 && p.games === maxGames) {
-          gamesCell.classList.add('stat-top-highlight');
-        }
-      }
+      setStatCellValue(clone, '.col-games .stat-num-box', p.games, maxGames);
 
       // 参加率（プログレスバー ＋ ％ ＋ スマホ用サブテキスト）
       const rateBarFill = clone.querySelector('.rate-bar-fill');
@@ -382,35 +376,40 @@
         rateSubMobile.textContent = p.rateDetailText || '';
       }
 
-      // 得点
-      const goalsBox = clone.querySelector('.col-goals .stat-num-box');
-      if (goalsBox) {
-        goalsBox.textContent = p.goals;
-        if (p.goals > 0 && p.goals === maxGoals) {
-          goalsBox.classList.add('stat-top-highlight');
-        }
-      }
-
-      // アシスト
-      const assistsBox = clone.querySelector('.col-assists .stat-num-box');
-      if (assistsBox) {
-        assistsBox.textContent = p.assists;
-        if (p.assists > 0 && p.assists === maxAssists) {
-          assistsBox.classList.add('stat-top-highlight');
-        }
-      }
-
-      // MVP
-      const momBox = clone.querySelector('.col-mom .stat-num-box');
-      if (momBox) {
-        momBox.textContent = p.mom;
-        if (p.mom > 0 && p.mom === maxMom) {
-          momBox.classList.add('stat-top-highlight');
-        }
-      }
+      // 得点・アシスト・MVP
+      setStatCellValue(clone, '.col-goals .stat-num-box', p.goals, maxGoals);
+      setStatCellValue(clone, '.col-assists .stat-num-box', p.assists, maxAssists);
+      setStatCellValue(clone, '.col-mom .stat-num-box', p.mom, maxMom);
 
       tbody.appendChild(clone);
     });
+  }
+
+  /**
+   * 成績セルに数値をセットし、チーム内1位（1以上）には王冠マークを付与する
+   *
+   * @param {DocumentFragment|Element} container - 対象の行フラグメント
+   * @param {string} selector - 対象セルのセレクタ
+   * @param {number} value - 選手の数値
+   * @param {number} maxValue - チーム内の最大値
+   */
+  function setStatCellValue(container, selector, value, maxValue) {
+    const box = container.querySelector(selector);
+    if (!box) return;
+    if (value > 0 && value === maxValue) {
+      box.classList.add('stat-top-highlight');
+      box.innerHTML =
+        '<span class="stat-crown-badge" aria-label="1位">' +
+          '<svg class="stat-crown-svg" viewBox="5 3 22 14" width="15" height="10" aria-hidden="true">' +
+            '<path d="M6.8 6.5 L11.5 10.5 L16 4.8 L20.5 10.5 L25.2 6.5 C24.5 10 23 13 21 15 C19 16 13 16 11 15 C9 13 7.5 10 6.8 6.5 Z" fill="#f2b705" stroke="#d97706" stroke-width="1" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</span>' +
+        '<span class="stat-top-value"></span>';
+      const valSpan = box.querySelector('.stat-top-value');
+      if (valSpan) valSpan.textContent = value;
+    } else {
+      box.textContent = value;
+    }
   }
 
   /**

@@ -30,6 +30,14 @@
   <div class="card-box stats-table-card">
     <div class="stats-table-header">
       <div class="stats-table-title">個人成績一覧</div>
+      <div class="stats-tap-hint-inline">
+        <span class="material-symbols-outlined">touch_app</span>
+        <span>選手行をクリックで個人詳細・試合履歴を表示</span>
+      </div>
+    </div>
+    <div class="stats-tap-hint-mobile">
+      <span class="material-symbols-outlined">touch_app</span>
+      <span>選手行をタップで個人詳細・試合履歴を表示</span>
     </div>
     
     <div class="table-responsive">
@@ -129,7 +137,10 @@
         <span class="player-avatar-icon"><span class="material-symbols-outlined">person</span></span>
         <div class="player-name-meta">
           <span class="player-name"></span>
-          <span class="player-pos-badge"></span>
+          <span class="player-meta-sub">
+            <span class="player-pos-badge"></span>
+            <span class="player-tap-cue" aria-hidden="true">詳細<span class="material-symbols-outlined">chevron_right</span></span>
+          </span>
         </div>
       </div>
     </td>

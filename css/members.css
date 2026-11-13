@@ -1096,6 +1096,8 @@
   border: 1px solid #e2e8f0;
   border-radius: var(--radius);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
@@ -1117,6 +1119,8 @@ a.btn-member-modal-save {
   border: 1px solid var(--primary);
   border-radius: var(--radius);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
   text-decoration: none !important;
@@ -1261,6 +1265,8 @@ a.btn-member-modal-save:hover {
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   border-radius: 4px;
   transition: all 0.15s ease;
 }
@@ -1331,4 +1337,49 @@ a.btn-member-modal-save:hover {
 
 .text-muted-meta {
   color: #94a3b8 !important;
+}
+
+/* モーダルフッター スマホ用レスポンシブ配置（2行折り返し防止・バランス最適化） */
+@media (max-width: 639px) {
+  .member-modal-footer {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 16px 14px !important;
+  }
+
+  .member-modal-footer-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    gap: 10px !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-cancel,
+  .member-modal-footer-right .btn-member-modal-save {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .member-modal-footer-left {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .member-modal-footer-left:has(> .hidden:only-child) {
+    display: none !important;
+  }
+
+  .btn-member-danger-link {
+    padding: 6px 12px !important;
+    justify-content: center !important;
+  }
+
+  .delete-modal-footer {
+    padding: 12px 16px 14px !important;
+    gap: 10px !important;
+  }
 }

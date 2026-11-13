@@ -110,6 +110,35 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.player-meta-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.player-tap-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.player-tap-cue .material-symbols-outlined {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.stats-table tbody tr:hover .player-tap-cue {
+  color: var(--primary);
+  transform: translateX(2px);
 }
 
 .player-pos-badge {
@@ -181,7 +210,7 @@
   display: none;
 }
 
-/* 各トップ数値の統一ハイライトバッジ（濃い枠線 ＋ 淡い背景色） */
+/* 各トップ数値の1位王冠バッジ */
 .stat-num-box {
   display: inline-flex;
   align-items: center;
@@ -193,13 +222,40 @@
 }
 
 .stat-top-highlight {
-  background: #fffbeb !important;
-  border: 1.5px solid #d97706 !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  min-width: 28px;
+  height: auto !important;
+  padding: 2px 4px !important;
+  border: none !important;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(254, 243, 199, 0) 75%) !important;
   color: #b45309 !important;
-  border-radius: 6px;
-  padding: 0 4px;
   font-weight: 800;
-  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.12);
+  line-height: 1.05;
+}
+
+.stat-crown-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  margin-bottom: 1px;
+}
+
+.stat-crown-svg {
+  width: 15px;
+  height: 10px;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(180, 83, 9, 0.2));
+}
+
+.stat-top-value {
+  font-weight: 800;
+  line-height: 1;
 }
 
 .col-pc-only {
@@ -226,7 +282,7 @@
 }
 
 .stats-table tbody tr:active {
-  background-color: #f1f5f9;
+  background-color: #eff6ff;
 }
 
 .stats-table .text-left {
@@ -239,7 +295,28 @@
 }
 
 .stats-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.stats-tap-hint-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.stats-tap-hint-inline .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.stats-tap-hint-mobile {
+  display: none;
 }
 
 .stats-table-title {
@@ -315,6 +392,28 @@ th.sort-active .sort-icon {
 
   .stats-table-header {
     display: none !important; /* スマホ時は省スペース化 */
+  }
+
+  .stats-tap-hint-mobile {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .stats-tap-hint-mobile .material-symbols-outlined {
+    font-size: 15px !important;
+    color: var(--primary) !important;
+    flex-shrink: 0 !important;
+  }
+
+  .stats-table tbody tr:active {
+    background-color: #eff6ff !important;
   }
 
   .card-box.stats-table-card .table-responsive {
@@ -420,8 +519,22 @@ th.sort-active .sort-icon {
   }
 
   .player-name-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  .player-meta-sub {
     gap: 4px !important;
-    flex-wrap: wrap !important;
+  }
+
+  .player-tap-cue {
+    font-size: 0.64rem !important;
+    color: #64748b !important;
+  }
+
+  .player-tap-cue .material-symbols-outlined {
+    font-size: 13px !important;
   }
 
   .player-name,
@@ -429,6 +542,9 @@ th.sort-active .sort-icon {
     font-size: 0.88rem !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .player-pos-badge {
@@ -521,10 +637,20 @@ th.sort-active .sort-icon {
   }
 
   .stat-top-highlight {
-    min-width: 20px !important;
-    height: 20px !important;
-    padding: 0 2px !important;
-    border-width: 1.5px !important;
+    min-width: 24px !important;
+    height: auto !important;
+    padding: 1px 2px !important;
+    border: none !important;
+  }
+
+  .stat-crown-svg {
+    width: 13px !important;
+    height: 9px !important;
+  }
+
+  .stat-top-value {
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
   }
 
   .stats-table th.th-stat .th-icon {

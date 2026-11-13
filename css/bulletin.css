@@ -377,6 +377,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   cursor: pointer;
 }
 
@@ -387,6 +388,8 @@
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-heading);
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .readers-stat-badge {
@@ -398,6 +401,8 @@
   padding: 2px 8px;
   border-radius: 12px;
   margin-left: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-readers-toggle {
@@ -410,6 +415,8 @@
   align-items: center;
   gap: 2px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .readers-accordion-content {
@@ -1037,5 +1044,61 @@ textarea.comment-textarea:active {
   .btn-create-post {
     width: 100%;
     justify-content: center;
+  }
+
+  /* 閲覧状況ヘッダー：スマホ幅でも文字途切れ・不自然な2行折り返しを防ぐ */
+  .bulletin-readers-summary {
+    padding: 9px 10px;
+  }
+
+  .bulletin-readers-header {
+    flex-wrap: wrap;
+    gap: 4px 6px;
+  }
+
+  .readers-summary-title {
+    font-size: 0.75rem;
+    gap: 3px;
+  }
+
+  .readers-summary-title .material-symbols-outlined {
+    font-size: 16px !important;
+  }
+
+  .readers-stat-badge {
+    font-size: 0.66rem;
+    padding: 1px 5px;
+    margin-left: 2px;
+  }
+
+  .btn-readers-toggle {
+    margin-left: auto;
+    font-size: 0.72rem;
+    padding: 2px 0;
+  }
+
+  /* 掲示板モーダルフッター：360pxスマホでも1行に美しく収める */
+  .bulletin-modal-footer {
+    padding: 10px 12px 12px !important;
+    gap: 6px !important;
+  }
+
+  .bulletin-detail-actions-left,
+  .bulletin-edit-actions-left,
+  .bulletin-edit-actions-right {
+    gap: 6px !important;
+  }
+
+  .bulletin-edit-actions-right {
+    margin-left: auto !important;
+  }
+
+  .bulletin-modal-footer .btn-cancel-action,
+  .bulletin-modal-footer .btn-submit-action,
+  .bulletin-modal-footer .bdm-action-btn {
+    height: 36px !important;
+    padding: 0 11px !important;
+    font-size: 0.82rem !important;
+    gap: 4px !important;
   }
 }
