@@ -2655,6 +2655,27 @@ html.no-scroll {
 .profile-line-open-link .material-symbols-outlined {
   font-size: 15px;
 }
+.profile-line-unlink-test-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  cursor: pointer;
+}
+.profile-line-unlink-test-btn:hover {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+}
+.profile-line-unlink-test-btn .material-symbols-outlined {
+  font-size: 16px;
+}
 .profile-line-msg {
   margin-top: 8px;
   padding: 6px 10px;
@@ -11772,6 +11793,11 @@ textarea.comment-textarea:active {
               </div>
               <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、LINEトークへ送信してください。</div>
             </div>
+            <div id="profileLineLinkedArea" class="hidden">
+              <button type="button" id="btnProfileLineUnlink" class="btn-outline w-full profile-line-unlink-test-btn" onclick="handleProfileLineUnlink()">
+                <span class="material-symbols-outlined">link_off</span>LINE連携を解除（テスト用）
+              </button>
+            </div>
             <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
           </div>
 
@@ -19069,6 +19095,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const isLinked = !!u.lineLinked;
     const isMobile = isLineMobileEnv();
     const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
+    const linkedArea = document.getElementById('profileLineLinkedArea');
     const codeBox = document.getElementById('profileLineCodeBox');
     const codeText = document.getElementById('profileLineCodeText');
     const openOaLink = document.getElementById('btnProfileLineOpenOa');
@@ -19076,6 +19103,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const guideEl = document.getElementById('profileLineGuideText');
 
     if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
+    if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
 
     if (guideEl) {
       guideEl.textContent = isMobile
@@ -19132,7 +19160,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (targetBox) targetBox.classList.remove('opacity-50');
 
     const isPushGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
-    const showLineAction = (val === 'line' || val === 'both') && !u.lineLinked;
+    const showLineAction = (val === 'line' || val === 'both');
     const showPushAction = (val === 'push' || val === 'both') && !isPushGranted;
 
     if (lineWrap) {
@@ -19303,6 +19331,37 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
+   * LINE連携解除（テスト用）
+   */
+  async function handleProfileLineUnlink() {
+    const u = window.currentUser;
+    if (!u || !window.SupabaseLinePush) return;
+
+    const btn = document.getElementById('btnProfileLineUnlink');
+    if (btn) btn.disabled = true;
+
+    try {
+      await window.SupabaseLinePush.unlinkLine(u);
+      u.lineLinked = false;
+      u.lineLinkCode = '';
+      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+
+      updateNotificationBadges();
+      syncProfileLineUi();
+      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
+      handleNotifTypeChange(currentVal);
+      if (typeof window.refreshHomeLineMockState === 'function') {
+        window.refreshHomeLineMockState(false);
+      }
+      setProfileLineMsg('LINEの連携を解除しました。', 'info');
+    } catch (err) {
+      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  /**
    * 通知設定保存処理
    */
   function handleSaveNotificationSettings() {
@@ -19379,6 +19438,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   window.handleLineConnectClick = handleLineConnectClick;
   window.handleProfileLineCopyCode = handleProfileLineCopyCode;
   window.handleProfileLineRefresh = handleProfileLineRefresh;
+  window.handleProfileLineUnlink = handleProfileLineUnlink;
   window.handleSaveNotificationSettings = handleSaveNotificationSettings;
 
   /**
