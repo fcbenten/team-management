@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 render_flow_diagram.py
-ユーザーの指摘を全面的に反映した最新システム相関図:
-1. LINE大箱の右側の余計な箱（「部員のスマホへ自動着信！」緑枠）を完全削除。
-   - ユーザーのサンプル図（画像3）通り、「API」小箱のみのシンプルで正確な構成に。
-2. 「0.1s~0.3sの超高速」等の過剰な速度アピール文言を全廃:
-   - DB: 「PostgreSQL 17 / 業務データ全般 (CRUD)」
-   - WEB アプリ: 「ブラウザ実行 / ホーム画面起動」「Supabase Direct CRUD 通信」
-   - ストレージ: 「写真保存 (CDN配信)」
-3. ユーザーのサンプル図通りの明確な結線（大箱接続 vs 小箱接続）とロゴ配置を維持。
+ユーザー要望に基づき「実装に完全忠実化」したアーキテクチャ＆システム相関図:
+1. Google大箱内の配置を左右反転:
+   - 左側: GAS (Google Apps Script) を配置（WebアプリからのAPI受け口）
+   - 右側: Google カレンダー API (v3) ＆ 認証 (Google OAuth 2.0)
+   - 「特権代行」の文言を撤廃し「バックエンドAPI ＆ 外部連携」に純化
+2. 通信経路（矢印）を実装実態に合わせて完全忠実化:
+   - WEB アプリ ➔ GAS: google.script.run によるバックエンドAPI呼び出し（水平直線）
+   - GAS ➔ Google カレンダー API: 予定同期・出欠パッチ更新（水平直線）
+   - GAS ➔ 認証 (Google OAuth 2.0): 認可コード交換・トークン発行（水平直線）
+   - GAS ⇄ supabase (DB): OAuthトークン保存・名簿照合（垂直双方向直線）
+   - 定期通知: GAS ➔ LINE Messaging API: 定期トリガー発信（垂直直線）
+   - 手動通知 (パターンA): supabase ➔ LINE Messaging API: Edge Functions経由（右外側C字カーブ）
+   - LINE Messaging API ➔ LINE アプリ: プッシュ通知着信（水平直線）
+   - GitHub Pages ➔ WEB アプリ: PWA配信（点線カーブ）
+   - WEB アプリ ⇄ supabase: Direct CRUD通信（太い水平双方向直線）
 """
 import os
 import base64
@@ -35,7 +42,7 @@ def build_html():
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
     background: #FFFFFF;
     color: #1F2937;
-    padding: 18px 24px;
+    padding: 16px 24px;
     width: 1560px;
     height: 760px;
     overflow: hidden;
@@ -105,19 +112,48 @@ def build_html():
     justify-content: center;
     flex-shrink: 0;
   }}
+
+  /* 矢印注記ラベル */
+  .arrow-label {{
+    position: absolute;
+    font-size: 9.5px;
+    font-weight: 700;
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FDBA74;
+    border-radius: 4px;
+    padding: 2px 6px;
+    white-space: nowrap;
+    z-index: 10;
+  }}
+  .arrow-label-vertical {{
+    position: absolute;
+    font-size: 9.5px;
+    font-weight: 700;
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FDBA74;
+    border-radius: 4px;
+    padding: 6px 3px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    white-space: nowrap;
+    letter-spacing: 1px;
+    z-index: 10;
+  }}
 </style>
 </head>
 <body>
 
 <div class="header-group">
   <div class="title">アーキテクチャ ＆ システム相関図</div>
-  <div class="sub-title">FC Benten チーム管理システム（クライアント・Supabase・Google・LINEの役割と通信フロー）</div>
+  <div class="sub-title">FC Benten チーム管理システム（クライアント・Supabase・Google・LINEの実装通信相関）</div>
 </div>
 
 <div class="canvas">
 
   <!-- ========================================================
-       SVG レイヤー（シャープで美しいオレンジ矢印・精密配線）
+       SVG レイヤー（シャープで美しいオレンジ矢印・実装忠実配線）
        ======================================================== -->
   <svg style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5;" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -132,29 +168,42 @@ def build_html():
     </defs>
 
     <!-- 1. GitHub Pages (小箱) ➔ WEB アプリ (小箱) [オレンジ点線] -->
-    <path d="M 252 85 C 285 85, 295 125, 334 125" stroke="#EA580C" stroke-width="2.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-orange)"/>
+    <path d="M 246 78 C 280 78, 290 85, 323 85" stroke="#EA580C" stroke-width="2.5" stroke-dasharray="4 3" fill="none" marker-end="url(#arr-orange)"/>
 
     <!-- 2. WEB アプリ (小箱) ⇄ supabase (【大箱】の左外枠に直結！) [太い双方向矢印] -->
-    <path d="M 672 135 H 738" stroke="#EA580C" stroke-width="3" fill="none" marker-start="url(#arr-orange-rev)" marker-end="url(#arr-orange)"/>
+    <path d="M 652 85 H 718" stroke="#EA580C" stroke-width="3" fill="none" marker-start="url(#arr-orange-rev)" marker-end="url(#arr-orange)"/>
 
-    <!-- 3. WEB アプリ (小箱) ➔ Google カレンダー (【小箱】) [直線矢印] -->
-    <path d="M 672 215 L 752 316" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+    <!-- 3. WEB アプリ (小箱) ➔ GAS (Google Apps Script) [水平直線！] -->
+    <path d="M 652 340 H 740" stroke="#EA580C" stroke-width="3" fill="none" marker-end="url(#arr-orange)"/>
 
-    <!-- 4. WEB アプリ (小箱) ➔ Google 認証 (【小箱】) [直線矢印] -->
-    <path d="M 672 295 L 752 416" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+    <!-- 4. GAS (小箱) ➔ Google カレンダー API (小箱) [水平直線！] -->
+    <path d="M 1122 316 H 1140" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
 
-    <!-- 5. GAS (【小箱】) ➔ Google カレンダー (【小箱】) [Google大箱内の左斜め上矢印] -->
-    <path d="M 1110 350 L 1084 325" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+    <!-- 5. GAS (小箱) ➔ 認証 (Google OAuth 2.0) [水平直線！] -->
+    <path d="M 1122 416 H 1140" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
 
-    <!-- 6. GAS (【小箱】) ➔ LINE Messaging API (【小箱】) [大箱跨ぎの垂直下向き矢印] -->
-    <path d="M 1150 435 V 545" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+    <!-- 6. GAS (小箱) ⇄ supabase DB (小箱) [大箱跨ぎの垂直双方向矢印！] -->
+    <path d="M 1050 272 V 155" stroke="#EA580C" stroke-width="2.5" fill="none" marker-start="url(#arr-orange-rev)" marker-end="url(#arr-orange)"/>
 
-    <!-- 7. WEB アプリ (小箱) ⇄ LINE Messaging API (【小箱】) [双方向直線矢印] -->
-    <path d="M 672 355 L 752 570" stroke="#EA580C" stroke-width="2.5" fill="none" marker-start="url(#arr-orange-rev)" marker-end="url(#arr-orange)"/>
+    <!-- 7. GAS (小箱) ➔ LINE Messaging API (小箱) [垂直下向き矢印！定期バッチ] -->
+    <path d="M 880 461 V 564" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
 
-    <!-- 8. LINE Messaging API (【小箱】) ➔ LINE アプリ (【小箱】) [水平直線！] -->
-    <path d="M 754 615 H 676" stroke="#EA580C" stroke-width="3" fill="none" marker-end="url(#arr-orange)"/>
+    <!-- 8. 手動通知: supabase (大箱) ➔ LINE Messaging API (小箱) [右外側C字カーブ！] -->
+    <path d="M 1470 85 C 1540 85, 1540 614, 1204 614" stroke="#EA580C" stroke-width="2.5" fill="none" marker-end="url(#arr-orange)"/>
+
+    <!-- 9. LINE Messaging API (小箱) ➔ LINE アプリ (小箱) [水平直線！] -->
+    <path d="M 740 614 H 652" stroke="#EA580C" stroke-width="3" fill="none" marker-end="url(#arr-orange)"/>
   </svg>
+
+  <!-- 矢印注記バッジ -->
+  <!-- GAS ⇄ DB 間の注記 -->
+  <div class="arrow-label" style="top: 200px; left: 1058px;">OAuthトークン保存 / 名簿照合</div>
+
+  <!-- GAS ➔ LINE API 間の注記 -->
+  <div class="arrow-label" style="top: 498px; left: 888px;">定期バッチリマインド</div>
+
+  <!-- 手動通知 (Functions) の注記 (右側バイパスの縦書きバッジ) -->
+  <div class="arrow-label-vertical" style="top: 310px; left: 1496px;">手動通知 (Functions)</div>
 
 
   <!-- ========================================================
@@ -183,7 +232,7 @@ def build_html():
   <!-- ========================================================
        2. PC スマートフォン (大箱・中列)
        ======================================================== -->
-  <div class="big-box" style="top: 0; left: 320px; width: 360px; height: 680px; padding: 16px 18px; border: 2px solid #CBD5E1; background: #F8FAFC; display: flex; flex-direction: column; justify-content: space-between;">
+  <div class="big-box" style="top: 0; left: 305px; width: 365px; height: 680px; padding: 16px 18px; border: 2px solid #CBD5E1; background: #F8FAFC; display: flex; flex-direction: column; justify-content: space-between;">
     <div>
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #E2E8F0; padding-bottom: 6px; margin-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 6px;">
@@ -193,8 +242,8 @@ def build_html():
         <span class="badge" style="background: #475569; color: #FFFFFF; font-size: 9.5px;">クライアント環境</span>
       </div>
 
-      <!-- 小箱1: WEB アプリ (過剰な速度表記を削除) -->
-      <div style="background: #FFFFFF; border: 2.5px solid #0284C7; border-radius: 14px; padding: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08); height: 285px; display: flex; flex-direction: column; justify-content: space-between;">
+      <!-- 小箱1: WEB アプリ -->
+      <div style="background: #FFFFFF; border: 2.5px solid #0284C7; border-radius: 14px; padding: 16px; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08); height: 305px; display: flex; flex-direction: column; justify-content: space-between;">
         <div>
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
             <div class="icon-box" style="background: #E0F2FE;">
@@ -213,6 +262,7 @@ def build_html():
             <div>・ブラウザ実行 / ホーム画面起動</div>
             <div>・出欠、スコア入力、掲示板、名簿</div>
             <div>・Supabase Direct CRUD 通信</div>
+            <div>・GAS API 呼び出し (google.script.run)</div>
           </div>
         </div>
         <div style="background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 8px; padding: 6px 10px; text-align: center; font-size: 10px; color: #0369A1; font-weight: 700;">
@@ -236,7 +286,7 @@ def build_html():
   <!-- ========================================================
        3. supabase (大箱・右上)
        ======================================================== -->
-  <div class="big-box" style="top: 0; left: 740px; width: 780px; height: 175px; padding: 16px 20px; border: 2px solid #10B981;">
+  <div class="big-box" style="top: 0; left: 720px; width: 750px; height: 175px; padding: 16px 20px; border: 2px solid #10B981;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1.5px solid #E2E8F0; padding-bottom: 6px;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <svg width="24" height="24" viewBox="0 0 109 113" fill="none">
@@ -249,7 +299,7 @@ def build_html():
       <span style="font-size: 11px; color: #64748B; font-weight: 700;">東京リージョン (ap-northeast-1)</span>
     </div>
 
-    <!-- 小箱3つ: 認証 / DB / ストレージ (速度誇張を全廃) -->
+    <!-- 小箱3つ: 認証 / DB / ストレージ -->
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; height: 90px;">
       <!-- 認証 -->
       <div class="small-box" style="border: 1.5px solid #D1FAE5; background: #F0FDF4;">
@@ -266,7 +316,7 @@ def build_html():
         </div>
       </div>
 
-      <!-- DB (速度アピール削除) -->
+      <!-- DB -->
       <div class="small-box" style="border: 2px solid #10B981; background: #ECFDF5; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);">
         <div class="icon-box" style="background: #D1FAE5;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -282,7 +332,7 @@ def build_html():
         </div>
       </div>
 
-      <!-- ストレージ (速度誇張削除) -->
+      <!-- ストレージ -->
       <div class="small-box" style="border: 1.5px solid #D1FAE5; background: #F0FDF4;">
         <div class="icon-box" style="background: #ECFDF5;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -302,8 +352,9 @@ def build_html():
 
   <!-- ========================================================
        4. Google (大箱・右中央)
+       ※左右反転: 左側に GAS (APIサーバー)、右側にカレンダーAPI ＆ 認証
        ======================================================== -->
-  <div class="big-box" style="top: 215px; left: 740px; width: 780px; height: 265px; padding: 16px 20px; border: 2px solid #3B82F6;">
+  <div class="big-box" style="top: 215px; left: 720px; width: 750px; height: 265px; padding: 16px 20px; border: 2px solid #3B82F6;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1.5px solid #E2E8F0; padding-bottom: 6px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -314,15 +365,34 @@ def build_html():
         </svg>
         <span style="font-size: 17px; font-weight: 800; color: #111827;">Google</span>
       </div>
-      <span class="badge" style="background: #2563EB; color: #FFFFFF; font-size: 9.5px;">特権代行 ＆ 外部連携</span>
+      <span class="badge" style="background: #2563EB; color: #FFFFFF; font-size: 9.5px;">バックエンドAPI ＆ 外部連携</span>
     </div>
 
-    <!-- 2列レイアウト: 左列(カレンダー / 認証) + 右列(GAS) -->
+    <!-- 2列レイアウト: 左列(GAS: 幅380px) + 右列(カレンダー / 認証: 幅310px) -->
     <div style="display: flex; gap: 20px; height: 185px;">
-      <!-- 左列 (幅 320px): カレンダー + 認証 -->
-      <div style="width: 320px; display: flex; flex-direction: column; justify-content: space-between;">
+      <!-- 左列 (幅 380px): GAS (Webアプリからの受け口 ＆ サーバーAPI) -->
+      <div style="width: 380px; display: flex; align-items: center;">
+        <div class="small-box" style="width: 100%; height: 185px; border: 2px solid #34A853; background: #F0FDF4; box-shadow: 0 4px 12px rgba(52, 168, 83, 0.08); padding: 14px 16px; align-items: flex-start; gap: 14px;">
+          <img src="data:image/png;base64,{gas_b64}" style="width: 52px; height: 52px; object-fit: contain; flex-shrink: 0; margin-top: 4px;" alt="GAS"/>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span style="font-size: 17px; font-weight: 800; color: #15803D;">GAS</span>
+              <span style="font-size: 10px; color: #166534; font-weight: 700;">Google Apps Script</span>
+            </div>
+            <div style="font-size: 9.5px; color: #475569; margin-top: 6px; line-height: 1.6; border-top: 1px solid #DCFCE7; padding-top: 6px;">
+              <div>・Google OAuth 認証 / トークン交換</div>
+              <div>・カレンダー同期 ＆ 出欠更新 API</div>
+              <div>・Supabase と直接連携 (トークン・名簿)</div>
+              <div>・定期トリガー発信 (LINEリマインド)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右列 (幅 310px): カレンダー API ＆ 認証 (OAuth 2.0) -->
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
         <!-- Google カレンダー API -->
-        <div class="small-box" style="border: 1.5px solid #FCA5A5; background: #FEF2F2; height: 82px;">
+        <div class="small-box" style="border: 1.5px solid #FCA5A5; background: #FEF2F2; height: 85px;">
           <div class="icon-box" style="background: #FFFFFF; border: 1.5px solid #E2E8F0;">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
               <rect width="24" height="24" rx="5" fill="#FFFFFF"/>
@@ -337,12 +407,12 @@ def build_html():
           <div>
             <div style="font-size: 13.5px; font-weight: 800; color: #991B1B;">Google カレンダー API</div>
             <div style="font-size: 10px; color: #DC2626; font-weight: 700; margin-top: 1px;">Google Calendar API v3</div>
-            <div style="font-size: 9px; color: #64748B; margin-top: 1px;">公式予定の原本データ / マスター</div>
+            <div style="font-size: 9px; color: #64748B; margin-top: 1px;">チーム公式予定の原本データ / マスター</div>
           </div>
         </div>
 
         <!-- 認証 -->
-        <div class="small-box" style="border: 1.5px solid #BFDBFE; background: #EFF6FF; height: 82px;">
+        <div class="small-box" style="border: 1.5px solid #BFDBFE; background: #EFF6FF; height: 85px;">
           <div class="icon-box" style="background: #DBEAFE;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="#2563EB" stroke-width="2"/>
@@ -352,21 +422,7 @@ def build_html():
           <div>
             <div style="font-size: 14.5px; font-weight: 800; color: #1E40AF;">認証</div>
             <div style="font-size: 10.5px; color: #2563EB; font-weight: 700; margin-top: 1px;">Google OAuth 2.0</div>
-            <div style="font-size: 9.5px; color: #64748B; margin-top: 1px;">アカウント連携・認可</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 右列 (幅 400px): GAS (ユーザー提供の公式4色扇形ロゴ logo_gas.png) -->
-      <div style="flex: 1; display: flex; align-items: center;">
-        <div class="small-box" style="width: 100%; height: 130px; border: 2px solid #34A853; background: #F0FDF4; box-shadow: 0 4px 12px rgba(52, 168, 83, 0.08); padding: 14px 18px;">
-          <img src="data:image/png;base64,{gas_b64}" style="width: 56px; height: 56px; object-fit: contain; flex-shrink: 0;" alt="GAS"/>
-          <div>
-            <div style="font-size: 16.5px; font-weight: 800; color: #15803D;">GAS</div>
-            <div style="font-size: 11px; color: #166534; font-weight: 700; margin-top: 2px;">Google Apps Script</div>
-            <div style="font-size: 9.5px; color: #64748B; margin-top: 3px; line-height: 1.45;">
-              カレンダー同期代行<br>＆ LINE通知トリガー発信
-            </div>
+            <div style="font-size: 9.5px; color: #64748B; margin-top: 1px;">アカウント連携・認可 (全部員必須)</div>
           </div>
         </div>
       </div>
@@ -376,9 +432,8 @@ def build_html():
 
   <!-- ========================================================
        5. LINE (大箱・右下)
-       ※余計な右側バナーを完全削除し、ユーザーのサンプル図通りAPI小箱のみに純化
        ======================================================== -->
-  <div class="big-box" style="top: 505px; left: 740px; width: 780px; height: 165px; padding: 14px 20px; border: 2px solid #06C755; background: #F0FDF4;">
+  <div class="big-box" style="top: 510px; left: 720px; width: 750px; height: 165px; padding: 14px 20px; border: 2px solid #06C755; background: #F0FDF4;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1.5px solid #BBF7D0; padding-bottom: 5px;">
       <div style="display: flex; align-items: center; gap: 8px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="#06C755">
@@ -389,8 +444,8 @@ def build_html():
       <span class="badge" style="background: #06C755; color: #FFFFFF; font-size: 9.5px;">公式アカウント通知基盤</span>
     </div>
 
-    <!-- 小箱: API (余計なバナーなし・Messaging API のロゴはそのまま) -->
-    <div class="small-box" style="border: 1.5px solid #BBF7D0; background: #FFFFFF; height: 95px; width: 440px; padding: 14px 18px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.06);">
+    <!-- 小箱: API (Messaging API) -->
+    <div class="small-box" style="border: 1.5px solid #BBF7D0; background: #FFFFFF; height: 95px; width: 460px; padding: 14px 18px; box-shadow: 0 4px 12px rgba(6, 199, 85, 0.06);">
       <div class="icon-box" style="background: #06C755;">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="#FFFFFF">
           <path d="M12 3C6.48 3 2 6.58 2 11c0 2.87 1.9 5.39 4.75 6.78-.21.78-.77 2.83-.88 3.27-.14.54.2.53.42.39.29-.19 3.96-2.7 4.54-3.11.39.05.78.08 1.17.08 5.52 0 10-3.58 10-8s-4.48-8-10-8z"/>
@@ -428,14 +483,13 @@ def generate_diagram_image():
             page = browser.new_page(viewport={"width": 1560, "height": 760})
             page.goto(f"file:///{html_path.replace(os.sep, '/')}")
             page.wait_for_timeout(300)
-            page.screenshot(path=png_path, full_page=True)
+            page.screenshot(path=png_path, full_page=False)
             browser.close()
-    finally:
-        if os.path.exists(html_path):
-            os.remove(html_path)
-
-    print(f"Diagram image generated: {png_path}")
-    return png_path
+        print(f"Successfully generated {png_path} via Playwright (1560x760).")
+        return png_path
+    except Exception as e:
+        print(f"Error generating diagram with Playwright: {e}")
+        return None
 
 if __name__ == "__main__":
     generate_diagram_image()
