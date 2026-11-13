@@ -2734,6 +2734,11 @@
 
     const LINE_BOT_BASIC_ID = '@377avqrr';
 
+    function isMobileBrowser() {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '';
+      return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+    }
+
     function getLineFriendUrl() {
       return `https://line.me/R/ti/p/${encodeURIComponent(LINE_BOT_BASIC_ID)}`;
     }
@@ -2743,10 +2748,16 @@
       return code ? `${base}?${encodeURIComponent(code)}` : base;
     }
 
+    function getLineOpenUrl(code) {
+      return isMobileBrowser() ? getLineOaMessageUrl(code) : getLineFriendUrl();
+    }
+
     window.SupabaseLinePush = {
       LINE_BOT_BASIC_ID,
+      isMobileBrowser,
       getLineFriendUrl,
       getLineOaMessageUrl,
+      getLineOpenUrl,
       getLineLinkStatus,
       issueLinkCode,
       unlinkLine,

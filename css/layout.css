@@ -135,6 +135,28 @@
   color: #15803d;
   border: 1px solid #bbf7d0;
 }
+.notif-status-badge.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #15803d;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+.notif-status-badge.badge-verified .material-symbols-outlined {
+  font-size: 16px;
+  color: #16a34a;
+}
+.notif-guide-text {
+  font-size: 0.73rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 6px;
+}
 .notif-radio-desc {
   font-size: 0.73rem;
   color: var(--text-muted);
@@ -256,25 +278,54 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #15803d;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-heading, #334155);
 }
 .profile-line-linked-label .material-symbols-outlined {
   font-size: 17px;
+  color: #06c755;
 }
 .profile-line-unlink-btn {
-  border: none;
-  background: transparent;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.73rem;
   font-weight: 600;
-  padding: 4px 6px;
+  padding: 4px 10px;
+  border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .profile-line-unlink-btn:hover {
   color: #dc2626;
-  text-decoration: underline;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+.profile-line-msg {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 0.73rem;
+  line-height: 1.4;
+  font-weight: 600;
+  text-align: center;
+}
+.profile-line-msg.success {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.profile-line-msg.error {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+.profile-line-msg.info {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
 }
 .notif-target-box {
   padding: 10px 12px;

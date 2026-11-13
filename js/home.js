@@ -888,8 +888,13 @@ async function refreshHomeLineMockState(showMessage) {
       if (!status.linked && status.linkCode) {
         codeText.textContent = status.linkCode;
         const openOaLink = document.getElementById('btnHomeLineOpenOa');
-        if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
-          openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(status.linkCode);
+        const openOaLabel = document.getElementById('btnHomeLineOpenLabel');
+        const isMobile = window.SupabaseLinePush.isMobileBrowser ? window.SupabaseLinePush.isMobileBrowser() : false;
+        if (openOaLink && window.SupabaseLinePush.getLineOpenUrl) {
+          openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(status.linkCode);
+        }
+        if (openOaLabel) {
+          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
         }
         codeBox.classList.remove('hidden');
       } else {
@@ -927,11 +932,21 @@ async function handleHomeIssueLineCode() {
     const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
     if (codeText) codeText.textContent = res.code;
     const openOaLink = document.getElementById('btnHomeLineOpenOa');
-    if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
-      openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(res.code);
+    const openOaLabel = document.getElementById('btnHomeLineOpenLabel');
+    const isMobile = window.SupabaseLinePush.isMobileBrowser ? window.SupabaseLinePush.isMobileBrowser() : false;
+    if (openOaLink && window.SupabaseLinePush.getLineOpenUrl) {
+      openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(res.code);
+    }
+    if (openOaLabel) {
+      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
     }
     if (codeBox) codeBox.classList.remove('hidden');
-    setHomeLineFeedback(`コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`, 'success');
+    setHomeLineFeedback(
+      isMobile
+        ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`
+        : `コード「${res.code}」を発行しました。「コピー」して公式LINEトークへ送信（未追加なら「公式LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
+      'success'
+    );
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
   } finally {
