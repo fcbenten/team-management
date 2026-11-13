@@ -4665,6 +4665,35 @@ html.no-scroll {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  flex: 1 1 auto;
+}
+
+.player-meta-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.player-tap-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #94a3b8;
+  line-height: 1;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.player-tap-cue .material-symbols-outlined {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.stats-table tbody tr:hover .player-tap-cue {
+  color: var(--primary);
+  transform: translateX(2px);
 }
 
 .player-pos-badge {
@@ -4736,7 +4765,7 @@ html.no-scroll {
   display: none;
 }
 
-/* 各トップ数値の統一ハイライトバッジ（濃い枠線 ＋ 淡い背景色） */
+/* 各トップ数値の1位王冠バッジ */
 .stat-num-box {
   display: inline-flex;
   align-items: center;
@@ -4748,13 +4777,40 @@ html.no-scroll {
 }
 
 .stat-top-highlight {
-  background: #fffbeb !important;
-  border: 1.5px solid #d97706 !important;
+  display: inline-flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0 !important;
+  min-width: 28px;
+  height: auto !important;
+  padding: 2px 4px !important;
+  border: none !important;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(254, 243, 199, 0) 75%) !important;
   color: #b45309 !important;
-  border-radius: 6px;
-  padding: 0 4px;
   font-weight: 800;
-  box-shadow: 0 1px 2px rgba(217, 119, 6, 0.12);
+  line-height: 1.05;
+}
+
+.stat-crown-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  margin-bottom: 1px;
+}
+
+.stat-crown-svg {
+  width: 15px;
+  height: 10px;
+  display: block;
+  filter: drop-shadow(0 1px 1px rgba(180, 83, 9, 0.2));
+}
+
+.stat-top-value {
+  font-weight: 800;
+  line-height: 1;
 }
 
 .col-pc-only {
@@ -4781,7 +4837,7 @@ html.no-scroll {
 }
 
 .stats-table tbody tr:active {
-  background-color: #f1f5f9;
+  background-color: #eff6ff;
 }
 
 .stats-table .text-left {
@@ -4794,7 +4850,28 @@ html.no-scroll {
 }
 
 .stats-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.stats-tap-hint-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.stats-tap-hint-inline .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--primary);
+}
+
+.stats-tap-hint-mobile {
+  display: none;
 }
 
 .stats-table-title {
@@ -4870,6 +4947,28 @@ th.sort-active .sort-icon {
 
   .stats-table-header {
     display: none !important; /* スマホ時は省スペース化 */
+  }
+
+  .stats-tap-hint-mobile {
+    display: flex !important;
+    align-items: center !important;
+    gap: 5px !important;
+    padding: 6px 10px !important;
+    font-size: 0.72rem !important;
+    font-weight: 500 !important;
+    color: #475569 !important;
+    background: #f8fafc !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .stats-tap-hint-mobile .material-symbols-outlined {
+    font-size: 15px !important;
+    color: var(--primary) !important;
+    flex-shrink: 0 !important;
+  }
+
+  .stats-table tbody tr:active {
+    background-color: #eff6ff !important;
   }
 
   .card-box.stats-table-card .table-responsive {
@@ -4975,8 +5074,22 @@ th.sort-active .sort-icon {
   }
 
   .player-name-meta {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 2px !important;
+  }
+
+  .player-meta-sub {
     gap: 4px !important;
-    flex-wrap: wrap !important;
+  }
+
+  .player-tap-cue {
+    font-size: 0.64rem !important;
+    color: #64748b !important;
+  }
+
+  .player-tap-cue .material-symbols-outlined {
+    font-size: 13px !important;
   }
 
   .player-name,
@@ -4984,6 +5097,9 @@ th.sort-active .sort-icon {
     font-size: 0.88rem !important;
     font-weight: 600 !important;
     white-space: nowrap !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .player-pos-badge {
@@ -5076,10 +5192,20 @@ th.sort-active .sort-icon {
   }
 
   .stat-top-highlight {
-    min-width: 20px !important;
-    height: 20px !important;
-    padding: 0 2px !important;
-    border-width: 1.5px !important;
+    min-width: 24px !important;
+    height: auto !important;
+    padding: 1px 2px !important;
+    border: none !important;
+  }
+
+  .stat-crown-svg {
+    width: 13px !important;
+    height: 9px !important;
+  }
+
+  .stat-top-value {
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
   }
 
   .stats-table th.th-stat .th-icon {
@@ -8584,6 +8710,8 @@ th.sort-active .sort-icon {
   border: 1px solid #e2e8f0;
   border-radius: var(--radius);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
@@ -8605,6 +8733,8 @@ a.btn-member-modal-save {
   border: 1px solid var(--primary);
   border-radius: var(--radius);
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
   text-decoration: none !important;
@@ -8749,6 +8879,8 @@ a.btn-member-modal-save:hover {
   font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   border-radius: 4px;
   transition: all 0.15s ease;
 }
@@ -8819,6 +8951,51 @@ a.btn-member-modal-save:hover {
 
 .text-muted-meta {
   color: #94a3b8 !important;
+}
+
+/* モーダルフッター スマホ用レスポンシブ配置（2行折り返し防止・バランス最適化） */
+@media (max-width: 639px) {
+  .member-modal-footer {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 16px 14px !important;
+  }
+
+  .member-modal-footer-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    gap: 10px !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-cancel,
+  .member-modal-footer-right .btn-member-modal-save {
+    width: 100% !important;
+    min-height: 40px !important;
+    padding: 8px 12px !important;
+    box-sizing: border-box !important;
+  }
+
+  .member-modal-footer-left {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .member-modal-footer-left:has(> .hidden:only-child) {
+    display: none !important;
+  }
+
+  .btn-member-danger-link {
+    padding: 6px 12px !important;
+    justify-content: center !important;
+  }
+
+  .delete-modal-footer {
+    padding: 12px 16px 14px !important;
+    gap: 10px !important;
+  }
 }
 
 </style>
@@ -9615,19 +9792,19 @@ a.btn-member-modal-save:hover {
     max-width: 100% !important;
   }
 
-  /* 品名ラベル（審判道具・その他）: 1行目左端 */
+  /* 品名ラベル（審判道具・その他）: PC版に合わせたニュートラルな視認スタイル */
   .equipment-labeled-row .equipment-item-label {
     order: 1 !important;
     width: auto !important;
     min-width: auto !important;
-    max-width: 85px !important;
-    font-size: 0.72rem !important;
+    max-width: 96px !important;
+    font-size: 0.75rem !important;
     font-weight: 700 !important;
-    color: var(--primary) !important;
-    background: #eff6ff !important;
-    border: 1px solid #bfdbfe !important;
+    color: var(--text-heading, #1e293b) !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
     border-radius: 4px !important;
-    padding: 2px 5px !important;
+    padding: 2px 6px !important;
     line-height: 1.25 !important;
     flex-shrink: 0 !important;
     white-space: nowrap !important;
@@ -9747,6 +9924,38 @@ a.btn-member-modal-save:hover {
 
   .equipment-modal-footer {
     padding: 12px 16px 14px !important;
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+  }
+
+  .equipment-footer-right {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    gap: 10px !important;
+  }
+
+  .equipment-footer-right > button {
+    width: 100% !important;
+    min-height: 40px !important;
+    white-space: nowrap !important;
+  }
+
+  .equipment-modal-footer-left {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  .equipment-modal-footer-left:has(> .hidden:only-child) {
+    display: none !important;
+  }
+
+  .btn-equipment-danger-link {
+    white-space: nowrap !important;
+    padding: 6px 12px !important;
+    justify-content: center !important;
   }
 }
 
@@ -10170,6 +10379,7 @@ a.btn-member-modal-save:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
   cursor: pointer;
 }
 
@@ -10180,6 +10390,8 @@ a.btn-member-modal-save:hover {
   font-size: 0.85rem;
   font-weight: 700;
   color: var(--text-heading);
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .readers-stat-badge {
@@ -10191,6 +10403,8 @@ a.btn-member-modal-save:hover {
   padding: 2px 8px;
   border-radius: 12px;
   margin-left: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .btn-readers-toggle {
@@ -10203,6 +10417,8 @@ a.btn-member-modal-save:hover {
   align-items: center;
   gap: 2px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .readers-accordion-content {
@@ -10830,6 +11046,62 @@ textarea.comment-textarea:active {
   .btn-create-post {
     width: 100%;
     justify-content: center;
+  }
+
+  /* 閲覧状況ヘッダー：スマホ幅でも文字途切れ・不自然な2行折り返しを防ぐ */
+  .bulletin-readers-summary {
+    padding: 9px 10px;
+  }
+
+  .bulletin-readers-header {
+    flex-wrap: wrap;
+    gap: 4px 6px;
+  }
+
+  .readers-summary-title {
+    font-size: 0.75rem;
+    gap: 3px;
+  }
+
+  .readers-summary-title .material-symbols-outlined {
+    font-size: 16px !important;
+  }
+
+  .readers-stat-badge {
+    font-size: 0.66rem;
+    padding: 1px 5px;
+    margin-left: 2px;
+  }
+
+  .btn-readers-toggle {
+    margin-left: auto;
+    font-size: 0.72rem;
+    padding: 2px 0;
+  }
+
+  /* 掲示板モーダルフッター：360pxスマホでも1行に美しく収める */
+  .bulletin-modal-footer {
+    padding: 10px 12px 12px !important;
+    gap: 6px !important;
+  }
+
+  .bulletin-detail-actions-left,
+  .bulletin-edit-actions-left,
+  .bulletin-edit-actions-right {
+    gap: 6px !important;
+  }
+
+  .bulletin-edit-actions-right {
+    margin-left: auto !important;
+  }
+
+  .bulletin-modal-footer .btn-cancel-action,
+  .bulletin-modal-footer .btn-submit-action,
+  .bulletin-modal-footer .bdm-action-btn {
+    height: 36px !important;
+    padding: 0 11px !important;
+    font-size: 0.82rem !important;
+    gap: 4px !important;
   }
 }
 
@@ -12115,6 +12387,14 @@ textarea.comment-textarea:active {
   <div class="card-box stats-table-card">
     <div class="stats-table-header">
       <div class="stats-table-title">個人成績一覧</div>
+      <div class="stats-tap-hint-inline">
+        <span class="material-symbols-outlined">touch_app</span>
+        <span>選手行をクリックで個人詳細・試合履歴を表示</span>
+      </div>
+    </div>
+    <div class="stats-tap-hint-mobile">
+      <span class="material-symbols-outlined">touch_app</span>
+      <span>選手行をタップで個人詳細・試合履歴を表示</span>
     </div>
     
     <div class="table-responsive">
@@ -12214,7 +12494,10 @@ textarea.comment-textarea:active {
         <span class="player-avatar-icon"><span class="material-symbols-outlined">person</span></span>
         <div class="player-name-meta">
           <span class="player-name"></span>
-          <span class="player-pos-badge"></span>
+          <span class="player-meta-sub">
+            <span class="player-pos-badge"></span>
+            <span class="player-tap-cue" aria-hidden="true">詳細<span class="material-symbols-outlined">chevron_right</span></span>
+          </span>
         </div>
       </div>
     </td>
@@ -21749,13 +22032,7 @@ function toggleRankList(type) {
       }
 
       // 参加数（PC専用列）
-      const gamesCell = clone.querySelector('.col-games .stat-num-box');
-      if (gamesCell) {
-        gamesCell.textContent = p.games;
-        if (p.games > 0 && p.games === maxGames) {
-          gamesCell.classList.add('stat-top-highlight');
-        }
-      }
+      setStatCellValue(clone, '.col-games .stat-num-box', p.games, maxGames);
 
       // 参加率（プログレスバー ＋ ％ ＋ スマホ用サブテキスト）
       const rateBarFill = clone.querySelector('.rate-bar-fill');
@@ -21781,35 +22058,40 @@ function toggleRankList(type) {
         rateSubMobile.textContent = p.rateDetailText || '';
       }
 
-      // 得点
-      const goalsBox = clone.querySelector('.col-goals .stat-num-box');
-      if (goalsBox) {
-        goalsBox.textContent = p.goals;
-        if (p.goals > 0 && p.goals === maxGoals) {
-          goalsBox.classList.add('stat-top-highlight');
-        }
-      }
-
-      // アシスト
-      const assistsBox = clone.querySelector('.col-assists .stat-num-box');
-      if (assistsBox) {
-        assistsBox.textContent = p.assists;
-        if (p.assists > 0 && p.assists === maxAssists) {
-          assistsBox.classList.add('stat-top-highlight');
-        }
-      }
-
-      // MVP
-      const momBox = clone.querySelector('.col-mom .stat-num-box');
-      if (momBox) {
-        momBox.textContent = p.mom;
-        if (p.mom > 0 && p.mom === maxMom) {
-          momBox.classList.add('stat-top-highlight');
-        }
-      }
+      // 得点・アシスト・MVP
+      setStatCellValue(clone, '.col-goals .stat-num-box', p.goals, maxGoals);
+      setStatCellValue(clone, '.col-assists .stat-num-box', p.assists, maxAssists);
+      setStatCellValue(clone, '.col-mom .stat-num-box', p.mom, maxMom);
 
       tbody.appendChild(clone);
     });
+  }
+
+  /**
+   * 成績セルに数値をセットし、チーム内1位（1以上）には王冠マークを付与する
+   *
+   * @param {DocumentFragment|Element} container - 対象の行フラグメント
+   * @param {string} selector - 対象セルのセレクタ
+   * @param {number} value - 選手の数値
+   * @param {number} maxValue - チーム内の最大値
+   */
+  function setStatCellValue(container, selector, value, maxValue) {
+    const box = container.querySelector(selector);
+    if (!box) return;
+    if (value > 0 && value === maxValue) {
+      box.classList.add('stat-top-highlight');
+      box.innerHTML =
+        '<span class="stat-crown-badge" aria-label="1位">' +
+          '<svg class="stat-crown-svg" viewBox="5 3 22 14" width="15" height="10" aria-hidden="true">' +
+            '<path d="M6.8 6.5 L11.5 10.5 L16 4.8 L20.5 10.5 L25.2 6.5 C24.5 10 23 13 21 15 C19 16 13 16 11 15 C9 13 7.5 10 6.8 6.5 Z" fill="#f2b705" stroke="#d97706" stroke-width="1" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</span>' +
+        '<span class="stat-top-value"></span>';
+      const valSpan = box.querySelector('.stat-top-value');
+      if (valSpan) valSpan.textContent = value;
+    } else {
+      box.textContent = value;
+    }
   }
 
   /**
