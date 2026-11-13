@@ -2655,41 +2655,6 @@ html.no-scroll {
 .profile-line-open-link .material-symbols-outlined {
   font-size: 15px;
 }
-.profile-line-linked-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.profile-line-linked-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-heading, #334155);
-}
-.profile-line-linked-label .material-symbols-outlined {
-  font-size: 17px;
-  color: #06c755;
-}
-.profile-line-unlink-btn {
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: var(--text-muted);
-  font-size: 0.73rem;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 5px;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.profile-line-unlink-btn:hover {
-  color: #dc2626;
-  border-color: #fecaca;
-  background: #fef2f2;
-}
 .profile-line-msg {
   margin-top: 8px;
   padding: 6px 10px;
@@ -11778,9 +11743,37 @@ textarea.comment-textarea:active {
                 <span class="notif-type-name">LINE通知</span>
                 <span class="notif-status-badge badge-gray" id="notifBadgeLine">未連携</span>
               </div>
-              <div class="notif-radio-desc">公式LINEの個別トークで受信</div>
+              <div class="notif-radio-desc">LINEの個別トークで受信</div>
             </div>
           </label>
+
+          <!-- LINE連携のインラインアクションエリア（選択カード直下に動的配置） -->
+          <div id="notifActionLineWrap" class="notif-action-area hidden">
+            <div id="profileLineUnlinkedArea">
+              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full" onclick="handleLineConnectClick()">
+                <span class="material-symbols-outlined">add_link</span>LINEと連携する
+              </button>
+              <div id="profileLineCodeBox" class="profile-line-code-box hidden">
+                <div class="profile-line-code-row">
+                  <span class="profile-line-code-label">連携コード（15分間有効）:</span>
+                  <code id="profileLineCodeText" class="profile-line-code-val">FCB-0000</code>
+                </div>
+                <div class="profile-line-code-btns">
+                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineCopyCode()">
+                    <span class="material-symbols-outlined">content_copy</span>コピー
+                  </button>
+                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined">open_in_new</span><span id="btnProfileLineOpenLabel">LINEを開く</span>
+                  </a>
+                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineRefresh()">
+                    <span class="material-symbols-outlined">refresh</span>連携確認
+                  </button>
+                </div>
+              </div>
+              <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、LINEトークへ送信してください。</div>
+            </div>
+            <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
+          </div>
 
           <label class="notif-radio-card" id="notifCardPush">
             <input type="radio" name="profileNotifType" value="push" onchange="handleNotifTypeChange(this.value)">
@@ -11793,6 +11786,14 @@ textarea.comment-textarea:active {
               <div class="notif-radio-desc">スマホ画面上部のバナーで直接受信</div>
             </div>
           </label>
+
+          <!-- 端末プッシュ許可のインラインアクションエリア（選択カード直下に動的配置） -->
+          <div id="notifActionPushWrap" class="notif-action-area hidden">
+            <button type="button" class="btn-notif-action btn-notif-push w-full" onclick="handlePushPermissionRequest()">
+              <span class="material-symbols-outlined">notifications</span>この端末の通知を有効化
+            </button>
+            <div class="notif-guide-text" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
+          </div>
 
           <label class="notif-radio-card" id="notifCardBoth">
             <input type="radio" name="profileNotifType" value="both" onchange="handleNotifTypeChange(this.value)">
@@ -11815,48 +11816,6 @@ textarea.comment-textarea:active {
               <div class="notif-radio-desc">アプリを開いた時のみ確認</div>
             </div>
           </label>
-        </div>
-
-        <!-- 端末許可・LINE連携のアクションボタンエリア -->
-        <div id="notifActionArea" class="notif-action-area mb-12 hidden">
-          <div id="notifActionLineWrap" class="hidden">
-            <div id="profileLineUnlinkedArea">
-              <button type="button" id="btnProfileLineConnect" class="btn-notif-action btn-notif-line w-full" onclick="handleLineConnectClick()">
-                <span class="material-symbols-outlined">add_link</span>LINE公式アカウントと連携
-              </button>
-              <div id="profileLineCodeBox" class="profile-line-code-box hidden">
-                <div class="profile-line-code-row">
-                  <span class="profile-line-code-label">連携コード（15分間有効）:</span>
-                  <code id="profileLineCodeText" class="profile-line-code-val">FCB-0000</code>
-                </div>
-                <div class="profile-line-code-btns">
-                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineCopyCode()">
-                    <span class="material-symbols-outlined">content_copy</span>コピー
-                  </button>
-                  <a id="btnProfileLineOpenOa" class="profile-line-open-link" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
-                    <span class="material-symbols-outlined">open_in_new</span><span id="btnProfileLineOpenLabel">公式LINEを開く</span>
-                  </a>
-                  <button type="button" class="btn-outline profile-line-sub-btn" onclick="handleProfileLineRefresh()">
-                    <span class="material-symbols-outlined">refresh</span>連携確認
-                  </button>
-                </div>
-              </div>
-              <div class="notif-guide-text" id="profileLineGuideText">※ボタンを押して連携コードを発行し、公式LINEへ送信してください。</div>
-            </div>
-            <div id="profileLineLinkedArea" class="profile-line-linked-row hidden">
-              <span class="profile-line-linked-label">
-                <span class="material-symbols-outlined">chat</span>公式LINE 接続中（@377avqrr）
-              </span>
-              <button type="button" id="btnProfileLineUnlink" class="profile-line-unlink-btn" onclick="handleProfileLineUnlink()">連携解除</button>
-            </div>
-            <div id="profileLineStatusMsg" class="profile-line-msg hidden"></div>
-          </div>
-          <div id="notifActionPushWrap" class="hidden">
-            <button type="button" class="btn-notif-action btn-notif-push w-full" onclick="handlePushPermissionRequest()">
-              <span class="material-symbols-outlined">notifications</span>この端末の通知を有効化
-            </button>
-            <div class="notif-guide-text" id="notifPushGuideText">※ブラウザの通知許可ダイアログで「許可」を選択してください。</div>
-          </div>
         </div>
 
         <!-- 通知対象項目のチェックボックス -->
@@ -12389,7 +12348,7 @@ textarea.comment-textarea:active {
       <!-- 2. LINE 個人通知パネル -->
       <div id="homeMockPanelLine" class="hidden">
         <p class="home-push-mock-desc">
-          公式LINEアカウントを友だち追加し、発行した連携コードをトークへ送信すると 1対1 トークへ通知をテスト送信できます。
+          FC Benten のLINEアカウントを友だち追加し、発行した連携コードをトークへ送信すると 1対1 トークへ通知をテスト送信できます。
         </p>
 
         <div id="homeLineCodeBox" class="home-line-code-box hidden">
@@ -12404,7 +12363,7 @@ textarea.comment-textarea:active {
             </button>
             <a id="btnHomeLineOpenOa" class="home-line-open-btn" href="https://line.me/R/ti/p/%40377avqrr" target="_blank" rel="noopener noreferrer">
               <span class="material-symbols-outlined">open_in_new</span>
-              <span id="btnHomeLineOpenLabel">公式LINEを開く</span>
+              <span id="btnHomeLineOpenLabel">LINEを開く</span>
             </a>
           </div>
         </div>
@@ -19043,7 +19002,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const lineBadge = document.getElementById('notifBadgeLine');
     if (lineBadge) {
       if (u.lineLinked) {
-        lineBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>連携済み</span>';
+        lineBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>連携済</span>';
         lineBadge.className = 'notif-status-badge badge-verified';
       } else {
         lineBadge.textContent = '未連携';
@@ -19056,7 +19015,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (pushBadge) {
       if (typeof Notification !== 'undefined') {
         if (Notification.permission === 'granted') {
-          pushBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>許可済み</span>';
+          pushBadge.innerHTML = '<span class="material-symbols-outlined">check_circle</span><span>許可済</span>';
           pushBadge.className = 'notif-status-badge badge-verified';
         } else if (Notification.permission === 'denied') {
           pushBadge.textContent = 'ブロック中';
@@ -19110,7 +19069,6 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const isLinked = !!u.lineLinked;
     const isMobile = isLineMobileEnv();
     const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
-    const linkedArea = document.getElementById('profileLineLinkedArea');
     const codeBox = document.getElementById('profileLineCodeBox');
     const codeText = document.getElementById('profileLineCodeText');
     const openOaLink = document.getElementById('btnProfileLineOpenOa');
@@ -19118,12 +19076,11 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const guideEl = document.getElementById('profileLineGuideText');
 
     if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
-    if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
 
     if (guideEl) {
       guideEl.textContent = isMobile
-        ? '※ボタンを押して連携コードを発行し、「LINEを開く（入力済み）」から公式LINEへそのまま送信してください。'
-        : '※PCからは「公式LINEを開く（QR表示）」でスマホから友だち追加し、発行した連携コードをコピーして公式LINEトークへ送信してください。';
+        ? '※ボタンを押して連携コードを発行し、「LINEを開く（入力済み）」からLINEトークへそのまま送信してください。'
+        : '※PCからは「LINEを開く（QR表示）」でスマホから友だち追加し、発行した連携コードをコピーしてLINEトークへ送信してください。';
     }
 
     if (!isLinked && u.lineLinkCode) {
@@ -19136,7 +19093,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             : 'https://line.me/R/ti/p/%40377avqrr');
       }
       if (openOaLabel) {
-        openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+        openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
       }
       if (codeBox) codeBox.classList.remove('hidden');
     } else if (codeBox) {
@@ -19145,9 +19102,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
-   * 通知タイプ変更時のアクション表示制御
+   * 通知タイプ変更時のアクション表示制御（選択カード直下に配置）
    */
   function handleNotifTypeChange(val) {
+    const u = window.currentUser || {};
     const radios = document.querySelectorAll('input[name="profileNotifType"]');
     radios.forEach(r => {
       const card = r.closest('.notif-radio-card');
@@ -19157,13 +19115,16 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
     });
 
-    const actionArea = document.getElementById('notifActionArea');
     const lineWrap = document.getElementById('notifActionLineWrap');
     const pushWrap = document.getElementById('notifActionPushWrap');
     const targetBox = document.getElementById('notifTargetBox');
+    const cardLine = document.getElementById('notifCardLine');
+    const cardPush = document.getElementById('notifCardPush');
+    const cardBoth = document.getElementById('notifCardBoth');
 
     if (val === 'none') {
-      if (actionArea) actionArea.classList.add('hidden');
+      if (lineWrap) lineWrap.classList.add('hidden');
+      if (pushWrap) pushWrap.classList.add('hidden');
       if (targetBox) targetBox.classList.add('opacity-50');
       return;
     }
@@ -19171,11 +19132,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (targetBox) targetBox.classList.remove('opacity-50');
 
     const isPushGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
-    const showLineAction = (val === 'line' || val === 'both');
+    const showLineAction = (val === 'line' || val === 'both') && !u.lineLinked;
     const showPushAction = (val === 'push' || val === 'both') && !isPushGranted;
 
     if (lineWrap) {
       if (showLineAction) {
+        const anchor = (val === 'both' && cardBoth) ? cardBoth : cardLine;
+        if (anchor && anchor.nextElementSibling !== lineWrap) {
+          anchor.insertAdjacentElement('afterend', lineWrap);
+        }
         lineWrap.classList.remove('hidden');
         syncProfileLineUi();
       } else {
@@ -19184,13 +19149,17 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
 
     if (pushWrap) {
-      if (showPushAction) pushWrap.classList.remove('hidden');
-      else pushWrap.classList.add('hidden');
-    }
-
-    if (actionArea) {
-      if (showLineAction || showPushAction) actionArea.classList.remove('hidden');
-      else actionArea.classList.add('hidden');
+      if (showPushAction) {
+        const anchor = (val === 'both' && cardBoth)
+          ? (showLineAction && lineWrap ? lineWrap : cardBoth)
+          : cardPush;
+        if (anchor && anchor.nextElementSibling !== pushWrap) {
+          anchor.insertAdjacentElement('afterend', pushWrap);
+        }
+        pushWrap.classList.remove('hidden');
+      } else {
+        pushWrap.classList.add('hidden');
+      }
     }
   }
 
@@ -19245,7 +19214,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
-   * LINE公式アカウント連携コード発行
+   * LINE連携コード発行
    */
   async function handleLineConnectClick() {
     const u = window.currentUser;
@@ -19272,7 +19241,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       handleNotifTypeChange(currentVal);
       const issuedMsg = isLineMobileEnv()
         ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、戻ってから「連携確認」を押してください。`
-        : `コード「${res.code}」を発行しました。「コピー」してからスマホの公式LINEトークへ送信し、「連携確認」を押してください。`;
+        : `コード「${res.code}」を発行しました。「コピー」してからスマホのLINEトークへ送信し、「連携確認」を押してください。`;
       setProfileLineMsg(issuedMsg, 'success');
       if (typeof window.refreshHomeLineMockState === 'function') {
         window.refreshHomeLineMockState(false);
@@ -19296,9 +19265,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!code) return;
     try {
       await navigator.clipboard.writeText(code);
-      setProfileLineMsg(`コード「${code}」をコピーしました。公式LINEトークに貼り付けて送信してください。`, 'success');
+      setProfileLineMsg(`コード「${code}」をコピーしました。LINEトークに貼り付けて送信してください。`, 'success');
     } catch (e) {
-      setProfileLineMsg(`コード「${code}」を公式LINEトークへ送信してください。`, 'info');
+      setProfileLineMsg(`コード「${code}」をLINEトークへ送信してください。`, 'info');
     }
   }
 
@@ -19324,43 +19293,12 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
 
       if (status.linked) {
-        setProfileLineMsg('公式LINEとの連携を確認しました。', 'success');
+        setProfileLineMsg('');
       } else {
-        setProfileLineMsg('まだ連携が確認できていません。公式LINEトークへコード送信後に再度お試しください。', 'error');
+        setProfileLineMsg('まだ連携が確認できていません。LINEトークへコード送信後に再度お試しください。', 'error');
       }
     } catch (err) {
       setProfileLineMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
-    }
-  }
-
-  /**
-   * LINE公式アカウント連携解除
-   */
-  async function handleProfileLineUnlink() {
-    const u = window.currentUser;
-    if (!u || !window.SupabaseLinePush) return;
-
-    const btn = document.getElementById('btnProfileLineUnlink');
-    if (btn) btn.disabled = true;
-
-    try {
-      await window.SupabaseLinePush.unlinkLine(u);
-      u.lineLinked = false;
-      u.lineLinkCode = '';
-      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
-
-      updateNotificationBadges();
-      syncProfileLineUi();
-      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
-      handleNotifTypeChange(currentVal);
-      if (typeof window.refreshHomeLineMockState === 'function') {
-        window.refreshHomeLineMockState(false);
-      }
-      setProfileLineMsg('公式LINEとの連携を解除しました。', 'info');
-    } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
-    } finally {
-      if (btn) btn.disabled = false;
     }
   }
 
@@ -19441,7 +19379,6 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   window.handleLineConnectClick = handleLineConnectClick;
   window.handleProfileLineCopyCode = handleProfileLineCopyCode;
   window.handleProfileLineRefresh = handleProfileLineRefresh;
-  window.handleProfileLineUnlink = handleProfileLineUnlink;
   window.handleSaveNotificationSettings = handleSaveNotificationSettings;
 
   /**
@@ -21739,7 +21676,7 @@ async function refreshHomePushMockState() {
     badgeEl.textContent = '購読済み';
     badgeEl.className = 'home-push-status-badge status-active';
   } else if (env.permission === 'granted') {
-    badgeEl.textContent = '許可済み（未購読）';
+    badgeEl.textContent = '許可済（未購読）';
     badgeEl.className = 'home-push-status-badge status-warn';
   } else {
     badgeEl.textContent = '未有効化';
@@ -21873,7 +21810,7 @@ async function refreshHomeLineMockState(showMessage) {
   try {
     const status = await window.SupabaseLinePush.getLineLinkStatus(window.currentUser);
     if (badgeEl && window.homeNotifMockTab === 'line') {
-      badgeEl.textContent = status.linked ? 'LINE連携済み' : 'LINE未連携';
+      badgeEl.textContent = status.linked ? 'LINE連携済' : 'LINE未連携';
       badgeEl.className = 'home-push-status-badge ' + (status.linked ? 'status-active' : 'status-idle');
     }
     if (unlinkBtn) unlinkBtn.classList.toggle('hidden', !status.linked);
@@ -21881,7 +21818,7 @@ async function refreshHomeLineMockState(showMessage) {
       if (status.linked && status.lineUserId) {
         const lid = status.lineUserId;
         const masked = lid.length > 12 ? lid.slice(0, 6) + '...' + lid.slice(-4) : lid;
-        infoEl.textContent = `連携済み LINE ID: ${masked} (${status.name})`;
+        infoEl.textContent = `連携済 LINE ID: ${masked} (${status.name})`;
         infoEl.classList.remove('hidden');
       } else {
         infoEl.textContent = '';
@@ -21898,7 +21835,7 @@ async function refreshHomeLineMockState(showMessage) {
           openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(status.linkCode);
         }
         if (openOaLabel) {
-          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+          openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
         }
         codeBox.classList.remove('hidden');
       } else {
@@ -21908,8 +21845,8 @@ async function refreshHomeLineMockState(showMessage) {
     if (showMessage) {
       setHomeLineFeedback(
         status.linked
-          ? `${status.name} さんの LINE アカウントと連携済みです。「LINE テスト送信」を試せます。`
-          : 'まだ LINE 未連携です。連携コードを発行して公式LINEのトークへ送信してください。',
+          ? `${status.name} さんの LINE アカウントと連携済です。「LINE テスト送信」を試せます。`
+          : 'まだ LINE 未連携です。連携コードを発行してLINEトークへ送信してください。',
         status.linked ? 'success' : 'info'
       );
     }
@@ -21942,13 +21879,13 @@ async function handleHomeIssueLineCode() {
       openOaLink.href = window.SupabaseLinePush.getLineOpenUrl(res.code);
     }
     if (openOaLabel) {
-      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : '公式LINEを開く（QR表示）';
+      openOaLabel.textContent = isMobile ? 'LINEを開く（入力済み）' : 'LINEを開く（QR表示）';
     }
     if (codeBox) codeBox.classList.remove('hidden');
     setHomeLineFeedback(
       isMobile
         ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`
-        : `コード「${res.code}」を発行しました。「コピー」して公式LINEトークへ送信（未追加なら「公式LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
+        : `コード「${res.code}」を発行しました。「コピー」してLINEトークへ送信（未追加なら「LINEを開く（QR表示）」から追加）後、「連携状態を確認」を押してください。`,
       'success'
     );
   } catch (err) {
@@ -21964,9 +21901,9 @@ async function handleHomeCopyLineCode() {
   if (!code) return;
   try {
     await navigator.clipboard.writeText(code);
-    setHomeLineFeedback(`連携コード「${code}」をコピーしました。公式LINEのトークに貼り付けて送信してください。`, 'success');
+    setHomeLineFeedback(`連携コード「${code}」をコピーしました。LINEトークに貼り付けて送信してください。`, 'success');
   } catch (e) {
-    setHomeLineFeedback(`コード「${code}」をそのまま公式LINEへ送信してください。`, 'info');
+    setHomeLineFeedback(`コード「${code}」をそのままLINEトークへ送信してください。`, 'info');
   }
 }
 
@@ -21987,7 +21924,7 @@ async function handleHomeSendTestLinePush() {
     const title = (titleEl && titleEl.value.trim()) || 'FC Benten LINE テスト通知';
     const body = (bodyEl && bodyEl.value.trim()) || '個人トーク宛てのテスト通知です。';
     const res = await window.SupabaseLinePush.sendTestLinePush({ title, body });
-    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。公式LINEトークをご確認ください。`, 'success');
+    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。LINEトークをご確認ください。`, 'success');
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : 'LINE テスト送信に失敗しました。', 'error');
   } finally {
