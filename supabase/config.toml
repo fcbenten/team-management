@@ -2,3 +2,4 @@ project_id = "pkufnywvnuicragvobaq"
 
 [functions.send-web-push]
 verify_jwt = false
+

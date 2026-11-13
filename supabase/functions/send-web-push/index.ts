@@ -199,7 +199,7 @@ Deno.serve(async (req: Request) => {
       title,
       body: messageBody,
       icon: "./icon-192.png",
-      badge: "./icon-192.png",
+      badge: "./badge-96.png",
       url,
       tag,
       sentAt: new Date().toISOString(),
@@ -259,3 +259,4 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ success: false, error: message }, 500);
   }
 });
+
