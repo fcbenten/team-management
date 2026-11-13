@@ -1,8 +1,9 @@
-const CACHE_NAME = 'fc-benten-pwa-v73';
+const CACHE_NAME = 'fc-benten-pwa-v74';
 const ASSETS = [
   './manifest.json',
   './icon-192.png',
-  './icon-512.png'
+  './icon-512.png',
+  './badge-96.png'
 ];
 
 // Install: Cache Shell Assets
@@ -57,7 +58,7 @@ self.addEventListener('push', event => {
     title: 'FC Benten 通知',
     body: '新しいお知らせがあります。',
     icon: './icon-192.png',
-    badge: './icon-192.png',
+    badge: './badge-96.png',
     url: './',
     tag: 'fcb-notification'
   };
@@ -72,10 +73,14 @@ self.addEventListener('push', event => {
     }
   }
 
+  const badgeIcon = (!payload.badge || payload.badge === './icon-192.png')
+    ? './badge-96.png'
+    : payload.badge;
+
   const options = {
     body: payload.body,
     icon: payload.icon || './icon-192.png',
-    badge: payload.badge || './icon-192.png',
+    badge: badgeIcon,
     tag: payload.tag || 'fcb-notification',
     renotify: true,
     data: {
