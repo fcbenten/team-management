@@ -2659,7 +2659,21 @@
       });
     }
 
+    const LINE_BOT_BASIC_ID = '@377avqrr';
+
+    function getLineFriendUrl() {
+      return `https://line.me/R/ti/p/${encodeURIComponent(LINE_BOT_BASIC_ID)}`;
+    }
+
+    function getLineOaMessageUrl(code) {
+      const base = `https://line.me/R/oaMessage/${encodeURIComponent(LINE_BOT_BASIC_ID)}/`;
+      return code ? `${base}?${encodeURIComponent(code)}` : base;
+    }
+
     window.SupabaseLinePush = {
+      LINE_BOT_BASIC_ID,
+      getLineFriendUrl,
+      getLineOaMessageUrl,
       getLineLinkStatus,
       issueLinkCode,
       unlinkLine,

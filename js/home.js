@@ -887,6 +887,10 @@ async function refreshHomeLineMockState(showMessage) {
     if (codeBox && codeText) {
       if (!status.linked && status.linkCode) {
         codeText.textContent = status.linkCode;
+        const openOaLink = document.getElementById('btnHomeLineOpenOa');
+        if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
+          openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(status.linkCode);
+        }
         codeBox.classList.remove('hidden');
       } else {
         codeBox.classList.add('hidden');
@@ -922,8 +926,12 @@ async function handleHomeIssueLineCode() {
   try {
     const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
     if (codeText) codeText.textContent = res.code;
+    const openOaLink = document.getElementById('btnHomeLineOpenOa');
+    if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
+      openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(res.code);
+    }
     if (codeBox) codeBox.classList.remove('hidden');
-    setHomeLineFeedback(`コード「${res.code}」を発行しました。公式LINEのトーク画面へこのまま送信し、「連携状態を確認」を押してください。`, 'success');
+    setHomeLineFeedback(`コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`, 'success');
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
   } finally {
