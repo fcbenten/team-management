@@ -3093,6 +3093,93 @@ html.no-scroll {
   border-radius: 4px;
 }
 
+.home-push-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-notif-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.home-notif-tab {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.home-notif-tab.active {
+  background: #ffffff;
+  color: var(--primary);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.home-line-code-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 6px;
+  flex-wrap: wrap;
+}
+
+.home-line-code-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-line-code-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.home-line-code-value {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #15803d;
+  background: #ffffff;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #bbf7d0;
+}
+
+.home-line-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: auto !important;
+  height: 30px !important;
+  padding: 0 10px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 5px !important;
+  cursor: pointer;
+}
+
+.home-line-copy-btn .material-symbols-outlined {
+  font-size: 15px;
+}
+
 .home-push-status-badge {
   display: inline-flex;
   align-items: center;
@@ -12039,47 +12126,100 @@ textarea.comment-textarea:active {
     <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
 
     <!-- =========================================
-         Web Push 通知テスト（モックUI）
+         通知テスト（Web Push / LINE 個人通知モックUI）
          ========================================= -->
     <div class="card-box home-section-card home-push-mock-card" id="homePushMockCard">
       <div class="home-section-header home-push-mock-header">
         <div class="home-section-title">
           <span class="material-symbols-outlined text-muted">notifications_active</span>
-          <span>Web Push 通知テスト</span>
+          <span>通知テスト</span>
           <span class="home-push-mock-tag">モック</span>
         </div>
-        <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+        <div class="home-push-header-right">
+          <div class="home-notif-tabs" role="tablist">
+            <button type="button" id="tabBtnMockWebPush" class="home-notif-tab active" onclick="switchHomeNotifMockTab('webpush')">Web Push</button>
+            <button type="button" id="tabBtnMockLine" class="home-notif-tab" onclick="switchHomeNotifMockTab('line')">LINE 個人</button>
+          </div>
+          <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+        </div>
       </div>
 
-      <p class="home-push-mock-desc" id="homePushMockDesc">
-        この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
-      </p>
+      <!-- 1. Web Push パネル -->
+      <div id="homeMockPanelWebPush">
+        <p class="home-push-mock-desc" id="homePushMockDesc">
+          この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
+        </p>
 
-      <div id="homePushIosGuide" class="home-push-ios-guide hidden">
-        iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+        <div id="homePushIosGuide" class="home-push-ios-guide hidden">
+          iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+        </div>
+
+        <div class="home-push-mock-inputs">
+          <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
+          <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
+        </div>
+
+        <div class="home-push-mock-actions">
+          <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
+            <span class="material-symbols-outlined">notifications</span>
+            <span id="btnHomePushEnableLabel">通知を有効化</span>
+          </button>
+          <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
+            <span class="material-symbols-outlined">send</span>
+            <span>テスト通知を送信</span>
+          </button>
+          <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
+            解除
+          </button>
+        </div>
+
+        <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
+        <div id="homePushFeedback" class="home-push-feedback hidden"></div>
       </div>
 
-      <div class="home-push-mock-inputs">
-        <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
-        <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
-      </div>
+      <!-- 2. LINE 個人通知パネル -->
+      <div id="homeMockPanelLine" class="hidden">
+        <p class="home-push-mock-desc">
+          公式LINEアカウントを友だち追加し、発行した連携コードをトークへ送信すると 1対1 トークへ通知をテスト送信できます。
+        </p>
 
-      <div class="home-push-mock-actions">
-        <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
-          <span class="material-symbols-outlined">notifications</span>
-          <span id="btnHomePushEnableLabel">通知を有効化</span>
-        </button>
-        <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
-          <span class="material-symbols-outlined">send</span>
-          <span>テスト通知を送信</span>
-        </button>
-        <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
-          解除
-        </button>
-      </div>
+        <div id="homeLineCodeBox" class="home-line-code-box hidden">
+          <div class="home-line-code-main">
+            <span class="home-line-code-label">連携コード（15分間有効）:</span>
+            <code id="homeLineCodeText" class="home-line-code-value">FCB-0000</code>
+          </div>
+          <button type="button" class="btn-outline home-line-copy-btn" onclick="handleHomeCopyLineCode()">
+            <span class="material-symbols-outlined">content_copy</span>
+            <span>コピー</span>
+          </button>
+        </div>
 
-      <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
-      <div id="homePushFeedback" class="home-push-feedback hidden"></div>
+        <div class="home-push-mock-inputs">
+          <input type="text" id="homeLineTestTitle" class="home-push-input" value="FC Benten LINE テスト通知" placeholder="通知タイトル" maxlength="60">
+          <input type="text" id="homeLineTestBody" class="home-push-input" value="個人トーク宛てのテスト通知です。" placeholder="通知本文" maxlength="200">
+        </div>
+
+        <div class="home-push-mock-actions">
+          <button type="button" id="btnHomeLineIssueCode" class="btn-outline home-push-btn" onclick="handleHomeIssueLineCode()">
+            <span class="material-symbols-outlined">key</span>
+            <span>連携コードを発行</span>
+          </button>
+          <button type="button" id="btnHomeLineRefresh" class="btn-outline home-push-btn" onclick="refreshHomeLineMockState(true)">
+            <span class="material-symbols-outlined">refresh</span>
+            <span>連携状態を確認</span>
+          </button>
+          <button type="button" id="btnHomeLineTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestLinePush()">
+            <span class="material-symbols-outlined">send</span>
+            <span>LINE テスト送信</span>
+          </button>
+          <button type="button" id="btnHomeLineUnlink" class="home-push-reset-btn hidden" onclick="handleHomeUnlinkLine()">
+            連携解除
+          </button>
+        </div>
+
+        <div id="homeLineUserIdInfo" class="home-push-endpoint-info hidden"></div>
+        <div id="homeLineFeedback" class="home-push-feedback hidden"></div>
+      </div>
     </div>
 
     <!-- =========================================
@@ -16632,8 +16772,8 @@ textarea.comment-textarea:active {
       return { success: true };
     }
 
-    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
-      const endpoint = `${SUPABASE_URL}/functions/v1/send-web-push`;
+    async function invokeEdgeFunction(fnName, bodyPayload) {
+      const endpoint = `${SUPABASE_URL}/functions/v1/${fnName}`;
       let res;
       try {
         res = await fetch(endpoint, {
@@ -16643,18 +16783,10 @@ textarea.comment-textarea:active {
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           },
-          body: JSON.stringify({
-            subscription,
-            memberId,
-            targetAll,
-            title: title || 'FC Benten テスト通知',
-            body: body || 'Web Push 通知の受信テスト成功です！',
-            url: url || './',
-            tag: tag || 'fcb-webpush-test'
-          })
+          body: JSON.stringify(bodyPayload || {})
         });
       } catch (networkErr) {
-        throw new Error('Edge Function へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。');
+        throw new Error(`Edge Function (${fnName}) へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。`);
       }
 
       let data = null;
@@ -16673,6 +16805,18 @@ textarea.comment-textarea:active {
       return data;
     }
 
+    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
+      return await invokeEdgeFunction('send-web-push', {
+        subscription,
+        memberId,
+        targetAll,
+        title: title || 'FC Benten テスト通知',
+        body: body || 'Web Push 通知の受信テスト成功です！',
+        url: url || './',
+        tag: tag || 'fcb-webpush-test'
+      });
+    }
+
     window.SupabaseWebPush = {
       VAPID_PUBLIC_KEY,
       getEnvironmentStatus,
@@ -16680,6 +16824,112 @@ textarea.comment-textarea:active {
       subscribeAndSave,
       unsubscribeAndClear,
       sendTestPush
+    };
+
+    // =========================================
+    // 7. LINE 個人通知ヘルパー (連携コード発行 & Edge Function呼び出し)
+    // =========================================
+    function applyMemberFilter(query, user) {
+      const u = user || window.currentUser || {};
+      const memberId = (u.id || u.memberId || '').trim();
+      const targetEmail = (u.email || '').trim().toLowerCase();
+      const targetName = (u.name || '').trim();
+
+      if (memberId) return { query: query.eq('member_id', memberId), memberId };
+      if (targetEmail) return { query: query.eq('email', targetEmail), memberId: null };
+      if (targetName) return { query: query.eq('name', targetName), memberId: null };
+      return { query: null, memberId: null };
+    }
+
+    async function getLineLinkStatus(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const { query } = applyMemberFilter(sb.from('members').select('member_id, name, line_user_id, notify_settings'), user);
+      if (!query) throw new Error('ログイン中のメンバーを特定できません。');
+
+      const { data, error } = await query.limit(1);
+      if (error) throw error;
+      const row = (data && data[0]) || null;
+      if (!row) throw new Error('メンバー情報が見つかりません。');
+
+      let parsedSettings = {};
+      if (row.notify_settings) {
+        try { parsedSettings = JSON.parse(row.notify_settings); } catch (e) {}
+      }
+
+      const hasValidCode = !!(parsedSettings.linkCode && Number(parsedSettings.linkCodeExpiresAt || 0) > Date.now());
+      return {
+        memberId: row.member_id,
+        name: row.name,
+        linked: !!(row.line_user_id && String(row.line_user_id).trim()),
+        lineUserId: row.line_user_id || '',
+        linkCode: hasValidCode ? parsedSettings.linkCode : '',
+        linkCodeExpiresAt: hasValidCode ? Number(parsedSettings.linkCodeExpiresAt) : 0,
+        settings: parsedSettings
+      };
+    }
+
+    async function issueLinkCode(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const status = await getLineLinkStatus(user);
+      const rand4 = Math.floor(1000 + Math.random() * 9000);
+      const code = `FCB-${rand4}`;
+      const expiresAt = Date.now() + 15 * 60 * 1000;
+
+      const nextSettings = {
+        ...(status.settings || {}),
+        linkCode: code,
+        linkCodeExpiresAt: expiresAt
+      };
+
+      const { error } = await sb
+        .from('members')
+        .update({
+          notify_settings: JSON.stringify(nextSettings),
+          updated_at: new Date().toISOString()
+        })
+        .eq('member_id', status.memberId);
+
+      if (error) throw error;
+      return { memberId: status.memberId, code, expiresAt };
+    }
+
+    async function unlinkLine(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const status = await getLineLinkStatus(user);
+      const { error } = await sb
+        .from('members')
+        .update({
+          line_user_id: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('member_id', status.memberId);
+
+      if (error) throw error;
+      return { success: true };
+    }
+
+    async function sendTestLinePush({ memberId, lineUserId, title, body, appUrl }) {
+      const u = window.currentUser || {};
+      const resolvedMemberId = memberId || (u.id || u.memberId || '').trim() || undefined;
+      const resolvedUrl = appUrl || (window.location && /^https:/i.test(window.location.href) ? window.location.href.split('#')[0] : undefined);
+
+      return await invokeEdgeFunction('send-line-push', {
+        memberId: lineUserId ? undefined : resolvedMemberId,
+        lineUserId,
+        title: title || 'FC Benten LINE テスト通知',
+        body: body || '個人トーク宛てのテスト通知です。',
+        appUrl: resolvedUrl
+      });
+    }
+
+    window.SupabaseLinePush = {
+      getLineLinkStatus,
+      issueLinkCode,
+      unlinkLine,
+      sendTestLinePush
     };
 
   })();
@@ -20867,10 +21117,12 @@ window.renderHomeRecentMatch = renderHomeRecentMatch;
 window.renderHomePlayerHeader = function() {};
 
 // =========================================
-// Web Push 通知テスト（モックUI制御）
+// Web Push / LINE 個人通知テスト（モックUI制御）
 // =========================================
-function setHomePushFeedback(message, type) {
-  const el = document.getElementById('homePushFeedback');
+window.homeNotifMockTab = window.homeNotifMockTab || 'webpush';
+
+function setHomeMockFeedback(elId, message, type) {
+  const el = document.getElementById(elId);
   if (!el) return;
   if (!message) {
     el.textContent = '';
@@ -20879,6 +21131,33 @@ function setHomePushFeedback(message, type) {
   }
   el.textContent = message;
   el.className = 'home-push-feedback ' + (type === 'success' ? 'is-success' : type === 'error' ? 'is-error' : 'is-info');
+}
+
+function setHomePushFeedback(message, type) {
+  setHomeMockFeedback('homePushFeedback', message, type);
+}
+
+function setHomeLineFeedback(message, type) {
+  setHomeMockFeedback('homeLineFeedback', message, type);
+}
+
+function switchHomeNotifMockTab(tab) {
+  window.homeNotifMockTab = (tab === 'line') ? 'line' : 'webpush';
+  const webBtn = document.getElementById('tabBtnMockWebPush');
+  const lineBtn = document.getElementById('tabBtnMockLine');
+  const webPanel = document.getElementById('homeMockPanelWebPush');
+  const linePanel = document.getElementById('homeMockPanelLine');
+
+  if (webBtn) webBtn.classList.toggle('active', window.homeNotifMockTab === 'webpush');
+  if (lineBtn) lineBtn.classList.toggle('active', window.homeNotifMockTab === 'line');
+  if (webPanel) webPanel.classList.toggle('hidden', window.homeNotifMockTab !== 'webpush');
+  if (linePanel) linePanel.classList.toggle('hidden', window.homeNotifMockTab !== 'line');
+
+  if (window.homeNotifMockTab === 'line') {
+    refreshHomeLineMockState(false);
+  } else {
+    refreshHomePushMockState();
+  }
 }
 
 async function refreshHomePushMockState() {
@@ -20891,6 +21170,10 @@ async function refreshHomePushMockState() {
   const endpointEl = document.getElementById('homePushEndpointInfo');
 
   if (!badgeEl || !window.SupabaseWebPush) return;
+  if (window.homeNotifMockTab === 'line') {
+    await refreshHomeLineMockState(false);
+    return;
+  }
 
   const env = window.SupabaseWebPush.getEnvironmentStatus();
   if (iosGuideEl) {
@@ -21052,6 +21335,143 @@ window.refreshHomePushMockState = refreshHomePushMockState;
 window.handleHomeEnablePush = handleHomeEnablePush;
 window.handleHomeSendTestPush = handleHomeSendTestPush;
 window.handleHomeDisablePush = handleHomeDisablePush;
+
+async function refreshHomeLineMockState(showMessage) {
+  const badgeEl = document.getElementById('homePushStatusBadge');
+  const codeBox = document.getElementById('homeLineCodeBox');
+  const codeText = document.getElementById('homeLineCodeText');
+  const unlinkBtn = document.getElementById('btnHomeLineUnlink');
+  const infoEl = document.getElementById('homeLineUserIdInfo');
+
+  if (!window.SupabaseLinePush) return;
+
+  try {
+    const status = await window.SupabaseLinePush.getLineLinkStatus(window.currentUser);
+    if (badgeEl && window.homeNotifMockTab === 'line') {
+      badgeEl.textContent = status.linked ? 'LINE連携済み' : 'LINE未連携';
+      badgeEl.className = 'home-push-status-badge ' + (status.linked ? 'status-active' : 'status-idle');
+    }
+    if (unlinkBtn) unlinkBtn.classList.toggle('hidden', !status.linked);
+    if (infoEl) {
+      if (status.linked && status.lineUserId) {
+        const lid = status.lineUserId;
+        const masked = lid.length > 12 ? lid.slice(0, 6) + '...' + lid.slice(-4) : lid;
+        infoEl.textContent = `連携済み LINE ID: ${masked} (${status.name})`;
+        infoEl.classList.remove('hidden');
+      } else {
+        infoEl.textContent = '';
+        infoEl.classList.add('hidden');
+      }
+    }
+    if (codeBox && codeText) {
+      if (!status.linked && status.linkCode) {
+        codeText.textContent = status.linkCode;
+        codeBox.classList.remove('hidden');
+      } else {
+        codeBox.classList.add('hidden');
+      }
+    }
+    if (showMessage) {
+      setHomeLineFeedback(
+        status.linked
+          ? `${status.name} さんの LINE アカウントと連携済みです。「LINE テスト送信」を試せます。`
+          : 'まだ LINE 未連携です。連携コードを発行して公式LINEのトークへ送信してください。',
+        status.linked ? 'success' : 'info'
+      );
+    }
+  } catch (err) {
+    if (badgeEl && window.homeNotifMockTab === 'line') {
+      badgeEl.textContent = 'LINE未確認';
+      badgeEl.className = 'home-push-status-badge status-warn';
+    }
+    if (showMessage) {
+      setHomeLineFeedback(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
+    }
+  }
+}
+
+async function handleHomeIssueLineCode() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineIssueCode');
+  const codeBox = document.getElementById('homeLineCodeBox');
+  const codeText = document.getElementById('homeLineCodeText');
+  if (btn) btn.disabled = true;
+  setHomeLineFeedback('連携コードを発行しています...', 'info');
+
+  try {
+    const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
+    if (codeText) codeText.textContent = res.code;
+    if (codeBox) codeBox.classList.remove('hidden');
+    setHomeLineFeedback(`コード「${res.code}」を発行しました。公式LINEのトーク画面へこのまま送信し、「連携状態を確認」を押してください。`, 'success');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleHomeCopyLineCode() {
+  const codeText = document.getElementById('homeLineCodeText');
+  const code = codeText ? codeText.textContent.trim() : '';
+  if (!code) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    setHomeLineFeedback(`連携コード「${code}」をコピーしました。公式LINEのトークに貼り付けて送信してください。`, 'success');
+  } catch (e) {
+    setHomeLineFeedback(`コード「${code}」をそのまま公式LINEへ送信してください。`, 'info');
+  }
+}
+
+async function handleHomeSendTestLinePush() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineTest');
+  const titleEl = document.getElementById('homeLineTestTitle');
+  const bodyEl = document.getElementById('homeLineTestBody');
+  const prevHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+  }
+  setHomeLineFeedback('Supabase Edge Function 経由で LINE テスト通知を送信しています...', 'info');
+
+  try {
+    const title = (titleEl && titleEl.value.trim()) || 'FC Benten LINE テスト通知';
+    const body = (bodyEl && bodyEl.value.trim()) || '個人トーク宛てのテスト通知です。';
+    const res = await window.SupabaseLinePush.sendTestLinePush({ title, body });
+    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。公式LINEトークをご確認ください。`, 'success');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : 'LINE テスト送信に失敗しました。', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = prevHtml;
+    }
+    await refreshHomeLineMockState(false);
+  }
+}
+
+async function handleHomeUnlinkLine() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineUnlink');
+  if (btn) btn.disabled = true;
+  try {
+    await window.SupabaseLinePush.unlinkLine(window.currentUser);
+    setHomeLineFeedback('LINE 連携を解除しました。', 'info');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomeLineMockState(false);
+  }
+}
+
+window.switchHomeNotifMockTab = switchHomeNotifMockTab;
+window.refreshHomeLineMockState = refreshHomeLineMockState;
+window.handleHomeIssueLineCode = handleHomeIssueLineCode;
+window.handleHomeCopyLineCode = handleHomeCopyLineCode;
+window.handleHomeSendTestLinePush = handleHomeSendTestLinePush;
+window.handleHomeUnlinkLine = handleHomeUnlinkLine;
 
 </script>
      <script>
