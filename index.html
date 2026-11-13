@@ -3163,6 +3163,13 @@ html.no-scroll {
   border: 1px solid #bbf7d0;
 }
 
+.home-line-code-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
 .home-line-copy-btn {
   display: inline-flex;
   align-items: center;
@@ -3176,7 +3183,30 @@ html.no-scroll {
   cursor: pointer;
 }
 
-.home-line-copy-btn .material-symbols-outlined {
+.home-line-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 30px;
+  padding: 0 11px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #06C755;
+  border: 1px solid #06C755;
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.home-line-open-btn:hover {
+  background: #05b34c;
+  border-color: #05b34c;
+}
+
+.home-line-copy-btn .material-symbols-outlined,
+.home-line-open-btn .material-symbols-outlined {
   font-size: 15px;
 }
 
@@ -12188,10 +12218,16 @@ textarea.comment-textarea:active {
             <span class="home-line-code-label">連携コード（15分間有効）:</span>
             <code id="homeLineCodeText" class="home-line-code-value">FCB-0000</code>
           </div>
-          <button type="button" class="btn-outline home-line-copy-btn" onclick="handleHomeCopyLineCode()">
-            <span class="material-symbols-outlined">content_copy</span>
-            <span>コピー</span>
-          </button>
+          <div class="home-line-code-actions">
+            <button type="button" class="btn-outline home-line-copy-btn" onclick="handleHomeCopyLineCode()">
+              <span class="material-symbols-outlined">content_copy</span>
+              <span>コピー</span>
+            </button>
+            <a id="btnHomeLineOpenOa" class="home-line-open-btn" href="https://line.me/R/oaMessage/%40377avqrr/" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined">open_in_new</span>
+              <span>LINEを開く（入力済み）</span>
+            </a>
+          </div>
         </div>
 
         <div class="home-push-mock-inputs">
@@ -16925,7 +16961,21 @@ textarea.comment-textarea:active {
       });
     }
 
+    const LINE_BOT_BASIC_ID = '@377avqrr';
+
+    function getLineFriendUrl() {
+      return `https://line.me/R/ti/p/${encodeURIComponent(LINE_BOT_BASIC_ID)}`;
+    }
+
+    function getLineOaMessageUrl(code) {
+      const base = `https://line.me/R/oaMessage/${encodeURIComponent(LINE_BOT_BASIC_ID)}/`;
+      return code ? `${base}?${encodeURIComponent(code)}` : base;
+    }
+
     window.SupabaseLinePush = {
+      LINE_BOT_BASIC_ID,
+      getLineFriendUrl,
+      getLineOaMessageUrl,
       getLineLinkStatus,
       issueLinkCode,
       unlinkLine,
@@ -21366,6 +21416,10 @@ async function refreshHomeLineMockState(showMessage) {
     if (codeBox && codeText) {
       if (!status.linked && status.linkCode) {
         codeText.textContent = status.linkCode;
+        const openOaLink = document.getElementById('btnHomeLineOpenOa');
+        if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
+          openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(status.linkCode);
+        }
         codeBox.classList.remove('hidden');
       } else {
         codeBox.classList.add('hidden');
@@ -21401,8 +21455,12 @@ async function handleHomeIssueLineCode() {
   try {
     const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
     if (codeText) codeText.textContent = res.code;
+    const openOaLink = document.getElementById('btnHomeLineOpenOa');
+    if (openOaLink && window.SupabaseLinePush.getLineOaMessageUrl) {
+      openOaLink.href = window.SupabaseLinePush.getLineOaMessageUrl(res.code);
+    }
     if (codeBox) codeBox.classList.remove('hidden');
-    setHomeLineFeedback(`コード「${res.code}」を発行しました。公式LINEのトーク画面へこのまま送信し、「連携状態を確認」を押してください。`, 'success');
+    setHomeLineFeedback(`コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、アプリへ戻って「連携状態を確認」を押してください。`, 'success');
   } catch (err) {
     setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
   } finally {
