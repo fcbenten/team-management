@@ -978,6 +978,7 @@ def run_generate():
                 ("通知方法ラジオ選択", "profileNotifType", "ラジオボタングループ", "必須", "スマホプッシュ通知", "「LINE通知」「プッシュ通知」「両方で受け取る」「通知を受け取らない」から各自が希望の受信先を選択。"),
                 ("LINE連携ボタン", "btnProfileLineConnect", "ボタン", "-", "LINEと連携する", "未連携時に「LINE通知」または「両方で受け取る」カード直下に表示。15分間有効の連携コード（FCB-XXXX）を発行。"),
                 ("LINE連携コード表示・操作エリア", "profileLineCodeBox", "連携ボックス", "-", "コード発行後に表示", "発行済みコード（profileLineCodeText）、コピーボタン、LINE起動リンク（btnProfileLineOpenOa：スマホはoaMessage／PCはQR表示ページ）、連携確認ボタン、状況メッセージ（profileLineStatusMsg）を表示。"),
+                ("LINE連携解除ボタン（テスト用）", "profileLineLinkedArea / btnProfileLineUnlink", "ボタン", "-", "連携済時に表示", "テスト段階の検証用として選択カード直下に表示し、押下で members.line_user_id をクリアする。"),
                 ("ブラウザ通知有効化ボタン", "notifActionPushWrap 内ボタン", "ボタン", "-", "この端末の通知を有効化", "未許可時に選択カード直下に表示。タップでNotification API許可およびSupabaseWebPush.subscribeAndSaveを実行し、購読情報を保存。"),
                 ("受け取る通知項目チェックボックス", "notifItemEmergency / notifItemAttendance / notifItemBulletin", "チェックボックス", "-", "すべてON", "緊急・中止連絡、出欠リマインド、チーム掲示板の更新それぞれについて通知受け取り対象をON/OFF設定。"),
                 ("通知設定を保存ボタン", "btnSaveNotificationSettings", "ボタン", "-", "通知設定を保存", "選択中の通知方法および受け取る通知項目をSupabaseのmembersテーブルへ保存。"),

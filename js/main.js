@@ -1164,6 +1164,7 @@
     const isLinked = !!u.lineLinked;
     const isMobile = isLineMobileEnv();
     const unlinkedArea = document.getElementById('profileLineUnlinkedArea');
+    const linkedArea = document.getElementById('profileLineLinkedArea');
     const codeBox = document.getElementById('profileLineCodeBox');
     const codeText = document.getElementById('profileLineCodeText');
     const openOaLink = document.getElementById('btnProfileLineOpenOa');
@@ -1171,6 +1172,7 @@
     const guideEl = document.getElementById('profileLineGuideText');
 
     if (unlinkedArea) unlinkedArea.classList.toggle('hidden', isLinked);
+    if (linkedArea) linkedArea.classList.toggle('hidden', !isLinked);
 
     if (guideEl) {
       guideEl.textContent = isMobile
@@ -1227,7 +1229,7 @@
     if (targetBox) targetBox.classList.remove('opacity-50');
 
     const isPushGranted = (typeof Notification !== 'undefined' && Notification.permission === 'granted');
-    const showLineAction = (val === 'line' || val === 'both') && !u.lineLinked;
+    const showLineAction = (val === 'line' || val === 'both');
     const showPushAction = (val === 'push' || val === 'both') && !isPushGranted;
 
     if (lineWrap) {
@@ -1398,6 +1400,37 @@
   }
 
   /**
+   * LINE連携解除（テスト用）
+   */
+  async function handleProfileLineUnlink() {
+    const u = window.currentUser;
+    if (!u || !window.SupabaseLinePush) return;
+
+    const btn = document.getElementById('btnProfileLineUnlink');
+    if (btn) btn.disabled = true;
+
+    try {
+      await window.SupabaseLinePush.unlinkLine(u);
+      u.lineLinked = false;
+      u.lineLinkCode = '';
+      try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+
+      updateNotificationBadges();
+      syncProfileLineUi();
+      const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
+      handleNotifTypeChange(currentVal);
+      if (typeof window.refreshHomeLineMockState === 'function') {
+        window.refreshHomeLineMockState(false);
+      }
+      setProfileLineMsg('LINEの連携を解除しました。', 'info');
+    } catch (err) {
+      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  /**
    * 通知設定保存処理
    */
   function handleSaveNotificationSettings() {
@@ -1474,6 +1507,7 @@
   window.handleLineConnectClick = handleLineConnectClick;
   window.handleProfileLineCopyCode = handleProfileLineCopyCode;
   window.handleProfileLineRefresh = handleProfileLineRefresh;
+  window.handleProfileLineUnlink = handleProfileLineUnlink;
   window.handleSaveNotificationSettings = handleSaveNotificationSettings;
 
   /**

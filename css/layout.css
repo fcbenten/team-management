@@ -268,6 +268,27 @@
 .profile-line-open-link .material-symbols-outlined {
   font-size: 15px;
 }
+.profile-line-unlink-test-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px !important;
+  font-size: 0.76rem !important;
+  font-weight: 600 !important;
+  color: var(--text-muted) !important;
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  cursor: pointer;
+}
+.profile-line-unlink-test-btn:hover {
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+  background: #fef2f2 !important;
+}
+.profile-line-unlink-test-btn .material-symbols-outlined {
+  font-size: 16px;
+}
 .profile-line-msg {
   margin-top: 8px;
   padding: 6px 10px;
