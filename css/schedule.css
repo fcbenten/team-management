@@ -634,36 +634,40 @@
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 12px 14px 14px !important;
-    gap: 8px !important;
+    padding: 10px 10px 12px !important;
+    gap: 6px !important;
     box-sizing: border-box !important;
   }
-  .footer-right-btns {
-    display: flex !important;
+  .event-modal-footer .footer-right-btns {
+    display: inline-flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 8px !important;
-    flex: 1 !important;
+    gap: 6px !important;
+    flex: 0 0 auto !important;
     justify-content: flex-end !important;
+    margin-left: auto !important;
   }
-  .btn-delete-action {
-    padding: 8px 10px !important;
-    font-size: 0.82rem !important;
+  .event-modal-footer .btn-delete-action {
+    padding: 6px 2px !important;
+    font-size: 0.76rem !important;
+    gap: 2px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
-  .btn-cancel-action {
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
+  .event-modal-footer .btn-delete-action .material-symbols-outlined {
+    font-size: 16px !important;
+  }
+  .event-modal-footer .btn-cancel-action {
+    padding: 6px 9px !important;
+    font-size: 0.76rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
-  .btn-submit-action {
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
+  .event-modal-footer .btn-submit-action {
+    padding: 6px 10px !important;
+    font-size: 0.76rem !important;
     white-space: nowrap !important;
-    flex: 1 !important;
-    max-width: 220px !important;
+    flex: 0 0 auto !important;
     text-align: center !important;
   }
 
@@ -883,14 +887,17 @@
 }
 
 .btn-event-delete {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #ef4444;
+  background: transparent;
+  border-color: transparent;
+  color: #dc2626;
+  font-weight: 500;
 }
 
 .btn-event-delete:hover {
-  background: #ef4444;
-  color: #ffffff;
+  background: #fef2f2;
+  border-color: transparent;
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .btn-danger-outline {
@@ -1258,20 +1265,31 @@
 }
 
 .btn-delete-action {
-  background: transparent;
-  border: 1px solid #fca5a5;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
   color: #dc2626;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 0.82rem;
+  padding: 6px 4px;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
+.btn-delete-action .material-symbols-outlined {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .btn-delete-action:hover {
-  background: #fee2e2;
-  border-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .btn-cancel-action {

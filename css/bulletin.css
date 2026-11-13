@@ -607,15 +607,19 @@
   color: #d97706 !important;
 }
 
-/* 削除ボタン（赤枠） */
+/* 削除ボタン（枠なし・危険操作リンク統一デザイン） */
 .bdm-action-btn.btn-delete-action {
-  background: #ffffff !important;
-  border: 1px solid #fca5a5 !important;
+  background: transparent !important;
+  border: none !important;
   color: #dc2626 !important;
+  font-weight: 500 !important;
+  padding: 0 8px !important;
+  box-shadow: none !important;
 }
 .bdm-action-btn.btn-delete-action:hover {
-  background: #fee2e2 !important;
-  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  text-decoration: underline !important;
 }
 .bdm-action-btn.btn-delete-action .material-symbols-outlined {
   color: #dc2626 !important;

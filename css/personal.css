@@ -113,34 +113,6 @@
   flex: 1 1 auto;
 }
 
-.player-meta-sub {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.player-tap-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #94a3b8;
-  line-height: 1;
-  transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.player-tap-cue .material-symbols-outlined {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.stats-table tbody tr:hover .player-tap-cue {
-  color: var(--primary);
-  transform: translateX(2px);
-}
-
 .player-pos-badge {
   display: inline-block;
   padding: 1px 5px;
@@ -412,13 +384,19 @@ th.sort-active .sort-icon {
     flex-shrink: 0 !important;
   }
 
-  .stats-table tbody tr:active {
+  .stats-table tbody tr:active td {
     background-color: #eff6ff !important;
+    border-top-color: #93c5fd !important;
+    border-bottom-color: #93c5fd !important;
   }
 
   .card-box.stats-table-card .table-responsive {
     overflow: visible !important;
     margin: 0 !important;
+    background: #f1f5f9 !important;
+    padding: 0 6px 8px !important;
+    border-bottom-left-radius: var(--radius, 4px);
+    border-bottom-right-radius: var(--radius, 4px);
   }
 
   /* 一覧テーブルヘッダーのスクロール固定化（フィルターの真下に吸着：上6px + カード60px + 下6px = 72px） */
@@ -462,34 +440,53 @@ th.sort-active .sort-icon {
     display: none !important;
   }
 
-  /* テーブル全体を固定幅にして均等配置を保証（separateでsticky境界線を安定化） */
+  /* スマホ時は各行を独立したカード風行として表示し、タップ可能性を直感的に伝える */
   .stats-table {
     table-layout: fixed !important;
     width: 100% !important;
     border-collapse: separate !important;
-    border-spacing: 0 !important;
+    border-spacing: 0 6px !important;
   }
 
-  /* NO.列（視認性を保ちつつコンパクト固定幅化＆中央配置） */
+  .stats-table tbody tr td {
+    background-color: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    vertical-align: middle !important;
+  }
+
+  .stats-table tbody tr td:first-child {
+    border-left: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+  }
+
+  .stats-table tbody tr td:last-child {
+    border-right: 1px solid #e2e8f0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+  }
+
+  /* NO.列（コンパクト固定幅＆中央配置） */
   .stats-table th.th-number {
-    width: 38px !important;
-    max-width: 38px !important;
+    width: 34px !important;
+    max-width: 34px !important;
     text-align: center !important;
     padding: 10px 1px !important;
     font-size: 0.82rem !important;
     font-weight: 600 !important;
   }
   .stats-table td.col-number {
-    width: 38px !important;
-    max-width: 38px !important;
+    width: 34px !important;
+    max-width: 34px !important;
     text-align: center !important;
-    padding: 6px 1px !important;
-    font-size: 0.86rem !important;
+    padding: 7px 1px !important;
+    font-size: 0.84rem !important;
     font-weight: 600 !important;
     color: var(--text-heading) !important;
   }
 
-  /* 名前列：アバター＋名前＋バッジを美しく配置 */
+  /* 名前列：長い名前も見切れずに折り返して全表示＋アバターアクセント */
   .stats-table th.th-name {
     width: auto !important;
     text-align: left !important;
@@ -500,51 +497,43 @@ th.sort-active .sort-icon {
   .stats-table td.col-name-cell {
     width: auto !important;
     text-align: left !important;
-    padding: 6px 3px 6px 6px !important;
-    overflow: hidden;
+    padding: 7px 4px 7px 6px !important;
+    overflow: visible !important;
   }
 
   .player-cell-wrap {
     gap: 6px !important;
+    align-items: center !important;
   }
 
   .player-avatar-icon {
     width: 26px !important;
     height: 26px !important;
     border-radius: 50% !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
   }
 
   .player-avatar-icon .material-symbols-outlined {
     font-size: 0.95rem !important;
+    color: var(--primary) !important;
   }
 
   .player-name-meta {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 2px !important;
-  }
-
-  .player-meta-sub {
-    gap: 4px !important;
-  }
-
-  .player-tap-cue {
-    font-size: 0.64rem !important;
-    color: #64748b !important;
-  }
-
-  .player-tap-cue .material-symbols-outlined {
-    font-size: 13px !important;
+    gap: 3px !important;
+    min-width: 0 !important;
   }
 
   .player-name,
   .player-link {
-    font-size: 0.88rem !important;
+    font-size: 0.85rem !important;
     font-weight: 600 !important;
-    white-space: nowrap !important;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
   }
 
   .player-pos-badge {

@@ -1271,6 +1271,11 @@ a.btn-member-modal-save:hover {
   transition: all 0.15s ease;
 }
 
+.btn-member-danger-link .material-symbols-outlined {
+  font-size: 18px !important;
+  line-height: 1;
+}
+
 .btn-member-danger-link:hover {
   background: #fef2f2;
   color: #b91c1c;
@@ -1339,47 +1344,52 @@ a.btn-member-modal-save:hover {
   color: #94a3b8 !important;
 }
 
-/* モーダルフッター スマホ用レスポンシブ配置（2行折り返し防止・バランス最適化） */
+/* モーダルフッター スマホ用レスポンシブ配置（1列固定・2行折り返し防止） */
 @media (max-width: 639px) {
   .member-modal-footer {
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    padding: 12px 16px 14px !important;
-  }
-
-  .member-modal-footer-right {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    width: 100% !important;
-    margin-left: 0 !important;
-    gap: 10px !important;
-  }
-
-  .member-modal-footer-right .btn-member-modal-cancel,
-  .member-modal-footer-right .btn-member-modal-save {
-    width: 100% !important;
-    min-height: 40px !important;
-    padding: 8px 12px !important;
-    box-sizing: border-box !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 12px 14px 14px !important;
   }
 
   .member-modal-footer-left {
-    width: 100% !important;
-    justify-content: center !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
-  .member-modal-footer-left:has(> .hidden:only-child) {
-    display: none !important;
+  .member-modal-footer-right {
+    display: inline-flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-cancel {
+    padding: 7px 11px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-save {
+    padding: 7px 14px !important;
+    font-size: 0.8rem !important;
   }
 
   .btn-member-danger-link {
-    padding: 6px 12px !important;
-    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 6px 2px !important;
+    gap: 2px !important;
+  }
+
+  .btn-member-danger-link .material-symbols-outlined {
+    font-size: 16px !important;
   }
 
   .delete-modal-footer {
-    padding: 12px 16px 14px !important;
-    gap: 10px !important;
+    padding: 12px 14px 14px !important;
+    gap: 8px !important;
   }
 }

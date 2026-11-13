@@ -291,7 +291,9 @@
 
         <!-- 操作フッター（削除・キャンセル・保存） -->
         <div class="event-modal-footer">
-          <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">削除</button>
+          <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">
+            <span class="material-symbols-outlined">delete</span><span>削除</span>
+          </button>
           <div class="footer-right-btns">
             <button type="button" class="btn-cancel-action" onclick="closeEventEditModal(event)">キャンセル</button>
             <button type="button" id="eeSubmitBtn" class="btn-submit-action" onclick="submitEventEditForm(event)">カレンダーに保存</button>
