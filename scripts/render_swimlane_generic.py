@@ -568,32 +568,61 @@ window.addEventListener('load', () => {{
     }};
   }}
 
-  // 1. Place Lane 2 (JS) boxes aligned to Lane 1 triggers with anti-overlap
+  // 1 & 2. Synchronize Lane 1 (Triggers), Lane 2 (JS), and Lane 3 (GAS) vertical centers so t->j->g arrows stay straight
   const rowCenterY = {{}};
+  const bodyOffset12 = lane1Body.getBoundingClientRect().top - lane2Body.getBoundingClientRect().top;
   let prevJBottom = -16;
+  let prevGBottom = -16;
+  const gasByRow = {{}};
+  cfg.gasList.forEach(item => {{ gasByRow[item.rowIdx] = item; }});
+
   cfg.jsList.forEach(item => {{
     const tEl = document.getElementById(item.tId);
     const jEl = document.getElementById(item.jId);
-    const tR = getBoxRel(tEl, lane1Body);
-    const jH = jEl.offsetHeight;
-    let top = Math.round(tR.cy - jH / 2);
-    if (top < prevJBottom + 16) top = prevJBottom + 16;
-    jEl.style.top = top + 'px';
-    prevJBottom = top + jH;
-    rowCenterY[item.rowIdx] = top + jH / 2;
-  }});
+    const gasItem = gasByRow[item.rowIdx];
+    const gEl = gasItem ? document.getElementById(gasItem.gId) : null;
 
-  // 2. Place Lane 3 (GAS) boxes aligned to Lane 2 (JS) with anti-overlap
-  let prevGBottom = -16;
-  cfg.gasList.forEach(item => {{
-    const gEl = document.getElementById(item.gId);
-    const jEl = document.getElementById(item.jId);
-    const jR = getBoxRel(jEl, lane2Body);
-    const gH = gEl.offsetHeight;
-    let top = Math.round(jR.cy - gH / 2);
-    if (top < prevGBottom + 18) top = prevGBottom + 18;
-    gEl.style.top = top + 'px';
-    prevGBottom = top + gH;
+    let tR = getBoxRel(tEl, lane1Body);
+    const jH = jEl.offsetHeight;
+    const gH = gEl ? gEl.offsetHeight : 0;
+
+    let desiredCY = tR.cy + bodyOffset12;
+    const minJTop = prevJBottom + 18;
+    if (desiredCY - jH / 2 < minJTop) {{
+      desiredCY = minJTop + jH / 2;
+    }}
+    if (gEl) {{
+      const minGTop = prevGBottom + 20;
+      if (desiredCY - gH / 2 < minGTop) {{
+        desiredCY = minGTop + gH / 2;
+      }}
+    }}
+
+    const delta = Math.round(desiredCY - (tR.cy + bodyOffset12));
+    if (delta > 0) {{
+      const parentCard = tEl.closest('.sub-card');
+      const isFirstInCard = parentCard && parentCard.querySelector('.node-item') === tEl;
+      if (isFirstInCard) {{
+        const curMt = parseFloat(getComputedStyle(parentCard).marginTop) || 0;
+        parentCard.style.marginTop = (curMt + delta) + 'px';
+      }} else {{
+        const curMt = parseFloat(getComputedStyle(tEl).marginTop) || 0;
+        tEl.style.marginTop = (curMt + delta) + 'px';
+      }}
+      tR = getBoxRel(tEl, lane1Body);
+    }}
+
+    const alignedCY = tR.cy + bodyOffset12;
+    const jTop = Math.round(alignedCY - jH / 2);
+    jEl.style.top = jTop + 'px';
+    prevJBottom = jTop + jH;
+    rowCenterY[item.rowIdx] = alignedCY;
+
+    if (gEl) {{
+      const gTop = Math.round(alignedCY - gH / 2);
+      gEl.style.top = gTop + 'px';
+      prevGBottom = gTop + gH;
+    }}
   }});
 
   // 3. Place Lane 4 (DB / External API) nodes near anchor rows, leaving >=44px clear corridors
