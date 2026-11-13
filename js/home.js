@@ -638,10 +638,12 @@ window.renderHomeRecentMatch = renderHomeRecentMatch;
 window.renderHomePlayerHeader = function() {};
 
 // =========================================
-// Web Push 通知テスト（モックUI制御）
+// Web Push / LINE 個人通知テスト（モックUI制御）
 // =========================================
-function setHomePushFeedback(message, type) {
-  const el = document.getElementById('homePushFeedback');
+window.homeNotifMockTab = window.homeNotifMockTab || 'webpush';
+
+function setHomeMockFeedback(elId, message, type) {
+  const el = document.getElementById(elId);
   if (!el) return;
   if (!message) {
     el.textContent = '';
@@ -650,6 +652,33 @@ function setHomePushFeedback(message, type) {
   }
   el.textContent = message;
   el.className = 'home-push-feedback ' + (type === 'success' ? 'is-success' : type === 'error' ? 'is-error' : 'is-info');
+}
+
+function setHomePushFeedback(message, type) {
+  setHomeMockFeedback('homePushFeedback', message, type);
+}
+
+function setHomeLineFeedback(message, type) {
+  setHomeMockFeedback('homeLineFeedback', message, type);
+}
+
+function switchHomeNotifMockTab(tab) {
+  window.homeNotifMockTab = (tab === 'line') ? 'line' : 'webpush';
+  const webBtn = document.getElementById('tabBtnMockWebPush');
+  const lineBtn = document.getElementById('tabBtnMockLine');
+  const webPanel = document.getElementById('homeMockPanelWebPush');
+  const linePanel = document.getElementById('homeMockPanelLine');
+
+  if (webBtn) webBtn.classList.toggle('active', window.homeNotifMockTab === 'webpush');
+  if (lineBtn) lineBtn.classList.toggle('active', window.homeNotifMockTab === 'line');
+  if (webPanel) webPanel.classList.toggle('hidden', window.homeNotifMockTab !== 'webpush');
+  if (linePanel) linePanel.classList.toggle('hidden', window.homeNotifMockTab !== 'line');
+
+  if (window.homeNotifMockTab === 'line') {
+    refreshHomeLineMockState(false);
+  } else {
+    refreshHomePushMockState();
+  }
 }
 
 async function refreshHomePushMockState() {
@@ -662,6 +691,10 @@ async function refreshHomePushMockState() {
   const endpointEl = document.getElementById('homePushEndpointInfo');
 
   if (!badgeEl || !window.SupabaseWebPush) return;
+  if (window.homeNotifMockTab === 'line') {
+    await refreshHomeLineMockState(false);
+    return;
+  }
 
   const env = window.SupabaseWebPush.getEnvironmentStatus();
   if (iosGuideEl) {
@@ -823,3 +856,140 @@ window.refreshHomePushMockState = refreshHomePushMockState;
 window.handleHomeEnablePush = handleHomeEnablePush;
 window.handleHomeSendTestPush = handleHomeSendTestPush;
 window.handleHomeDisablePush = handleHomeDisablePush;
+
+async function refreshHomeLineMockState(showMessage) {
+  const badgeEl = document.getElementById('homePushStatusBadge');
+  const codeBox = document.getElementById('homeLineCodeBox');
+  const codeText = document.getElementById('homeLineCodeText');
+  const unlinkBtn = document.getElementById('btnHomeLineUnlink');
+  const infoEl = document.getElementById('homeLineUserIdInfo');
+
+  if (!window.SupabaseLinePush) return;
+
+  try {
+    const status = await window.SupabaseLinePush.getLineLinkStatus(window.currentUser);
+    if (badgeEl && window.homeNotifMockTab === 'line') {
+      badgeEl.textContent = status.linked ? 'LINE連携済み' : 'LINE未連携';
+      badgeEl.className = 'home-push-status-badge ' + (status.linked ? 'status-active' : 'status-idle');
+    }
+    if (unlinkBtn) unlinkBtn.classList.toggle('hidden', !status.linked);
+    if (infoEl) {
+      if (status.linked && status.lineUserId) {
+        const lid = status.lineUserId;
+        const masked = lid.length > 12 ? lid.slice(0, 6) + '...' + lid.slice(-4) : lid;
+        infoEl.textContent = `連携済み LINE ID: ${masked} (${status.name})`;
+        infoEl.classList.remove('hidden');
+      } else {
+        infoEl.textContent = '';
+        infoEl.classList.add('hidden');
+      }
+    }
+    if (codeBox && codeText) {
+      if (!status.linked && status.linkCode) {
+        codeText.textContent = status.linkCode;
+        codeBox.classList.remove('hidden');
+      } else {
+        codeBox.classList.add('hidden');
+      }
+    }
+    if (showMessage) {
+      setHomeLineFeedback(
+        status.linked
+          ? `${status.name} さんの LINE アカウントと連携済みです。「LINE テスト送信」を試せます。`
+          : 'まだ LINE 未連携です。連携コードを発行して公式LINEのトークへ送信してください。',
+        status.linked ? 'success' : 'info'
+      );
+    }
+  } catch (err) {
+    if (badgeEl && window.homeNotifMockTab === 'line') {
+      badgeEl.textContent = 'LINE未確認';
+      badgeEl.className = 'home-push-status-badge status-warn';
+    }
+    if (showMessage) {
+      setHomeLineFeedback(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
+    }
+  }
+}
+
+async function handleHomeIssueLineCode() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineIssueCode');
+  const codeBox = document.getElementById('homeLineCodeBox');
+  const codeText = document.getElementById('homeLineCodeText');
+  if (btn) btn.disabled = true;
+  setHomeLineFeedback('連携コードを発行しています...', 'info');
+
+  try {
+    const res = await window.SupabaseLinePush.issueLinkCode(window.currentUser);
+    if (codeText) codeText.textContent = res.code;
+    if (codeBox) codeBox.classList.remove('hidden');
+    setHomeLineFeedback(`コード「${res.code}」を発行しました。公式LINEのトーク画面へこのまま送信し、「連携状態を確認」を押してください。`, 'success');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleHomeCopyLineCode() {
+  const codeText = document.getElementById('homeLineCodeText');
+  const code = codeText ? codeText.textContent.trim() : '';
+  if (!code) return;
+  try {
+    await navigator.clipboard.writeText(code);
+    setHomeLineFeedback(`連携コード「${code}」をコピーしました。公式LINEのトークに貼り付けて送信してください。`, 'success');
+  } catch (e) {
+    setHomeLineFeedback(`コード「${code}」をそのまま公式LINEへ送信してください。`, 'info');
+  }
+}
+
+async function handleHomeSendTestLinePush() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineTest');
+  const titleEl = document.getElementById('homeLineTestTitle');
+  const bodyEl = document.getElementById('homeLineTestBody');
+  const prevHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+  }
+  setHomeLineFeedback('Supabase Edge Function 経由で LINE テスト通知を送信しています...', 'info');
+
+  try {
+    const title = (titleEl && titleEl.value.trim()) || 'FC Benten LINE テスト通知';
+    const body = (bodyEl && bodyEl.value.trim()) || '個人トーク宛てのテスト通知です。';
+    const res = await window.SupabaseLinePush.sendTestLinePush({ title, body });
+    setHomeLineFeedback(`LINE 通知を送信しました（送信件数: ${res.sentCount || 1}件）。公式LINEトークをご確認ください。`, 'success');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : 'LINE テスト送信に失敗しました。', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = prevHtml;
+    }
+    await refreshHomeLineMockState(false);
+  }
+}
+
+async function handleHomeUnlinkLine() {
+  if (!window.SupabaseLinePush) return;
+  const btn = document.getElementById('btnHomeLineUnlink');
+  if (btn) btn.disabled = true;
+  try {
+    await window.SupabaseLinePush.unlinkLine(window.currentUser);
+    setHomeLineFeedback('LINE 連携を解除しました。', 'info');
+  } catch (err) {
+    setHomeLineFeedback(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomeLineMockState(false);
+  }
+}
+
+window.switchHomeNotifMockTab = switchHomeNotifMockTab;
+window.refreshHomeLineMockState = refreshHomeLineMockState;
+window.handleHomeIssueLineCode = handleHomeIssueLineCode;
+window.handleHomeCopyLineCode = handleHomeCopyLineCode;
+window.handleHomeSendTestLinePush = handleHomeSendTestLinePush;
+window.handleHomeUnlinkLine = handleHomeUnlinkLine;

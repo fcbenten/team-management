@@ -23,47 +23,100 @@
     <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
 
     <!-- =========================================
-         Web Push 通知テスト（モックUI）
+         通知テスト（Web Push / LINE 個人通知モックUI）
          ========================================= -->
     <div class="card-box home-section-card home-push-mock-card" id="homePushMockCard">
       <div class="home-section-header home-push-mock-header">
         <div class="home-section-title">
           <span class="material-symbols-outlined text-muted">notifications_active</span>
-          <span>Web Push 通知テスト</span>
+          <span>通知テスト</span>
           <span class="home-push-mock-tag">モック</span>
         </div>
-        <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+        <div class="home-push-header-right">
+          <div class="home-notif-tabs" role="tablist">
+            <button type="button" id="tabBtnMockWebPush" class="home-notif-tab active" onclick="switchHomeNotifMockTab('webpush')">Web Push</button>
+            <button type="button" id="tabBtnMockLine" class="home-notif-tab" onclick="switchHomeNotifMockTab('line')">LINE 個人</button>
+          </div>
+          <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+        </div>
       </div>
 
-      <p class="home-push-mock-desc" id="homePushMockDesc">
-        この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
-      </p>
+      <!-- 1. Web Push パネル -->
+      <div id="homeMockPanelWebPush">
+        <p class="home-push-mock-desc" id="homePushMockDesc">
+          この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
+        </p>
 
-      <div id="homePushIosGuide" class="home-push-ios-guide hidden">
-        iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+        <div id="homePushIosGuide" class="home-push-ios-guide hidden">
+          iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+        </div>
+
+        <div class="home-push-mock-inputs">
+          <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
+          <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
+        </div>
+
+        <div class="home-push-mock-actions">
+          <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
+            <span class="material-symbols-outlined">notifications</span>
+            <span id="btnHomePushEnableLabel">通知を有効化</span>
+          </button>
+          <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
+            <span class="material-symbols-outlined">send</span>
+            <span>テスト通知を送信</span>
+          </button>
+          <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
+            解除
+          </button>
+        </div>
+
+        <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
+        <div id="homePushFeedback" class="home-push-feedback hidden"></div>
       </div>
 
-      <div class="home-push-mock-inputs">
-        <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
-        <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
-      </div>
+      <!-- 2. LINE 個人通知パネル -->
+      <div id="homeMockPanelLine" class="hidden">
+        <p class="home-push-mock-desc">
+          公式LINEアカウントを友だち追加し、発行した連携コードをトークへ送信すると 1対1 トークへ通知をテスト送信できます。
+        </p>
 
-      <div class="home-push-mock-actions">
-        <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
-          <span class="material-symbols-outlined">notifications</span>
-          <span id="btnHomePushEnableLabel">通知を有効化</span>
-        </button>
-        <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
-          <span class="material-symbols-outlined">send</span>
-          <span>テスト通知を送信</span>
-        </button>
-        <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
-          解除
-        </button>
-      </div>
+        <div id="homeLineCodeBox" class="home-line-code-box hidden">
+          <div class="home-line-code-main">
+            <span class="home-line-code-label">連携コード（15分間有効）:</span>
+            <code id="homeLineCodeText" class="home-line-code-value">FCB-0000</code>
+          </div>
+          <button type="button" class="btn-outline home-line-copy-btn" onclick="handleHomeCopyLineCode()">
+            <span class="material-symbols-outlined">content_copy</span>
+            <span>コピー</span>
+          </button>
+        </div>
 
-      <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
-      <div id="homePushFeedback" class="home-push-feedback hidden"></div>
+        <div class="home-push-mock-inputs">
+          <input type="text" id="homeLineTestTitle" class="home-push-input" value="FC Benten LINE テスト通知" placeholder="通知タイトル" maxlength="60">
+          <input type="text" id="homeLineTestBody" class="home-push-input" value="個人トーク宛てのテスト通知です。" placeholder="通知本文" maxlength="200">
+        </div>
+
+        <div class="home-push-mock-actions">
+          <button type="button" id="btnHomeLineIssueCode" class="btn-outline home-push-btn" onclick="handleHomeIssueLineCode()">
+            <span class="material-symbols-outlined">key</span>
+            <span>連携コードを発行</span>
+          </button>
+          <button type="button" id="btnHomeLineRefresh" class="btn-outline home-push-btn" onclick="refreshHomeLineMockState(true)">
+            <span class="material-symbols-outlined">refresh</span>
+            <span>連携状態を確認</span>
+          </button>
+          <button type="button" id="btnHomeLineTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestLinePush()">
+            <span class="material-symbols-outlined">send</span>
+            <span>LINE テスト送信</span>
+          </button>
+          <button type="button" id="btnHomeLineUnlink" class="home-push-reset-btn hidden" onclick="handleHomeUnlinkLine()">
+            連携解除
+          </button>
+        </div>
+
+        <div id="homeLineUserIdInfo" class="home-push-endpoint-info hidden"></div>
+        <div id="homeLineFeedback" class="home-push-feedback hidden"></div>
+      </div>
     </div>
 
     <!-- =========================================

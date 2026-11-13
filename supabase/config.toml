@@ -3,3 +3,8 @@ project_id = "pkufnywvnuicragvobaq"
 [functions.send-web-push]
 verify_jwt = false
 
+[functions.line-webhook]
+verify_jwt = false
+
+[functions.send-line-push]
+verify_jwt = false

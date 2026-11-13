@@ -2506,8 +2506,8 @@
       return { success: true };
     }
 
-    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
-      const endpoint = `${SUPABASE_URL}/functions/v1/send-web-push`;
+    async function invokeEdgeFunction(fnName, bodyPayload) {
+      const endpoint = `${SUPABASE_URL}/functions/v1/${fnName}`;
       let res;
       try {
         res = await fetch(endpoint, {
@@ -2517,18 +2517,10 @@
             'apikey': SUPABASE_ANON_KEY,
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           },
-          body: JSON.stringify({
-            subscription,
-            memberId,
-            targetAll,
-            title: title || 'FC Benten テスト通知',
-            body: body || 'Web Push 通知の受信テスト成功です！',
-            url: url || './',
-            tag: tag || 'fcb-webpush-test'
-          })
+          body: JSON.stringify(bodyPayload || {})
         });
       } catch (networkErr) {
-        throw new Error('Edge Function へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。');
+        throw new Error(`Edge Function (${fnName}) へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。`);
       }
 
       let data = null;
@@ -2547,6 +2539,18 @@
       return data;
     }
 
+    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
+      return await invokeEdgeFunction('send-web-push', {
+        subscription,
+        memberId,
+        targetAll,
+        title: title || 'FC Benten テスト通知',
+        body: body || 'Web Push 通知の受信テスト成功です！',
+        url: url || './',
+        tag: tag || 'fcb-webpush-test'
+      });
+    }
+
     window.SupabaseWebPush = {
       VAPID_PUBLIC_KEY,
       getEnvironmentStatus,
@@ -2554,6 +2558,112 @@
       subscribeAndSave,
       unsubscribeAndClear,
       sendTestPush
+    };
+
+    // =========================================
+    // 7. LINE 個人通知ヘルパー (連携コード発行 & Edge Function呼び出し)
+    // =========================================
+    function applyMemberFilter(query, user) {
+      const u = user || window.currentUser || {};
+      const memberId = (u.id || u.memberId || '').trim();
+      const targetEmail = (u.email || '').trim().toLowerCase();
+      const targetName = (u.name || '').trim();
+
+      if (memberId) return { query: query.eq('member_id', memberId), memberId };
+      if (targetEmail) return { query: query.eq('email', targetEmail), memberId: null };
+      if (targetName) return { query: query.eq('name', targetName), memberId: null };
+      return { query: null, memberId: null };
+    }
+
+    async function getLineLinkStatus(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const { query } = applyMemberFilter(sb.from('members').select('member_id, name, line_user_id, notify_settings'), user);
+      if (!query) throw new Error('ログイン中のメンバーを特定できません。');
+
+      const { data, error } = await query.limit(1);
+      if (error) throw error;
+      const row = (data && data[0]) || null;
+      if (!row) throw new Error('メンバー情報が見つかりません。');
+
+      let parsedSettings = {};
+      if (row.notify_settings) {
+        try { parsedSettings = JSON.parse(row.notify_settings); } catch (e) {}
+      }
+
+      const hasValidCode = !!(parsedSettings.linkCode && Number(parsedSettings.linkCodeExpiresAt || 0) > Date.now());
+      return {
+        memberId: row.member_id,
+        name: row.name,
+        linked: !!(row.line_user_id && String(row.line_user_id).trim()),
+        lineUserId: row.line_user_id || '',
+        linkCode: hasValidCode ? parsedSettings.linkCode : '',
+        linkCodeExpiresAt: hasValidCode ? Number(parsedSettings.linkCodeExpiresAt) : 0,
+        settings: parsedSettings
+      };
+    }
+
+    async function issueLinkCode(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const status = await getLineLinkStatus(user);
+      const rand4 = Math.floor(1000 + Math.random() * 9000);
+      const code = `FCB-${rand4}`;
+      const expiresAt = Date.now() + 15 * 60 * 1000;
+
+      const nextSettings = {
+        ...(status.settings || {}),
+        linkCode: code,
+        linkCodeExpiresAt: expiresAt
+      };
+
+      const { error } = await sb
+        .from('members')
+        .update({
+          notify_settings: JSON.stringify(nextSettings),
+          updated_at: new Date().toISOString()
+        })
+        .eq('member_id', status.memberId);
+
+      if (error) throw error;
+      return { memberId: status.memberId, code, expiresAt };
+    }
+
+    async function unlinkLine(user) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const status = await getLineLinkStatus(user);
+      const { error } = await sb
+        .from('members')
+        .update({
+          line_user_id: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('member_id', status.memberId);
+
+      if (error) throw error;
+      return { success: true };
+    }
+
+    async function sendTestLinePush({ memberId, lineUserId, title, body, appUrl }) {
+      const u = window.currentUser || {};
+      const resolvedMemberId = memberId || (u.id || u.memberId || '').trim() || undefined;
+      const resolvedUrl = appUrl || (window.location && /^https:/i.test(window.location.href) ? window.location.href.split('#')[0] : undefined);
+
+      return await invokeEdgeFunction('send-line-push', {
+        memberId: lineUserId ? undefined : resolvedMemberId,
+        lineUserId,
+        title: title || 'FC Benten LINE テスト通知',
+        body: body || '個人トーク宛てのテスト通知です。',
+        appUrl: resolvedUrl
+      });
+    }
+
+    window.SupabaseLinePush = {
+      getLineLinkStatus,
+      issueLinkCode,
+      unlinkLine,
+      sendTestLinePush
     };
 
   })();
