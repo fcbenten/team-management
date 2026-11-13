@@ -531,19 +531,23 @@ body {
 .btn-avatar-delete {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  gap: 4px;
+  padding: 6px 8px;
+  font-size: 0.82rem;
+  font-weight: 500;
   color: #dc2626;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
+  background: none;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
 .btn-avatar-delete:hover {
-  background: #fee2e2;
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .avatar-upload-status {
@@ -4668,34 +4672,6 @@ html.no-scroll {
   flex: 1 1 auto;
 }
 
-.player-meta-sub {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.player-tap-cue {
-  display: inline-flex;
-  align-items: center;
-  gap: 1px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #94a3b8;
-  line-height: 1;
-  transition: transform 0.15s ease, color 0.15s ease;
-}
-
-.player-tap-cue .material-symbols-outlined {
-  font-size: 14px;
-  line-height: 1;
-}
-
-.stats-table tbody tr:hover .player-tap-cue {
-  color: var(--primary);
-  transform: translateX(2px);
-}
-
 .player-pos-badge {
   display: inline-block;
   padding: 1px 5px;
@@ -4967,13 +4943,19 @@ th.sort-active .sort-icon {
     flex-shrink: 0 !important;
   }
 
-  .stats-table tbody tr:active {
+  .stats-table tbody tr:active td {
     background-color: #eff6ff !important;
+    border-top-color: #93c5fd !important;
+    border-bottom-color: #93c5fd !important;
   }
 
   .card-box.stats-table-card .table-responsive {
     overflow: visible !important;
     margin: 0 !important;
+    background: #f1f5f9 !important;
+    padding: 0 6px 8px !important;
+    border-bottom-left-radius: var(--radius, 4px);
+    border-bottom-right-radius: var(--radius, 4px);
   }
 
   /* 一覧テーブルヘッダーのスクロール固定化（フィルターの真下に吸着：上6px + カード60px + 下6px = 72px） */
@@ -5017,34 +4999,53 @@ th.sort-active .sort-icon {
     display: none !important;
   }
 
-  /* テーブル全体を固定幅にして均等配置を保証（separateでsticky境界線を安定化） */
+  /* スマホ時は各行を独立したカード風行として表示し、タップ可能性を直感的に伝える */
   .stats-table {
     table-layout: fixed !important;
     width: 100% !important;
     border-collapse: separate !important;
-    border-spacing: 0 !important;
+    border-spacing: 0 6px !important;
   }
 
-  /* NO.列（視認性を保ちつつコンパクト固定幅化＆中央配置） */
+  .stats-table tbody tr td {
+    background-color: #ffffff !important;
+    border-top: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    vertical-align: middle !important;
+  }
+
+  .stats-table tbody tr td:first-child {
+    border-left: 1px solid #e2e8f0 !important;
+    border-top-left-radius: 8px !important;
+    border-bottom-left-radius: 8px !important;
+  }
+
+  .stats-table tbody tr td:last-child {
+    border-right: 1px solid #e2e8f0 !important;
+    border-top-right-radius: 8px !important;
+    border-bottom-right-radius: 8px !important;
+  }
+
+  /* NO.列（コンパクト固定幅＆中央配置） */
   .stats-table th.th-number {
-    width: 38px !important;
-    max-width: 38px !important;
+    width: 34px !important;
+    max-width: 34px !important;
     text-align: center !important;
     padding: 10px 1px !important;
     font-size: 0.82rem !important;
     font-weight: 600 !important;
   }
   .stats-table td.col-number {
-    width: 38px !important;
-    max-width: 38px !important;
+    width: 34px !important;
+    max-width: 34px !important;
     text-align: center !important;
-    padding: 6px 1px !important;
-    font-size: 0.86rem !important;
+    padding: 7px 1px !important;
+    font-size: 0.84rem !important;
     font-weight: 600 !important;
     color: var(--text-heading) !important;
   }
 
-  /* 名前列：アバター＋名前＋バッジを美しく配置 */
+  /* 名前列：長い名前も見切れずに折り返して全表示＋アバターアクセント */
   .stats-table th.th-name {
     width: auto !important;
     text-align: left !important;
@@ -5055,51 +5056,43 @@ th.sort-active .sort-icon {
   .stats-table td.col-name-cell {
     width: auto !important;
     text-align: left !important;
-    padding: 6px 3px 6px 6px !important;
-    overflow: hidden;
+    padding: 7px 4px 7px 6px !important;
+    overflow: visible !important;
   }
 
   .player-cell-wrap {
     gap: 6px !important;
+    align-items: center !important;
   }
 
   .player-avatar-icon {
     width: 26px !important;
     height: 26px !important;
     border-radius: 50% !important;
+    background: #eff6ff !important;
+    border: 1px solid #bfdbfe !important;
   }
 
   .player-avatar-icon .material-symbols-outlined {
     font-size: 0.95rem !important;
+    color: var(--primary) !important;
   }
 
   .player-name-meta {
     flex-direction: column !important;
     align-items: flex-start !important;
-    gap: 2px !important;
-  }
-
-  .player-meta-sub {
-    gap: 4px !important;
-  }
-
-  .player-tap-cue {
-    font-size: 0.64rem !important;
-    color: #64748b !important;
-  }
-
-  .player-tap-cue .material-symbols-outlined {
-    font-size: 13px !important;
+    gap: 3px !important;
+    min-width: 0 !important;
   }
 
   .player-name,
   .player-link {
-    font-size: 0.88rem !important;
+    font-size: 0.85rem !important;
     font-weight: 600 !important;
-    white-space: nowrap !important;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.25 !important;
   }
 
   .player-pos-badge {
@@ -6260,36 +6253,40 @@ th.sort-active .sort-icon {
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 12px 14px 14px !important;
-    gap: 8px !important;
+    padding: 10px 10px 12px !important;
+    gap: 6px !important;
     box-sizing: border-box !important;
   }
-  .footer-right-btns {
-    display: flex !important;
+  .event-modal-footer .footer-right-btns {
+    display: inline-flex !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    gap: 8px !important;
-    flex: 1 !important;
+    gap: 6px !important;
+    flex: 0 0 auto !important;
     justify-content: flex-end !important;
+    margin-left: auto !important;
   }
-  .btn-delete-action {
-    padding: 8px 10px !important;
-    font-size: 0.82rem !important;
+  .event-modal-footer .btn-delete-action {
+    padding: 6px 2px !important;
+    font-size: 0.76rem !important;
+    gap: 2px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
-  .btn-cancel-action {
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
+  .event-modal-footer .btn-delete-action .material-symbols-outlined {
+    font-size: 16px !important;
+  }
+  .event-modal-footer .btn-cancel-action {
+    padding: 6px 9px !important;
+    font-size: 0.76rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
-  .btn-submit-action {
-    padding: 8px 12px !important;
-    font-size: 0.85rem !important;
+  .event-modal-footer .btn-submit-action {
+    padding: 6px 10px !important;
+    font-size: 0.76rem !important;
     white-space: nowrap !important;
-    flex: 1 !important;
-    max-width: 220px !important;
+    flex: 0 0 auto !important;
     text-align: center !important;
   }
 
@@ -6509,14 +6506,17 @@ th.sort-active .sort-icon {
 }
 
 .btn-event-delete {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #ef4444;
+  background: transparent;
+  border-color: transparent;
+  color: #dc2626;
+  font-weight: 500;
 }
 
 .btn-event-delete:hover {
-  background: #ef4444;
-  color: #ffffff;
+  background: #fef2f2;
+  border-color: transparent;
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .btn-danger-outline {
@@ -6884,20 +6884,31 @@ th.sort-active .sort-icon {
 }
 
 .btn-delete-action {
-  background: transparent;
-  border: 1px solid #fca5a5;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
   color: #dc2626;
-  font-weight: 700;
-  font-size: 0.85rem;
-  padding: 8px 14px;
+  font-weight: 500;
+  font-size: 0.82rem;
+  padding: 6px 4px;
   border-radius: 4px;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
+.btn-delete-action .material-symbols-outlined {
+  font-size: 18px;
+  line-height: 1;
+}
+
 .btn-delete-action:hover {
-  background: #fee2e2;
-  border-color: #ef4444;
+  background: #fef2f2;
+  color: #b91c1c;
+  text-decoration: underline;
 }
 
 .btn-cancel-action {
@@ -8885,6 +8896,11 @@ a.btn-member-modal-save:hover {
   transition: all 0.15s ease;
 }
 
+.btn-member-danger-link .material-symbols-outlined {
+  font-size: 18px !important;
+  line-height: 1;
+}
+
 .btn-member-danger-link:hover {
   background: #fef2f2;
   color: #b91c1c;
@@ -8953,48 +8969,53 @@ a.btn-member-modal-save:hover {
   color: #94a3b8 !important;
 }
 
-/* モーダルフッター スマホ用レスポンシブ配置（2行折り返し防止・バランス最適化） */
+/* モーダルフッター スマホ用レスポンシブ配置（1列固定・2行折り返し防止） */
 @media (max-width: 639px) {
   .member-modal-footer {
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    padding: 12px 16px 14px !important;
-  }
-
-  .member-modal-footer-right {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    width: 100% !important;
-    margin-left: 0 !important;
-    gap: 10px !important;
-  }
-
-  .member-modal-footer-right .btn-member-modal-cancel,
-  .member-modal-footer-right .btn-member-modal-save {
-    width: 100% !important;
-    min-height: 40px !important;
-    padding: 8px 12px !important;
-    box-sizing: border-box !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 6px !important;
+    padding: 12px 14px 14px !important;
   }
 
   .member-modal-footer-left {
-    width: 100% !important;
-    justify-content: center !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
-  .member-modal-footer-left:has(> .hidden:only-child) {
-    display: none !important;
+  .member-modal-footer-right {
+    display: inline-flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-cancel {
+    padding: 7px 11px !important;
+    font-size: 0.8rem !important;
+  }
+
+  .member-modal-footer-right .btn-member-modal-save {
+    padding: 7px 14px !important;
+    font-size: 0.8rem !important;
   }
 
   .btn-member-danger-link {
-    padding: 6px 12px !important;
-    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 6px 2px !important;
+    gap: 2px !important;
+  }
+
+  .btn-member-danger-link .material-symbols-outlined {
+    font-size: 16px !important;
   }
 
   .delete-modal-footer {
-    padding: 12px 16px 14px !important;
-    gap: 10px !important;
+    padding: 12px 14px 14px !important;
+    gap: 8px !important;
   }
 }
 
@@ -9923,39 +9944,43 @@ a.btn-member-modal-save:hover {
   }
 
   .equipment-modal-footer {
-    padding: 12px 16px 14px !important;
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-    gap: 10px !important;
+    padding: 12px 14px 14px !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
 
   .equipment-footer-right {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    width: 100% !important;
-    margin-left: 0 !important;
-    gap: 10px !important;
+    display: inline-flex !important;
+    width: auto !important;
+    margin-left: auto !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
   }
 
   .equipment-footer-right > button {
-    width: 100% !important;
-    min-height: 40px !important;
+    width: auto !important;
+    padding: 7px 12px !important;
+    font-size: 0.8rem !important;
     white-space: nowrap !important;
   }
 
   .equipment-modal-footer-left {
-    width: 100% !important;
-    justify-content: center !important;
-  }
-
-  .equipment-modal-footer-left:has(> .hidden:only-child) {
-    display: none !important;
+    width: auto !important;
+    flex-shrink: 0 !important;
   }
 
   .btn-equipment-danger-link {
     white-space: nowrap !important;
-    padding: 6px 12px !important;
-    justify-content: center !important;
+    font-size: 0.76rem !important;
+    padding: 6px 2px !important;
+    gap: 2px !important;
+  }
+
+  .btn-equipment-danger-link .material-symbols-outlined {
+    font-size: 16px !important;
   }
 }
 
@@ -10609,15 +10634,19 @@ a.btn-member-modal-save:hover {
   color: #d97706 !important;
 }
 
-/* 削除ボタン（赤枠） */
+/* 削除ボタン（枠なし・危険操作リンク統一デザイン） */
 .bdm-action-btn.btn-delete-action {
-  background: #ffffff !important;
-  border: 1px solid #fca5a5 !important;
+  background: transparent !important;
+  border: none !important;
   color: #dc2626 !important;
+  font-weight: 500 !important;
+  padding: 0 8px !important;
+  box-shadow: none !important;
 }
 .bdm-action-btn.btn-delete-action:hover {
-  background: #fee2e2 !important;
-  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  text-decoration: underline !important;
 }
 .bdm-action-btn.btn-delete-action .material-symbols-outlined {
   color: #dc2626 !important;
@@ -12494,10 +12523,7 @@ textarea.comment-textarea:active {
         <span class="player-avatar-icon"><span class="material-symbols-outlined">person</span></span>
         <div class="player-name-meta">
           <span class="player-name"></span>
-          <span class="player-meta-sub">
-            <span class="player-pos-badge"></span>
-            <span class="player-tap-cue" aria-hidden="true">詳細<span class="material-symbols-outlined">chevron_right</span></span>
-          </span>
+          <span class="player-pos-badge"></span>
         </div>
       </div>
     </td>
@@ -12851,7 +12877,9 @@ textarea.comment-textarea:active {
 
         <!-- 操作フッター（削除・キャンセル・保存） -->
         <div class="event-modal-footer">
-          <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">削除</button>
+          <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">
+            <span class="material-symbols-outlined">delete</span><span>削除</span>
+          </button>
           <div class="footer-right-btns">
             <button type="button" class="btn-cancel-action" onclick="closeEventEditModal(event)">キャンセル</button>
             <button type="button" id="eeSubmitBtn" class="btn-submit-action" onclick="submitEventEditForm(event)">カレンダーに保存</button>
