@@ -1022,32 +1022,33 @@ def run_generate():
     # ==============================================================================
     # 保存処理
     # ==============================================================================
-    output_docs = r"d:\app\TeamManagement\docs\FC_Benten_チーム管理システム_画面機能仕様書.xlsx"
-    output_gdrive = r"H:\マイドライブ\app\TeamManagement\FC_Benten_チーム管理システム_画面機能仕様書.xlsx"
-
-    print(f"Saving to local docs: {output_docs}...")
-    try:
-        wb.save(output_docs)
-        print("Local save OK.")
-    except PermissionError:
-        print(f"WARNING: {output_docs} is currently locked (opened in Excel).")
-        alt_docs = r"d:\app\TeamManagement\docs\FC_Benten_チーム管理システム_画面機能仕様書_最新版.xlsx"
+    def save_with_cleanup(primary_path, alt_path, label):
+        print(f"Saving to {label}: {primary_path}...")
         try:
-            wb.save(alt_docs)
-            print(f"Saved to alternative local path: {alt_docs}")
+            wb.save(primary_path)
+            print(f"{label} save OK.")
+            if os.path.exists(alt_path):
+                try:
+                    os.remove(alt_path)
+                    print(f"Removed stale fallback file: {alt_path}")
+                except OSError:
+                    pass
         except Exception as e:
-            pass
+            print(f"WARNING: Could not overwrite {label} file (maybe opened in Excel): {e}")
+            try:
+                wb.save(alt_path)
+                print(f"Saved to alternative path: {alt_path}")
+            except Exception:
+                pass
+
+    output_docs = r"d:\app\TeamManagement\docs\FC_Benten_チーム管理システム_画面機能仕様書.xlsx"
+    alt_docs = r"d:\app\TeamManagement\docs\FC_Benten_チーム管理システム_画面機能仕様書_最新版.xlsx"
+    save_with_cleanup(output_docs, alt_docs, "local docs")
 
     if os.path.exists(r"H:\マイドライブ\app\TeamManagement"):
-        print(f"Saving to Google Drive: {output_gdrive}...")
-        try:
-            wb.save(output_gdrive)
-            print("Google Drive save OK.")
-        except Exception as e:
-            print(f"WARNING: Could not overwrite Google Drive file (maybe opened in Excel): {e}")
-            alt_gdrive = r"H:\マイドライブ\app\TeamManagement\FC_Benten_チーム管理システム_画面機能仕様書_最新版.xlsx"
-            wb.save(alt_gdrive)
-            print(f"Saved to alternative path: {alt_gdrive}")
+        output_gdrive = r"H:\マイドライブ\app\TeamManagement\FC_Benten_チーム管理システム_画面機能仕様書.xlsx"
+        alt_gdrive = r"H:\マイドライブ\app\TeamManagement\FC_Benten_チーム管理システム_画面機能仕様書_最新版.xlsx"
+        save_with_cleanup(output_gdrive, alt_gdrive, "Google Drive")
     else:
         print("Google Drive path not found.")
 
