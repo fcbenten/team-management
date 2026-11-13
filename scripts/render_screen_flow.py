@@ -101,12 +101,19 @@ def generate_flow_html(screen_info):
 
         # 4. ストレージ / 遷移先ノード
         storage_type = f.get("storage_type", "db")
+        target_badge = f.get("target_badge", "遷移先画面 / モーダル")
+        target_badge_style = 'background:#EDE9FE; color:#6D28D9; border-color:#DDD6FE;'
+        if "カード切替" in target_badge or "画面内" in target_badge:
+            target_badge_style = 'background:#FEF3C7; color:#B45309; border-color:#FDE68A;'
+        elif "外部" in target_badge or "リダイレクト" in target_badge:
+            target_badge_style = 'background:#E0F2FE; color:#0369A1; border-color:#BAE6FD;'
+
         if storage_type == "navigate":
             # 画面遷移専用ノード
             storage_html = f"""
             <div class="node-box node-target-screen">
               <div class="target-screen-header">
-                <span class="target-screen-badge">遷移先画面 / モーダル</span>
+                <span class="target-screen-badge" style="{target_badge_style}">{target_badge}</span>
               </div>
               <div class="target-screen-body">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2.2" style="flex-shrink:0;">
@@ -201,6 +208,9 @@ def generate_flow_html(screen_info):
             </div>
             """
 
+        # 画面ノードのカード表示
+        sub_card_html = f'<div style="font-size: 10px; color: #2563EB; font-weight: 800; background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 4px; padding: 1px 4px; margin-top: 3px; display: inline-block;">{f["screen_sub_card"]}</div>' if f.get("screen_sub_card") else ''
+
         flows_html += f"""
         <div class="flow-row">
           <div class="flow-header-row">
@@ -216,6 +226,7 @@ def generate_flow_html(screen_info):
             <div class="node-box node-screen">
               <div class="node-header">
                 <div class="screen-title-text">{screen_info['screen_id']} {screen_info['screen_name']}</div>
+                {sub_card_html}
               </div>
               <div class="screen-display-icon">
                 <svg width="52" height="40" viewBox="0 0 64 50" fill="none" xmlns="http://www.w3.org/2000/svg">
