@@ -364,7 +364,7 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
     if flow_image_path and os.path.exists(flow_image_path):
         curr_r += 1  # セクション間の空白行
         merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
-                        value="4. データフロー図",
+                        value="4. データ連携・画面遷移フロー図（初期表示・データ照合/更新・画面遷移）",
                         font=f_sec_h1, fill=fill_navy, alignment=Alignment(horizontal="left", vertical="center", indent=1))
         ws.row_dimensions[curr_r].height = 24
         curr_r += 1
