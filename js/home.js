@@ -27,6 +27,7 @@ function initHomeView(data) {
   renderHomeSeasonStats(data);
   renderHomeNextEvent(data);
   renderHomeRecentMatch(data);
+  refreshHomePushMockState();
 }
 
 /**
@@ -635,3 +636,190 @@ window.renderHomeSeasonStats = renderHomeSeasonStats;
 window.renderHomeNextEvent = renderHomeNextEvent;
 window.renderHomeRecentMatch = renderHomeRecentMatch;
 window.renderHomePlayerHeader = function() {};
+
+// =========================================
+// Web Push 通知テスト（モックUI制御）
+// =========================================
+function setHomePushFeedback(message, type) {
+  const el = document.getElementById('homePushFeedback');
+  if (!el) return;
+  if (!message) {
+    el.textContent = '';
+    el.className = 'home-push-feedback hidden';
+    return;
+  }
+  el.textContent = message;
+  el.className = 'home-push-feedback ' + (type === 'success' ? 'is-success' : type === 'error' ? 'is-error' : 'is-info');
+}
+
+async function refreshHomePushMockState() {
+  const badgeEl = document.getElementById('homePushStatusBadge');
+  const iosGuideEl = document.getElementById('homePushIosGuide');
+  const enableBtn = document.getElementById('btnHomePushEnable');
+  const enableLabel = document.getElementById('btnHomePushEnableLabel');
+  const testBtn = document.getElementById('btnHomePushTest');
+  const disableBtn = document.getElementById('btnHomePushDisable');
+  const endpointEl = document.getElementById('homePushEndpointInfo');
+
+  if (!badgeEl || !window.SupabaseWebPush) return;
+
+  const env = window.SupabaseWebPush.getEnvironmentStatus();
+  if (iosGuideEl) {
+    iosGuideEl.classList.toggle('hidden', !env.needsIOSHomeScreen);
+  }
+
+  if (env.needsIOSHomeScreen) {
+    badgeEl.textContent = 'PWA起動が必要';
+    badgeEl.className = 'home-push-status-badge status-warn';
+    if (enableLabel) enableLabel.textContent = '通知を有効化';
+    if (disableBtn) disableBtn.classList.add('hidden');
+    if (testBtn) testBtn.disabled = false;
+    if (endpointEl) endpointEl.classList.add('hidden');
+    return;
+  }
+
+  if (!env.supported) {
+    badgeEl.textContent = '非対応環境';
+    badgeEl.className = 'home-push-status-badge status-error';
+    if (enableBtn) enableBtn.disabled = true;
+    if (testBtn) testBtn.disabled = true;
+    if (disableBtn) disableBtn.classList.add('hidden');
+    if (endpointEl) endpointEl.classList.add('hidden');
+    return;
+  }
+
+  let sub = null;
+  try {
+    sub = await window.SupabaseWebPush.getSubscription();
+  } catch (e) {
+    sub = null;
+  }
+
+  if (env.permission === 'denied') {
+    badgeEl.textContent = 'ブロック中';
+    badgeEl.className = 'home-push-status-badge status-error';
+  } else if (sub) {
+    badgeEl.textContent = '購読済み';
+    badgeEl.className = 'home-push-status-badge status-active';
+  } else if (env.permission === 'granted') {
+    badgeEl.textContent = '許可済み（未購読）';
+    badgeEl.className = 'home-push-status-badge status-warn';
+  } else {
+    badgeEl.textContent = '未有効化';
+    badgeEl.className = 'home-push-status-badge status-idle';
+  }
+
+  if (enableLabel) {
+    enableLabel.textContent = sub ? '購読情報を更新' : '通知を有効化';
+  }
+  if (disableBtn) {
+    disableBtn.classList.toggle('hidden', !sub);
+  }
+  if (endpointEl) {
+    if (sub && sub.endpoint) {
+      const ep = sub.endpoint;
+      const preview = ep.length > 68 ? ep.slice(0, 42) + '...' + ep.slice(-20) : ep;
+      endpointEl.textContent = `登録先 Endpoint: ${preview}`;
+      endpointEl.classList.remove('hidden');
+    } else {
+      endpointEl.textContent = '';
+      endpointEl.classList.add('hidden');
+    }
+  }
+}
+
+async function handleHomeEnablePush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushEnable');
+  const label = document.getElementById('btnHomePushEnableLabel');
+  const prevText = label ? label.textContent : '通知を有効化';
+
+  if (btn) btn.disabled = true;
+  if (label) label.textContent = '登録中...';
+  setHomePushFeedback('通知許可と Push 購読を登録しています...', 'info');
+
+  try {
+    const res = await window.SupabaseWebPush.subscribeAndSave(window.currentUser);
+    await refreshHomePushMockState();
+    if (res.savedToDb) {
+      setHomePushFeedback('この端末の Web Push 購読を有効化し、Supabase へ保存しました。', 'success');
+    } else if (res.dbError) {
+      setHomePushFeedback(`端末の購読は完了しました（DB保存警告: ${res.dbError}）。テスト送信は利用できます。`, 'success');
+    } else {
+      setHomePushFeedback('この端末の Web Push 購読を有効化しました。', 'success');
+    }
+  } catch (err) {
+    await refreshHomePushMockState();
+    setHomePushFeedback(err && err.message ? err.message : '通知の有効化に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomePushMockState();
+    if (label && !label.textContent) label.textContent = prevText;
+  }
+}
+
+async function handleHomeSendTestPush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushTest');
+  const titleEl = document.getElementById('homePushTestTitle');
+  const bodyEl = document.getElementById('homePushTestBody');
+  const prevHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+  }
+
+  try {
+    let sub = await window.SupabaseWebPush.getSubscription();
+    if (!sub) {
+      setHomePushFeedback('先にこの端末で通知を有効化します...', 'info');
+      await window.SupabaseWebPush.subscribeAndSave(window.currentUser);
+      sub = await window.SupabaseWebPush.getSubscription();
+    }
+
+    if (!sub) {
+      throw new Error('Push 購読情報を取得できませんでした。先に「通知を有効化」を実行してください。');
+    }
+
+    setHomePushFeedback('Supabase Edge Function 経由でテスト通知を送信しています...', 'info');
+    const title = (titleEl && titleEl.value.trim()) || 'FC Benten テスト通知';
+    const body = (bodyEl && bodyEl.value.trim()) || 'ホーム画面からの Web Push 受信テストです。';
+
+    const result = await window.SupabaseWebPush.sendTestPush({
+      subscription: sub.toJSON(),
+      title,
+      body
+    });
+    setHomePushFeedback(`テスト通知を送信しました（送信成功: ${result.sentCount || 1}件）。OSの通知バナーをご確認ください。`, 'success');
+  } catch (err) {
+    setHomePushFeedback(err && err.message ? err.message : 'テスト通知の送信に失敗しました。', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = prevHtml;
+    }
+    await refreshHomePushMockState();
+  }
+}
+
+async function handleHomeDisablePush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushDisable');
+  if (btn) btn.disabled = true;
+
+  try {
+    await window.SupabaseWebPush.unsubscribeAndClear(window.currentUser);
+    setHomePushFeedback('この端末の Web Push 購読を解除しました。', 'info');
+  } catch (err) {
+    setHomePushFeedback(err && err.message ? err.message : '購読解除に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomePushMockState();
+  }
+}
+
+window.refreshHomePushMockState = refreshHomePushMockState;
+window.handleHomeEnablePush = handleHomeEnablePush;
+window.handleHomeSendTestPush = handleHomeSendTestPush;
+window.handleHomeDisablePush = handleHomeDisablePush;

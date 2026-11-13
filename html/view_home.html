@@ -23,6 +23,50 @@
     <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
 
     <!-- =========================================
+         Web Push 通知テスト（モックUI）
+         ========================================= -->
+    <div class="card-box home-section-card home-push-mock-card" id="homePushMockCard">
+      <div class="home-section-header home-push-mock-header">
+        <div class="home-section-title">
+          <span class="material-symbols-outlined text-muted">notifications_active</span>
+          <span>Web Push 通知テスト</span>
+          <span class="home-push-mock-tag">モック</span>
+        </div>
+        <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+      </div>
+
+      <p class="home-push-mock-desc" id="homePushMockDesc">
+        この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
+      </p>
+
+      <div id="homePushIosGuide" class="home-push-ios-guide hidden">
+        iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+      </div>
+
+      <div class="home-push-mock-inputs">
+        <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
+        <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
+      </div>
+
+      <div class="home-push-mock-actions">
+        <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
+          <span class="material-symbols-outlined">notifications</span>
+          <span id="btnHomePushEnableLabel">通知を有効化</span>
+        </button>
+        <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
+          <span class="material-symbols-outlined">send</span>
+          <span>テスト通知を送信</span>
+        </button>
+        <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
+          解除
+        </button>
+      </div>
+
+      <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
+      <div id="homePushFeedback" class="home-push-feedback hidden"></div>
+    </div>
+
+    <!-- =========================================
          2. ホーム最上段: チーム現在年度の成績（KPIダッシュボード）
          ========================================= -->
     <div class="card-box home-section-card home-stats-hero-card" id="homeSeasonStatsCard">

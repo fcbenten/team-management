@@ -1148,6 +1148,38 @@
       },
 
       /**
+       * Push購読情報のみを members.push_subscription に保存（既存設定を保持）
+       */
+      async savePushSubscription(subscriptionJson, userName, userEmail) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const u = window.currentUser || {};
+        const memberId = (u.id || u.memberId || '').trim();
+        const targetEmail = (userEmail || u.email || '').trim().toLowerCase();
+        const targetName = (userName || u.name || '').trim();
+
+        let query = sb.from('members').update({
+          push_subscription: subscriptionJson || null,
+          updated_at: new Date().toISOString()
+        });
+
+        if (memberId) {
+          query = query.eq('member_id', memberId);
+        } else if (targetEmail) {
+          query = query.eq('email', targetEmail);
+        } else if (targetName) {
+          query = query.eq('name', targetName);
+        } else {
+          return { success: false, skipped: true, reason: 'ログイン中のメンバーを特定できません。' };
+        }
+
+        const { error } = await query;
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
        * 備品保管者の引き継ぎ更新
        */
       async updateItemHolder(itemId, newMemberId) {
@@ -2320,5 +2352,208 @@
     window.addEventListener('focus', () => {
       refreshOnResume();
     });
+
+    // =========================================
+    // 6. Web Push ヘルパー (PWA Push購読 & Supabase Edge Function呼び出し)
+    // =========================================
+    const VAPID_PUBLIC_KEY = 'BNjJdZwtSl-l4FKvrTXeTc5TGv_ceWN_WP56KX3pb_hGJUOzm0SN1rYSifIurMZFueJngr0KKJbHQPWdROn4ews';
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    function uint8ArraysEqual(a, b) {
+      if (!a || !b || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    }
+
+    function getEnvironmentStatus() {
+      const notificationSupported = typeof Notification !== 'undefined';
+      const swSupported = 'serviceWorker' in navigator;
+      const pushSupported = 'PushManager' in window;
+      const permission = notificationSupported ? Notification.permission : 'unsupported';
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+
+      return {
+        supported: notificationSupported && swSupported && pushSupported,
+        notificationSupported,
+        swSupported,
+        pushSupported,
+        permission,
+        isIOS,
+        isStandalone,
+        needsIOSHomeScreen: isIOS && !isStandalone
+      };
+    }
+
+    async function ensureServiceWorkerRegistration() {
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('このブラウザは Service Worker に対応していません。');
+      }
+      let reg = await navigator.serviceWorker.getRegistration('./') || await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        try {
+          reg = await navigator.serviceWorker.register('./sw.js');
+        } catch (e) {
+          throw new Error('Service Worker (sw.js) が見つかりません。PWA配信URL（GitHub Pages等）からアクセスしてください。');
+        }
+      }
+      if (reg && reg.active) {
+        return reg;
+      }
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Service Worker の起動がタイムアウトしました。ページを再読み込みしてください。')), 5000);
+      });
+      return await Promise.race([navigator.serviceWorker.ready, timeoutPromise]);
+    }
+
+    async function getSubscription() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+      const reg = await navigator.serviceWorker.getRegistration('./') || await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.pushManager) return null;
+      return await reg.pushManager.getSubscription();
+    }
+
+    async function subscribeAndSave(user) {
+      const env = getEnvironmentStatus();
+      if (env.needsIOSHomeScreen) {
+        throw new Error('iPhone/iPadでは、Safariの共有メニューから「ホーム画面に追加」したPWAから起動すると通知を有効化できます。');
+      }
+      if (!env.supported) {
+        throw new Error('お使いのブラウザ・端末では Web Push を利用できません。');
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission === 'denied') {
+        throw new Error('通知がブロックされています。ブラウザまたはOSの設定から通知を許可してください。');
+      }
+      if (permission !== 'granted') {
+        throw new Error('通知の許可が承認されませんでした。');
+      }
+
+      const reg = await ensureServiceWorkerRegistration();
+      const expectedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      let sub = await reg.pushManager.getSubscription();
+
+      if (sub && sub.options && sub.options.applicationServerKey) {
+        const currentKey = new Uint8Array(sub.options.applicationServerKey);
+        if (!uint8ArraysEqual(currentKey, expectedKey)) {
+          await sub.unsubscribe();
+          sub = null;
+        }
+      }
+
+      if (!sub) {
+        try {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: expectedKey
+          });
+        } catch (err) {
+          if (err && err.name === 'InvalidStateError') {
+            const stale = await reg.pushManager.getSubscription();
+            if (stale) await stale.unsubscribe();
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: expectedKey
+            });
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      const subJson = sub.toJSON();
+      let savedToDb = false;
+      let dbError = null;
+      try {
+        const saveRes = await SupabaseService.savePushSubscription(
+          JSON.stringify(subJson),
+          user && user.name,
+          user && user.email
+        );
+        savedToDb = !!(saveRes && saveRes.success);
+      } catch (e) {
+        dbError = e && e.message ? e.message : String(e);
+      }
+
+      return { subscription: subJson, savedToDb, dbError };
+    }
+
+    async function unsubscribeAndClear(user) {
+      const sub = await getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+      }
+      try {
+        await SupabaseService.savePushSubscription(null, user && user.name, user && user.email);
+      } catch (e) {
+        console.warn('Failed to clear push_subscription in DB:', e);
+      }
+      return { success: true };
+    }
+
+    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
+      const endpoint = `${SUPABASE_URL}/functions/v1/send-web-push`;
+      let res;
+      try {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            subscription,
+            memberId,
+            targetAll,
+            title: title || 'FC Benten テスト通知',
+            body: body || 'Web Push 通知の受信テスト成功です！',
+            url: url || './',
+            tag: tag || 'fcb-webpush-test'
+          })
+        });
+      } catch (networkErr) {
+        throw new Error('Edge Function へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。');
+      }
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = null;
+      }
+
+      if (!res.ok || !data || !data.success) {
+        const msg = (data && data.error) ||
+          (data && data.results && data.results[0] && data.results[0].error) ||
+          `HTTP ${res.status} エラー`;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    window.SupabaseWebPush = {
+      VAPID_PUBLIC_KEY,
+      getEnvironmentStatus,
+      getSubscription,
+      subscribeAndSave,
+      unsubscribeAndClear,
+      sendTestPush
+    };
 
   })();
