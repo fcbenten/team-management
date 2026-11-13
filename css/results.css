@@ -213,7 +213,10 @@
    ========================================= */
 #matchDetailModal .modal-content {
   max-width: 500px;
-  padding: 24px 20px !important;
+}
+
+.modal-match-body {
+  padding: 0;
 }
 
 .modal-match-header {

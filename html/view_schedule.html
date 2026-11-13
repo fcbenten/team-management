@@ -114,7 +114,7 @@
       </div>
 
       <!-- スクロール可能な詳細コンテンツ本体 -->
-      <div class="event-modal-body">
+      <div class="modal-body event-modal-body">
         
         <!-- 日付 -->
         <div class="event-detail-row">
@@ -224,7 +224,7 @@
         <input type="hidden" id="eeIsDuplicate" value="0">
         <input type="hidden" id="eeOriginalDate" value="">
         <input type="hidden" id="eeOriginalTitle" value="">
-        <div class="event-modal-body">
+        <div class="modal-body event-modal-body">
           <!-- 予定タイトル入力ブロック -->
           <div class="form-group mb-12">
             <label class="form-label font-bold text-sm">タイトル <span class="text-danger">*</span></label>
@@ -290,7 +290,7 @@
         </div>
 
         <!-- 操作フッター（削除・キャンセル・保存） -->
-        <div class="event-modal-footer">
+        <div class="modal-footer event-modal-footer">
           <button type="button" id="eeDeleteBtn" class="btn-delete-action hidden" onclick="onDeleteFromEditModal()">
             <span class="material-symbols-outlined">delete</span><span>削除</span>
           </button>
@@ -313,7 +313,7 @@
         <div class="font-bold text-lg text-danger">予定の削除</div>
         <button class="modal-close" onclick="closeDeleteConfirmModal(event)">&times;</button>
       </div>
-      <div class="event-modal-body confirm-modal-body text-center">
+      <div class="modal-body event-modal-body confirm-modal-body text-center">
         <div class="confirm-icon-box mb-12"><span class="material-symbols-outlined">warning</span></div>
         <div id="deleteConfirmTargetText" class="font-bold mb-8 text-base">この予定を削除しますか？</div>
         <div class="text-sm text-muted">※ Google カレンダーから完全に削除されます。<br>この操作は取り消せません。</div>

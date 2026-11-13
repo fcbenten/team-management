@@ -670,13 +670,16 @@
     }
 
     // モーダルを表示
-    document.getElementById('playerModalOverlay').classList.add('active');
+    const playerOverlay = document.getElementById('playerModalOverlay');
+    playerOverlay.classList.add('active');
     if (typeof lockBodyScroll === 'function') {
       lockBodyScroll();
     } else {
       document.body.classList.add('no-scroll');
     }
     // スクロール位置を一番上に戻す
+    const bodyEl = playerOverlay.querySelector('.modal-body');
+    if (bodyEl) bodyEl.scrollTop = 0;
     setTimeout(() => { historyContainer.scrollTop = 0; }, 10);
   }
 

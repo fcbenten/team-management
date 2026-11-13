@@ -536,7 +536,7 @@
   border-radius: 6px !important;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-bottom: 8px !important;
+  margin-bottom: 0 !important;
 }
 .btn-logout:hover {
   background: #fef2f2 !important;

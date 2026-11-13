@@ -46,7 +46,8 @@
     <form id="bulletinPostForm" onsubmit="handleBulletinPostSubmit(event)">
       <input type="hidden" id="bulletinEditPostId" value="">
       
-      <div class="modal-section">
+      <div class="modal-body">
+        <div class="modal-section">
         <!-- カテゴリ選択 -->
         <div class="form-group mb-16">
           <label class="form-label" for="bulletinCategorySelect">カテゴリ <span class="text-danger">*</span></label>
@@ -90,10 +91,11 @@
         </div>
       </div>
 
-      <!-- 送信ステータスメッセージ -->
-      <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
+        <!-- 送信ステータスメッセージ -->
+        <div id="bulletinFormStatus" class="form-status-msg hidden mb-12 mx-24"></div>
+      </div>
 
-      <div class="bulletin-modal-footer flex-between">
+      <div class="modal-footer bulletin-modal-footer flex-between">
         <div class="bulletin-edit-actions-left">
           <button type="button" id="btnBulletinEditDelete" class="bdm-action-btn btn-delete-action hidden" onclick="handleBulletinEditDelete()">
             <span class="material-symbols-outlined text-sm">delete</span>
@@ -127,7 +129,8 @@
       <button type="button" class="modal-close" onclick="closeBulletinDetailModalForce()">&times;</button>
     </div>
 
-    <div class="modal-section bulletin-detail-body">
+    <div class="modal-body">
+      <div class="modal-section bulletin-detail-body">
       <!-- タイトル -->
       <h2 id="bdmTitle" class="bulletin-detail-title"></h2>
 
@@ -232,8 +235,10 @@
       </div>
     </div>
 
+    </div>
+
     <!-- 操作フッター（全モーダル統一配置：左＝削除、右＝主要操作） -->
-    <div class="bulletin-modal-footer flex-between">
+    <div class="modal-footer bulletin-modal-footer flex-between">
       <div class="bulletin-detail-actions-left">
         <button type="button" id="btnBdmDelete" class="bdm-action-btn btn-delete-action" onclick="handleBdmDelete()">
           <span class="material-symbols-outlined">delete</span>

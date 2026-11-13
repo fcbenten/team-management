@@ -329,7 +329,10 @@ function openMatchDetail(matchId) {
   }
   
   // モーダルを表示して背景のスクロールを無効化する
-  document.getElementById('matchDetailModal').classList.add('active');
+  const detailModal = document.getElementById('matchDetailModal');
+  detailModal.classList.add('active');
+  const bodyEl = detailModal.querySelector('.modal-match-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   document.body.classList.add('no-scroll');
 }
 
@@ -340,7 +343,7 @@ function openMatchDetail(matchId) {
  */
 function closeMatchDetailModal(e) {
   // モーダルのコンテンツ部分をクリックした場合は閉じない
-  if (e && e.target && e.target.closest('.modal-content') && !e.target.classList.contains('modal-close')) { 
+  if (e && e.target && e.target.closest('.modal-content') && !e.target.closest('.modal-close')) { 
     return; 
   }
   document.getElementById('matchDetailModal').classList.remove('active');

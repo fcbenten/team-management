@@ -1620,7 +1620,7 @@ function closeModalById(modalId) {
         e.preventDefault();
         return;
       }
-      const scrollable = modal.querySelector('.modal-content') || modal;
+      const scrollable = modal.querySelector('.modal-body') || modal.querySelector('.modal-content') || modal;
       const isAtTop = scrollable.scrollTop <= 0;
       const isAtBottom = scrollable.scrollTop + scrollable.clientHeight >= scrollable.scrollHeight - 1;
       if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom) || e.target === modal) {
@@ -1639,7 +1639,7 @@ function closeModalById(modalId) {
         return;
       }
       // 内部スクロール要素を取得
-      const scrollable = modal.querySelector('.modal-content');
+      const scrollable = modal.querySelector('.modal-body') || modal.querySelector('.modal-content');
       if (!scrollable) {
         if (e.cancelable) e.preventDefault();
         return;

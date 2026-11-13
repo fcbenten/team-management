@@ -76,9 +76,6 @@
         <span class="material-symbols-outlined profile-settings-nav-arrow">chevron_right</span>
       </button>
     </div>
-    <div class="modal-footer profile-modal-footer">
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
-    </div>
   </div>
 </div>
 
@@ -239,10 +236,9 @@
       </div>
     </div>
     <div class="modal-footer profile-modal-footer">
-      <button type="button" class="btn btn-logout w-full mb-8" onclick="openLogoutModal(event)">
+      <button type="button" class="btn btn-logout w-full" onclick="openLogoutModal(event)">
         <span class="material-symbols-outlined mr-2">logout</span>ログアウト
       </button>
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserSettingsModal(event)">閉じる</button>
     </div>
   </div>
 </div>
@@ -306,76 +302,81 @@
      ========================================= -->
 <div id="matchDetailModal" class="modal-overlay" onclick="closeMatchDetailModal(event)">
   <div class="modal-content">
-    <!-- モーダルヘッダー -->
-    <div class="modal-match-header">
-      <div class="modal-match-header-left">
-        <div class="modal-match-header-row">
-          <span id="modalCategory" class="category-badge"></span>
-          <span id="modalDate" class="text-muted modal-match-date"></span>
-        </div>
-        <div id="modalLocationRow" class="modal-match-location-row hidden">
-          <span class="material-symbols-outlined modal-loc-icon">location_on</span>
-          <span id="modalLocation"></span>
-        </div>
-      </div>
-      <div class="modal-match-header-right">
-        <button type="button" class="modal-close" onclick="closeMatchDetailModal(event)">&times;</button>
-      </div>
+    <!-- 最上部固定ヘッダー -->
+    <div class="modal-header">
+      <div class="modal-title font-bold">試合結果詳細</div>
+      <button type="button" class="modal-close" onclick="closeMatchDetailModal(event)">&times;</button>
     </div>
 
-    <!-- スコアボード -->
-    <div class="modal-score-board">
-      <div class="modal-score-row">
-        <div class="team-name team-name-left">FC Benten</div>
-        <div id="modalScoreBox" class="modal-score-box">
-          <span id="modalMyScore"></span>
-          <span class="score-hyphen">-</span>
-          <span id="modalOppScore"></span>
-        </div>
-        <div id="modalOpponent" class="team-name team-name-right"></div>
-      </div>
-      <div id="modalHalfScores" class="modal-half-scores">
-        <div class="modal-half-row">
-          <div class="half-col-left">前半</div>
-          <div class="half-col-center" id="modalHalf1stVal">0 - 0</div>
-          <div class="half-col-right"></div>
-        </div>
-        <div class="modal-half-row">
-          <div class="half-col-left">後半</div>
-          <div class="half-col-center" id="modalHalf2ndVal">0 - 0</div>
-          <div class="half-col-right"></div>
-        </div>
-        <div id="modalHalfExtRow" class="hidden modal-half-row">
-          <div class="half-col-left">延長</div>
-          <div class="half-col-center" id="modalHalfExtVal">0 - 0</div>
-          <div class="half-col-right"></div>
+    <div class="modal-body modal-match-body">
+      <!-- 試合基本情報ヘッダー -->
+      <div class="modal-match-header">
+        <div class="modal-match-header-left">
+          <div class="modal-match-header-row">
+            <span id="modalCategory" class="category-badge"></span>
+            <span id="modalDate" class="text-muted modal-match-date"></span>
+          </div>
+          <div id="modalLocationRow" class="modal-match-location-row hidden">
+            <span class="material-symbols-outlined modal-loc-icon">location_on</span>
+            <span id="modalLocation"></span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- MOM表示エリア -->
-    <div class="modal-section">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">emoji_events</span>MOM
+      <!-- スコアボード -->
+      <div class="modal-score-board">
+        <div class="modal-score-row">
+          <div class="team-name team-name-left">FC Benten</div>
+          <div id="modalScoreBox" class="modal-score-box">
+            <span id="modalMyScore"></span>
+            <span class="score-hyphen">-</span>
+            <span id="modalOppScore"></span>
+          </div>
+          <div id="modalOpponent" class="team-name team-name-right"></div>
+        </div>
+        <div id="modalHalfScores" class="modal-half-scores">
+          <div class="modal-half-row">
+            <div class="half-col-left">前半</div>
+            <div class="half-col-center" id="modalHalf1stVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+          <div class="modal-half-row">
+            <div class="half-col-left">後半</div>
+            <div class="half-col-center" id="modalHalf2ndVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+          <div id="modalHalfExtRow" class="hidden modal-half-row">
+            <div class="half-col-left">延長</div>
+            <div class="half-col-center" id="modalHalfExtVal">0 - 0</div>
+            <div class="half-col-right"></div>
+          </div>
+        </div>
       </div>
-      <div id="modalMom" class="modal-section-content"></div>
-    </div>
 
-    <!-- 参加者エリア -->
-    <div class="modal-section">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">group</span>参加者
+      <!-- MOM表示エリア -->
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">emoji_events</span>MOM
+        </div>
+        <div id="modalMom" class="modal-section-content"></div>
       </div>
-      <div id="modalAttended" class="modal-section-content"></div>
-    </div>
 
-    <!-- 試合ログエリア -->
-    <div class="modal-section modal-section-last">
-      <div class="modal-section-title">
-        <span class="material-symbols-outlined">history</span>試合ログ
+      <!-- 参加者エリア -->
+      <div class="modal-section">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">group</span>参加者
+        </div>
+        <div id="modalAttended" class="modal-section-content"></div>
       </div>
-      <div id="modalLogs"></div>
-      <div id="modalNoLogs" class="empty-state hidden">記録はありません</div>
+
+      <!-- 試合ログエリア -->
+      <div class="modal-section modal-section-last">
+        <div class="modal-section-title">
+          <span class="material-symbols-outlined">history</span>試合ログ
+        </div>
+        <div id="modalLogs"></div>
+        <div id="modalNoLogs" class="empty-state hidden">記録はありません</div>
+      </div>
     </div>
 
     <!-- モーダルフッター -->

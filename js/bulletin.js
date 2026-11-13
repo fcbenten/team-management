@@ -454,6 +454,8 @@ function openBulletinCreateModal(linkedEvent = null) {
   populateBulletinEventSelect(linkedEvent ? linkedEvent.id : '');
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
@@ -485,6 +487,8 @@ function openBulletinEditModal(post) {
   populateBulletinEventSelect(post.eventId || '');
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
@@ -716,7 +720,7 @@ function setupBulletinCommentInputEvents() {
   // 2. カーソルがあたっている時のホイールスクロールを親モーダルへ透過
   inputEl.addEventListener('wheel', (e) => {
     const isScrollable = inputEl.scrollHeight > inputEl.clientHeight;
-    const modalContent = inputEl.closest('.modal-content') || document.querySelector('.bulletin-detail-modal');
+    const modalContent = inputEl.closest('.modal-body') || inputEl.closest('.modal-content') || document.querySelector('.bulletin-detail-modal');
     if (!isScrollable && modalContent) {
       modalContent.scrollTop += e.deltaY;
     } else if (modalContent) {
@@ -916,6 +920,8 @@ function openBulletinDetailModal(post, openReaders = false) {
   markPostAsReadIfUnread(post);
 
   modal.classList.add('active');
+  const bodyEl = modal.querySelector('.modal-body');
+  if (bodyEl) bodyEl.scrollTop = 0;
   if (typeof lockBodyScroll === 'function') lockBodyScroll();
 }
 
