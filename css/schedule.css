@@ -107,13 +107,19 @@
   border-radius: 4px; /* 四角ベース（角丸4px） */
   cursor: pointer;
   white-space: nowrap;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
 
 .filter-pill-btn:hover:not(.active) {
-  background: #f8fafc;
-  color: var(--text-heading);
-  border-color: #cbd5e1;
+  background: #eff6ff;
+  color: var(--primary);
+  border-color: #bfdbfe;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.filter-pill-btn:active:not(.active) {
+  transform: translateY(0);
 }
 
 /* 全タブ共通の選択中スタイル（5色分けを撤廃し単色統一） */
@@ -215,6 +221,11 @@
 
 .cal-nav-btn:hover {
   background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.cal-nav-btn:active {
+  transform: translateY(0);
 }
 
 .cal-today-btn {
@@ -226,7 +237,7 @@
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.15s ease;
   white-space: nowrap;
   position: absolute;
   right: 0;
@@ -235,6 +246,12 @@
 .cal-today-btn:hover {
   background: var(--primary);
   color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.cal-today-btn:active {
+  transform: translateY(0);
 }
 
 .btn-cal-add-event {
@@ -246,12 +263,19 @@
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   white-space: nowrap;
 }
 
 .btn-cal-add-event:hover {
   background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-cal-add-event:active {
+  transform: translateY(0);
 }
 
 .btn-primary-sm {
@@ -263,11 +287,17 @@
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .btn-primary-sm:hover {
   background: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.btn-primary-sm:active {
+  transform: translateY(0);
 }
 
 /* 譖懈律繝倥ャ繝繝ｼ */
@@ -307,13 +337,14 @@
   align-items: flex-start;
   justify-content: flex-start;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
   position: relative;
   overflow: hidden;
 }
 
 .cal-day-cell:hover {
-  background: #f8fafc;
+  background: #eff6ff;
+  box-shadow: inset 0 0 0 1px #bfdbfe;
 }
 
 .cal-day-num {
@@ -1385,7 +1416,14 @@
 }
 
 .btn-attend-choice:hover {
-  background: #f8fafc;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.btn-attend-choice:active {
+  transform: translateY(0);
 }
 
 .btn-attend-choice.btn-attend-yes.active {
@@ -1473,13 +1511,18 @@
 
 .schedule-card-clickable {
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .schedule-card-clickable:hover {
+  background-color: #eff6ff;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
-  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #bfdbfe;
+}
+
+.schedule-card-clickable:active {
+  transform: translateY(0);
 }
 
 /* =========================================
@@ -1568,11 +1611,16 @@
 .cal-event-item {
   cursor: pointer;
   border-radius: 4px;
-  transition: background 0.12s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 .cal-event-item:hover {
-  background: rgba(37, 99, 235, 0.12);
+  background: rgba(37, 99, 235, 0.14);
+  transform: translateY(-1px);
+}
+
+.cal-event-item:active {
+  transform: translateY(0);
 }
 
 /* 蜷梧律隍・焚莠亥ｮ壹・蛻・ｊ譖ｿ縺医ち繝厄ｼ郁ｩｳ邏ｰ繝｢繝ｼ繝€繝ｫ蜀・ｼ・*/
@@ -1609,7 +1657,18 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.same-day-tab-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.same-day-tab-btn:active {
+  transform: translateY(0);
 }
 /* =========================================
    📋 NEW: アジェンダカード (Tailwind風デザイン)
@@ -1629,9 +1688,14 @@
 }
 
 .schedule-agenda-card:hover {
-  background: #ffffff;
+  background: #eff6ff;
+  border-color: #bfdbfe;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.schedule-agenda-card:active {
+  transform: translateY(0);
 }
 
 /* 左端のアクセントライン */
@@ -1698,6 +1762,10 @@
 /* 未入力 (Unanswered) - 白 (デフォルトと同じ) */
 .schedule-agenda-card.card-unanswered {
   background: #ffffff;
+}
+.schedule-agenda-card.card-unanswered:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
 }
 
 /* ヘッダー */

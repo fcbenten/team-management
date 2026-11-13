@@ -70,9 +70,15 @@
 }
 
 .btn-refresh-equipment:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
   color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-refresh-equipment:active {
+  transform: translateY(0);
 }
 
 .btn-refresh-equipment .material-symbols-outlined {
@@ -104,6 +110,12 @@
 .btn-add-equipment:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-add-equipment:active {
+  transform: translateY(0);
 }
 
 .btn-add-equipment .material-symbols-outlined {
@@ -406,9 +418,15 @@
 }
 
 .btn-item-edit:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
   color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.btn-item-edit:active {
+  transform: translateY(0);
 }
 
 .btn-item-edit .material-symbols-outlined {

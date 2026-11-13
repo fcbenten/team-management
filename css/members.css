@@ -76,9 +76,15 @@
 }
 
 .btn-gcp-header-link:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
+  background: #eff6ff;
+  border-color: #bfdbfe;
   color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.btn-gcp-header-link:active {
+  transform: translateY(0);
 }
 
 .btn-gcp-header-link .material-symbols-outlined {
@@ -112,6 +118,12 @@
 .btn-add-member:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.btn-add-member:active {
+  transform: translateY(0);
 }
 
 .btn-add-member .material-symbols-outlined {
@@ -471,12 +483,18 @@
   padding: 10px 12px;
   cursor: pointer;
   border-radius: 6px;
-  transition: background 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
   user-select: none;
 }
 
 .ob-accordion-header:hover {
-  background: #f1f5f9;
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ob-accordion-header:active {
+  transform: translateY(0);
 }
 
 .ob-header-left {
@@ -670,9 +688,15 @@
 }
 
 .btn-member-edit:hover {
-  background: #f8fafc;
-  border-color: #94a3b8;
-  color: #475569;
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.btn-member-edit:active {
+  transform: translateY(0);
 }
 
 .btn-member-edit .material-symbols-outlined {

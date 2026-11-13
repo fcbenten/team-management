@@ -632,8 +632,13 @@ body {
   }
 
   .nav-item:hover:not(.active) {
-    background-color: #f1f5f9 !important;
+    background-color: #e2e8f0 !important;
     color: var(--primary) !important;
+    transform: translateX(2px);
+  }
+
+  .nav-item:active:not(.active) {
+    transform: translateX(0);
   }
 
   .nav-item.active {
@@ -674,12 +679,18 @@ body {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-muted);
-    transition: all 0.2s ease;
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
     box-sizing: border-box;
   }
 
   .sidebar-user-btn:hover {
     background: #e2e8f0;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .sidebar-user-btn:active {
+    transform: translateY(0);
   }
 
   .logout-icon-btn {
@@ -689,12 +700,17 @@ body {
     padding: 6px;
     border-radius: 50%;
     color: var(--text-muted);
-    transition: all 0.2s;
+    transition: transform 0.15s ease, background-color 0.2s ease, color 0.2s ease;
   }
 
   .logout-icon-btn:hover {
     background: #fee2e2;
     color: #dc2626 !important;
+    transform: translateY(-1px);
+  }
+
+  .logout-icon-btn:active {
+    transform: translateY(0);
   }
 
   .app-layout {

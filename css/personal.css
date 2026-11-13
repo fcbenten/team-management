@@ -34,8 +34,8 @@
 }
 
 .stats-table th:hover {
-  color: var(--text-heading);
-  background-color: #f3f4f6;
+  color: var(--primary);
+  background-color: #eff6ff;
 }
 
 .stats-table th.th-number {
@@ -246,15 +246,15 @@
 /* 行全体をタップ可能にして詳細モーダルを開くスタイル */
 .stats-table tbody tr {
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.18s ease;
 }
 
 .stats-table tbody tr:hover {
-  background-color: #f8fafc;
+  background-color: #eff6ff;
 }
 
 .stats-table tbody tr:active {
-  background-color: #eff6ff;
+  background-color: #dbeafe;
 }
 
 .stats-table .text-left {

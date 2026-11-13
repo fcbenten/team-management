@@ -72,11 +72,16 @@
   gap: 10px;
   cursor: pointer;
   text-align: left;
-  transition: all 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 .profile-settings-nav-btn:hover {
   background: #eff6ff;
   border-color: #bfdbfe;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.profile-settings-nav-btn:active {
+  transform: translateY(0);
 }
 .profile-settings-nav-left {
   display: flex;
@@ -128,10 +133,14 @@
   justify-content: center;
   color: var(--text-heading);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: transform 0.15s ease, background-color 0.15s ease;
 }
 .modal-back-btn:hover {
   background: #f1f5f9;
+  transform: translateY(-1px);
+}
+.modal-back-btn:active {
+  transform: translateY(0);
 }
 .modal-back-btn .material-symbols-outlined {
   font-size: 20px;
@@ -155,18 +164,27 @@
   border: 1.5px solid #e2e8f0;
   border-radius: 8px;
   background: #ffffff;
-  transition: all 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
   user-select: none;
 }
 .notif-radio-card:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+.notif-radio-card:active {
+  transform: translateY(0);
 }
 .notif-radio-card:has(input:checked),
 .notif-radio-card.selected {
   border-color: var(--primary, #0284c7);
   background: #f0f9ff;
   box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12);
+}
+.notif-radio-card:has(input:checked):hover,
+.notif-radio-card.selected:hover {
+  background: #e0f2fe;
 }
 .notif-radio-card input[type="radio"] {
   width: auto !important;

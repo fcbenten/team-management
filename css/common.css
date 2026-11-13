@@ -269,10 +269,17 @@ select:focus, input:focus, textarea:focus {
   background-color: var(--primary) !important; color: #fff !important;
   border: none !important; border-radius: var(--radius) !important;
   font-weight: 600; font-size: 0.9rem; letter-spacing: 0.5px;
-  cursor: pointer; transition: background-color 0.2s;
+  cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   box-shadow: none !important;
 }
-.btn:hover { background-color: var(--primary-hover) !important; }
+.btn:hover {
+  background-color: var(--primary-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+.btn:active {
+  transform: translateY(0);
+}
 
 /* プライマリアクションボタン（共通） */
 .btn-primary-action {
@@ -338,6 +345,11 @@ select:focus, input:focus, textarea:focus {
   background-color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
   color: #334155 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.btn-cancel-action:active {
+  transform: translateY(0);
 }
 
 /* 枠線ボタン */
@@ -347,8 +359,13 @@ select:focus, input:focus, textarea:focus {
   border: 1px solid var(--border-color) !important;
 }
 .btn-outline:hover {
-  background-color: #f3f4f6 !important;
-  color: var(--text-heading) !important;
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: var(--primary) !important;
+  transform: translateY(-1px);
+}
+.btn-outline:active {
+  transform: translateY(0);
 }
 
 /* 追加ボタン（緑） */
@@ -358,6 +375,10 @@ select:focus, input:focus, textarea:focus {
 }
 .btn-add:hover {
   background-color: #059669 !important;
+  transform: translateY(-1px);
+}
+.btn-add:active {
+  transform: translateY(0);
 }
 
 /* 削除ボタン（赤） */
@@ -586,10 +607,18 @@ select:focus, input:focus, textarea:focus {
 /* モーダルを閉じる「×」ボタン */
 .modal-close {
   background: transparent !important; border: none !important; font-size: 1.5rem; cursor: pointer;
-  color: var(--text-muted) !important; width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+  color: var(--text-muted) !important; width: 32px; height: 32px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
-.modal-close:hover { color: var(--text-heading) !important; }
+.modal-close:hover {
+  background: #f1f5f9 !important;
+  color: var(--text-heading) !important;
+  transform: translateY(-1px);
+}
+.modal-close:active {
+  transform: translateY(0);
+}
 
 /* =========================================
    📐 レイアウト・ユーティリティ用クラス
