@@ -138,13 +138,13 @@ COLS_T2 = [
 # =========================================================================
 # 表3: メッセージ一覧
 # 列配分（合計80列）:
-# ID(1-5=5) / 種別(6-9=4) / 対象エリア(10-19=10) / トリガー(20-32=13) /
+# ID(1-5=5) / 種別(6-9=4) / 表示先エリア(10-19=10) / トリガー(20-32=13) /
 # 表示条件(33-46=14) / 表示形式(47-53=7) / メッセージ文言(54-68=15) / 解除・復帰(69-80=12)
 # =========================================================================
 COLS_T3 = [
     ("ID", 1, 5, al_top_center),
     ("種別", 6, 9, al_top_center),
-    ("対象エリア / 項目", 10, 19, al_top_left),
+    ("表示先エリア / 項目", 10, 19, al_top_left),
     ("トリガー", 20, 32, al_top_left),
     ("表示条件 / チェック内容", 33, 46, al_top_left),
     ("表示形式", 47, 53, al_top_center),
@@ -376,7 +376,7 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
         merge_and_style(ws, curr_r, 54, curr_r, 68, value=msg, font=msg_font, fill=lvl_fill, alignment=al_top_left)
         merge_and_style(ws, curr_r, 69, curr_r, 80, value=recovery, font=f_td, fill=fill_odd, alignment=al_top_left)
 
-        max_len = max(len(str(trigger)), len(str(rule)), len(str(msg)), len(str(recovery)))
+        max_len = max(int(len(str(target)) * 1.4), len(str(trigger)), len(str(rule)), len(str(msg)), len(str(recovery)))
         ws.row_dimensions[curr_r].height = 36 if max_len > 36 else 26
         curr_r += 1
 
