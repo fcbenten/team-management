@@ -18,7 +18,9 @@ COLOR_BORDER = "CBD5E1"      # 通常罫線色
 COLOR_ROW_EVEN = "F8FAFC"    # テーブル偶数行
 COLOR_TEXT_MAIN = "0F172A"   # 主要文字
 COLOR_TEXT_MUTED = "475569"  # 補足文字
-COLOR_ERR_BG = "FEF2F2"      # エラー背景 (薄赤)
+COLOR_ERR_BG = "FEF2F2"      # error背景 (薄赤)
+COLOR_WARN_BG = "FFFBEB"     # warning背景 (薄黄)
+COLOR_SLATE_DARK = "334155"  # セクションバー (表3: メッセージ一覧)
 
 # フォント定義
 f_title = Font(name="Meiryo UI", size=15, bold=True, color="FFFFFF")
@@ -32,6 +34,9 @@ f_area_title = Font(name="Meiryo UI", size=9, bold=True, color="1E1B4B")
 f_meta_k = Font(name="Meiryo UI", size=9, bold=True, color=COLOR_NAVY_DARK)
 f_meta_v = Font(name="Meiryo UI", size=9, color=COLOR_TEXT_MAIN)
 f_err_msg = Font(name="Meiryo UI", size=9, bold=True, color="B91C1C")
+f_warn_msg = Font(name="Meiryo UI", size=9, bold=True, color="92400E")
+f_info_msg = Font(name="Meiryo UI", size=9, color="334155")
+f_info_lvl = Font(name="Meiryo UI", size=9, bold=True, color="475569")
 f_req_must = Font(name="Meiryo UI", size=9, bold=True, color="DC2626") # 必須 (赤太字)
 f_req_opt = Font(name="Meiryo UI", size=9, color=COLOR_TEXT_MUTED)     # 任意 (通常)
 
@@ -40,12 +45,14 @@ fill_navy = PatternFill(start_color=COLOR_NAVY_DARK, end_color=COLOR_NAVY_DARK, 
 fill_blue_med = PatternFill(start_color=COLOR_BLUE_MED, end_color=COLOR_BLUE_MED, fill_type="solid")
 fill_green_med = PatternFill(start_color=COLOR_GREEN_MED, end_color=COLOR_GREEN_MED, fill_type="solid")
 fill_red_med = PatternFill(start_color=COLOR_RED_MED, end_color=COLOR_RED_MED, fill_type="solid")
+fill_slate_dark = PatternFill(start_color=COLOR_SLATE_DARK, end_color=COLOR_SLATE_DARK, fill_type="solid")
 fill_bg_light = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
 fill_area = PatternFill(start_color=COLOR_AREA_BG, end_color=COLOR_AREA_BG, fill_type="solid")
 fill_area_band = PatternFill(start_color="F5F3FF", end_color="F5F3FF", fill_type="solid")
 fill_even = PatternFill(start_color=COLOR_ROW_EVEN, end_color=COLOR_ROW_EVEN, fill_type="solid")
 fill_odd = PatternFill(start_color="FFFFFF", end_color="FFFFFF", fill_type="solid")
 fill_err = PatternFill(start_color=COLOR_ERR_BG, end_color=COLOR_ERR_BG, fill_type="solid")
+fill_warn = PatternFill(start_color=COLOR_WARN_BG, end_color=COLOR_WARN_BG, fill_type="solid")
 
 # 罫線定義
 side_thin = Side(border_style="thin", color=COLOR_BORDER)
@@ -129,19 +136,20 @@ COLS_T2 = [
 ]
 
 # =========================================================================
-# 表3: エラー・バリデーション一覧
+# 表3: メッセージ一覧
 # 列配分（合計80列）:
-# エラーID(1-5=5) / 対象エリア(6-17=12) / トリガー(18-25=8) /
-# バリデーション条件(26-42=17) / 表示形式・領域(43-50=8) / メッセージ(51-67=17) / 復帰条件(68-80=13)
+# ID(1-5=5) / 種別(6-11=6) / 対象エリア(12-21=10) / トリガー(22-28=7) /
+# 表示条件(29-43=15) / 表示領域(44-52=9) / メッセージ文言(53-68=16) / 解除・復帰条件(69-80=12)
 # =========================================================================
 COLS_T3 = [
-    ("エラーID", 1, 5, al_top_center),
-    ("対象エリア / 項目", 6, 17, al_top_left),
-    ("トリガー", 18, 25, al_top_center),
-    ("バリデーションチェック条件", 26, 42, al_top_left),
-    ("表示形式 (表示領域)", 43, 50, al_top_center),
-    ("エラーメッセージ文言", 51, 67, al_top_left),
-    ("復帰・解除条件", 68, 80, al_top_left)
+    ("ID", 1, 5, al_top_center),
+    ("種別", 6, 11, al_top_center),
+    ("対象エリア / 項目", 12, 21, al_top_left),
+    ("トリガー", 22, 28, al_top_center),
+    ("表示条件 / チェック内容", 29, 43, al_top_left),
+    ("表示形式 (表示領域)", 44, 52, al_top_center),
+    ("メッセージ文言", 53, 68, al_top_left),
+    ("解除・復帰 / 補足", 69, 80, al_top_left)
 ]
 
 def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission, view_files, overview,
@@ -329,10 +337,11 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
     curr_r += 1  # セクション間の空白行
 
     # =========================================================================
-    # 3. エラー・バリデーション一覧 (入力チェック・例外処理)
+    # 3. メッセージ一覧 (種別: info[無灯] / warning[黄背景] / error[赤背景])
     # =========================================================================
-    merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value="3. エラー・バリデーション一覧 (入力制限・エラー条件・メッセージ文言)",
-                    font=f_sec_h1, fill=fill_red_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
+    merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS,
+                    value="3. メッセージ一覧 (種別: info[無灯] / warning[黄背景] / error[赤背景])",
+                    font=f_sec_h1, fill=fill_slate_dark, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
 
@@ -343,19 +352,32 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
     ws.row_dimensions[curr_r].height = 26
     curr_r += 1
 
-    for err in validation_errors:
-        err_id, target, trigger, rule, disp_type, msg, recovery = err
+    LEVEL_STYLES = {
+        "info": ("info\n(無灯)", fill_odd, f_info_lvl, f_info_msg),
+        "warning": ("warning\n(黄背景)", fill_warn, f_warn_msg, f_warn_msg),
+        "error": ("error\n(赤背景)", fill_err, f_err_msg, f_err_msg),
+    }
 
-        merge_and_style(ws, curr_r, 1, curr_r, 5, value=err_id, font=f_td_bold, fill=fill_err, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 6, curr_r, 17, value=target, font=f_td, fill=fill_odd, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 18, curr_r, 25, value=trigger, font=f_td, fill=fill_odd, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 26, curr_r, 42, value=rule, font=f_td, fill=fill_odd, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 43, curr_r, 50, value=disp_type, font=f_td, fill=fill_odd, alignment=al_top_center)
-        merge_and_style(ws, curr_r, 51, curr_r, 67, value=msg, font=f_err_msg, fill=fill_err, alignment=al_top_left)
-        merge_and_style(ws, curr_r, 68, curr_r, 80, value=recovery, font=f_td, fill=fill_odd, alignment=al_top_left)
+    for err in validation_errors:
+        if len(err) == 8:
+            err_id, level, target, trigger, rule, disp_type, msg, recovery = err
+        else:
+            err_id, target, trigger, rule, disp_type, msg, recovery = err
+            level = "error"
+
+        lvl_label, lvl_fill, lvl_font, msg_font = LEVEL_STYLES.get(level, LEVEL_STYLES["error"])
+
+        merge_and_style(ws, curr_r, 1, curr_r, 5, value=err_id, font=f_td_bold, fill=lvl_fill, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 6, curr_r, 11, value=lvl_label, font=lvl_font, fill=lvl_fill, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 12, curr_r, 21, value=target, font=f_td, fill=fill_odd, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 22, curr_r, 28, value=trigger, font=f_td, fill=fill_odd, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 29, curr_r, 43, value=rule, font=f_td, fill=fill_odd, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 44, curr_r, 52, value=disp_type, font=f_td, fill=fill_odd, alignment=al_top_center)
+        merge_and_style(ws, curr_r, 53, curr_r, 68, value=msg, font=msg_font, fill=lvl_fill, alignment=al_top_left)
+        merge_and_style(ws, curr_r, 69, curr_r, 80, value=recovery, font=f_td, fill=fill_odd, alignment=al_top_left)
 
         max_len = max(len(str(rule)), len(str(msg)), len(str(recovery)))
-        ws.row_dimensions[curr_r].height = 36 if max_len > 40 else 24
+        ws.row_dimensions[curr_r].height = 36 if max_len > 36 else 26
         curr_r += 1
 
     # =========================================================================
