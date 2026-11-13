@@ -831,6 +831,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     '.home-line-open-btn',
     '.home-line-copy-btn',
     '.home-push-reset-btn',
+    '.notice-banner-action-link',
+    '.notice-banner-dismiss-btn',
     '#btnSaveNotificationSettings'
   ].join(', ');
 
@@ -840,6 +842,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   let startY = 0;
   let startTime = 0;
   let cancelledByMove = false;
+  let touchEnded = false;
 
   function clearActiveImmediate() {
     if (clearTimer) {
@@ -850,6 +853,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       activeEl.classList.remove('is-touch-active');
       activeEl = null;
     }
+    touchEnded = false;
   }
 
   document.addEventListener('touchstart', function(e) {
@@ -869,6 +873,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     clearActiveImmediate();
     activeEl = target;
     cancelledByMove = false;
+    touchEnded = false;
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
     startTime = Date.now();
@@ -876,10 +881,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }, { passive: true, capture: true });
 
   document.addEventListener('touchmove', function(e) {
-    if (!activeEl || !e.touches || !e.touches.length) return;
+    if (!activeEl || touchEnded || !e.touches || !e.touches.length) return;
     const dx = Math.abs(e.touches[0].clientX - startX);
     const dy = Math.abs(e.touches[0].clientY - startY);
-    if (dx > 10 || dy > 10) {
+    if (dx > 12 || dy > 12) {
       cancelledByMove = true;
       clearActiveImmediate();
     }
@@ -891,8 +896,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       clearActiveImmediate();
       return;
     }
+    touchEnded = true;
     const targetRef = activeEl;
-    const remaining = Math.max(0, 180 - (Date.now() - startTime));
+    // CSSトランジション(150-200ms)のピークが十分視認できるよう最低380ms＆離脱後200ms維持
+    const remaining = Math.max(200, 380 - (Date.now() - startTime));
     clearTimer = setTimeout(function() {
       targetRef.classList.remove('is-touch-active');
       if (activeEl === targetRef) activeEl = null;
@@ -903,7 +910,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   document.addEventListener('touchend', handleTouchFinish, { passive: true, capture: true });
   document.addEventListener('touchcancel', clearActiveImmediate, { passive: true, capture: true });
   document.addEventListener('scroll', function() {
-    if (activeEl) {
+    if (activeEl && !touchEnded) {
       cancelledByMove = true;
       clearActiveImmediate();
     }
