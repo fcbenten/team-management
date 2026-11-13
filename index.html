@@ -1127,20 +1127,23 @@ select:focus, input:focus, textarea:focus {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   width: 100% !important;
-  padding: 10px 16px !important;
-  background-color: var(--primary, #0284c7) !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  background-color: var(--primary, #2563eb) !important;
   color: #ffffff !important;
-  border: 1px solid var(--primary, #0284c7) !important;
-  border-radius: var(--radius, 4px) !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  border: 1px solid var(--primary, #2563eb) !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2) !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
 }
 .btn-primary-action:hover:not(:disabled) {
   background-color: var(--primary-hover, #0369a1) !important;
@@ -1163,21 +1166,26 @@ select:focus, input:focus, textarea:focus {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 10px 16px !important;
+  gap: 5px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
   background-color: #f1f5f9 !important;
   color: #475569 !important;
   border: 1px solid #cbd5e1 !important;
-  border-radius: var(--radius, 4px) !important;
-  font-size: 0.88rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
   font-weight: 600 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
 }
 .btn-cancel-action:hover {
   background-color: #e2e8f0 !important;
-  color: #475569 !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
 }
 
 /* 枠線ボタン */
@@ -2650,21 +2658,36 @@ html.no-scroll {
   color: var(--text-muted);
 }
 .logout-modal-footer {
-  display: flex;
-  gap: 8px;
-  padding: 12px 16px !important;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px 20px 16px !important;
+  border-top: 1px solid var(--border-color);
+  background: #ffffff;
+  box-sizing: border-box;
 }
 .logout-btn {
-  flex: 1;
+  width: 100%;
   margin: 0 !important;
 }
 .logout-btn-danger {
-  flex: 1;
+  width: 100%;
   margin: 0 !important;
-  background: #ef4444 !important;
-  border-color: #ef4444 !important;
-  color: #fff !important;
-  font-weight: 700 !important;
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.logout-btn-danger:hover:not(:disabled) {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+}
+.app-dialog-footer-center {
+  display: flex !important;
+  justify-content: center !important;
+}
+.app-dialog-footer-center .app-dialog-btn-single {
+  max-width: 200px;
 }
 
 /* --- プロフィールモーダル内 ログアウトボタン --- */
@@ -5069,13 +5092,13 @@ th.sort-active .sort-icon {
     width: 26px !important;
     height: 26px !important;
     border-radius: 50% !important;
-    background: #eff6ff !important;
-    border: 1px solid #bfdbfe !important;
+    background: #f1f5f9 !important;
+    border: none !important;
   }
 
   .player-avatar-icon .material-symbols-outlined {
     font-size: 0.95rem !important;
-    color: var(--primary) !important;
+    color: #94a3b8 !important;
   }
 
   .player-name-meta {
@@ -6253,7 +6276,7 @@ th.sort-active .sort-icon {
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 10px 10px 12px !important;
+    padding: 12px 10px 14px !important;
     gap: 6px !important;
     box-sizing: border-box !important;
   }
@@ -6267,9 +6290,10 @@ th.sort-active .sort-icon {
     margin-left: auto !important;
   }
   .event-modal-footer .btn-delete-action {
-    padding: 6px 2px !important;
-    font-size: 0.76rem !important;
-    gap: 2px !important;
+    height: 36px !important;
+    padding: 0 4px !important;
+    font-size: 0.78rem !important;
+    gap: 3px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
@@ -6277,14 +6301,16 @@ th.sort-active .sort-icon {
     font-size: 16px !important;
   }
   .event-modal-footer .btn-cancel-action {
-    padding: 6px 9px !important;
-    font-size: 0.76rem !important;
+    height: 36px !important;
+    padding: 0 9px !important;
+    font-size: 0.78rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
   .event-modal-footer .btn-submit-action {
-    padding: 6px 10px !important;
-    font-size: 0.76rem !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 0.78rem !important;
     white-space: nowrap !important;
     flex: 0 0 auto !important;
     text-align: center !important;
@@ -7021,25 +7047,35 @@ th.sort-active .sort-icon {
 }
 
 .btn-submit-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-weight: 800;
-  font-size: 0.88rem;
-  padding: 9px 18px;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   transition: all 0.15s ease;
 }
 
 .btn-submit-action:hover {
   background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
-/* 蜑企勁遒ｺ隱阪Δ繝ｼ繝€繝ｫ蟆ら畑繧ｹ繧ｿ繧､繝ｫ */
+/* 削除確認モーダル専用スタイル */
 .event-confirm-modal {
   max-width: 380px !important;
-  border-radius: 4px !important;
+  border-radius: 8px !important;
 }
 
 .confirm-icon-box {
@@ -7048,19 +7084,28 @@ th.sort-active .sort-icon {
 }
 
 .btn-danger-execute {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   background: #dc2626;
   border: 1px solid #dc2626;
   color: #ffffff;
-  font-weight: 800;
-  font-size: 0.88rem;
-  padding: 9px 18px;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-danger-execute:hover {
   background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .schedule-card-clickable {
@@ -8713,13 +8758,17 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 400;
+  font-weight: 600;
+  line-height: 1;
   color: #475569;
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -8728,7 +8777,8 @@ th.sort-active .sort-icon {
 
 .btn-member-modal-cancel:hover {
   background: #e2e8f0;
-  color: #475569;
+  border-color: #94a3b8;
+  color: #334155;
 }
 
 .btn-member-modal-save,
@@ -8736,18 +8786,22 @@ a.btn-member-modal-save {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
   border: 1px solid var(--primary);
-  border-radius: var(--radius);
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   text-decoration: none !important;
 }
 
@@ -8767,20 +8821,25 @@ a.btn-member-modal-save:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   color: #ffffff;
-  background: #ef4444;
-  border: 1px solid #ef4444;
-  border-radius: var(--radius);
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
 .btn-member-modal-delete-danger:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .btn-member-modal-delete-danger:disabled {
@@ -8856,7 +8915,7 @@ a.btn-member-modal-save:hover {
 .delete-modal-footer {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 12px !important;
+  gap: 10px !important;
   padding: 14px 20px 16px !important;
   border-top: 1px solid var(--border-color) !important;
   background: #ffffff !important;
@@ -8865,15 +8924,20 @@ a.btn-member-modal-save:hover {
 }
 
 .delete-modal-footer .btn-member-modal-cancel,
-.delete-modal-footer .btn-member-modal-delete-danger {
+.delete-modal-footer .btn-member-modal-delete-danger,
+.delete-modal-footer .btn-equipment-modal-cancel,
+.delete-modal-footer .btn-cancel-action,
+.delete-modal-footer .btn-danger-execute {
   width: 100% !important;
+  height: 38px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  padding: 9px 12px !important;
+  padding: 0 12px !important;
   font-size: 0.85rem !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
 }
@@ -8993,20 +9057,18 @@ a.btn-member-modal-save:hover {
     flex-shrink: 0 !important;
   }
 
-  .member-modal-footer-right .btn-member-modal-cancel {
-    padding: 7px 11px !important;
-    font-size: 0.8rem !important;
-  }
-
+  .member-modal-footer-right .btn-member-modal-cancel,
   .member-modal-footer-right .btn-member-modal-save {
-    padding: 7px 14px !important;
+    height: 36px !important;
+    padding: 0 12px !important;
     font-size: 0.8rem !important;
   }
 
   .btn-member-danger-link {
-    font-size: 0.76rem !important;
-    padding: 6px 2px !important;
-    gap: 2px !important;
+    height: 36px !important;
+    font-size: 0.78rem !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
   }
 
   .btn-member-danger-link .material-symbols-outlined {
@@ -9015,7 +9077,12 @@ a.btn-member-modal-save:hover {
 
   .delete-modal-footer {
     padding: 12px 14px 14px !important;
-    gap: 8px !important;
+    gap: 10px !important;
+  }
+
+  .delete-modal-footer > button {
+    height: 36px !important;
+    font-size: 0.8rem !important;
   }
 }
 
@@ -9570,36 +9637,49 @@ a.btn-member-modal-save:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 400;
+  font-weight: 600;
+  line-height: 1;
   color: #475569;
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
 }
 
 .btn-equipment-modal-cancel:hover {
   background: #e2e8f0;
-  color: #475569;
+  border-color: #94a3b8;
+  color: #334155;
 }
 
 .btn-equipment-modal-save {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
   border: 1px solid var(--primary);
-  border-radius: var(--radius);
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
 }
 
 .btn-equipment-modal-save:hover {
@@ -9962,7 +10042,8 @@ a.btn-member-modal-save:hover {
 
   .equipment-footer-right > button {
     width: auto !important;
-    padding: 7px 12px !important;
+    height: 36px !important;
+    padding: 0 12px !important;
     font-size: 0.8rem !important;
     white-space: nowrap !important;
   }
@@ -9974,9 +10055,10 @@ a.btn-member-modal-save:hover {
 
   .btn-equipment-danger-link {
     white-space: nowrap !important;
-    font-size: 0.76rem !important;
-    padding: 6px 2px !important;
-    gap: 2px !important;
+    height: 36px !important;
+    font-size: 0.78rem !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
   }
 
   .btn-equipment-danger-link .material-symbols-outlined {
@@ -10538,13 +10620,15 @@ a.btn-member-modal-save:hover {
   gap: 8px;
 }
 
+.bulletin-detail-actions-right,
 .bulletin-edit-actions-right {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
+  margin-left: auto !important;
 }
 
-/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント・角丸・行揃え） */
+/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント0.85rem・weight 600・角丸6px） */
 .bulletin-modal-footer .btn-cancel-action,
 .bulletin-modal-footer .btn-submit-action,
 .bulletin-modal-footer .bdm-action-btn {
@@ -10553,9 +10637,9 @@ a.btn-member-modal-save:hover {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
-  border-radius: 4px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
   padding: 0 16px !important;
   margin: 0 !important;
   line-height: 1 !important;
@@ -10592,13 +10676,13 @@ a.btn-member-modal-save:hover {
   height: 38px !important;
   box-sizing: border-box !important;
   padding: 0 16px !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   line-height: 1 !important;
@@ -11108,29 +11192,37 @@ textarea.comment-textarea:active {
     padding: 2px 0;
   }
 
-  /* 掲示板モーダルフッター：360pxスマホでも1行に美しく収める */
+  /* 掲示板モーダルフッター：全モーダル共通の1列統一サイズ */
   .bulletin-modal-footer {
-    padding: 10px 12px 12px !important;
+    padding: 12px 14px 14px !important;
     gap: 6px !important;
   }
 
   .bulletin-detail-actions-left,
   .bulletin-edit-actions-left,
+  .bulletin-detail-actions-right,
   .bulletin-edit-actions-right {
     gap: 6px !important;
-  }
-
-  .bulletin-edit-actions-right {
-    margin-left: auto !important;
   }
 
   .bulletin-modal-footer .btn-cancel-action,
   .bulletin-modal-footer .btn-submit-action,
   .bulletin-modal-footer .bdm-action-btn {
     height: 36px !important;
-    padding: 0 11px !important;
-    font-size: 0.82rem !important;
+    padding: 0 12px !important;
+    font-size: 0.8rem !important;
     gap: 4px !important;
+  }
+
+  .bulletin-modal-footer .bdm-action-btn.btn-delete-action {
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
+  }
+
+  .bulletin-modal-footer .bdm-action-btn.btn-delete-action .material-symbols-outlined {
+    font-size: 16px !important;
   }
 }
 
@@ -12904,7 +12996,7 @@ textarea.comment-textarea:active {
         <div id="deleteConfirmTargetText" class="font-bold mb-8 text-base">この予定を削除しますか？</div>
         <div class="text-sm text-muted">※ Google カレンダーから完全に削除されます。<br>この操作は取り消せません。</div>
       </div>
-      <div class="event-modal-footer flex-end gap-8">
+      <div class="modal-footer delete-modal-footer">
         <button type="button" class="btn-cancel-action" onclick="closeDeleteConfirmModal(event)">キャンセル</button>
         <button type="button" id="deleteConfirmExecuteBtn" class="btn-danger-execute" onclick="executeConfirmedDelete()">削除</button>
       </div>
@@ -13178,7 +13270,7 @@ textarea.comment-textarea:active {
       <div class="modal-footer member-modal-footer">
         <div class="member-modal-footer-left">
           <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
-            <span class="material-symbols-outlined text-sm">delete</span>メンバーを削除
+            <span class="material-symbols-outlined">delete</span><span>削除</span>
           </button>
         </div>
         <div class="member-modal-footer-right">
@@ -13261,11 +13353,13 @@ textarea.comment-textarea:active {
         </div>
       </div>
       <div class="modal-footer member-modal-footer">
-        <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
-        <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
-          <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
-          <span>テストユーザー登録画面を開く</span>
-        </a>
+        <div class="member-modal-footer-right">
+          <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
+          <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
+            <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
+            <span>テストユーザー登録画面を開く</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
@@ -13487,7 +13581,7 @@ textarea.comment-textarea:active {
       <div class="equipment-modal-footer-left">
         <button type="button" id="btnDeleteEquipment" class="btn-equipment-danger-link hidden" onclick="openEquipmentDeleteConfirmModal()">
           <span class="material-symbols-outlined">delete</span>
-          <span>備品を削除</span>
+          <span>削除</span>
         </button>
       </div>
       <div class="equipment-footer-right">
@@ -13758,22 +13852,22 @@ textarea.comment-textarea:active {
       </div>
     </div>
 
-    <!-- 操作フッター（統一ボタンスタイル） -->
+    <!-- 操作フッター（全モーダル統一配置：左＝削除、右＝主要操作） -->
     <div class="bulletin-modal-footer flex-between">
-      <div class="bulletin-detail-actions-left flex-center gap-8">
-        <label id="btnBdmTogglePin" class="bdm-action-btn bdm-pin-btn" for="bdmPinCheckbox" title="ホーム画面にピン留め">
-          <input type="checkbox" id="bdmPinCheckbox" onchange="handleBdmTogglePinCheckbox(this.checked)">
-          <span class="material-symbols-outlined text-sm" id="bdmPinActionIcon">push_pin</span>
-          <span id="bdmPinActionText">ピン留め</span>
-        </label>
+      <div class="bulletin-detail-actions-left">
         <button type="button" id="btnBdmDelete" class="bdm-action-btn btn-delete-action" onclick="handleBdmDelete()">
-          <span class="material-symbols-outlined text-sm">delete</span>
+          <span class="material-symbols-outlined">delete</span>
           <span>削除</span>
         </button>
       </div>
-      <div class="bulletin-detail-actions-right">
+      <div class="bulletin-detail-actions-right flex-center gap-8">
+        <label id="btnBdmTogglePin" class="bdm-action-btn bdm-pin-btn" for="bdmPinCheckbox" title="ホーム画面にピン留め">
+          <input type="checkbox" id="bdmPinCheckbox" onchange="handleBdmTogglePinCheckbox(this.checked)">
+          <span class="material-symbols-outlined" id="bdmPinActionIcon">push_pin</span>
+          <span id="bdmPinActionText">ピン留め</span>
+        </label>
         <button type="button" id="btnBdmEdit" class="bdm-action-btn btn-edit-action" onclick="openBulletinEditModalFromCurrent()">
-          <span class="material-symbols-outlined text-sm">edit</span>
+          <span class="material-symbols-outlined">edit</span>
           <span>編集</span>
         </button>
       </div>
