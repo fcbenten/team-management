@@ -370,12 +370,15 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
         curr_r += 1
 
         img = openpyxl.drawing.image.Image(flow_image_path)
-        # 80列グリッド(幅約1380px)に収まるようアスペクト比維持でスケーリング
-        scale = min(1.0, 1380.0 / img.width) if img.width > 0 else 1.0
-        img.width = int(img.width * scale)
-        img.height = int(img.height * scale)
-
-        ws.add_image(img, f"B{curr_r}")
+        if img.width >= 1450:
+            # 5列スイムレーン図などは80列グリッド全幅(約1580px)へフィット
+            scale = 1580.0 / img.width
+            img.width = int(img.width * scale)
+            img.height = int(img.height * scale)
+            ws.add_image(img, f"A{curr_r}")
+        else:
+            # 従来フォーマット(1380px等倍)
+            ws.add_image(img, f"B{curr_r}")
 
         # 画像が覆う行数を確保
         rows_needed = int(img.height / 24) + 2

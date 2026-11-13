@@ -53,11 +53,11 @@ def run_generate():
         },
         {
             "type": "area",
-            "name": "カードC/D: Google認可コールバック ＆ 初期パスワード設定 (#oauthLoadingOverlay / #oauthPasswordCard)",
+            "name": "カードC: 初期パスワード設定 ＆ 認可コールバック (#oauthLoadingOverlay / #oauthPasswordCard)",
             "desc": "Google認可画面からの ?code=... リダイレクト復帰、トークン交換、および初回パスワード設定領域",
             "items": [
-                ("連携中ローディングカード", "oauthLoadingOverlay", "カード領域", "-", "初期非表示（?code=... 受信時展開）", "Google認可復帰時に表示し、裏側でGAS apiExchangeOAuthCode を実行。"),
-                ("パスワード設定カード", "oauthPasswordCard", "カード領域", "-", "初期非表示（未設定時展開）", "Google認証成功・パスワード未設定時にカードCから切り替えて展開。"),
+                ("連携中ローディング表示", "oauthLoadingOverlay", "オーバーレイ表示", "-", "初期非表示（?code=... 受信時展開）", "Google認可復帰時に自動展開し、裏側でGAS apiExchangeOAuthCode を実行。"),
+                ("パスワード設定カード (カードC)", "oauthPasswordCard", "カード領域", "-", "初期非表示（未設定時展開）", "Google認証成功・パスワード未設定時にローディング表示から切り替えて展開。"),
                 ("設定パスワード入力欄", "oauthNewPwInput", "パスワード入力", "必須", "なし", "初回登録時のパスワード設定（4文字以上）。エラーは err-oauthNewPwInput に表示。"),
                 ("確認用パスワード入力欄", "oauthConfirmPwInput", "パスワード入力", "必須", "なし", "パスワード再確認入力欄。エラーは err-oauthConfirmPwInput に表示。"),
                 ("設定完了・ログインボタン", "oauthPwSubmitBtn", "ボタン", "-", "設定完了してログイン", "Supabase Direct（apiRegisterMember）でパスワードを保存し、SCR02ホーム画面へ遷移。"),
@@ -85,7 +85,7 @@ def run_generate():
          "事前確認カード（カードB）を閉じ、エラー表示をリセットしてログインカード（カードA）へ復帰。",
          "switchToLoginCard()", "カードA（#loginCard）へ切替"),
         ("Google連携コールバック", "画面読み込み時 (?code=...)",
-         "URL内の認可コードを取得し履歴をクリーンアップ後、カードCを表示。GAS API（apiExchangeOAuthCode）でトークン交換と名簿照合を実施し、パスワード設定済みなら即SCR02ホームへ、未設定ならカードD（#oauthPasswordCard）へ切替。",
+         "URL内の認可コードを取得し履歴をクリーンアップ後、連携中ローディング表示（#oauthLoadingOverlay）を展開。GAS API（apiExchangeOAuthCode）でトークン交換と名簿照合を実施し、パスワード設定済みなら即SCR02ホームへ、未設定ならカードC（#oauthPasswordCard）へ切替。",
          "checkOAuthCallbackOnLoad() / apiExchangeOAuthCode()", "GAS経由トークン交換・分岐切替"),
         ("設定完了・ログインボタン", "クリック時",
          "パスワード（4文字以上・確認一致）検証後、Supabase Direct（apiRegisterMember）で password_hash を保存し、localStorage登録後にSCR02ホーム画面を起動。",

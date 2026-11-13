@@ -709,7 +709,7 @@ def render_all_screen_flows(output_dir="d:/app/TeamManagement/docs/flow_images")
                 with open(html_path, "w", encoding="utf-8") as f:
                     f.write(html_content)
                 try:
-                    page.set_viewport_size({"width": 1620, "height": 1100})
+                    page.set_viewport_size({"width": 1720, "height": 1200})
                     page.goto(f"file:///{os.path.abspath(html_path)}")
                     page.wait_for_selector(".edge-label")
                     page.wait_for_timeout(200)

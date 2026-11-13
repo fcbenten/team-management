@@ -28,16 +28,16 @@ def build_scr01_swimlane_html():
     background: #FFFFFF;
     color: #0F172A;
     padding: 12px;
-    width: 1620px;
+    width: 1720px;
   }
 
   .diagram-container {
     position: relative;
-    width: 1596px;
+    width: 1696px;
     border: 1.5px solid #CBD5E1;
     border-radius: 12px;
     background: #F8FAFC;
-    padding: 16px;
+    padding: 18px;
     overflow: hidden;
   }
 
@@ -50,14 +50,14 @@ def build_scr01_swimlane_html():
     border-bottom: 2px solid #E2E8F0;
   }
   .header-title {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 800;
     color: #0F172A;
   }
   .legend-group {
     display: flex;
-    gap: 16px;
-    font-size: 11px;
+    gap: 18px;
+    font-size: 11.5px;
     font-weight: 700;
   }
   .legend-item {
@@ -71,32 +71,32 @@ def build_scr01_swimlane_html():
     border-radius: 2px;
   }
 
-  /* 5列スイムレーングリッド: 345 + 295 + 250 + 295 + 245 + 33*4 = 1430 + 132 = 1562px (コンテナ1596-32=1564内フィット) */
+  /* 5列スイムレーングリッド: 345 + 300 + 250 + 295 + 250 + 55*4 = 1440 + 220 = 1660px */
   .lanes-grid {
     display: grid;
-    grid-template-columns: 345px 295px 250px 295px 245px;
-    gap: 33px;
+    grid-template-columns: 345px 300px 250px 295px 250px;
+    gap: 55px;
     position: relative;
     z-index: 2;
   }
 
-  /* 各縦軸レーン（大箱） - 十分な縦余白で平行配線を確保 */
+  /* 各縦軸レーン（大箱） - 十分な縦高さ(1025px)と55pxギャップで交差のない直交配線を実現 */
   .lane {
     border-radius: 14px;
     padding: 12px;
     display: flex;
     flex-direction: column;
     position: relative;
-    min-height: 890px;
+    min-height: 1030px;
     border: 2px solid;
   }
   .lane-screen {
-    padding-left: 24px; /* 左端にカード戻る用クリーン通路を確保 */
+    padding-left: 26px; /* 左端にカード戻る用クリーン通路を確保 */
   }
   .lane-header {
-    font-size: 13px;
+    font-size: 13.5px;
     font-weight: 800;
-    padding: 6px 10px;
+    padding: 7px 10px;
     border-radius: 8px;
     text-align: center;
     margin-bottom: 14px;
@@ -190,7 +190,7 @@ def build_scr01_swimlane_html():
     gap: 8px;
   }
 
-  /* 小箱（ボタン・処理・ストレージ・他画面） */
+  /* 小箱（ボタン・処理・イベント・他画面） */
   .node-item {
     background: #FFFFFF;
     border: 1.5px solid #94A3B8;
@@ -254,13 +254,13 @@ def build_scr01_swimlane_html():
     text-align: center;
   }
   .node-db-logic {
-    font-size: 11.5px;
+    font-size: 12.5px;
     font-weight: 800;
     color: #0F172A;
     line-height: 1.2;
   }
   .node-db-phys {
-    font-size: 10px;
+    font-size: 10.5px;
     font-weight: 800;
     color: #334155;
     font-family: Consolas, monospace;
@@ -272,9 +272,9 @@ def build_scr01_swimlane_html():
   }
 
   .node-tag {
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 800;
-    padding: 1.5px 5px;
+    padding: 1.5px 6px;
     border-radius: 4px;
     display: inline-block;
     margin-bottom: 2px;
@@ -288,13 +288,13 @@ def build_scr01_swimlane_html():
   .tag-screen { background: #EDE9FE; color: #5B21B6; }
 
   .node-title {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 800;
     color: #0F172A;
     line-height: 1.25;
   }
   .node-sub {
-    font-size: 9px;
+    font-size: 9.5px;
     color: #475569;
     margin-top: 2px;
     line-height: 1.3;
@@ -313,9 +313,9 @@ def build_scr01_swimlane_html():
   }
   .edge-label {
     position: absolute;
-    font-size: 9px;
+    font-size: 9.5px;
     font-weight: 800;
-    padding: 1.5px 6px;
+    padding: 2px 7px;
     border-radius: 4px;
     background: #FFFFFF;
     border: 1px solid #CBD5E1;
@@ -335,7 +335,7 @@ def build_scr01_swimlane_html():
       <div class="legend-item"><div class="legend-line" style="background:#2563EB;"></div><span>通常処理・参照 (JS/GAS)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#059669;"></div><span>Supabase Direct バイパス (GAS不要)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#D97706;"></div><span>画面内カード表示・切替 (SPA)</span></div>
-      <div class="legend-item"><div class="legend-line" style="background:#7C3AED;"></div><span>他画面・外部遷移</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#7C3AED;"></div><span>他画面・外部遷移 / コールバック復帰</span></div>
     </div>
   </div>
 
@@ -347,19 +347,15 @@ def build_scr01_swimlane_html():
       <div class="lane-header">1. ログイン画面 (view_login.html)</div>
       <div class="lane-body">
 
-        <!-- 起動時: y=8 -->
-        <div class="sub-card" id="card-init" style="position:absolute; top: 8px; left: 0; right: 0; border-style: dashed; border-color: #94A3B8; background: #F8FAFC;">
-          <div class="sub-card-title" style="background:#E2E8F0; color:#334155;">起動時・ロード共通処理</div>
-          <div class="sub-card-list">
-            <div class="node-item node-trigger-init" id="t-init">
-              <span class="node-tag tag-init">初期表示</span>
-              <div class="node-title">画面読み込み (DOMContentLoaded)</div>
-            </div>
-          </div>
+        <!-- 起動時ロード共通イベント（枠なし・点線ノード） -->
+        <div class="node-item node-trigger-init" id="t-init" style="position:absolute; top: 14px; left: 0; right: 0;">
+          <span class="node-tag tag-init">初期表示</span>
+          <div class="node-title">画面読み込み (DOMContentLoaded)</div>
+          <div class="node-sub">起動時・セッション判定トリガー</div>
         </div>
 
-        <!-- カードA: y=132 -->
-        <div class="sub-card" id="card-login" style="position:absolute; top: 132px; left: 0; right: 0;">
+        <!-- カードA: ログインカード -->
+        <div class="sub-card" id="card-login" style="position:absolute; top: 146px; left: 0; right: 0;">
           <div class="sub-card-title">カードA: ログインカード (#loginCard)</div>
           <div class="sub-card-list">
             <div class="node-item node-trigger" id="t-login-btn">
@@ -375,8 +371,8 @@ def build_scr01_swimlane_html():
           </div>
         </div>
 
-        <!-- カードB: y=335 (新設: 連携事前確認カード) -->
-        <div class="sub-card" id="card-precheck" style="position:absolute; top: 335px; left: 0; right: 0;">
+        <!-- カードB: 連携事前確認カード -->
+        <div class="sub-card" id="card-precheck" style="position:absolute; top: 388px; left: 0; right: 0;">
           <div class="sub-card-title">カードB: 連携事前確認 (#oauthPreCheckCard)</div>
           <div class="sub-card-note">注意書き：事前登録済みのGmailで進行</div>
           <div class="sub-card-list">
@@ -392,21 +388,16 @@ def build_scr01_swimlane_html():
           </div>
         </div>
 
-        <!-- カードC: y=578 (連携ローディング) -->
-        <div class="sub-card" id="card-loading" style="position:absolute; top: 578px; left: 0; right: 0;">
-          <div class="sub-card-title">カードC: 連携中 (#oauthLoadingOverlay)</div>
-          <div class="sub-card-list">
-            <div class="node-item node-trigger-init" id="t-callback">
-              <span class="node-tag tag-init">リダイレクト復帰</span>
-              <div class="node-title">認可コールバック (?code=...)</div>
-              <div class="node-sub">Google認可コード受信時に自動展開</div>
-            </div>
-          </div>
+        <!-- リダイレクト復帰イベント（カード枠なし・#oauthLoadingOverlay 自動表示） -->
+        <div class="node-item node-trigger-init" id="t-callback" style="position:absolute; top: 696px; left: 0; right: 0;">
+          <span class="node-tag tag-init">リダイレクト復帰（自動実行）</span>
+          <div class="node-title">認可コールバック (?code=...)</div>
+          <div class="node-sub">連携中ローディング (#oauthLoadingOverlay) 自動展開</div>
         </div>
 
-        <!-- カードD: y=706 (初期パスワード設定) -->
-        <div class="sub-card" id="card-pw" style="position:absolute; top: 706px; left: 0; right: 0;">
-          <div class="sub-card-title">カードD: パスワード設定 (#oauthPasswordCard)</div>
+        <!-- カードC: 初期パスワード設定カード -->
+        <div class="sub-card" id="card-pw" style="position:absolute; top: 834px; left: 0; right: 0;">
+          <div class="sub-card-title">カードC: パスワード設定 (#oauthPasswordCard)</div>
           <div class="sub-card-list">
             <div class="node-item node-trigger" id="t-pw-submit">
               <span class="node-tag tag-btn">ボタン</span>
@@ -421,47 +412,48 @@ def build_scr01_swimlane_html():
 
     <!-- ======================================================
          2列目: JS (クライアント処理)
+         ※ Y座標はJS側でもトリガー中央に微調整し水平直線を保証
          ====================================================== -->
     <div class="lane lane-js">
       <div class="lane-header">2. JS (クライアント処理)</div>
       <div class="lane-body">
-        <div class="node-item node-js" id="j-init" style="position:absolute; top: 20px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-init" style="position:absolute; top: 14px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js</span>
           <div class="node-title">セッション判定処理</div>
           <div class="node-sub">fcb_auth_user 保持チェック</div>
         </div>
 
-        <div class="node-item node-js" id="j-login" style="position:absolute; top: 158px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-login" style="position:absolute; top: 180px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js ➔ supabase.js</span>
           <div class="node-title">handleUserLogin()</div>
           <div class="node-sub">Bypass: SupabaseService.loginUser()</div>
         </div>
 
-        <div class="node-item node-js" id="j-to-precheck" style="position:absolute; top: 236px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-to-precheck" style="position:absolute; top: 266px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js</span>
           <div class="node-title">switchToOAuthPreCheckCard()</div>
           <div class="node-sub">カードB表示 ＆ 入力状態初期化</div>
         </div>
 
-        <div class="node-item node-js" id="j-precheck-submit" style="position:absolute; top: 374px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-precheck-submit" style="position:absolute; top: 446px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js ➔ supabase.js</span>
           <div class="node-title">handleOAuthPreCheckSubmit()</div>
           <div class="node-sub">名簿照合 ➔ login_hint付きOAuth起動</div>
         </div>
 
-        <div class="node-item node-js" id="j-back-login" style="position:absolute; top: 462px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-back-login" style="position:absolute; top: 536px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js</span>
           <div class="node-title">switchToLoginCard()</div>
           <div class="node-sub">エラー解除 ＆ カードA表示切替</div>
         </div>
 
-        <div class="node-item node-js" id="j-callback" style="position:absolute; top: 588px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-callback" style="position:absolute; top: 696px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js</span>
           <div class="node-title">checkOAuthCallbackOnLoad()</div>
-          <div class="node-sub">分岐: 設定済➔ホーム / 未設定➔カードD</div>
+          <div class="node-sub">分岐: 設定済➔ホーム / 未設定➔カードC</div>
         </div>
 
-        <div class="node-item node-js" id="j-pw-submit" style="position:absolute; top: 726px; left: 0; right: 0;">
+        <div class="node-item node-js" id="j-pw-submit" style="position:absolute; top: 866px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js ➔ supabase.js</span>
           <div class="node-title">handleOAuthPasswordSubmit()</div>
           <div class="node-sub">Bypass: SupabaseService.registerMember()</div>
@@ -475,7 +467,7 @@ def build_scr01_swimlane_html():
     <div class="lane lane-gas">
       <div class="lane-header">3. GAS (バックエンドAPI)</div>
       <div class="lane-body">
-        <div class="node-item node-gas" id="g-exchange" style="position:absolute; top: 588px; left: 0; right: 0;">
+        <div class="node-item node-gas" id="g-exchange" style="position:absolute; top: 696px; left: 0; right: 0;">
           <span class="node-tag tag-gas">server/api_auth.js</span>
           <div class="node-title">apiExchangeOAuthCode(code)</div>
           <div class="node-sub">秘密鍵を用いて認可コードをトークンへ交換</div>
@@ -489,14 +481,14 @@ def build_scr01_swimlane_html():
     <div class="lane lane-db">
       <div class="lane-header">4. DB / 外部API</div>
       <div class="lane-body">
-        <div class="node-item node-ext" id="d-local" style="position:absolute; top: 8px; left: 0; right: 0;">
+        <div class="node-item node-ext" id="d-local" style="position:absolute; top: 14px; left: 0; right: 0;">
           <span class="node-tag tag-ext">Browser Storage</span>
           <div class="node-title">localStorage (fcb_auth_user)</div>
           <div class="node-sub">ログインセッションの読込・保存</div>
         </div>
 
-        <!-- members テーブル (洗練されたスチールグレー立体DBシリンダー: 論理名/物理名) -->
-        <div class="node-db-cyl" id="d-members" style="position:absolute; top: 162px; left: 0; right: 0;">
+        <!-- members テーブル (スチールグレー立体DBシリンダー: 論理名/物理名) -->
+        <div class="node-db-cyl" id="d-members" style="position:absolute; top: 176px; left: 0; right: 0;">
           <svg viewBox="0 0 196 92" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="dbSteelBody" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -521,7 +513,7 @@ def build_scr01_swimlane_html():
           </div>
         </div>
 
-        <div class="node-item node-ext" id="d-google-oauth" style="position:absolute; top: 588px; left: 0; right: 0; border-color:#3B82F6; background:#EFF6FF;">
+        <div class="node-item node-ext" id="d-google-oauth" style="position:absolute; top: 696px; left: 0; right: 0; border-color:#3B82F6; background:#EFF6FF;">
           <span class="node-tag" style="background:#DBEAFE; color:#1E40AF;">Google API</span>
           <div class="node-title">Google OAuth 2.0 サーバー</div>
           <div class="node-sub">Refresh Token ＆ ユーザー情報取得</div>
@@ -535,18 +527,18 @@ def build_scr01_swimlane_html():
     <div class="lane lane-other">
       <div class="lane-header">5. 他画面など</div>
       <div class="lane-body">
-        <!-- SCR02 ホーム画面: 縦に余裕を持たせて平行到着を受け止める -->
-        <div class="node-item node-other" id="n-home" style="position:absolute; top: 68px; left: 0; right: 0; height: 220px; display:flex; flex-direction:column; justify-content:center;">
+        <!-- SCR02 ホーム画面 -->
+        <div class="node-item node-other" id="n-home" style="position:absolute; top: 82px; left: 0; right: 0; height: 225px; display:flex; flex-direction:column; justify-content:center;">
           <span class="node-tag tag-screen">遷移先画面</span>
           <div class="node-title" style="font-size:14px; color:#4C1D95;">SCR02 ホーム画面</div>
           <div class="node-sub" style="margin-top:6px;">hideLoginScreen() ＆<br>loadAppInitialData() 実行</div>
         </div>
 
-        <!-- Google認可画面: カードB(handleOAuthPreCheckSubmit)と真横一列 y=384 -->
-        <div class="node-item node-other" id="n-google-auth" style="position:absolute; top: 384px; left: 0; right: 0;">
+        <!-- Google認可画面: カードB(handleOAuthPreCheckSubmit)と真横一列 -->
+        <div class="node-item node-other" id="n-google-auth" style="position:absolute; top: 448px; left: 0; right: 0;">
           <span class="node-tag" style="background:#E0F2FE; color:#0369A1;">外部画面遷移</span>
           <div class="node-title">Google アカウント認可画面</div>
-          <div class="node-sub">accounts.google.com<br>(login_hint指定・同意後にSCR01へ復帰)</div>
+          <div class="node-sub">accounts.google.com<br>(login_hint指定 ＆ 同意画面)</div>
         </div>
       </div>
     </div>
@@ -583,6 +575,29 @@ def build_scr01_swimlane_html():
     const svg = document.getElementById('svg-layer');
     const cRect = container.getBoundingClientRect();
 
+    // トリガー要素とJSボックスの縦中心を正確に一致させ、青いトリガー線を完全水平化
+    function alignCenterY(targetId, refId) {
+      const refEl = document.getElementById(refId);
+      const tgtEl = document.getElementById(targetId);
+      const parentRect = tgtEl.offsetParent.getBoundingClientRect();
+      const refRect = refEl.getBoundingClientRect();
+      const tgtRect = tgtEl.getBoundingClientRect();
+      const refCy = (refRect.top + refRect.bottom) / 2 - parentRect.top;
+      tgtEl.style.top = Math.round(refCy - tgtRect.height / 2) + 'px';
+    }
+
+    alignCenterY('j-init', 't-init');
+    alignCenterY('d-local', 't-init');
+    alignCenterY('j-login', 't-login-btn');
+    alignCenterY('j-to-precheck', 't-oauth-link');
+    alignCenterY('j-precheck-submit', 't-precheck-btn');
+    alignCenterY('n-google-auth', 't-precheck-btn');
+    alignCenterY('j-back-login', 't-back-login');
+    alignCenterY('j-callback', 't-callback');
+    alignCenterY('g-exchange', 't-callback');
+    alignCenterY('d-google-oauth', 't-callback');
+    alignCenterY('j-pw-submit', 't-pw-submit');
+
     function getBox(id) {
       const el = document.getElementById(id);
       const r = el.getBoundingClientRect();
@@ -611,7 +626,7 @@ def build_scr01_swimlane_html():
       svg.appendChild(path);
     }
 
-    // 直線・平行な直交折れ線パス（角丸 r=10）を自動生成するヘルパー
+    // 直線・平行な直交折れ線パス（角丸 r=10）
     function orthoPath(pts, r = 10) {
       if (pts.length < 2) return '';
       let d = `M ${pts[0][0]} ${pts[0][1]}`;
@@ -684,9 +699,10 @@ def build_scr01_swimlane_html():
 
     const col4Left = dGoogleOAuth.left;
     const col4Right = dGoogleOAuth.right;
+    const gutter12MidX = (cardLogin.right + jLogin.left) / 2;
 
     // =========================================================
-    // 1. 画面トリガー ➔ JS (完全直線・平行)
+    // 1. 画面トリガー ➔ JS (完全水平直線: 中央揃え済み!)
     // =========================================================
     addPath(`M ${tInit.right} ${tInit.cy} L ${jInit.left - 2} ${tInit.cy}`, '#2563EB', 'arr-blue');
     addPath(`M ${tLogin.right} ${tLogin.cy} L ${jLogin.left - 2} ${tLogin.cy}`, '#2563EB', 'arr-blue');
@@ -697,127 +713,146 @@ def build_scr01_swimlane_html():
     addPath(`M ${tPwSubmit.right} ${tPwSubmit.cy} L ${jPwSubmit.left - 2} ${tPwSubmit.cy}`, '#2563EB', 'arr-blue');
 
     // =========================================================
-    // 2. 初期表示: セッション保持チェック ＆ 分岐 (直交平行ライン)
+    // 2. 初期表示: セッション保持チェック ＆ 分岐
     // =========================================================
-    // 2a. JS(init) ◀──▶ localStorage (上段の水平直線)
-    const yLocalCheck = dLocal.cy + 4;
+    // 2a. JS(init) ◀──▶ localStorage (上段水平直線)
+    const yLocalCheck = dLocal.cy - 6;
     addPath(`M ${jInit.right + 2} ${yLocalCheck} L ${dLocal.left - 2} ${yLocalCheck}`, '#2563EB', 'arr-blue', 'arr-blue-rev');
     addLabel('保持確認', gExchange.cx, yLocalCheck, '#1E40AF', '#93C5FD');
 
-    // 2b. セッション有効時 ➔ SCR02 ホーム画面 (localStorageの下 y=132 を真横に走る直線トラック)
+    // 2b. セッション有効時 ➔ SCR02 ホーム画面 (localStorage直下の水平直線トラック)
     const trackHome1Y = dLocal.bottom + 18;
     addPath(orthoPath([
-      [jInit.right + 2, jInit.cy + 16],
-      [jInit.right + 22, jInit.cy + 16],
-      [jInit.right + 22, trackHome1Y],
+      [jInit.right + 2, jInit.cy + 14],
+      [jInit.right + 24, jInit.cy + 14],
+      [jInit.right + 24, trackHome1Y],
       [nHome.left - 2, trackHome1Y]
     ], 8), '#7C3AED', 'arr-purple');
     addLabel('セッション有効時', (col4Right + nHome.left) / 2, trackHome1Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
-    // 2c. ★セッション未保持時 ➔ カードA (#loginCard) へ切替・表示
-    const gutter12MidX = (cardLogin.right + jInit.left) / 2;
+    // 2c. ★セッション未保持時 ➔ カードA (#loginCard) へ表示 (jInit底辺から出て青い矢印に一切重ならない!)
+    const step1DropY = jInit.bottom + 12;
     addPath(orthoPath([
-      [jInit.left + 20, jInit.bottom],
-      [jInit.left + 20, cardLogin.top + 14],
+      [jInit.left + 26, jInit.bottom + 1],
+      [jInit.left + 26, step1DropY],
+      [gutter12MidX, step1DropY],
+      [gutter12MidX, cardLogin.top + 14],
       [cardLogin.right + 2, cardLogin.top + 14]
-    ], 10), '#D97706', 'arr-amber', null, null, 2.6);
-    addLabel('未保持時 カードA表示', gutter12MidX + 4, cardLogin.top - 10, '#B45309', '#FDE68A', '#FEF3C7');
+    ], 7), '#D97706', 'arr-amber', null, null, 2.5);
+    addLabel('未保持時 カードA表示', gutter12MidX, (step1DropY + cardLogin.top + 14) / 2, '#B45309', '#FDE68A', '#FEF3C7');
 
     // =========================================================
     // 3. カードA ログイン処理 & 「初めての方はこちら」
     // =========================================================
-    // 3a. ログイン認証: JS ◀──▶ members (GAS上空を完全直線でバイパス!)
+    // 3a. ログイン認証: JS ◀──▶ members (完全水平直線バイパス)
     const yLoginBypass = jLogin.cy + 8;
     addPath(`M ${jLogin.right + 2} ${yLoginBypass} L ${dMembers.left - 2} ${yLoginBypass}`, '#059669', 'arr-green', 'arr-green-rev', null, 2.5);
     addLabel('Direct認証照合', gExchange.cx, yLoginBypass, '#065F46', '#6EE7B7', '#ECFDF5');
 
-    // 3b. 認証成功 ➔ SCR02 ホーム画面 (trackHome1Y に完全平行な上側通路 y=162 を真横に走る!)
+    // 3b. 認証成功 ➔ SCR02 ホーム画面 (trackHome1Y に平行な上側トラック)
     const trackHome2Y = dMembers.top - 16;
     addPath(orthoPath([
       [jLogin.right + 2, jLogin.cy - 14],
-      [jLogin.right + 22, jLogin.cy - 14],
-      [jLogin.right + 22, trackHome2Y],
+      [jLogin.right + 24, jLogin.cy - 14],
+      [jLogin.right + 24, trackHome2Y],
       [nHome.left - 2, trackHome2Y]
     ], 8), '#7C3AED', 'arr-purple');
     addLabel('認証成功', (col4Right + nHome.left) / 2, trackHome2Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
-    // 3c. 「初めての方はこちら」 ➔ カードB (#oauthPreCheckCard) へ切替
+    // 3c. 「初めての方はこちら」 ➔ カードB (#oauthPreCheckCard) へ切替 (底辺から出て青い矢印と完全非接触!)
+    const step2DropY = jToPrecheck.bottom + 12;
     addPath(orthoPath([
-      [jToPrecheck.left + 20, jToPrecheck.bottom],
-      [jToPrecheck.left + 20, cardPrecheck.top + 16],
+      [jToPrecheck.left + 26, jToPrecheck.bottom + 1],
+      [jToPrecheck.left + 26, step2DropY],
+      [gutter12MidX, step2DropY],
+      [gutter12MidX, cardPrecheck.top + 16],
       [cardPrecheck.right + 2, cardPrecheck.top + 16]
-    ], 10), '#D97706', 'arr-amber', null, null, 2.6);
-    addLabel('カードBへ切替', gutter12MidX + 2, cardPrecheck.top - 8, '#B45309', '#FDE68A', '#FEF3C7');
+    ], 7), '#D97706', 'arr-amber', null, null, 2.5);
+    addLabel('カードBへ切替', gutter12MidX, (step2DropY + cardPrecheck.top + 16) / 2, '#B45309', '#FDE68A', '#FEF3C7');
 
     // =========================================================
     // 4. カードB: メアド事前チェック & OAuth遷移 / 戻る
-    //    ※ membersへの3本の直交バイパス線は x1 < x2 < x3 / y1 < y2 < y3 で完全非交差!
     // =========================================================
-    const xMemberBus1 = gExchange.right + 12;      // 最左: J4 (y=390) ➔ members上寄り
-    const xMemberBus2 = gExchange.right + 32;      // 中央: G1 (y=600) ➔ members中下寄り
-    const xMemberBus3 = col4Left - 10;             // 最右: J7 (y=740) ➔ members最下寄り
+    const xMemberBus1 = gExchange.right + 16;      // 最左: J4 ➔ members上寄り
+    const xMemberBus2 = gExchange.right + 36;      // 中央: G1 ➔ members中下寄り
+    const xMemberBus3 = col4Left - 14;             // 最右: J7 ➔ members最下寄り
 
-    const yMemberEnter1 = dMembers.bottom - 38;    // 最上 (y1)
-    const yMemberEnter2 = dMembers.bottom - 22;    // 中央 (y2)
-    const yMemberEnter3 = dMembers.bottom - 8;     // 最下 (y3)
+    const yMemberEnter1 = dMembers.bottom - 38;
+    const yMemberEnter2 = dMembers.bottom - 22;
+    const yMemberEnter3 = dMembers.bottom - 8;
 
     // 4a. 事前メアド照合: JS(precheck) ◀──▶ members (完全直交・非交差!)
     addPath(orthoPath([
-      [jPrecheckSubmit.right + 2, jPrecheckSubmit.cy - 10],
-      [xMemberBus1, jPrecheckSubmit.cy - 10],
+      [jPrecheckSubmit.right + 2, jPrecheckSubmit.cy - 12],
+      [xMemberBus1, jPrecheckSubmit.cy - 12],
       [xMemberBus1, yMemberEnter1],
       [dMembers.left - 2, yMemberEnter1]
     ], 8), '#059669', 'arr-green', 'arr-green-rev', null, 2.4);
     addLabel('Direct事前名簿照合', gExchange.cx, jPrecheckSubmit.cy - 12, '#065F46', '#6EE7B7', '#ECFDF5');
 
-    // 4b. 登録済み確認後 ➔ Googleアカウント認可画面 (真横の完全直線!)
-    const yGoogleAuthLine = nGoogleAuth.cy + 4;
+    // 4b. 登録済み確認後 ➔ Googleアカウント認可画面 (真横一線の水平破線!)
+    const yGoogleAuthLine = nGoogleAuth.cy + 6;
     addPath(`M ${jPrecheckSubmit.right + 2} ${yGoogleAuthLine} L ${nGoogleAuth.left - 2} ${yGoogleAuthLine}`, '#7C3AED', 'arr-purple', null, '6 3');
-    addLabel('login_hint指定 外部認可遷移', col4Left + 148, yGoogleAuthLine - 13, '#5B21B6', '#DDD6FE', '#F5F3FF');
+    addLabel('login_hint指定 外部認可遷移', dGoogleOAuth.cx, yGoogleAuthLine - 13, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
-    // 4c. 「ログイン画面へ戻る」 ➔ カードA へ戻る (カードBの下を通り、1列目左端専用通路をまっすぐ上る!)
+    // 4c. 「ログイン画面へ戻る」 ➔ カードA (カードB直下の通路を通り1列目左端から戻る)
     const leftReturnX = laneScreen.left + 11;
-    const underCardBY = cardPrecheck.bottom + 20;
+    const underCardBY = Math.max(cardPrecheck.bottom, jBackLogin.bottom) + 18;
     addPath(orthoPath([
-      [jBackLogin.left + 14, jBackLogin.bottom],
-      [jBackLogin.left + 14, underCardBY],
+      [jBackLogin.left + 26, jBackLogin.bottom + 1],
+      [jBackLogin.left + 26, underCardBY],
       [leftReturnX, underCardBY],
       [leftReturnX, cardLogin.cy],
       [cardLogin.left - 2, cardLogin.cy]
-    ], 10), '#D97706', 'arr-amber', null, null, 2.6);
-    addLabel('カードAへ戻る', cardPrecheck.cx - 40, underCardBY, '#B45309', '#FDE68A', '#FEF3C7');
+    ], 8), '#D97706', 'arr-amber', null, null, 2.5);
+    addLabel('カードAへ戻る', cardPrecheck.cx - 35, underCardBY, '#B45309', '#FDE68A', '#FEF3C7');
 
     // =========================================================
-    // 5. カードC: OAuthコールバック (?code=...)
+    // 5. ★Google認可画面 ➔ 認可コールバック (?code=...) リダイレクト復帰線
     // =========================================================
-    // 5a. JS ◀──▶ GAS ◀──▶ Google OAuth 2.0 (一直線の横パイプライン)
+    const callbackReturnY = underCardBY + 44; // カードA戻り線(underCardBY)と完全分離された下の横通路
+    addPath(orthoPath([
+      [nGoogleAuth.cx, nGoogleAuth.bottom + 2],
+      [nGoogleAuth.cx, callbackReturnY],
+      [tCallback.cx, callbackReturnY],
+      [tCallback.cx, tCallback.top - 2]
+    ], 10), '#7C3AED', 'arr-purple', null, '5 3', 2.3);
+    addLabel('認可コード (?code=...) 付与でリダイレクト復帰', dGoogleOAuth.cx, callbackReturnY, '#5B21B6', '#DDD6FE', '#F5F3FF');
+
+    // =========================================================
+    // 6. コールバック処理: JS ◀──▶ GAS ◀──▶ Google OAuth / members
+    // =========================================================
+    // 6a. 一直線の横パイプライン
     addPath(`M ${jCallback.right + 2} ${jCallback.cy} L ${gExchange.left - 2} ${jCallback.cy}`, '#2563EB', 'arr-blue', 'arr-blue-rev');
     addPath(`M ${gExchange.right + 2} ${gExchange.cy + 10} L ${dGoogleOAuth.left - 2} ${gExchange.cy + 10}`, '#2563EB', 'arr-blue', 'arr-blue-rev');
 
-    // 5b. GAS ➔ members (xMemberBus2 をまっすぐ上って yMemberEnter2 へ)
+    // 6b. GAS ➔ members
     addPath(orthoPath([
       [gExchange.right + 2, gExchange.cy - 12],
       [xMemberBus2, gExchange.cy - 12],
       [xMemberBus2, yMemberEnter2],
       [dMembers.left - 2, yMemberEnter2]
     ], 8), '#2563EB', 'arr-blue');
-    addLabel('token保存 / 名簿照合', xMemberBus2 + 12, 505, '#1E40AF', '#93C5FD');
+    addLabel('token保存 / 名簿照合', xMemberBus2, 575, '#1E40AF', '#93C5FD');
 
-    // 5c. 未設定時 ➔ カードD (#oauthPasswordCard) へ切替
+    // 6c. 未設定時 ➔ カードC (#oauthPasswordCard) へ切替 (底辺から出て青い矢印と完全非接触!)
+    const step3DropY = jCallback.bottom + 12;
     addPath(orthoPath([
-      [jCallback.left + 20, jCallback.bottom],
-      [jCallback.left + 20, cardPw.top + 16],
+      [jCallback.left + 26, jCallback.bottom + 1],
+      [jCallback.left + 26, step3DropY],
+      [gutter12MidX, step3DropY],
+      [gutter12MidX, cardPw.top + 16],
       [cardPw.right + 2, cardPw.top + 16]
-    ], 10), '#D97706', 'arr-amber', null, null, 2.6);
-    addLabel('未設定時 カードD切替', gutter12MidX + 2, cardPw.top - 10, '#B45309', '#FDE68A', '#FEF3C7');
+    ], 7), '#D97706', 'arr-amber', null, null, 2.5);
+    addLabel('未設定時 カードC切替', gutter12MidX, (step3DropY + cardPw.top + 16) / 2, '#B45309', '#FDE68A', '#FEF3C7');
 
-    // 5d. 設定済時 ➔ SCR02 ホーム画面 (4-5列間の専用縦トラックを上って平行にホーム下部へ!)
-    const gutter45X = col4Right + 16;
-    const trackHome3Y = gExchange.bottom + 26;
+    // 6d. 設定済時 ➔ SCR02 ホーム画面 (4-5列間55px通路の中央を上る)
+    const gutter45X = (col4Right + nHome.left) / 2;
+    const trackHome3Y = gExchange.bottom + 24;
     addPath(orthoPath([
-      [jCallback.right + 2, jCallback.cy + 20],
-      [jCallback.right + 22, jCallback.cy + 20],
-      [jCallback.right + 22, trackHome3Y],
+      [jCallback.right + 2, jCallback.cy + 18],
+      [jCallback.right + 24, jCallback.cy + 18],
+      [jCallback.right + 24, trackHome3Y],
       [gutter45X, trackHome3Y],
       [gutter45X, nHome.bottom - 20],
       [nHome.left - 2, nHome.bottom - 20]
@@ -825,9 +860,9 @@ def build_scr01_swimlane_html():
     addLabel('設定済時 即ログイン', dGoogleOAuth.cx, trackHome3Y, '#5B21B6', '#DDD6FE', '#F5F3FF');
 
     // =========================================================
-    // 6. カードD: 初期パスワード設定
+    // 7. カードC: 初期パスワード設定
     // =========================================================
-    // 6a. JS(pwSubmit) ➔ members (xMemberBus3 をまっすぐ上って yMemberEnter3 へ — 非交差!)
+    // 7a. JS(pwSubmit) ➔ members (xMemberBus3 をまっすぐ上って yMemberEnter3 へ)
     addPath(orthoPath([
       [jPwSubmit.right + 2, jPwSubmit.cy - 10],
       [xMemberBus3, jPwSubmit.cy - 10],
@@ -836,13 +871,13 @@ def build_scr01_swimlane_html():
     ], 8), '#059669', 'arr-green', null, null, 2.5);
     addLabel('Direct PW保存', gExchange.cx, jPwSubmit.cy - 10, '#065F46', '#6EE7B7', '#ECFDF5');
 
-    // 6b. 設定完了 ➔ SCR02 ホーム画面 (最下部をまっすぐ走り、Google認可画面右外余白を上ってホーム底辺へ!)
-    const trackHome4Y = jPwSubmit.bottom + 26;
+    // 7b. 設定完了 ➔ SCR02 ホーム画面 (最下部から右余白を通ってホーム底辺へ)
+    const trackHome4Y = jPwSubmit.bottom + 24;
     const rightMarginX = nGoogleAuth.right + 7;
     addPath(orthoPath([
       [jPwSubmit.right + 2, jPwSubmit.cy + 14],
-      [jPwSubmit.right + 22, jPwSubmit.cy + 14],
-      [jPwSubmit.right + 22, trackHome4Y],
+      [jPwSubmit.right + 24, jPwSubmit.cy + 14],
+      [jPwSubmit.right + 24, trackHome4Y],
       [rightMarginX, trackHome4Y],
       [rightMarginX, nHome.bottom + 14],
       [nHome.right - 20, nHome.bottom + 14],
@@ -868,7 +903,7 @@ def generate_prototype():
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1620, "height": 1100})
+        page = browser.new_page(viewport={"width": 1720, "height": 1200})
         page.goto(f"file:///{html_path.replace(os.sep, '/')}")
         page.wait_for_selector(".edge-label")
         page.wait_for_timeout(200)
