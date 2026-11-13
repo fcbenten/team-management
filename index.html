@@ -3988,7 +3988,7 @@ html.no-scroll {
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border-color) !important;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: #ffffff;
 }
 
 .modal-match-header-left {
@@ -6926,13 +6926,13 @@ th.sort-active .sort-icon {
 
 .event-detail-modal .modal-header {
   flex-shrink: 0;
-  padding: 14px 18px 16px;
+  padding: 10px 18px;
   border-bottom: 1px solid var(--border-color);
   background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 0;
 }
 
 /* 1段目: 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ */
@@ -6949,13 +6949,18 @@ th.sort-active .sort-icon {
   gap: 4px;
 }
 
-/* 2段目: タグとタイトルが横並び */
+/* タグとタイトルが横並び（ボディ内でスクロール） */
 .event-modal-title-row {
   display: flex;
   align-items: center;
   gap: 10px;
   width: 100%;
   flex-wrap: wrap;
+}
+
+.event-modal-body .event-modal-title-row {
+  padding: 16px 0 12px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .event-modal-title-row .category-badge {
@@ -12383,7 +12388,7 @@ textarea.comment-textarea:active {
            </a>
            <a class="nav-item" onclick="switchTab('results')">
              <span class="material-symbols-outlined mr-3">sports_soccer</span>
-             スコア
+             試合結果
            </a>
            <a class="nav-item" id="navItemBulletin" onclick="switchTab('bulletin')">
              <span class="material-symbols-outlined mr-3">article</span>
@@ -13470,9 +13475,9 @@ textarea.comment-textarea:active {
   <div id="eventDetailModalOverlay" class="modal-overlay" onclick="closeEventDetailModal(event)">
     <div class="modal-content event-detail-modal">
       
-      <!-- モーダルヘッダー -->
+      <!-- モーダルヘッダー（操作ボタン・閉じるボタンのみ最上部固定） -->
       <div class="modal-header">
-        <!-- 1段目: 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ -->
+        <!-- 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ -->
         <div class="event-modal-actions-row">
           <div class="event-modal-left-actions">
             <!-- 鉛筆マーク（編集） -->
@@ -13499,15 +13504,15 @@ textarea.comment-textarea:active {
           <!-- 閉じるボタン（右寄せ） -->
           <button type="button" class="modal-close" onclick="closeEventDetailModal(event)">&times;</button>
         </div>
-        <!-- 2段目: タグとタイトルが横並び -->
-        <div class="event-modal-title-row">
-          <div id="edmCategoryBadge" class="category-badge"></div>
-          <div id="edmTitle" class="event-modal-title hidden"></div>
-        </div>
       </div>
 
       <!-- スクロール可能な詳細コンテンツ本体 -->
       <div class="modal-body event-modal-body">
+        <!-- タグとタイトルが横並び（本文と一緒にスクロール） -->
+        <div class="event-modal-title-row">
+          <div id="edmCategoryBadge" class="category-badge"></div>
+          <div id="edmTitle" class="event-modal-title hidden"></div>
+        </div>
         
         <!-- 日付 -->
         <div class="event-detail-row">
