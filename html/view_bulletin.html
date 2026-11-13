@@ -232,22 +232,22 @@
       </div>
     </div>
 
-    <!-- 操作フッター（統一ボタンスタイル） -->
+    <!-- 操作フッター（全モーダル統一配置：左＝削除、右＝主要操作） -->
     <div class="bulletin-modal-footer flex-between">
-      <div class="bulletin-detail-actions-left flex-center gap-8">
-        <label id="btnBdmTogglePin" class="bdm-action-btn bdm-pin-btn" for="bdmPinCheckbox" title="ホーム画面にピン留め">
-          <input type="checkbox" id="bdmPinCheckbox" onchange="handleBdmTogglePinCheckbox(this.checked)">
-          <span class="material-symbols-outlined text-sm" id="bdmPinActionIcon">push_pin</span>
-          <span id="bdmPinActionText">ピン留め</span>
-        </label>
+      <div class="bulletin-detail-actions-left">
         <button type="button" id="btnBdmDelete" class="bdm-action-btn btn-delete-action" onclick="handleBdmDelete()">
-          <span class="material-symbols-outlined text-sm">delete</span>
+          <span class="material-symbols-outlined">delete</span>
           <span>削除</span>
         </button>
       </div>
-      <div class="bulletin-detail-actions-right">
+      <div class="bulletin-detail-actions-right flex-center gap-8">
+        <label id="btnBdmTogglePin" class="bdm-action-btn bdm-pin-btn" for="bdmPinCheckbox" title="ホーム画面にピン留め">
+          <input type="checkbox" id="bdmPinCheckbox" onchange="handleBdmTogglePinCheckbox(this.checked)">
+          <span class="material-symbols-outlined" id="bdmPinActionIcon">push_pin</span>
+          <span id="bdmPinActionText">ピン留め</span>
+        </label>
         <button type="button" id="btnBdmEdit" class="bdm-action-btn btn-edit-action" onclick="openBulletinEditModalFromCurrent()">
-          <span class="material-symbols-outlined text-sm">edit</span>
+          <span class="material-symbols-outlined">edit</span>
           <span>編集</span>
         </button>
       </div>

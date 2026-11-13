@@ -1088,13 +1088,17 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 400;
+  font-weight: 600;
+  line-height: 1;
   color: #475569;
   background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: var(--radius);
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1103,7 +1107,8 @@
 
 .btn-member-modal-cancel:hover {
   background: #e2e8f0;
-  color: #475569;
+  border-color: #94a3b8;
+  color: #334155;
 }
 
 .btn-member-modal-save,
@@ -1111,18 +1116,22 @@ a.btn-member-modal-save {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
   border: 1px solid var(--primary);
-  border-radius: var(--radius);
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
   transition: all 0.15s ease;
-  box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   text-decoration: none !important;
 }
 
@@ -1142,20 +1151,25 @@ a.btn-member-modal-save:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 20px;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
+  line-height: 1;
   color: #ffffff;
-  background: #ef4444;
-  border: 1px solid #ef4444;
-  border-radius: var(--radius);
+  background: #dc2626;
+  border: 1px solid #dc2626;
+  border-radius: 6px;
+  box-sizing: border-box;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.15s ease;
 }
 
 .btn-member-modal-delete-danger:hover {
-  background: #dc2626;
-  border-color: #dc2626;
+  background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .btn-member-modal-delete-danger:disabled {
@@ -1231,7 +1245,7 @@ a.btn-member-modal-save:hover {
 .delete-modal-footer {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 12px !important;
+  gap: 10px !important;
   padding: 14px 20px 16px !important;
   border-top: 1px solid var(--border-color) !important;
   background: #ffffff !important;
@@ -1240,15 +1254,20 @@ a.btn-member-modal-save:hover {
 }
 
 .delete-modal-footer .btn-member-modal-cancel,
-.delete-modal-footer .btn-member-modal-delete-danger {
+.delete-modal-footer .btn-member-modal-delete-danger,
+.delete-modal-footer .btn-equipment-modal-cancel,
+.delete-modal-footer .btn-cancel-action,
+.delete-modal-footer .btn-danger-execute {
   width: 100% !important;
+  height: 38px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
   text-align: center !important;
-  padding: 9px 12px !important;
+  padding: 0 12px !important;
   font-size: 0.85rem !important;
-  font-weight: 500 !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
 }
@@ -1368,20 +1387,18 @@ a.btn-member-modal-save:hover {
     flex-shrink: 0 !important;
   }
 
-  .member-modal-footer-right .btn-member-modal-cancel {
-    padding: 7px 11px !important;
-    font-size: 0.8rem !important;
-  }
-
+  .member-modal-footer-right .btn-member-modal-cancel,
   .member-modal-footer-right .btn-member-modal-save {
-    padding: 7px 14px !important;
+    height: 36px !important;
+    padding: 0 12px !important;
     font-size: 0.8rem !important;
   }
 
   .btn-member-danger-link {
-    font-size: 0.76rem !important;
-    padding: 6px 2px !important;
-    gap: 2px !important;
+    height: 36px !important;
+    font-size: 0.78rem !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
   }
 
   .btn-member-danger-link .material-symbols-outlined {
@@ -1390,6 +1407,11 @@ a.btn-member-modal-save:hover {
 
   .delete-modal-footer {
     padding: 12px 14px 14px !important;
-    gap: 8px !important;
+    gap: 10px !important;
+  }
+
+  .delete-modal-footer > button {
+    height: 36px !important;
+    font-size: 0.8rem !important;
   }
 }

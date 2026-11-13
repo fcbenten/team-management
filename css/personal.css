@@ -510,13 +510,13 @@ th.sort-active .sort-icon {
     width: 26px !important;
     height: 26px !important;
     border-radius: 50% !important;
-    background: #eff6ff !important;
-    border: 1px solid #bfdbfe !important;
+    background: #f1f5f9 !important;
+    border: none !important;
   }
 
   .player-avatar-icon .material-symbols-outlined {
     font-size: 0.95rem !important;
-    color: var(--primary) !important;
+    color: #94a3b8 !important;
   }
 
   .player-name-meta {

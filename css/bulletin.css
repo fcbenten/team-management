@@ -511,13 +511,15 @@
   gap: 8px;
 }
 
+.bulletin-detail-actions-right,
 .bulletin-edit-actions-right {
   display: flex !important;
   align-items: center !important;
   gap: 10px !important;
+  margin-left: auto !important;
 }
 
-/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント・角丸・行揃え） */
+/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント0.85rem・weight 600・角丸6px） */
 .bulletin-modal-footer .btn-cancel-action,
 .bulletin-modal-footer .btn-submit-action,
 .bulletin-modal-footer .bdm-action-btn {
@@ -526,9 +528,9 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
-  border-radius: 4px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
   padding: 0 16px !important;
   margin: 0 !important;
   line-height: 1 !important;
@@ -565,13 +567,13 @@
   height: 38px !important;
   box-sizing: border-box !important;
   padding: 0 16px !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   line-height: 1 !important;
@@ -1081,28 +1083,36 @@ textarea.comment-textarea:active {
     padding: 2px 0;
   }
 
-  /* 掲示板モーダルフッター：360pxスマホでも1行に美しく収める */
+  /* 掲示板モーダルフッター：全モーダル共通の1列統一サイズ */
   .bulletin-modal-footer {
-    padding: 10px 12px 12px !important;
+    padding: 12px 14px 14px !important;
     gap: 6px !important;
   }
 
   .bulletin-detail-actions-left,
   .bulletin-edit-actions-left,
+  .bulletin-detail-actions-right,
   .bulletin-edit-actions-right {
     gap: 6px !important;
-  }
-
-  .bulletin-edit-actions-right {
-    margin-left: auto !important;
   }
 
   .bulletin-modal-footer .btn-cancel-action,
   .bulletin-modal-footer .btn-submit-action,
   .bulletin-modal-footer .bdm-action-btn {
     height: 36px !important;
-    padding: 0 11px !important;
-    font-size: 0.82rem !important;
+    padding: 0 12px !important;
+    font-size: 0.8rem !important;
     gap: 4px !important;
+  }
+
+  .bulletin-modal-footer .bdm-action-btn.btn-delete-action {
+    font-size: 0.78rem !important;
+    font-weight: 500 !important;
+    padding: 0 4px !important;
+    gap: 3px !important;
+  }
+
+  .bulletin-modal-footer .bdm-action-btn.btn-delete-action .material-symbols-outlined {
+    font-size: 16px !important;
   }
 }

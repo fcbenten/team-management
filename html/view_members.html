@@ -213,7 +213,7 @@
       <div class="modal-footer member-modal-footer">
         <div class="member-modal-footer-left">
           <button type="button" id="btnDeleteMemberTrigger" class="btn-member-danger-link" onclick="openMemberDeleteConfirmFromModal()">
-            <span class="material-symbols-outlined text-sm">delete</span>メンバーを削除
+            <span class="material-symbols-outlined">delete</span><span>削除</span>
           </button>
         </div>
         <div class="member-modal-footer-right">
@@ -296,11 +296,13 @@
         </div>
       </div>
       <div class="modal-footer member-modal-footer">
-        <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
-        <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
-          <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
-          <span>テストユーザー登録画面を開く</span>
-        </a>
+        <div class="member-modal-footer-right">
+          <button type="button" class="btn-member-modal-cancel" onclick="closeAdminOAuthGuidanceModal(event)">閉じる</button>
+          <a href="https://console.cloud.google.com/auth/audience?project=gas-export-504009" target="_blank" rel="noopener noreferrer" class="btn-member-modal-save">
+            <span class="material-symbols-outlined guidance-btn-icon">open_in_new</span>
+            <span>テストユーザー登録画面を開く</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>

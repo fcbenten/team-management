@@ -279,20 +279,23 @@ select:focus, input:focus, textarea:focus {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 6px !important;
+  gap: 5px !important;
   width: 100% !important;
-  padding: 10px 16px !important;
-  background-color: var(--primary, #0284c7) !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  background-color: var(--primary, #2563eb) !important;
   color: #ffffff !important;
-  border: 1px solid var(--primary, #0284c7) !important;
-  border-radius: var(--radius, 4px) !important;
-  font-size: 0.88rem !important;
-  font-weight: 700 !important;
+  border: 1px solid var(--primary, #2563eb) !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  transition: all 0.15s ease !important;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2) !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
 }
 .btn-primary-action:hover:not(:disabled) {
   background-color: var(--primary-hover, #0369a1) !important;
@@ -315,21 +318,26 @@ select:focus, input:focus, textarea:focus {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 10px 16px !important;
+  gap: 5px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
   background-color: #f1f5f9 !important;
   color: #475569 !important;
   border: 1px solid #cbd5e1 !important;
-  border-radius: var(--radius, 4px) !important;
-  font-size: 0.88rem !important;
+  border-radius: 6px !important;
+  font-size: 0.85rem !important;
   font-weight: 600 !important;
+  line-height: 1 !important;
   cursor: pointer !important;
   transition: all 0.15s ease !important;
   box-sizing: border-box !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
 }
 .btn-cancel-action:hover {
   background-color: #e2e8f0 !important;
-  color: #475569 !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
 }
 
 /* 枠線ボタン */

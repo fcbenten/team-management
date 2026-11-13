@@ -634,7 +634,7 @@
     flex-wrap: nowrap !important;
     align-items: center !important;
     justify-content: space-between !important;
-    padding: 10px 10px 12px !important;
+    padding: 12px 10px 14px !important;
     gap: 6px !important;
     box-sizing: border-box !important;
   }
@@ -648,9 +648,10 @@
     margin-left: auto !important;
   }
   .event-modal-footer .btn-delete-action {
-    padding: 6px 2px !important;
-    font-size: 0.76rem !important;
-    gap: 2px !important;
+    height: 36px !important;
+    padding: 0 4px !important;
+    font-size: 0.78rem !important;
+    gap: 3px !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
@@ -658,14 +659,16 @@
     font-size: 16px !important;
   }
   .event-modal-footer .btn-cancel-action {
-    padding: 6px 9px !important;
-    font-size: 0.76rem !important;
+    height: 36px !important;
+    padding: 0 9px !important;
+    font-size: 0.78rem !important;
     white-space: nowrap !important;
     flex-shrink: 0 !important;
   }
   .event-modal-footer .btn-submit-action {
-    padding: 6px 10px !important;
-    font-size: 0.76rem !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    font-size: 0.78rem !important;
     white-space: nowrap !important;
     flex: 0 0 auto !important;
     text-align: center !important;
@@ -1402,25 +1405,35 @@
 }
 
 .btn-submit-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-weight: 800;
-  font-size: 0.88rem;
-  padding: 9px 18px;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  white-space: nowrap;
   cursor: pointer;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.2);
   transition: all 0.15s ease;
 }
 
 .btn-submit-action:hover {
   background: var(--primary-hover);
+  border-color: var(--primary-hover);
 }
 
-/* 蜑企勁遒ｺ隱阪Δ繝ｼ繝€繝ｫ蟆ら畑繧ｹ繧ｿ繧､繝ｫ */
+/* 削除確認モーダル専用スタイル */
 .event-confirm-modal {
   max-width: 380px !important;
-  border-radius: 4px !important;
+  border-radius: 8px !important;
 }
 
 .confirm-icon-box {
@@ -1429,19 +1442,28 @@
 }
 
 .btn-danger-execute {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
   background: #dc2626;
   border: 1px solid #dc2626;
   color: #ffffff;
-  font-weight: 800;
-  font-size: 0.88rem;
-  padding: 9px 18px;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  line-height: 1;
+  border-radius: 6px;
+  box-sizing: border-box;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .btn-danger-execute:hover {
   background: #b91c1c;
+  border-color: #b91c1c;
 }
 
 .schedule-card-clickable {
