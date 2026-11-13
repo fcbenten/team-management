@@ -19,13 +19,13 @@
 <div id="app-toast" class="hidden" aria-hidden="true"></div>
 
 <!-- =========================================
-     プロフィール確認・パスワード変更モーダル
-     プロフィール写真設定、選手基本情報、パスワード変更、ログアウト
+     プロフィール確認モーダル
+     プロフィール写真設定、選手基本情報、設定画面への遷移導線
      ========================================= -->
 <div id="userProfileModal" class="modal-overlay" onclick="closeUserProfileModal(event)">
   <div class="modal-content profile-modal-content">
     <div class="modal-header">
-      <div class="modal-title font-bold">プロフィール設定</div>
+      <div class="modal-title font-bold">プロフィール</div>
       <button type="button" class="modal-close" onclick="closeUserProfileModal(event)">&times;</button>
     </div>
     <div class="modal-body profile-modal-body">
@@ -64,6 +64,39 @@
         <span id="profileEmail" class="profile-value font-mono"></span>
       </div>
 
+      <!-- 設定画面への遷移メニュー -->
+      <button type="button" id="btnOpenUserSettings" class="profile-settings-nav-btn" onclick="openUserSettingsModal(event)">
+        <span class="profile-settings-nav-left">
+          <span class="material-symbols-outlined profile-settings-nav-icon">settings</span>
+          <span class="profile-settings-nav-text">
+            <span class="profile-settings-nav-title">設定</span>
+            <span class="profile-settings-nav-desc">通知・パスワード・ログアウト</span>
+          </span>
+        </span>
+        <span class="material-symbols-outlined profile-settings-nav-arrow">chevron_right</span>
+      </button>
+    </div>
+    <div class="modal-footer profile-modal-footer">
+      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     設定モーダル（通知設定、パスワード変更、ログアウト）
+     ========================================= -->
+<div id="userSettingsModal" class="modal-overlay" onclick="closeUserSettingsModal(event)">
+  <div class="modal-content profile-modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <div class="settings-modal-header-left">
+        <button type="button" id="btnBackToProfile" class="modal-back-btn" onclick="backToUserProfileModal(event)" aria-label="プロフィールへ戻る" title="プロフィールへ戻る">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="modal-title font-bold">設定</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeUserSettingsModal(event)">&times;</button>
+    </div>
+    <div class="modal-body profile-modal-body settings-modal-body">
       <!-- 通知設定セクション -->
       <div class="profile-notif-section">
         <div class="pw-section-title">通知設定</div>
@@ -209,7 +242,7 @@
       <button type="button" class="btn btn-logout w-full mb-8" onclick="openLogoutModal(event)">
         <span class="material-symbols-outlined mr-2">logout</span>ログアウト
       </button>
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
+      <button type="button" class="btn-cancel-action w-full" onclick="closeUserSettingsModal(event)">閉じる</button>
     </div>
   </div>
 </div>

@@ -1502,6 +1502,9 @@
     }
   }
 
+  window.openUserSettingsModal = openUserSettingsModal;
+  window.backToUserProfileModal = backToUserProfileModal;
+  window.closeUserSettingsModal = closeUserSettingsModal;
   window.handleNotifTypeChange = handleNotifTypeChange;
   window.handlePushPermissionRequest = handlePushPermissionRequest;
   window.handleLineConnectClick = handleLineConnectClick;
@@ -1849,23 +1852,8 @@
 
     if (emailEl) emailEl.textContent = u.email || '-';
 
-    setPwMsg('', '');
-
-    // パスワード変更フォームの初期状態をリセット
-    const showBtn = document.getElementById('showPwChangeBtn');
-    const formArea = document.getElementById('pwChangeFormArea');
-    if (showBtn) showBtn.classList.remove('hidden');
-    if (formArea) formArea.classList.add('hidden');
-
-    const currentPwInput = document.getElementById('currentPwInput');
-    const newPwInput = document.getElementById('newPwInput');
-    const confirmPwInput = document.getElementById('confirmNewPwInput');
-    if (currentPwInput) currentPwInput.value = '';
-    if (newPwInput) newPwInput.value = '';
-    if (confirmPwInput) confirmPwInput.value = '';
-
-    // 通知設定の初期状態をセット
-    initProfileNotificationSettings();
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
 
     const modal = document.getElementById('userProfileModal');
     if (modal) modal.classList.add('active');
@@ -1884,12 +1872,73 @@
   }
 
   /**
+   * 設定モーダルを開く（プロフィールモーダルから遷移）
+   */
+  function openUserSettingsModal(e) {
+    if (e) e.stopPropagation();
+    const u = window.currentUser;
+    if (!u) return;
+
+    const profileModal = document.getElementById('userProfileModal');
+    if (profileModal) profileModal.classList.remove('active');
+
+    setPwMsg('', '');
+
+    // パスワード変更フォームの初期状態をリセット
+    const showBtn = document.getElementById('showPwChangeBtn');
+    const formArea = document.getElementById('pwChangeFormArea');
+    if (showBtn) showBtn.classList.remove('hidden');
+    if (formArea) formArea.classList.add('hidden');
+
+    const currentPwInput = document.getElementById('currentPwInput');
+    const newPwInput = document.getElementById('newPwInput');
+    const confirmPwInput = document.getElementById('confirmNewPwInput');
+    if (currentPwInput) currentPwInput.value = '';
+    if (newPwInput) newPwInput.value = '';
+    if (confirmPwInput) confirmPwInput.value = '';
+
+    // 通知設定の初期状態をセット
+    initProfileNotificationSettings();
+
+    const modal = document.getElementById('userSettingsModal');
+    if (modal) {
+      modal.classList.add('active');
+      const bodyEl = modal.querySelector('.settings-modal-body');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    }
+  }
+
+  /**
+   * 設定モーダルからプロフィールモーダルへ戻る
+   */
+  function backToUserProfileModal(e) {
+    if (e) e.stopPropagation();
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
+    openUserProfileModal();
+  }
+
+  /**
+   * 設定モーダルを閉じる
+   */
+  function closeUserSettingsModal(e) {
+    if (e && e.target && e.target.closest('.settings-modal-content') && !e.target.closest('.modal-close') && !e.target.closest('.btn-cancel-action')) {
+      return;
+    }
+    const modal = document.getElementById('userSettingsModal');
+    if (modal) modal.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  }
+
+  /**
    * ログアウトモーダルを開く
    */
   function openLogoutModal(e) {
     if (e) e.stopPropagation();
     const profileModal = document.getElementById('userProfileModal');
     if (profileModal) profileModal.classList.remove('active');
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
     const modal = document.getElementById('logoutConfirmModal');
     if (modal) modal.classList.add('active');
   }
@@ -2721,6 +2770,8 @@
       if (lb && !lb.classList.contains('hidden')) return true;
       const prof = document.getElementById('userProfileModal');
       if (prof && prof.classList.contains('active')) return true;
+      const settings = document.getElementById('userSettingsModal');
+      if (settings && settings.classList.contains('active')) return true;
       const login = document.getElementById('loginScreen');
       if (login && login.style.display !== 'none') return true;
       const logout = document.getElementById('logoutConfirmModal');

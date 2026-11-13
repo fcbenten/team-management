@@ -966,13 +966,14 @@ def run_generate():
                 ("アバター写真アップロード", "avatarUploadInput", "ファイル選択 (image)", "任意", "現在の登録写真", "スマホのカメラ撮影または画像アルバムから正方形アイコンを選択。Canvasで256x256リサイズして保存。"),
                 ("アバター写真削除ボタン", "btnDeleteAvatar", "ボタン", "-", "写真登録時表示", "登録済みのアバター写真を削除。共通カスタム確認モーダル（showAppConfirm）で確認後に削除実行。"),
                 ("プロフィール基本情報", "profileBasicInfo", "表示エリア", "-", "背番号・名前・役職", "現在のログイン部員の基本情報を表示。"),
+                ("設定画面遷移ボタン", "btnOpenUserSettings", "メニューボタン", "-", "設定", "プロフィールモーダルを閉じて設定モーダル（userSettingsModal）へ遷移。"),
                 ("メッセージ表示領域 (プロフィール)", "err-settingsProfile", "インラインエラー", "-", "非表示", "画像形式・サイズ不適合エラーを表示する領域。")
             ]
         },
         {
             "type": "area",
-            "name": "通知受け取り設定 (個別選択・LINE連携・Web Push)",
-            "desc": "雨天中止連絡や出欠リマインドの受け取り手段選択、LINE連携コード発行・確認（未連携時のみ選択カード直下に表示）、端末Web Push有効化および通知設定保存領域",
+            "name": "設定画面 (#userSettingsModal：通知受け取り設定・パスワード変更・ログアウト)",
+            "desc": "プロフィールモーダルから遷移する設定モーダル（戻るボタンでプロフィールへ復帰）。通知受信手段選択、LINE連携、端末Web Push有効化、パスワード変更、ログアウトを集約",
             "items": [
                 ("LINE/Pushステータスバッジ", "notifBadgeLine / notifBadgePush", "ステータスバッジ", "-", "自動判定", "LINE連携状態（未連携/連携済）およびブラウザ通知許可状態（許可済/ブロック中/未許可/非対応端末）をチェックマーク付きで一覧表示。"),
                 ("通知方法ラジオ選択", "profileNotifType", "ラジオボタングループ", "必須", "スマホプッシュ通知", "「LINE通知」「プッシュ通知」「両方で受け取る」「通知を受け取らない」から各自が希望の受信先を選択。"),
@@ -996,6 +997,9 @@ def run_generate():
         }
     ]
     scr11_actions = [
+        ("設定画面遷移 / 戻るボタン", "クリック時",
+         "プロフィールモーダル（userProfileModal）の「設定」行クリックで設定モーダル（userSettingsModal）を開き、設定ヘッダーの戻るボタン（←）でプロフィールへ戻る。",
+         "openUserSettingsModal() / backToUserProfileModal()", "プロフィールと各種設定を分離し視認性を向上"),
         ("アバター写真アップロード", "ファイル選択時",
          "HTML5 Canvas を用いてクライアント側で画像を256x256px / JPEG形式に高速圧縮クロップ。GAS API（apiUploadProfileImage）へBase64送信し、Google Driveに保存。失敗時は共通カスタム通知ダイアログ（showAppAlert）表示。",
          "apiUploadProfileImage(base64Data)", "通信量を大幅削減して瞬時にアイコン反映"),
@@ -1029,9 +1033,9 @@ def run_generate():
     ]
 
     print("Building SCR11...")
-    create_grid_screen_sheet(wb, "SCR11_設定", "SCR11", "マイプロフィール・通知設定", "ログイン中の全メンバー利用可能",
-                             "html/view_common.html, css/common.css, js/main.js",
-                             "アバター写真の設定（Google Drive保存）、プッシュ通知/LINE通知の個別受信設定、およびログアウトを行うモーダル画面。",
+    create_grid_screen_sheet(wb, "SCR11_設定", "SCR11", "マイプロフィール・設定画面", "ログイン中の全メンバー利用可能",
+                             "html/view_common.html, css/layout.css, css/base.css, js/main.js",
+                             "プロフィール確認モーダル（写真設定・基本情報・設定導線）と、そこから遷移する設定モーダル（通知設定・パスワード変更・ログアウト）の2モーダル構成。",
                              scr11_tree, scr11_actions, scr11_errors, flow_image_path=flow_images.get("SCR11"))
 
     # ==============================================================================

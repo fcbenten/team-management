@@ -51,11 +51,90 @@
   padding: 8px 12px !important;
 }
 
-/* --- 通知設定セクション (プロフィールモーダル内) --- */
+/* --- 通知設定セクション (設定モーダル内) --- */
 .profile-notif-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* --- プロフィール内の設定画面遷移ボタン --- */
+.profile-settings-nav-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.profile-settings-nav-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.profile-settings-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.profile-settings-nav-icon {
+  font-size: 20px !important;
+  color: var(--primary, #2563eb);
+  flex-shrink: 0;
+}
+.profile-settings-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.profile-settings-nav-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+.profile-settings-nav-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.profile-settings-nav-arrow {
+  font-size: 20px !important;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* --- 設定モーダルヘッダー（戻るボタン付き） --- */
+.settings-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-back-btn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-heading);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.modal-back-btn:hover {
+  background: #f1f5f9;
+}
+.modal-back-btn .material-symbols-outlined {
+  font-size: 20px;
 }
 .notif-section-desc {
   font-size: 0.75rem;
