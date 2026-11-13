@@ -225,7 +225,7 @@
   align-items: center;
   padding: 20px 24px;
   border-bottom: 1px solid var(--border-color) !important;
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: #ffffff;
 }
 
 .modal-match-header-left {

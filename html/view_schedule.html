@@ -77,9 +77,9 @@
   <div id="eventDetailModalOverlay" class="modal-overlay" onclick="closeEventDetailModal(event)">
     <div class="modal-content event-detail-modal">
       
-      <!-- モーダルヘッダー -->
+      <!-- モーダルヘッダー（操作ボタン・閉じるボタンのみ最上部固定） -->
       <div class="modal-header">
-        <!-- 1段目: 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ -->
+        <!-- 鉛筆マークと3点ドットは左寄せ、閉じるボタンは右寄せ -->
         <div class="event-modal-actions-row">
           <div class="event-modal-left-actions">
             <!-- 鉛筆マーク（編集） -->
@@ -106,15 +106,15 @@
           <!-- 閉じるボタン（右寄せ） -->
           <button type="button" class="modal-close" onclick="closeEventDetailModal(event)">&times;</button>
         </div>
-        <!-- 2段目: タグとタイトルが横並び -->
-        <div class="event-modal-title-row">
-          <div id="edmCategoryBadge" class="category-badge"></div>
-          <div id="edmTitle" class="event-modal-title hidden"></div>
-        </div>
       </div>
 
       <!-- スクロール可能な詳細コンテンツ本体 -->
       <div class="modal-body event-modal-body">
+        <!-- タグとタイトルが横並び（本文と一緒にスクロール） -->
+        <div class="event-modal-title-row">
+          <div id="edmCategoryBadge" class="category-badge"></div>
+          <div id="edmTitle" class="event-modal-title hidden"></div>
+        </div>
         
         <!-- 日付 -->
         <div class="event-detail-row">
