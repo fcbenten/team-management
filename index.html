@@ -18368,6 +18368,40 @@ function appAlertModalClose(e) {
   }
 }
 
+/**
+ * 内部例外やDB・ネットワーク生エラーをマスクし、画面表示用の安全な日本語メッセージを返す。
+ * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg に置き換える。
+ */
+function getSafeErrorMessage(errOrMsg, fallbackMsg) {
+  var fallback = fallbackMsg || '処理に失敗しました。しばらく経ってから再度お試しください。';
+  var raw = '';
+  if (typeof errOrMsg === 'string') {
+    raw = errOrMsg;
+  } else if (errOrMsg && typeof errOrMsg === 'object') {
+    raw = errOrMsg.message || errOrMsg.error || '';
+  }
+  var msg = String(raw || '').trim();
+  if (!msg) return fallback;
+
+  // 例外クラス名・PostgRESTコード・DB制約・ネットワーク生文言・[object Object]等をマスク
+  var unsafePatterns = [
+    /\b(Exception|Error|TypeError|ReferenceError|SyntaxError|NetworkError|AbortError|PGRST\d+)\b/i,
+    /(violates |row-level security|constraint|duplicate key|foreign key|syntax error|relation "|column "|Failed to fetch|Load failed|Network request failed|timeout|ECONNREFUSED|status code \d+)/i,
+    /[A-Za-z0-9_]+\.[A-Za-z0-9_]+Error/,
+    /^\s*エラー\s*[:：]/,
+    /\[object Object\]/i
+  ];
+  for (var i = 0; i < unsafePatterns.length; i++) {
+    if (unsafePatterns[i].test(msg)) return fallback;
+  }
+
+  // 日本語（ひらがな・カタカナ・漢字）を含まない英語/記号のみのエラーは表示しない
+  if (!/[\u3040-\u30ff\u4e00-\u9faf]/.test(msg)) return fallback;
+
+  return msg;
+}
+window.getSafeErrorMessage = getSafeErrorMessage;
+
 window.showAppConfirm = showAppConfirm;
 window.handleAppConfirmResult = handleAppConfirmResult;
 window.appConfirmModalCancel = appConfirmModalCancel;
@@ -19208,20 +19242,22 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         if (res && res.success && res.registered) {
           startGoogleOAuthFlow(null, res.email || email);
         } else {
+          if (!(res && res.success)) console.error('apiCheckMemberEmailForOAuth error:', res);
           setLoginFieldError(
             'oauthPreCheckEmailInput',
-            (res && res.error) ? res.error : '名簿に登録されていないメールアドレスです。'
+            getSafeErrorMessage(res, '名簿に登録されていないメールアドレスです。')
           );
         }
       })
       .withFailureHandler(err => {
+        console.error('apiCheckMemberEmailForOAuth failure:', err);
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
         }
         setLoginFieldError(
           'oauthPreCheckEmailInput',
-          '通信エラーが発生しました: ' + ((err && err.message) || '')
+          getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         );
       })
       .apiCheckMemberEmailForOAuth(email);
@@ -19275,7 +19311,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!code) {
       if (err) {
         history.replaceState(null, '', window.location.pathname + window.location.hash);
-        showAppAlert({ title: '認証エラー', message: 'Google認証がキャンセルされたか、エラーが発生しました: ' + err, isError: true });
+        console.error('Google OAuth callback error:', err);
+        showAppAlert({ title: '認証エラー', message: 'Google認証がキャンセルされたか、認証に失敗しました。再度お試しください。', isError: true });
       }
       return false;
     }
@@ -19310,13 +19347,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           setLoginCardView('loginCard');
           const msg = (res && res.error === 'NOT_IN_ROSTER')
             ? '認証されたGoogleアカウント（' + (res.email || '') + '）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。'
-            : ((res && res.error) ? res.error : '連携処理に失敗しました。');
+            : getSafeErrorMessage(res, '連携処理に失敗しました。しばらく経ってから再度お試しください。');
           showAppAlert({ title: '連携エラー', message: msg, isError: true });
         }
       })
       .withFailureHandler(fetchErr => {
         setLoginCardView('loginCard');
-        showAppAlert({ title: '通信エラー', message: '連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''), isError: true });
+        console.error('apiExchangeOAuthCode failure:', fetchErr);
+        showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(fetchErr, '連携処理中に通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       })
       .apiExchangeOAuthCode(code, redirectUri);
 
@@ -19386,7 +19424,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           loadAppInitialData();
         } else {
           if (globalMsg) {
-            globalMsg.textContent = (res && res.error) ? res.error : '登録に失敗しました。';
+            console.error('oauth password submit error:', res);
+            globalMsg.textContent = getSafeErrorMessage(res, '登録に失敗しました。しばらく経ってから再度お試しください。');
             globalMsg.classList.remove('hidden');
             globalMsg.style.display = 'block';
           }
@@ -19398,7 +19437,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           submitBtn.textContent = '設定完了してログイン';
         }
         if (globalMsg) {
-          globalMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          console.error('oauth password submit failure:', err);
+          globalMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           globalMsg.classList.remove('hidden');
           globalMsg.style.display = 'block';
         }
@@ -19507,18 +19547,20 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           loadAppInitialData();
         } else {
           if (errorMsg) {
-            errorMsg.textContent = (res && res.error) ? res.error : 'ログインに失敗しました。';
+            console.error('apiLoginUser error:', res);
+            errorMsg.textContent = getSafeErrorMessage(res, 'ログインに失敗しました。メールアドレスまたはパスワードをご確認ください。');
             errorMsg.style.display = 'block';
           }
         }
       })
       .withFailureHandler(err => {
+        console.error('apiLoginUser failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
         }
         if (errorMsg) {
-          errorMsg.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          errorMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           errorMsg.style.display = 'block';
         }
       })
@@ -19680,11 +19722,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         if (typeof onComplete === 'function') onComplete(true);
       })
       .withFailureHandler(err => {
+        console.error('getInitialData failure:', err);
+        const safeErrMsg = getSafeErrorMessage(err, '通信環境をご確認の上、画面を再読み込みしてください。');
         const resultsList = document.getElementById('resultsList');
         if (resultsList) {
-          resultsList.innerHTML = '<div class="card-box error-box">データの取得に失敗しました<br><span class="error-sub">' + (err.message || '') + '</span></div>';
+          resultsList.innerHTML = '<div class="card-box error-box">データの取得に失敗しました<br><span class="error-sub">' + escapeHtml(safeErrMsg) + '</span></div>';
         }
-        handleError('eventSelect', 'データ初期取得エラー: ' + (err.message || ''));
+        handleError('eventSelect', 'データ初期取得エラー: ' + safeErrMsg);
         if (typeof onComplete === 'function') onComplete(false, err);
       })
       .getInitialData(forceRefresh);
@@ -19757,11 +19801,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           newPwInput.value = '';
           confirmPwInput.value = '';
         } else {
-          setPwMsg((res && res.error) ? res.error : '更新に失敗しました。', 'error');
+          console.error('apiChangePassword error:', res);
+          setPwMsg(getSafeErrorMessage(res, '更新に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
       .withFailureHandler(err => {
-        setPwMsg('通信エラー: ' + (err.message || ''), 'error');
+        console.error('apiChangePassword failure:', err);
+        setPwMsg(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
       })
       .apiChangePassword(u.name, currentPw, newPw);
   }
@@ -20038,9 +20084,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           window.refreshHomePushMockState();
         }
       } catch (err) {
+        console.error('Push notification enable error:', err);
         updateNotificationBadges();
         handleNotifTypeChange(currentVal);
-        const msg = err && err.message ? err.message : 'プッシュ通知の有効化に失敗しました。';
+        const msg = getSafeErrorMessage(err, 'プッシュ通知の有効化に失敗しました。');
         const isDenied = (typeof Notification !== 'undefined' && Notification.permission === 'denied');
         showAppAlert({
           title: isDenied ? '通知ブロック' : '通知設定エラー',
@@ -20097,7 +20144,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         window.refreshHomeLineMockState(false);
       }
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携コードの発行に失敗しました。', 'error');
+      console.error('issueLinkCode failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携コードの発行に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     } finally {
       if (btn) {
         btn.disabled = false;
@@ -20148,7 +20196,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         setProfileLineMsg('まだ連携が確認できていません。LINEトークへコード送信後に再度お試しください。', 'error');
       }
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携状態の確認に失敗しました。', 'error');
+      console.error('getLineLinkStatus failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携状態の確認に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     }
   }
 
@@ -20177,7 +20226,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
       setProfileLineMsg('LINEの連携を解除しました。', 'info');
     } catch (err) {
-      setProfileLineMsg(err && err.message ? err.message : '連携解除に失敗しました。', 'error');
+      console.error('unlinkLine failure:', err);
+      setProfileLineMsg(getSafeErrorMessage(err, '連携解除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -20241,11 +20291,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           if (res && res.success) {
             onComplete(true, res.message || '通知設定を保存しました');
           } else {
-            onComplete(false, (res && res.error) ? res.error : '保存に失敗しました');
+            console.error('apiSaveNotificationSettings error:', res);
+            onComplete(false, getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'));
           }
         })
         .withFailureHandler(err => {
-          onComplete(false, '通信エラー: ' + (err.message || ''));
+          console.error('apiSaveNotificationSettings failure:', err);
+          onComplete(false, getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'));
         })
         .apiSaveNotificationSettings(payload, u.name, u.email);
     } else {
@@ -20478,11 +20530,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
               showAvatarStatus('プロフィール写真を保存しました', 'success');
               setTimeout(() => { showAvatarStatus('', ''); }, 3500);
             } else {
-              showAvatarStatus('保存に失敗しました: ' + (res && res.error ? res.error : '不明なエラー'), 'error');
+              console.error('apiSaveProfileImage error:', res);
+              showAvatarStatus(getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'), 'error');
             }
           })
           .withFailureHandler(err => {
-            showAvatarStatus('通信エラー: ' + (err.message || ''), 'error');
+            console.error('apiSaveProfileImage failure:', err);
+            showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
           })
           .apiSaveProfileImage(window.currentUser.name, base64);
       };
@@ -20534,11 +20588,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           showAvatarStatus('プロフィール写真を削除しました', 'success');
           setTimeout(() => { showAvatarStatus('', ''); }, 3000);
         } else {
-          showAvatarStatus('削除に失敗しました: ' + (res && res.error ? res.error : ''), 'error');
+          console.error('apiDeleteProfileImage error:', res);
+          showAvatarStatus(getSafeErrorMessage(res, '削除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
       .withFailureHandler(err => {
-        showAvatarStatus('通信エラー: ' + (err.message || ''), 'error');
+        console.error('apiDeleteProfileImage failure:', err);
+        showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
       })
       .apiDeleteProfileImage(window.currentUser.name);
   }
@@ -20835,16 +20891,18 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             }
           } else {
             if (statusEl) {
-              statusEl.textContent = (res && res.error) ? res.error : '認証URLの取得に失敗しました。';
+              console.error('apiGetOAuthAuthUrl error:', res);
+              statusEl.textContent = getSafeErrorMessage(res, '認証URLの取得に失敗しました。しばらく経ってから再度お試しください。');
               statusEl.className = 'form-status-msg form-status-error mb-12';
               statusEl.classList.remove('hidden');
             }
           }
         })
         .withFailureHandler(err => {
+          console.error('apiGetOAuthAuthUrl failure:', err);
           resetForceAuthBtn();
           if (statusEl) {
-            statusEl.textContent = 'エラーが発生しました: ' + (err.message || '');
+            statusEl.textContent = getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
@@ -23855,7 +23913,11 @@ function submitData() {
       }
       
       if (typeof res === 'string' && res.includes('エラー')) {
-        showAppAlert({ title: '保存エラー', message: res, isError: true });
+        console.error('saveMatchData server error:', res);
+        var safeSaveMsg = (typeof getSafeErrorMessage === 'function')
+          ? getSafeErrorMessage(res, '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。')
+          : '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。';
+        showAppAlert({ title: '保存エラー', message: safeSaveMsg, isError: true });
       } else {
         
         // --- ローカルでの即時反映（ラグなし）処理 ---
@@ -23916,11 +23978,15 @@ function submitData() {
       }
     })
     .withFailureHandler(err => {
+      console.error('saveMatchData failure:', err);
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
       }
-      showAppAlert({ title: '通信エラー', message: '通信エラーが発生しました: ' + (err.message || err), isError: true });
+      var safeCommMsg = (typeof getSafeErrorMessage === 'function')
+        ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
+        : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
+      showAppAlert({ title: '通信エラー', message: safeCommMsg, isError: true });
     })
     .saveMatchData(payload);
 }
@@ -26643,7 +26709,8 @@ function executeConfirmedDelete() {
         }
       } else {
         closeDeleteConfirmModal();
-        showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
+        console.error('deleteCalendarEvent error:', res);
+        showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '予定の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -26652,7 +26719,8 @@ function executeConfirmedDelete() {
         execBtn.textContent = '削除';
       }
       closeDeleteConfirmModal();
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('deleteCalendarEvent failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .deleteCalendarEvent(payload);
 }
@@ -27038,7 +27106,8 @@ window.currentEditGuests = [];
 
         closeEventEditModal();
       } else {
-        showAppAlert({ title: '保存エラー', message: '保存に失敗しました: ' + (res ? res.error : '不明なエラー'), isError: true });
+        console.error('saveCalendarEvent error:', res);
+        showAppAlert({ title: '保存エラー', message: getSafeErrorMessage(res, '予定の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
@@ -27046,7 +27115,8 @@ window.currentEditGuests = [];
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
       }
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('saveCalendarEvent failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .saveCalendarEvent(payload);
 }
@@ -27283,7 +27353,8 @@ function initMembersView(initialRoster) {
           container.replaceChildren();
           const errBox = document.createElement('div');
           errBox.className = 'card-box error-box text-center p-20';
-          errBox.textContent = res && res.error ? res.error : 'メンバー情報の取得に失敗しました。';
+          console.error('apiGetMemberListForAdmin error:', res);
+          errBox.textContent = getSafeErrorMessage(res, 'メンバー情報の取得に失敗しました。しばらく経ってから再度お試しください。');
           container.appendChild(errBox);
         }
       }
@@ -27293,7 +27364,8 @@ function initMembersView(initialRoster) {
         container.replaceChildren();
         const errBox = document.createElement('div');
         errBox.className = 'card-box error-box text-center p-20';
-        errBox.textContent = '通信エラー: ' + (err.message || '');
+        console.error('apiGetMemberListForAdmin failure:', err);
+        errBox.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
         container.appendChild(errBox);
       }
     })
@@ -28395,7 +28467,8 @@ function handleSaveMemberSubmit(e) {
           setMemberFormStatus('', '');
           document.getElementById('memberEditEmail')?.focus();
         } else {
-          setMemberFormStatus(res && res.error ? res.error : '保存処理に失敗しました。', 'error');
+          console.error('apiSaveMember error:', res);
+          setMemberFormStatus(getSafeErrorMessage(res, '保存処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       }
     })
@@ -28404,7 +28477,8 @@ function handleSaveMemberSubmit(e) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
       }
-      setMemberFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
+      console.error('apiSaveMember failure:', err);
+      setMemberFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
     })
     .apiSaveMember(payload, actorEmail, actorName);
 }
@@ -28527,11 +28601,13 @@ async function handleRestoreMember(memberName) {
           }
         }
       } else {
-        showAppAlert({ title: '復帰エラー', message: '復帰処理に失敗しました: ' + (res && res.error ? res.error : ''), isError: true });
+        console.error('handleRestoreMember error:', res);
+        showAppAlert({ title: '復帰エラー', message: getSafeErrorMessage(res, '復帰処理に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(err => {
-      showAppAlert({ title: '通信エラー', message: 'エラーが発生しました: ' + (err.message || ''), isError: true });
+      console.error('handleRestoreMember failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiSaveMember(payload, actorEmail, actorName);
 }
@@ -28653,12 +28729,14 @@ function executeMemberDeletePermanently() {
           window.currentEditingMember = null;
         }, 500);
       } else {
-        setDeleteFormStatus(res && res.error ? res.error : '削除処理に失敗しました。', 'error');
+        console.error('apiDeleteMemberPermanently error:', res);
+        setDeleteFormStatus(getSafeErrorMessage(res, '削除処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
       }
     })
     .withFailureHandler(err => {
       if (deleteBtn) deleteBtn.disabled = false;
-      setDeleteFormStatus('エラーが発生しました: ' + (err.message || ''), 'error');
+      console.error('apiDeleteMemberPermanently failure:', err);
+      setDeleteFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
     })
     .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
 }
@@ -29670,7 +29748,7 @@ function handleSaveEquipmentSubmit(e) {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        showAppAlert({ title: '保存失敗', message: '備品の保存に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
+        showAppAlert({ title: '保存失敗', message: getSafeErrorMessage(res, '備品の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         return;
       }
 
@@ -29689,7 +29767,8 @@ function handleSaveEquipmentSubmit(e) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      showAppAlert({ title: '通信エラー', message: '保存通信エラーが発生しました: ' + (err.message || err), isError: true });
+      console.error('apiSaveEquipmentItem failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiSaveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName);
 }
@@ -29783,7 +29862,7 @@ function executeDeleteEquipmentPermanently() {
           window.initialFullData.equipmentData.itemsList = previousItems;
         }
         renderEquipmentUI();
-        showAppAlert({ title: '削除失敗', message: '備品の削除に失敗しました: ' + (res ? res.error : '通信エラー'), isError: true });
+        showAppAlert({ title: '削除失敗', message: getSafeErrorMessage(res, '備品の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
     .withFailureHandler(function(err) {
@@ -29793,7 +29872,8 @@ function executeDeleteEquipmentPermanently() {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || err), isError: true });
+      console.error('apiDeleteEquipmentItem failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
     })
     .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
 }
@@ -29885,7 +29965,8 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
           btnEl.classList.remove('btn-resolving');
           btnEl.textContent = '解決';
         }
-        showAppAlert({ title: '解決エラー', message: res ? res.error : '解決の登録に失敗しました。', isError: true });
+        console.error('apiResolveEquipmentAlert error:', res);
+        showAppAlert({ title: '解決エラー', message: getSafeErrorMessage(res, '解決の登録に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         refreshEquipmentData(true);
         return;
       }
@@ -29898,7 +29979,8 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
         btnEl.classList.remove('btn-resolving');
         btnEl.textContent = '解決';
       }
-      showAppAlert({ title: '通信エラー', message: '通信エラー: ' + (err.message || err), isError: true });
+      console.error('apiResolveEquipmentAlert failure:', err);
+      showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       refreshEquipmentData(true);
     })
     .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);
@@ -30561,7 +30643,8 @@ function handleBulletinPostSubmit(e) {
           loadBulletinData(true);
         } else {
           if (statusEl) {
-            statusEl.textContent = 'エラー: ' + (res ? res.error : '保存に失敗しました。');
+            console.error('apiSaveBulletinPost error:', res);
+            statusEl.textContent = getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
@@ -30570,7 +30653,8 @@ function handleBulletinPostSubmit(e) {
       .withFailureHandler(err => {
         enableForm();
         if (statusEl) {
-          statusEl.textContent = '通信エラーが発生しました: ' + (err.message || '');
+          console.error('apiSaveBulletinPost failure:', err);
+          statusEl.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusEl.className = 'form-status-msg form-status-error mb-12';
           statusEl.classList.remove('hidden');
         }
@@ -31234,7 +31318,8 @@ function handleSubmitBulletinComment() {
           renderBulletinComments(current.comments);
         } else {
           if (statusMsg) {
-            statusMsg.textContent = 'エラー: ' + (res ? res.error : '送信に失敗しました');
+            console.error('apiAddBulletinComment error:', res);
+            statusMsg.textContent = getSafeErrorMessage(res, '送信に失敗しました。しばらく経ってから再度お試しください。');
             statusMsg.className = 'comment-status-msg error';
             statusMsg.classList.remove('hidden');
           }
@@ -31243,7 +31328,8 @@ function handleSubmitBulletinComment() {
       .withFailureHandler(err => {
         enableBtn();
         if (statusMsg) {
-          statusMsg.textContent = '通信エラー: ' + (err.message || '');
+          console.error('apiAddBulletinComment failure:', err);
+          statusMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusMsg.className = 'comment-status-msg error';
           statusMsg.classList.remove('hidden');
         }
@@ -31419,12 +31505,14 @@ async function deleteBulletinPostById(postId, postTitle) {
         if (res && res.success) {
           loadBulletinData(true);
         } else {
-          showAppAlert({ title: '削除エラー', message: '削除に失敗しました: ' + (res ? res.error : ''), isError: true });
+          console.error('apiDeleteBulletinPost error:', res);
+          showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '投稿の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
           loadBulletinData(true);
         }
       })
       .withFailureHandler(err => {
-        showAppAlert({ title: '通信エラー', message: '削除通信エラーが発生しました: ' + (err.message || ''), isError: true });
+        console.error('apiDeleteBulletinPost failure:', err);
+        showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
         loadBulletinData(true);
       })
       .apiDeleteBulletinPost(postId, actorName);
