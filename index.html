@@ -19012,9 +19012,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    * ログイン画面の全フィールドエラー解除
    */
   function clearAllLoginFieldErrors() {
-    clearLoginFieldError('loginEmailInput');
-    clearLoginFieldError('loginPasswordInput');
-    clearLoginFieldError('oauthPreCheckEmailInput');
+    [
+      'loginEmailInput',
+      'loginPasswordInput',
+      'oauthPreCheckEmailInput',
+      'oauthNewPwInput',
+      'oauthConfirmPwInput'
+    ].forEach(clearLoginFieldError);
   }
 
   /**
@@ -19029,29 +19033,44 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     });
   }
 
+  // 名簿管理画面と共通のメールアドレス形式正規表現
+  const LOGIN_EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
   /**
-   * ログインメールアドレスのバリデーション（フォーカスアウト時・送信時）
+   * メールアドレス入力欄の共通バリデーション（フォーカスアウト時・送信時）
    */
-  function validateLoginEmailField() {
-    const input = document.getElementById('loginEmailInput');
+  function validateEmailFieldById(fieldId, emptyMsg) {
+    const input = document.getElementById(fieldId);
     if (!input) return true;
     const val = input.value.trim().toLowerCase();
     input.value = val;
 
     if (!val) {
-      setLoginFieldError('loginEmailInput', 'メールアドレスを入力してください。');
+      setLoginFieldError(fieldId, emptyMsg);
       return false;
     }
 
-    // 名簿管理画面と共通の正規表現チェック
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!emailRegex.test(val)) {
-      setLoginFieldError('loginEmailInput', 'メールアドレスの形式が正しくありません。');
+    if (!LOGIN_EMAIL_REGEX.test(val)) {
+      setLoginFieldError(fieldId, 'メールアドレスの形式が正しくありません。');
       return false;
     }
 
-    clearLoginFieldError('loginEmailInput');
+    clearLoginFieldError(fieldId);
     return true;
+  }
+
+  /**
+   * ログインメールアドレスのバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateLoginEmailField() {
+    return validateEmailFieldById('loginEmailInput', 'メールアドレスを入力してください。');
+  }
+
+  /**
+   * Google連携事前確認 Gmail入力欄のバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateOAuthPreCheckEmailField() {
+    return validateEmailFieldById('oauthPreCheckEmailInput', '登録済みのGmailアドレスを入力してください。');
   }
 
   /**
@@ -19072,26 +19091,66 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
+   * 初回パスワード設定：設定パスワード入力欄のバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateOAuthNewPwField() {
+    const input = document.getElementById('oauthNewPwInput');
+    if (!input) return true;
+    const val = input.value.trim();
+
+    if (!val || val.length < 4) {
+      setLoginFieldError('oauthNewPwInput', 'パスワードは4文字以上で設定してください。');
+      return false;
+    }
+
+    clearLoginFieldError('oauthNewPwInput');
+    const confirmInput = document.getElementById('oauthConfirmPwInput');
+    if (confirmInput && (confirmInput.value.trim() || confirmInput.classList.contains('input-has-error'))) {
+      validateOAuthConfirmPwField();
+    }
+    return true;
+  }
+
+  /**
+   * 初回パスワード設定：確認用パスワード入力欄のバリデーション（フォーカスアウト時・送信時）
+   */
+  function validateOAuthConfirmPwField() {
+    const pw1El = document.getElementById('oauthNewPwInput');
+    const pw2El = document.getElementById('oauthConfirmPwInput');
+    if (!pw1El || !pw2El) return true;
+    const p1 = pw1El.value.trim();
+    const p2 = pw2El.value.trim();
+
+    if (p1 !== p2) {
+      setLoginFieldError('oauthConfirmPwInput', '確認用パスワードと一致しません。');
+      return false;
+    }
+
+    clearLoginFieldError('oauthConfirmPwInput');
+    return true;
+  }
+
+  /**
    * ログイン画面の入力イベントリスナー初期化（フォーカスアウト時バリデーション）
    */
   function initLoginFormListeners() {
-    const emailInput = document.getElementById('loginEmailInput');
-    if (emailInput && !emailInput.dataset.listenerAttached) {
-      emailInput.dataset.listenerAttached = 'true';
-      emailInput.addEventListener('blur', validateLoginEmailField);
-      emailInput.addEventListener('input', () => {
-        if (emailInput.classList.contains('input-has-error')) validateLoginEmailField();
-      });
-    }
+    const fieldValidators = [
+      ['loginEmailInput', validateLoginEmailField],
+      ['loginPasswordInput', validateLoginPasswordField],
+      ['oauthPreCheckEmailInput', validateOAuthPreCheckEmailField],
+      ['oauthNewPwInput', validateOAuthNewPwField],
+      ['oauthConfirmPwInput', validateOAuthConfirmPwField]
+    ];
 
-    const pwInput = document.getElementById('loginPasswordInput');
-    if (pwInput && !pwInput.dataset.listenerAttached) {
-      pwInput.dataset.listenerAttached = 'true';
-      pwInput.addEventListener('blur', validateLoginPasswordField);
-      pwInput.addEventListener('input', () => {
-        if (pwInput.classList.contains('input-has-error')) validateLoginPasswordField();
+    fieldValidators.forEach(([fieldId, validator]) => {
+      const el = document.getElementById(fieldId);
+      if (!el || el.dataset.listenerAttached) return;
+      el.dataset.listenerAttached = 'true';
+      el.addEventListener('blur', validator);
+      el.addEventListener('input', () => {
+        if (el.classList.contains('input-has-error')) validator();
       });
-    }
+    });
   }
 
   /**
@@ -19130,11 +19189,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     if (!input) return;
 
     const email = input.value.trim().toLowerCase();
-    input.value = email;
-    clearLoginFieldError('oauthPreCheckEmailInput');
-
-    if (!email || !email.includes('@')) {
-      setLoginFieldError('oauthPreCheckEmailInput', '登録済みのGmailアドレスを入力してください。');
+    if (!validateOAuthPreCheckEmailField()) {
+      input.focus();
       return;
     }
 
@@ -19289,23 +19345,19 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const submitBtn = document.getElementById('oauthPwSubmitBtn');
 
     if (!pw1El || !pw2El) return;
-    const p1 = pw1El.value.trim();
-    const p2 = pw2El.value.trim();
-
-    const err1 = document.getElementById('err-oauthNewPwInput');
-    const err2 = document.getElementById('err-oauthConfirmPwInput');
-    if (err1) { err1.textContent = ''; err1.classList.add('hidden'); }
-    if (err2) { err2.textContent = ''; err2.classList.add('hidden'); }
     if (globalMsg) { globalMsg.textContent = ''; globalMsg.classList.add('hidden'); }
 
-    if (!p1 || p1.length < 4) {
-      if (err1) { err1.textContent = 'パスワードは4文字以上で設定してください。'; err1.classList.remove('hidden'); err1.style.display = 'block'; }
+    const isNewPwValid = validateOAuthNewPwField();
+    const isConfirmPwValid = validateOAuthConfirmPwField();
+    if (!isNewPwValid || !isConfirmPwValid) {
+      if (!isNewPwValid) {
+        pw1El.focus();
+      } else {
+        pw2El.focus();
+      }
       return;
     }
-    if (p1 !== p2) {
-      if (err2) { err2.textContent = '確認用パスワードと一致しません。'; err2.classList.remove('hidden'); err2.style.display = 'block'; }
-      return;
-    }
+    const p1 = pw1El.value.trim();
 
     if (submitBtn) {
       submitBtn.disabled = true;
