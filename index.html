@@ -2438,11 +2438,90 @@ html.no-scroll {
   padding: 8px 12px !important;
 }
 
-/* --- 通知設定セクション (プロフィールモーダル内) --- */
+/* --- 通知設定セクション (設定モーダル内) --- */
 .profile-notif-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* --- プロフィール内の設定画面遷移ボタン --- */
+.profile-settings-nav-btn {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+}
+.profile-settings-nav-btn:hover {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+.profile-settings-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.profile-settings-nav-icon {
+  font-size: 20px !important;
+  color: var(--primary, #2563eb);
+  flex-shrink: 0;
+}
+.profile-settings-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.profile-settings-nav-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-heading);
+}
+.profile-settings-nav-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.profile-settings-nav-arrow {
+  font-size: 20px !important;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+/* --- 設定モーダルヘッダー（戻るボタン付き） --- */
+.settings-modal-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-back-btn {
+  background: transparent;
+  border: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-heading);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.modal-back-btn:hover {
+  background: #f1f5f9;
+}
+.modal-back-btn .material-symbols-outlined {
+  font-size: 20px;
 }
 .notif-section-desc {
   font-size: 0.75rem;
@@ -11704,13 +11783,13 @@ textarea.comment-textarea:active {
 <div id="app-toast" class="hidden" aria-hidden="true"></div>
 
 <!-- =========================================
-     プロフィール確認・パスワード変更モーダル
-     プロフィール写真設定、選手基本情報、パスワード変更、ログアウト
+     プロフィール確認モーダル
+     プロフィール写真設定、選手基本情報、設定画面への遷移導線
      ========================================= -->
 <div id="userProfileModal" class="modal-overlay" onclick="closeUserProfileModal(event)">
   <div class="modal-content profile-modal-content">
     <div class="modal-header">
-      <div class="modal-title font-bold">プロフィール設定</div>
+      <div class="modal-title font-bold">プロフィール</div>
       <button type="button" class="modal-close" onclick="closeUserProfileModal(event)">&times;</button>
     </div>
     <div class="modal-body profile-modal-body">
@@ -11749,6 +11828,39 @@ textarea.comment-textarea:active {
         <span id="profileEmail" class="profile-value font-mono"></span>
       </div>
 
+      <!-- 設定画面への遷移メニュー -->
+      <button type="button" id="btnOpenUserSettings" class="profile-settings-nav-btn" onclick="openUserSettingsModal(event)">
+        <span class="profile-settings-nav-left">
+          <span class="material-symbols-outlined profile-settings-nav-icon">settings</span>
+          <span class="profile-settings-nav-text">
+            <span class="profile-settings-nav-title">設定</span>
+            <span class="profile-settings-nav-desc">通知・パスワード・ログアウト</span>
+          </span>
+        </span>
+        <span class="material-symbols-outlined profile-settings-nav-arrow">chevron_right</span>
+      </button>
+    </div>
+    <div class="modal-footer profile-modal-footer">
+      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     設定モーダル（通知設定、パスワード変更、ログアウト）
+     ========================================= -->
+<div id="userSettingsModal" class="modal-overlay" onclick="closeUserSettingsModal(event)">
+  <div class="modal-content profile-modal-content settings-modal-content">
+    <div class="modal-header settings-modal-header">
+      <div class="settings-modal-header-left">
+        <button type="button" id="btnBackToProfile" class="modal-back-btn" onclick="backToUserProfileModal(event)" aria-label="プロフィールへ戻る" title="プロフィールへ戻る">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <div class="modal-title font-bold">設定</div>
+      </div>
+      <button type="button" class="modal-close" onclick="closeUserSettingsModal(event)">&times;</button>
+    </div>
+    <div class="modal-body profile-modal-body settings-modal-body">
       <!-- 通知設定セクション -->
       <div class="profile-notif-section">
         <div class="pw-section-title">通知設定</div>
@@ -11894,7 +12006,7 @@ textarea.comment-textarea:active {
       <button type="button" class="btn btn-logout w-full mb-8" onclick="openLogoutModal(event)">
         <span class="material-symbols-outlined mr-2">logout</span>ログアウト
       </button>
-      <button type="button" class="btn-cancel-action w-full" onclick="closeUserProfileModal(event)">閉じる</button>
+      <button type="button" class="btn-cancel-action w-full" onclick="closeUserSettingsModal(event)">閉じる</button>
     </div>
   </div>
 </div>
@@ -19433,6 +19545,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
   }
 
+  window.openUserSettingsModal = openUserSettingsModal;
+  window.backToUserProfileModal = backToUserProfileModal;
+  window.closeUserSettingsModal = closeUserSettingsModal;
   window.handleNotifTypeChange = handleNotifTypeChange;
   window.handlePushPermissionRequest = handlePushPermissionRequest;
   window.handleLineConnectClick = handleLineConnectClick;
@@ -19780,23 +19895,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     if (emailEl) emailEl.textContent = u.email || '-';
 
-    setPwMsg('', '');
-
-    // パスワード変更フォームの初期状態をリセット
-    const showBtn = document.getElementById('showPwChangeBtn');
-    const formArea = document.getElementById('pwChangeFormArea');
-    if (showBtn) showBtn.classList.remove('hidden');
-    if (formArea) formArea.classList.add('hidden');
-
-    const currentPwInput = document.getElementById('currentPwInput');
-    const newPwInput = document.getElementById('newPwInput');
-    const confirmPwInput = document.getElementById('confirmNewPwInput');
-    if (currentPwInput) currentPwInput.value = '';
-    if (newPwInput) newPwInput.value = '';
-    if (confirmPwInput) confirmPwInput.value = '';
-
-    // 通知設定の初期状態をセット
-    initProfileNotificationSettings();
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
 
     const modal = document.getElementById('userProfileModal');
     if (modal) modal.classList.add('active');
@@ -19815,12 +19915,73 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
+   * 設定モーダルを開く（プロフィールモーダルから遷移）
+   */
+  function openUserSettingsModal(e) {
+    if (e) e.stopPropagation();
+    const u = window.currentUser;
+    if (!u) return;
+
+    const profileModal = document.getElementById('userProfileModal');
+    if (profileModal) profileModal.classList.remove('active');
+
+    setPwMsg('', '');
+
+    // パスワード変更フォームの初期状態をリセット
+    const showBtn = document.getElementById('showPwChangeBtn');
+    const formArea = document.getElementById('pwChangeFormArea');
+    if (showBtn) showBtn.classList.remove('hidden');
+    if (formArea) formArea.classList.add('hidden');
+
+    const currentPwInput = document.getElementById('currentPwInput');
+    const newPwInput = document.getElementById('newPwInput');
+    const confirmPwInput = document.getElementById('confirmNewPwInput');
+    if (currentPwInput) currentPwInput.value = '';
+    if (newPwInput) newPwInput.value = '';
+    if (confirmPwInput) confirmPwInput.value = '';
+
+    // 通知設定の初期状態をセット
+    initProfileNotificationSettings();
+
+    const modal = document.getElementById('userSettingsModal');
+    if (modal) {
+      modal.classList.add('active');
+      const bodyEl = modal.querySelector('.settings-modal-body');
+      if (bodyEl) bodyEl.scrollTop = 0;
+    }
+  }
+
+  /**
+   * 設定モーダルからプロフィールモーダルへ戻る
+   */
+  function backToUserProfileModal(e) {
+    if (e) e.stopPropagation();
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
+    openUserProfileModal();
+  }
+
+  /**
+   * 設定モーダルを閉じる
+   */
+  function closeUserSettingsModal(e) {
+    if (e && e.target && e.target.closest('.settings-modal-content') && !e.target.closest('.modal-close') && !e.target.closest('.btn-cancel-action')) {
+      return;
+    }
+    const modal = document.getElementById('userSettingsModal');
+    if (modal) modal.classList.remove('active');
+    document.body.classList.remove('no-scroll');
+  }
+
+  /**
    * ログアウトモーダルを開く
    */
   function openLogoutModal(e) {
     if (e) e.stopPropagation();
     const profileModal = document.getElementById('userProfileModal');
     if (profileModal) profileModal.classList.remove('active');
+    const settingsModal = document.getElementById('userSettingsModal');
+    if (settingsModal) settingsModal.classList.remove('active');
     const modal = document.getElementById('logoutConfirmModal');
     if (modal) modal.classList.add('active');
   }
@@ -20652,6 +20813,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       if (lb && !lb.classList.contains('hidden')) return true;
       const prof = document.getElementById('userProfileModal');
       if (prof && prof.classList.contains('active')) return true;
+      const settings = document.getElementById('userSettingsModal');
+      if (settings && settings.classList.contains('active')) return true;
       const login = document.getElementById('loginScreen');
       if (login && login.style.display !== 'none') return true;
       const logout = document.getElementById('logoutConfirmModal');
