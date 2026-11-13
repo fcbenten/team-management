@@ -313,6 +313,19 @@
   function clearAllLoginFieldErrors() {
     clearLoginFieldError('loginEmailInput');
     clearLoginFieldError('loginPasswordInput');
+    clearLoginFieldError('oauthPreCheckEmailInput');
+  }
+
+  /**
+   * ログイン画面内のアクティブカードを切り替える
+   * @param {'loginCard'|'oauthPreCheckCard'|'oauthLoadingOverlay'|'oauthPasswordCard'} activeCardId
+   */
+  function setLoginCardView(activeCardId) {
+    const cardIds = ['loginCard', 'oauthPreCheckCard', 'oauthLoadingOverlay', 'oauthPasswordCard'];
+    cardIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = (id === activeCardId) ? 'block' : 'none';
+    });
   }
 
   /**
@@ -381,9 +394,89 @@
   }
 
   /**
-   * Google OAuth 認証を直接起動する (PWAネイティブフロー: GAS画面を完全バイパス)
+   * 新規登録・Google連携事前確認カードへ切り替え
    */
-  function startGoogleOAuthFlow(e) {
+  function switchToOAuthPreCheckCard(e) {
+    if (e && e.preventDefault) e.preventDefault();
+    const screen = document.getElementById('loginScreen');
+    if (screen) screen.style.display = 'flex';
+    setLoginCardView('oauthPreCheckCard');
+
+    clearLoginFieldError('oauthPreCheckEmailInput');
+    const btn = document.getElementById('oauthPreCheckBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = 'Google連携へ進む';
+    }
+    const input = document.getElementById('oauthPreCheckEmailInput');
+    if (input) {
+      const loginEmail = (document.getElementById('loginEmailInput') || {}).value || '';
+      if (!input.value && loginEmail.includes('@')) {
+        input.value = loginEmail.trim().toLowerCase();
+      }
+      setTimeout(() => input.focus(), 50);
+    }
+  }
+  window.switchToOAuthPreCheckCard = switchToOAuthPreCheckCard;
+
+  /**
+   * Google連携前の名簿メールアドレス事前チェック送信処理
+   */
+  function handleOAuthPreCheckSubmit(e) {
+    if (e) e.preventDefault();
+    const input = document.getElementById('oauthPreCheckEmailInput');
+    const btn = document.getElementById('oauthPreCheckBtn');
+    if (!input) return;
+
+    const email = input.value.trim().toLowerCase();
+    input.value = email;
+    clearLoginFieldError('oauthPreCheckEmailInput');
+
+    if (!email || !email.includes('@')) {
+      setLoginFieldError('oauthPreCheckEmailInput', '登録済みのGmailアドレスを入力してください。');
+      return;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = '名簿を確認中...';
+    }
+
+    google.script.run
+      .withSuccessHandler(res => {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Google連携へ進む';
+        }
+        if (res && res.success && res.registered) {
+          startGoogleOAuthFlow(null, res.email || email);
+        } else {
+          setLoginFieldError(
+            'oauthPreCheckEmailInput',
+            (res && res.error) ? res.error : '名簿に登録されていないメールアドレスです。'
+          );
+        }
+      })
+      .withFailureHandler(err => {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Google連携へ進む';
+        }
+        setLoginFieldError(
+          'oauthPreCheckEmailInput',
+          '通信エラーが発生しました: ' + ((err && err.message) || '')
+        );
+      })
+      .apiCheckMemberEmailForOAuth(email);
+  }
+  window.handleOAuthPreCheckSubmit = handleOAuthPreCheckSubmit;
+
+  /**
+   * Google OAuth 認証を直接起動する (PWAネイティブフロー: GAS画面を完全バイパス)
+   * @param {Event|null} e
+   * @param {string} [loginHintEmail] - 事前確認済みアカウントのメアド
+   */
+  function startGoogleOAuthFlow(e, loginHintEmail) {
     if (e && e.preventDefault) e.preventDefault();
     const clientId = '578588983071-s1b4d5t2befflb29laviqfoo5mpdoldf.apps.googleusercontent.com';
     const redirectUri = window.location.origin + window.location.pathname;
@@ -401,6 +494,11 @@
       access_type: 'offline',
       prompt: 'select_account consent'
     });
+
+    const cleanHint = String(loginHintEmail || '').trim().toLowerCase();
+    if (cleanHint) {
+      params.set('login_hint', cleanHint);
+    }
 
     window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
   }
@@ -430,21 +528,13 @@
 
     // ログイン画面のカードをローディング表示に切り替え
     const screen = document.getElementById('loginScreen');
-    const loginCard = document.getElementById('loginCard');
-    const loadingCard = document.getElementById('oauthLoadingOverlay');
-    const pwCard = document.getElementById('oauthPasswordCard');
-
     if (screen) screen.style.display = 'flex';
-    if (loginCard) loginCard.style.display = 'none';
-    if (pwCard) pwCard.style.display = 'none';
-    if (loadingCard) loadingCard.style.display = 'block';
+    setLoginCardView('oauthLoadingOverlay');
 
     const redirectUri = window.location.origin + window.location.pathname;
 
     google.script.run
       .withSuccessHandler(res => {
-        if (loadingCard) loadingCard.style.display = 'none';
-
         if (res && res.success) {
           if (res.hasPassword) {
             // パスワード設定済み部員は即時自動ログイン
@@ -460,7 +550,7 @@
             openOAuthPasswordCard(res.email, res.name);
           }
         } else {
-          if (loginCard) loginCard.style.display = 'block';
+          setLoginCardView('loginCard');
           const msg = (res && res.error === 'NOT_IN_ROSTER')
             ? '認証されたGoogleアカウント（' + (res.email || '') + '）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。'
             : ((res && res.error) ? res.error : '連携処理に失敗しました。');
@@ -468,8 +558,7 @@
         }
       })
       .withFailureHandler(fetchErr => {
-        if (loadingCard) loadingCard.style.display = 'none';
-        if (loginCard) loginCard.style.display = 'block';
+        setLoginCardView('loginCard');
         showAppAlert({ title: '通信エラー', message: '連携処理中に通信エラーが発生しました: ' + (fetchErr.message || ''), isError: true });
       })
       .apiExchangeOAuthCode(code, redirectUri);
@@ -482,14 +571,8 @@
     oauthPendingName = name;
 
     const screen = document.getElementById('loginScreen');
-    const loginCard = document.getElementById('loginCard');
-    const loadingCard = document.getElementById('oauthLoadingOverlay');
-    const pwCard = document.getElementById('oauthPasswordCard');
-
     if (screen) screen.style.display = 'flex';
-    if (loginCard) loginCard.style.display = 'none';
-    if (loadingCard) loadingCard.style.display = 'none';
-    if (pwCard) pwCard.style.display = 'block';
+    setLoginCardView('oauthPasswordCard');
 
     const nameEl = document.getElementById('oauthTargetName');
     const emailEl = document.getElementById('oauthTargetEmail');
@@ -542,10 +625,7 @@
           } catch (e) {}
 
           // パスワード設定完了カードを非表示＆入力値リセット
-          const pwCard = document.getElementById('oauthPasswordCard');
-          if (pwCard) pwCard.style.display = 'none';
-          const loginCard = document.getElementById('loginCard');
-          if (loginCard) loginCard.style.display = 'block';
+          setLoginCardView('loginCard');
           if (pw1El) pw1El.value = '';
           if (pw2El) pw2El.value = '';
 
@@ -588,13 +668,7 @@
    * ログインカードを表示
    */
   function switchToLoginCard() {
-    const loginCard = document.getElementById('loginCard');
-    const loadingCard = document.getElementById('oauthLoadingOverlay');
-    const pwCard = document.getElementById('oauthPasswordCard');
-
-    if (loginCard) loginCard.style.display = 'block';
-    if (loadingCard) loadingCard.style.display = 'none';
-    if (pwCard) pwCard.style.display = 'none';
+    setLoginCardView('loginCard');
 
     const err = document.getElementById('loginErrorMsg');
     if (err) err.style.display = 'none';
@@ -614,14 +688,7 @@
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'none';
 
-    const loadingCard = document.getElementById('oauthLoadingOverlay');
-    const pwCard = document.getElementById('oauthPasswordCard');
-    const loginCard = document.getElementById('loginCard');
-
-    if (loadingCard) loadingCard.style.display = 'none';
-    if (pwCard) pwCard.style.display = 'none';
-    if (loginCard) loginCard.style.display = 'block';
-
+    setLoginCardView('loginCard');
     clearAllLoginFieldErrors();
   }
 

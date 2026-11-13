@@ -1881,6 +1881,49 @@
           user: user,
           message: 'パスワード設定が完了しました。'
         };
+      },
+
+      /**
+       * Google OAuth連携前のメールアドレス名簿存在チェック（Supabase Direct）
+       * @param {string} email 入力されたGmailアドレス
+       * @returns {Promise<{success: boolean, registered: boolean, email?: string, name?: string, hasPassword?: boolean, error?: string}>}
+       */
+      async checkMemberEmailForOAuth(email) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+          return {
+            success: false,
+            registered: false,
+            error: '有効なGmailアドレスを入力してください。'
+          };
+        }
+
+        const { data: members, error } = await sb
+          .from('members')
+          .select('member_id, name, email, password_hash, is_past')
+          .eq('is_past', false);
+
+        if (error) throw error;
+
+        const hit = (members || []).find(m => String(m.email || '').trim().toLowerCase() === cleanEmail);
+        if (!hit) {
+          return {
+            success: false,
+            registered: false,
+            error: '入力されたメールアドレスは名簿に登録されていません。管理者にメールアドレスの登録を依頼してください。'
+          };
+        }
+
+        return {
+          success: true,
+          registered: true,
+          email: String(hit.email || cleanEmail).trim(),
+          name: hit.name || '',
+          hasPassword: Boolean(hit.password_hash)
+        };
       }
     };
 
@@ -2112,6 +2155,14 @@
             if (prop === 'apiGetMemberListForLogin') {
               console.log('⚡ [Bypass] apiGetMemberListForLogin routed to Supabase Direct (0.1s)');
               SupabaseService.getMemberListForLogin()
+                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
+                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
+              return;
+            }
+
+            if (prop === 'apiCheckMemberEmailForOAuth') {
+              console.log('⚡ [Bypass] apiCheckMemberEmailForOAuth routed to Supabase Direct (0.1s)');
+              SupabaseService.checkMemberEmailForOAuth(args[0])
                 .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
                 .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
               return;

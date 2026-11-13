@@ -370,8 +370,8 @@ def create_grid_screen_sheet(wb, sheet_title, screen_id, screen_name, permission
         curr_r += 1
 
         img = openpyxl.drawing.image.Image(flow_image_path)
-        # 1380px等倍配置 (80列グリッドにジャストフィット)
-        scale = 1.0
+        # 80列グリッド(幅約1380px)に収まるようアスペクト比維持でスケーリング
+        scale = min(1.0, 1380.0 / img.width) if img.width > 0 else 1.0
         img.width = int(img.width * scale)
         img.height = int(img.height * scale)
 

@@ -31,11 +31,37 @@
       <button type="submit" id="loginSubmitBtn" class="btn">ログイン</button>
 
       <div class="login-register-wrap">
-        <a href="javascript:void(0)" onclick="startGoogleOAuthFlow(event)" class="login-register-link">
+        <a href="javascript:void(0)" onclick="switchToOAuthPreCheckCard(event)" class="login-register-link">
           初めての方はこちら（新規登録・Googleカレンダー連携）
         </a>
       </div>
     </form>
+  </div>
+
+  <!-- 新規登録・Google連携事前確認カード -->
+  <div id="oauthPreCheckCard" class="auth-card oauth-precheck-card">
+    <div class="auth-title">FC Benten</div>
+    <div class="auth-subtitle">新規登録・Googleカレンダー連携</div>
+
+    <div class="alert-box alert-warning oauth-alert-margin login-text-left">
+      あらかじめ管理者が部員名簿に登録したGmailアドレスを入力してください。未登録のアカウントでは連携できません。
+    </div>
+
+    <form id="oauthPreCheckForm" novalidate onsubmit="handleOAuthPreCheckSubmit(event)" autocomplete="off" class="login-text-left">
+      <div class="form-group">
+        <label class="form-label" for="oauthPreCheckEmailInput">登録済みGmailアドレス</label>
+        <input type="email" id="oauthPreCheckEmailInput" class="form-input" placeholder="example@gmail.com" autocomplete="email" required>
+        <div id="err-oauthPreCheckEmailInput" class="field-error-msg hidden"></div>
+      </div>
+
+      <button type="submit" id="oauthPreCheckBtn" class="btn oauth-btn-full">Google連携へ進む</button>
+    </form>
+
+    <div class="login-register-wrap">
+      <a href="javascript:void(0)" onclick="switchToLoginCard()" class="login-register-link">
+        ログイン画面へ戻る
+      </a>
+    </div>
   </div>
 
   <!-- Google連携中ローディングオーバーレイ -->

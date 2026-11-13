@@ -64,6 +64,11 @@
   opacity: 0.85;
 }
 
+/* 新規登録・Google連携事前確認カード */
+.oauth-precheck-card {
+  display: none;
+}
+
 /* Google連携中ローディングカード */
 .oauth-loading-card {
   display: none;

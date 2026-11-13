@@ -694,29 +694,45 @@ def render_all_screen_flows(output_dir="d:/app/TeamManagement/docs/flow_images")
     generated_images = {}
 
     from render_screen_flow import generate_flow_html
+    from render_swimlane_flow import build_scr01_swimlane_html
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
         page = browser.new_page()
 
         for scr_id, screen_info in FLOW_DEFINITIONS.items():
-            html_content = generate_flow_html(screen_info)
             html_path = os.path.join(output_dir, f"flow_{scr_id}.html")
             png_path = os.path.join(output_dir, f"flow_{scr_id}.png")
 
-            with open(html_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
+            if scr_id == "SCR01":
+                html_content = build_scr01_swimlane_html()
+                with open(html_path, "w", encoding="utf-8") as f:
+                    f.write(html_content)
+                try:
+                    page.set_viewport_size({"width": 1620, "height": 1100})
+                    page.goto(f"file:///{os.path.abspath(html_path)}")
+                    page.wait_for_selector(".edge-label")
+                    page.wait_for_timeout(200)
+                    container = page.query_selector("#diagram-container")
+                    container.screenshot(path=png_path)
+                finally:
+                    if os.path.exists(html_path):
+                        os.remove(html_path)
+            else:
+                html_content = generate_flow_html(screen_info)
+                with open(html_path, "w", encoding="utf-8") as f:
+                    f.write(html_content)
 
-            try:
-                page.set_viewport_size({"width": 1460, "height": 1400})
-                page.goto(f"file:///{os.path.abspath(html_path)}")
-                page.wait_for_selector(".diagram-wrapper")
-                wrapper = page.query_selector(".diagram-wrapper")
-                wrapper.screenshot(path=png_path)
-            finally:
-                if os.path.exists(html_path):
-                    os.remove(html_path)
-            
+                try:
+                    page.set_viewport_size({"width": 1460, "height": 1400})
+                    page.goto(f"file:///{os.path.abspath(html_path)}")
+                    page.wait_for_selector(".diagram-wrapper")
+                    wrapper = page.query_selector(".diagram-wrapper")
+                    wrapper.screenshot(path=png_path)
+                finally:
+                    if os.path.exists(html_path):
+                        os.remove(html_path)
+
             generated_images[scr_id] = png_path
             print(f"[{scr_id}] Generated: {png_path}")
 

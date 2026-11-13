@@ -30,69 +30,82 @@ def run_generate():
     scr01_tree = [
         {
             "type": "area",
-            "name": "ログインフォーム",
+            "name": "カードA: ログインフォーム (#loginCard)",
             "desc": "登録済み部員のメールアドレス・パスワード認証領域（Supabase Direct 0.1s高速認証）",
             "items": [
-                ("メールアドレス入力欄", "loginEmailInput", "テキスト入力 (email)", "必須", "なし", "名簿に登録済みのメールアドレスと照合。大文字小文字・空白無視。"),
-                ("パスワード入力欄", "loginPasswordInput", "パスワード入力", "必須", "なし", "半角英数記号4文字以上。SHA-256ハッシュ照合。"),
-                ("ログイン状態保持チェック", "rememberLoginCheck", "チェックボックス", "任意", "ON (保持)", "ONの場合、認証成功ユーザー情報をlocalStorageに保存。次回自動ログイン。"),
+                ("メールアドレス入力欄", "loginEmailInput", "テキスト入力 (email)", "必須", "なし", "名簿に登録済みのGmailアドレスと照合。大文字小文字・前後空白無視。"),
+                ("パスワード入力欄", "loginPasswordInput", "パスワード入力", "必須", "なし", "半角英数記号4文字以上。SHA-256ハッシュ照合（エラーは err-loginPasswordInput 等に表示）。"),
+                ("ログイン状態保持チェック", "rememberLoginCheck", "チェックボックス", "任意", "ON (保持)", "ONの場合、認証成功ユーザー情報をlocalStorage (fcb_auth_user) に保存し次回自動ログイン。"),
                 ("ログインボタン", "loginSubmitBtn", "ボタン", "-", "ログイン", "タップでSupabase Direct認証（apiLoginUser）を実行 (0.1s)。成功時はメイン画面へ遷移。"),
-                ("メッセージ表示領域 (ログイン)", "loginErrorMsg", "アラートボックス", "-", "非表示", "未入力チェックや認証エラー時（パスワード不一致、未登録等）に赤背景でエラー文言を表示。"),
-                ("新規登録・連携リンク", "loginRegisterLink", "ハイパーリンク", "-", "初めての方はこちら", "タップでGoogle OAuthネイティブ連携フローを開始。")
+                ("新規登録・連携リンク", "loginRegisterLink", "ハイパーリンク", "-", "初めての方はこちら", "タップでカードB（#oauthPreCheckCard）へ画面内カード切替。")
             ]
         },
         {
             "type": "area",
-            "name": "Googleカレンダー直接連携 ＆ 初期パスワード設定",
-            "desc": "PWAネイティブ直接リダイレクトによるGoogleカレンダー連携および初期パスワード設定領域",
+            "name": "カードB: 新規登録・Google連携事前確認 (#oauthPreCheckCard)",
+            "desc": "事前登録済みGmailアドレスの注意書き案内および名簿存在チェック領域",
             "items": [
-                ("Google連携ボタン", "oauthAuthBtn", "ボタン", "-", "初めての方はこちら（Google連携・新規登録）", "PWAから直接Google OAuth認証画面へ遷移しカレンダー読み書き権限を取得。承認後GitHub Pages（PWA）へ直接リダイレクト。"),
-                ("パスワード設定カード", "oauthPasswordCard", "カード領域", "-", "初期非表示（連携成功時展開）", "Google認証成功後、名簿登録情報と自動紐付けされ、パスワード設定フォームがインライン表示。"),
-                ("設定パスワード入力欄", "oauthPasswordInput", "パスワード入力", "必須", "なし", "初回登録時のパスワード設定（半角英数4文字以上）。"),
-                ("確認用パスワード入力欄", "oauthPasswordConfirmInput", "パスワード入力", "必須", "なし", "パスワード入力誤り防止のための再確認入力欄。"),
-                ("設定完了・ログインボタン", "oauthPasswordSubmitBtn", "ボタン", "-", "設定完了してログイン", "Supabase Directでパスワードとトークンを保存し、自動ログインを実行。"),
-                ("メッセージ表示領域 (新規登録)", "oauthPasswordError", "アラートボックス", "-", "非表示", "設定パスワード不一致や文字数不足等の登録時エラーメッセージを表示。")
+                ("事前登録案内メッセージ", "oauthPreCheckCard .alert-warning", "案内ボックス", "-", "管理者が事前登録済みのGmailで進む旨の注意書き", "管理者が名簿に登録したGoogleアカウントを入力するよう案内。"),
+                ("登録済みGmail入力欄", "oauthPreCheckEmailInput", "テキスト入力 (email)", "必須", "なし", "管理者が事前登録したGmailアドレスの入力欄。エラーは err-oauthPreCheckEmailInput に表示。"),
+                ("Google連携へ進むボタン", "oauthPreCheckBtn", "ボタン", "-", "Google連携へ進む", "Supabase Direct（apiCheckMemberEmailForOAuth）で名簿存在確認後、login_hint付きでGoogle認可画面へ遷移。"),
+                ("ログイン画面へ戻るリンク", "oauthPreCheckCard .login-register-link", "ハイパーリンク", "-", "ログイン画面へ戻る", "タップでカードA（#loginCard）へ戻り入力エラー表示をクリア。")
+            ]
+        },
+        {
+            "type": "area",
+            "name": "カードC/D: Google認可コールバック ＆ 初期パスワード設定 (#oauthLoadingOverlay / #oauthPasswordCard)",
+            "desc": "Google認可画面からの ?code=... リダイレクト復帰、トークン交換、および初回パスワード設定領域",
+            "items": [
+                ("連携中ローディングカード", "oauthLoadingOverlay", "カード領域", "-", "初期非表示（?code=... 受信時展開）", "Google認可復帰時に表示し、裏側でGAS apiExchangeOAuthCode を実行。"),
+                ("パスワード設定カード", "oauthPasswordCard", "カード領域", "-", "初期非表示（未設定時展開）", "Google認証成功・パスワード未設定時にカードCから切り替えて展開。"),
+                ("設定パスワード入力欄", "oauthNewPwInput", "パスワード入力", "必須", "なし", "初回登録時のパスワード設定（4文字以上）。エラーは err-oauthNewPwInput に表示。"),
+                ("確認用パスワード入力欄", "oauthConfirmPwInput", "パスワード入力", "必須", "なし", "パスワード再確認入力欄。エラーは err-oauthConfirmPwInput に表示。"),
+                ("設定完了・ログインボタン", "oauthPwSubmitBtn", "ボタン", "-", "設定完了してログイン", "Supabase Direct（apiRegisterMember）でパスワードを保存し、SCR02ホーム画面へ遷移。"),
+                ("メッセージ表示領域 (PW設定)", "oauthPwGlobalMsg", "アラートボックス", "-", "非表示", "サーバー保存失敗時等の全体エラーメッセージを表示。")
             ]
         }
     ]
     scr01_actions = [
-        ("メールアドレス入力欄", "フォーカスアウト時",
-         "フォーカスアウト時にメールアドレスの簡易書式（@マークの有無）を検証。不正時はインラインに警告表示。",
-         "validateLoginForm()", "リアルタイム入力補助"),
-        ("パスワード入力欄", "フォーカスアウト時",
-         "フォーカスアウト時に4文字以上入力されているかを検証。4文字未満の場合は警告表示。",
-         "validateLoginForm()", "リアルタイム入力補助"),
+        ("画面初期表示", "DOMContentLoaded時",
+         "URLの ?code=...（Google認可戻り）有無を先行判定。ない場合は localStorage (fcb_auth_user) を確認し、有効なら即座にSCR02ホーム画面を表示、未保持ならカードA（#loginCard）を表示。",
+         "checkOAuthCallbackOnLoad() / showLoginScreen()", "セッション保持時はホーム遷移・未保持時はカードA表示"),
+        ("入力欄 (ログイン)", "フォーカスアウト時",
+         "Gmailアドレス書式およびパスワード文字数（4文字以上）を検証し、不正時は対象フィールド直下にインラインエラーを表示。",
+         "validateLoginEmailField() / validateLoginPasswordField()", "リアルタイム入力補助"),
         ("ログインボタン", "クリック時",
-         "メールアドレスおよびパスワードの未入力チェック後、Supabase Direct API（apiLoginUser）へ送信 (0.1s)。成功時はlocalStorageへ保存しメイン画面を起動。認証失敗時はメッセージ表示領域にエラー文言を展開。",
-         "apiLoginUser(email, password)", "Supabase Direct高速認証 (0.1s)"),
-        ("ログイン状態保持", "画面初期表示時",
-         "localStorage内の認証セッション（fcb_auth_user）を確認。存在する場合はログイン画面のチラつき（FOUC）を完全防止して直接初期データを読み込み。",
-         "checkAutoLogin() / loadAppInitialData()", "セッションが残っている場合は即座にダッシュボード起動"),
-        ("Google連携ボタン", "クリック時",
-         "Google OAuth認可エンドポイント（accounts.google.com）へPWAから直接リダイレクト。承認済みリダイレクトURI（GitHub Pages）へ直接復帰するネイティブフローを実行（GAS中間画面バイパス）。",
-         "startGoogleOAuthFlow()", "PWAネイティブ直接リダイレクト"),
-        ("Google連携コールバック", "画面読み込み時",
-         "URLパラメータ内の認可コード（?code=...）を自動検知。URLを即時クリーンアップし、裏側でトークン交換と名簿照合を実行。成功時はパスワード設定カード（#oauthPasswordCard）を展開。",
-         "checkOAuthCallbackOnLoad()", "自動コード交換 ＆ パスワード設定カード展開"),
+         "入力チェック後、Supabase Direct API（apiLoginUser）へ送信 (0.1s)。成功時はlocalStorageへ保存しSCR02ホーム画面へ遷移。",
+         "handleUserLogin() / apiLoginUser()", "Supabase Direct高速認証 (0.1s)"),
+        ("初めての方はこちらリンク", "クリック時",
+         "Google認証画面へ直接飛ばさず、注意書き・メアド入力欄を含むカードB（#oauthPreCheckCard）へ画面内カードを切り替え。",
+         "switchToOAuthPreCheckCard()", "カードB（#oauthPreCheckCard）へ切替"),
+        ("Google連携へ進むボタン", "クリック時",
+         "入力されたGmailアドレスをSupabase Direct（apiCheckMemberEmailForOAuth）で名簿（members）と事前照合。登録済みなら login_hint パラメータを付与してGoogle認可画面へ遷移。",
+         "handleOAuthPreCheckSubmit() / startGoogleOAuthFlow(e, email)", "名簿事前確認後に login_hint 付きで外部OAuth遷移"),
+        ("ログイン画面へ戻るリンク", "クリック時",
+         "事前確認カード（カードB）を閉じ、エラー表示をリセットしてログインカード（カードA）へ復帰。",
+         "switchToLoginCard()", "カードA（#loginCard）へ切替"),
+        ("Google連携コールバック", "画面読み込み時 (?code=...)",
+         "URL内の認可コードを取得し履歴をクリーンアップ後、カードCを表示。GAS API（apiExchangeOAuthCode）でトークン交換と名簿照合を実施し、パスワード設定済みなら即SCR02ホームへ、未設定ならカードD（#oauthPasswordCard）へ切替。",
+         "checkOAuthCallbackOnLoad() / apiExchangeOAuthCode()", "GAS経由トークン交換・分岐切替"),
         ("設定完了・ログインボタン", "クリック時",
-         "パスワードのバリデーション（4文字以上、確認用との一致）後、Supabase Directでパスワードハッシュ・連携トークンを保存し、そのまま自動ログインしてメイン画面を起動。",
-         "handleOAuthPasswordSubmit()", "Supabase Direct即時保存 ＆ 自動ログイン")
+         "パスワード（4文字以上・確認一致）検証後、Supabase Direct（apiRegisterMember）で password_hash を保存し、localStorage登録後にSCR02ホーム画面を起動。",
+         "handleOAuthPasswordSubmit() / apiRegisterMember()", "Supabase Direct即時保存 ＆ ホーム遷移")
     ]
     scr01_errors = [
-        ("E01-01", "メールアドレス入力欄", "フォーカスアウト時", "メールアドレスが未入力の場合", "メッセージ表示領域 (ログイン)", "「メールアドレスとパスワードを入力してください。」", "未入力欄に値を入力"),
-        ("E01-02", "パスワード入力欄", "フォーカスアウト時", "パスワードが未入力の場合", "メッセージ表示領域 (ログイン)", "「メールアドレスとパスワードを入力してください。」", "未入力欄に値を入力"),
-        ("E01-03", "ログインボタン", "クリック時", "名簿に登録のないメールアドレス、またはパスワード不一致の場合", "メッセージ表示領域 (ログイン)", "「メールアドレスまたはパスワードが正しくありません。」", "正しい登録情報を再入力"),
-        ("E01-04", "ログインボタン", "クリック時", "ネットワーク切断やサーバー障害等で通信がタイムアウトした場合", "メッセージ表示領域 (ログイン)", "「通信エラーが発生しました。電波の良い場所で再度お試しください。」", "通信環境復帰後に再度ログイン"),
-        ("E01-05", "Google連携ボタン", "コールバック時", "認証されたGoogleアカウントが名簿に登録されていない場合", "共通カスタム通知ダイアログ", "「認証されたGoogleアカウント（◯◯）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。」", "管理者に名簿登録を依頼"),
-        ("E01-06", "設定パスワード入力欄", "フォーカスアウト時", "設定パスワードが4文字未満の場合", "メッセージ表示領域 (新規登録)", "「パスワードは4文字以上で入力してください。」", "4文字以上で再入力"),
-        ("E01-07", "確認用パスワード入力欄", "フォーカスアウト時", "確認用パスワードが設定パスワードと一致しない場合", "メッセージ表示領域 (新規登録)", "「パスワードが一致しません。」", "同一のパスワードを再入力"),
-        ("E01-08", "設定完了・ログインボタン", "クリック時", "アカウント情報の保存処理に失敗した場合", "共通カスタム通知ダイアログ", "「アカウント登録に失敗しました: [詳細]」", "管理者に確認後、再登録")
+        ("E01-01", "メールアドレス入力欄", "フォーカスアウト/送信時", "メールアドレスが空欄または@を含まない形式不正の場合", "フィールド下エラー (err-loginEmailInput)", "「メールアドレスを入力してください。」/ 形式警告", "有効なGmailアドレスを入力"),
+        ("E01-02", "パスワード入力欄", "フォーカスアウト/送信時", "パスワードが未入力または4文字未満の場合", "フィールド下エラー (err-loginPasswordInput)", "「パスワードは4文字以上で入力してください。」", "4文字以上のパスワードを入力"),
+        ("E01-03", "ログインボタン", "クリック時", "名簿に登録のないメールアドレス、またはパスワード不一致の場合", "グローバル/エラー領域", "「メールアドレスまたはパスワードが正しくありません。」", "正しい登録情報を再入力"),
+        ("E01-04", "Google連携へ進むボタン", "クリック時", "未入力・形式不正、または名簿 (members) に事前登録されていないGmailの場合", "フィールド下エラー (err-oauthPreCheckEmailInput)", "「入力されたメールアドレスは名簿に登録されていません。管理者にメールアドレスの登録を依頼してください。」", "管理者にメアド登録を依頼または登録済みGmailを入力"),
+        ("E01-05", "Google連携コールバック", "コールバック時", "Google認可で別アカウントを選択等し、名簿 (members) に一致しない場合", "共通カスタム通知ダイアログ", "「認証されたGoogleアカウント（◯◯）は名簿に登録されていません。管理者にメールアドレス登録を依頼してください。」", "登録済みアカウントで再連携"),
+        ("E01-06", "設定パスワード入力欄", "送信時", "設定パスワードが未入力または4文字未満の場合", "フィールド下エラー (err-oauthNewPwInput)", "「パスワードは4文字以上で設定してください。」", "4文字以上で再入力"),
+        ("E01-07", "確認用パスワード入力欄", "送信時", "確認用パスワードが設定パスワードと一致しない場合", "フィールド下エラー (err-oauthConfirmPwInput)", "「確認用パスワードと一致しません。」", "同一のパスワードを再入力"),
+        ("E01-08", "設定完了・ログインボタン", "クリック時", "Supabaseへの保存処理または通信に失敗した場合", "全体エラー領域 (oauthPwGlobalMsg)", "「登録に失敗しました: [詳細]」/ 通信エラーメッセージ", "通信環境確認後に再度送信")
     ]
 
     print("Building SCR01...")
     create_grid_screen_sheet(wb, "SCR01_ログイン", "SCR01", "ログイン・アカウント連携", "全員アクセス可能（未ログイン者向け）",
-                             "html/view_login.html, css/login.css, js/main.js",
-                             "部員認証および初回Googleアカウント連携を行うエントリポイント画面。",
+                             "html/view_login.html, css/login.css, js/main.js, js/supabase.js",
+                             "部員認証、名簿事前確認付きGoogleアカウント連携、および初回パスワード設定を行うエントリポイント画面。",
                              scr01_tree, scr01_actions, scr01_errors, flow_image_path=flow_images.get("SCR01"))
 
     # ==============================================================================
