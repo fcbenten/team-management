@@ -3068,6 +3068,199 @@ html.no-scroll {
   line-height: 1.4;
 }
 
+/* 7. Web Push 通知テスト（モックUI） */
+.home-push-mock-card {
+  margin-bottom: 20px !important;
+  border-left: 3px solid var(--primary) !important;
+}
+
+.home-push-mock-header {
+  margin-bottom: 10px !important;
+  padding-bottom: 8px !important;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-push-mock-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 4px;
+}
+
+.home-push-status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border-radius: 999px;
+}
+
+.home-push-status-badge.status-active {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.home-push-status-badge.status-idle {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.home-push-status-badge.status-warn {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+.home-push-status-badge.status-error {
+  color: #b91c1c;
+  background: #fee2e2;
+}
+
+.home-push-mock-desc {
+  margin: 0 0 10px 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.home-push-ios-guide {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  line-height: 1.45;
+}
+
+.home-push-mock-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.home-push-input {
+  width: 100%;
+  height: 36px;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  color: var(--text-heading);
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.home-push-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #ffffff;
+}
+
+.home-push-mock-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.home-push-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto !important;
+  height: 36px !important;
+  padding: 0 14px !important;
+  font-size: 0.82rem !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+}
+
+.home-push-btn .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.home-push-reset-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.home-push-reset-btn:hover {
+  color: #dc2626;
+  text-decoration: underline;
+}
+
+.home-push-endpoint-info {
+  margin-top: 8px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.home-push-feedback {
+  margin-top: 8px;
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 6px;
+  line-height: 1.4;
+}
+
+.home-push-feedback.is-success {
+  color: #166534;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+}
+
+.home-push-feedback.is-error {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.home-push-feedback.is-info {
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+@media (max-width: 639px) {
+  .home-push-mock-card {
+    margin-bottom: 16px !important;
+  }
+
+  .home-push-mock-inputs {
+    grid-template-columns: 1fr;
+  }
+
+  .home-push-mock-actions {
+    width: 100%;
+  }
+
+  .home-push-btn {
+    width: 100% !important;
+    flex: 1 1 100%;
+    min-width: 0;
+    padding: 0 12px !important;
+    font-size: 0.82rem !important;
+  }
+}
+
 </style>
      <style>
 /* ../css/login.css */
@@ -11846,6 +12039,50 @@ textarea.comment-textarea:active {
     <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
 
     <!-- =========================================
+         Web Push 通知テスト（モックUI）
+         ========================================= -->
+    <div class="card-box home-section-card home-push-mock-card" id="homePushMockCard">
+      <div class="home-section-header home-push-mock-header">
+        <div class="home-section-title">
+          <span class="material-symbols-outlined text-muted">notifications_active</span>
+          <span>Web Push 通知テスト</span>
+          <span class="home-push-mock-tag">モック</span>
+        </div>
+        <span id="homePushStatusBadge" class="home-push-status-badge status-idle">確認中...</span>
+      </div>
+
+      <p class="home-push-mock-desc" id="homePushMockDesc">
+        この端末でブラウザ/PWAのプッシュ通知を有効化し、Supabase Edge Functions 経由で即時テスト送信を試せます。
+      </p>
+
+      <div id="homePushIosGuide" class="home-push-ios-guide hidden">
+        iPhone / iPad では Safari の「共有」&rarr;「ホーム画面に追加」から起動したPWAでのみプッシュ通知を利用できます。
+      </div>
+
+      <div class="home-push-mock-inputs">
+        <input type="text" id="homePushTestTitle" class="home-push-input" value="FC Benten テスト通知" placeholder="通知タイトル" maxlength="60">
+        <input type="text" id="homePushTestBody" class="home-push-input" value="ホーム画面からの Web Push 受信テストです。" placeholder="通知本文" maxlength="120">
+      </div>
+
+      <div class="home-push-mock-actions">
+        <button type="button" id="btnHomePushEnable" class="btn-outline home-push-btn" onclick="handleHomeEnablePush()">
+          <span class="material-symbols-outlined">notifications</span>
+          <span id="btnHomePushEnableLabel">通知を有効化</span>
+        </button>
+        <button type="button" id="btnHomePushTest" class="btn-primary-action home-push-btn" onclick="handleHomeSendTestPush()">
+          <span class="material-symbols-outlined">send</span>
+          <span>テスト通知を送信</span>
+        </button>
+        <button type="button" id="btnHomePushDisable" class="home-push-reset-btn hidden" onclick="handleHomeDisablePush()">
+          解除
+        </button>
+      </div>
+
+      <div id="homePushEndpointInfo" class="home-push-endpoint-info hidden"></div>
+      <div id="homePushFeedback" class="home-push-feedback hidden"></div>
+    </div>
+
+    <!-- =========================================
          2. ホーム最上段: チーム現在年度の成績（KPIダッシュボード）
          ========================================= -->
     <div class="card-box home-section-card home-stats-hero-card" id="homeSeasonStatsCard">
@@ -15037,6 +15274,38 @@ textarea.comment-textarea:active {
       },
 
       /**
+       * Push購読情報のみを members.push_subscription に保存（既存設定を保持）
+       */
+      async savePushSubscription(subscriptionJson, userName, userEmail) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const u = window.currentUser || {};
+        const memberId = (u.id || u.memberId || '').trim();
+        const targetEmail = (userEmail || u.email || '').trim().toLowerCase();
+        const targetName = (userName || u.name || '').trim();
+
+        let query = sb.from('members').update({
+          push_subscription: subscriptionJson || null,
+          updated_at: new Date().toISOString()
+        });
+
+        if (memberId) {
+          query = query.eq('member_id', memberId);
+        } else if (targetEmail) {
+          query = query.eq('email', targetEmail);
+        } else if (targetName) {
+          query = query.eq('name', targetName);
+        } else {
+          return { success: false, skipped: true, reason: 'ログイン中のメンバーを特定できません。' };
+        }
+
+        const { error } = await query;
+        if (error) throw error;
+        return { success: true };
+      },
+
+      /**
        * 備品保管者の引き継ぎ更新
        */
       async updateItemHolder(itemId, newMemberId) {
@@ -16209,6 +16478,209 @@ textarea.comment-textarea:active {
     window.addEventListener('focus', () => {
       refreshOnResume();
     });
+
+    // =========================================
+    // 6. Web Push ヘルパー (PWA Push購読 & Supabase Edge Function呼び出し)
+    // =========================================
+    const VAPID_PUBLIC_KEY = 'BNjJdZwtSl-l4FKvrTXeTc5TGv_ceWN_WP56KX3pb_hGJUOzm0SN1rYSifIurMZFueJngr0KKJbHQPWdROn4ews';
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+    function uint8ArraysEqual(a, b) {
+      if (!a || !b || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) return false;
+      }
+      return true;
+    }
+
+    function getEnvironmentStatus() {
+      const notificationSupported = typeof Notification !== 'undefined';
+      const swSupported = 'serviceWorker' in navigator;
+      const pushSupported = 'PushManager' in window;
+      const permission = notificationSupported ? Notification.permission : 'unsupported';
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent || '') ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+
+      return {
+        supported: notificationSupported && swSupported && pushSupported,
+        notificationSupported,
+        swSupported,
+        pushSupported,
+        permission,
+        isIOS,
+        isStandalone,
+        needsIOSHomeScreen: isIOS && !isStandalone
+      };
+    }
+
+    async function ensureServiceWorkerRegistration() {
+      if (!('serviceWorker' in navigator)) {
+        throw new Error('このブラウザは Service Worker に対応していません。');
+      }
+      let reg = await navigator.serviceWorker.getRegistration('./') || await navigator.serviceWorker.getRegistration();
+      if (!reg) {
+        try {
+          reg = await navigator.serviceWorker.register('./sw.js');
+        } catch (e) {
+          throw new Error('Service Worker (sw.js) が見つかりません。PWA配信URL（GitHub Pages等）からアクセスしてください。');
+        }
+      }
+      if (reg && reg.active) {
+        return reg;
+      }
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Service Worker の起動がタイムアウトしました。ページを再読み込みしてください。')), 5000);
+      });
+      return await Promise.race([navigator.serviceWorker.ready, timeoutPromise]);
+    }
+
+    async function getSubscription() {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+      const reg = await navigator.serviceWorker.getRegistration('./') || await navigator.serviceWorker.getRegistration();
+      if (!reg || !reg.pushManager) return null;
+      return await reg.pushManager.getSubscription();
+    }
+
+    async function subscribeAndSave(user) {
+      const env = getEnvironmentStatus();
+      if (env.needsIOSHomeScreen) {
+        throw new Error('iPhone/iPadでは、Safariの共有メニューから「ホーム画面に追加」したPWAから起動すると通知を有効化できます。');
+      }
+      if (!env.supported) {
+        throw new Error('お使いのブラウザ・端末では Web Push を利用できません。');
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission === 'denied') {
+        throw new Error('通知がブロックされています。ブラウザまたはOSの設定から通知を許可してください。');
+      }
+      if (permission !== 'granted') {
+        throw new Error('通知の許可が承認されませんでした。');
+      }
+
+      const reg = await ensureServiceWorkerRegistration();
+      const expectedKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      let sub = await reg.pushManager.getSubscription();
+
+      if (sub && sub.options && sub.options.applicationServerKey) {
+        const currentKey = new Uint8Array(sub.options.applicationServerKey);
+        if (!uint8ArraysEqual(currentKey, expectedKey)) {
+          await sub.unsubscribe();
+          sub = null;
+        }
+      }
+
+      if (!sub) {
+        try {
+          sub = await reg.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: expectedKey
+          });
+        } catch (err) {
+          if (err && err.name === 'InvalidStateError') {
+            const stale = await reg.pushManager.getSubscription();
+            if (stale) await stale.unsubscribe();
+            sub = await reg.pushManager.subscribe({
+              userVisibleOnly: true,
+              applicationServerKey: expectedKey
+            });
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      const subJson = sub.toJSON();
+      let savedToDb = false;
+      let dbError = null;
+      try {
+        const saveRes = await SupabaseService.savePushSubscription(
+          JSON.stringify(subJson),
+          user && user.name,
+          user && user.email
+        );
+        savedToDb = !!(saveRes && saveRes.success);
+      } catch (e) {
+        dbError = e && e.message ? e.message : String(e);
+      }
+
+      return { subscription: subJson, savedToDb, dbError };
+    }
+
+    async function unsubscribeAndClear(user) {
+      const sub = await getSubscription();
+      if (sub) {
+        await sub.unsubscribe();
+      }
+      try {
+        await SupabaseService.savePushSubscription(null, user && user.name, user && user.email);
+      } catch (e) {
+        console.warn('Failed to clear push_subscription in DB:', e);
+      }
+      return { success: true };
+    }
+
+    async function sendTestPush({ subscription, title, body, memberId, targetAll, url, tag }) {
+      const endpoint = `${SUPABASE_URL}/functions/v1/send-web-push`;
+      let res;
+      try {
+        res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            subscription,
+            memberId,
+            targetAll,
+            title: title || 'FC Benten テスト通知',
+            body: body || 'Web Push 通知の受信テスト成功です！',
+            url: url || './',
+            tag: tag || 'fcb-webpush-test'
+          })
+        });
+      } catch (networkErr) {
+        throw new Error('Edge Function へ接続できませんでした（未デプロイまたはネットワークエラーの可能性があります）。');
+      }
+
+      let data = null;
+      try {
+        data = await res.json();
+      } catch (e) {
+        data = null;
+      }
+
+      if (!res.ok || !data || !data.success) {
+        const msg = (data && data.error) ||
+          (data && data.results && data.results[0] && data.results[0].error) ||
+          `HTTP ${res.status} エラー`;
+        throw new Error(msg);
+      }
+      return data;
+    }
+
+    window.SupabaseWebPush = {
+      VAPID_PUBLIC_KEY,
+      getEnvironmentStatus,
+      getSubscription,
+      subscribeAndSave,
+      unsubscribeAndClear,
+      sendTestPush
+    };
 
   })();
 
@@ -19784,6 +20256,7 @@ function initHomeView(data) {
   renderHomeSeasonStats(data);
   renderHomeNextEvent(data);
   renderHomeRecentMatch(data);
+  refreshHomePushMockState();
 }
 
 /**
@@ -20392,6 +20865,193 @@ window.renderHomeSeasonStats = renderHomeSeasonStats;
 window.renderHomeNextEvent = renderHomeNextEvent;
 window.renderHomeRecentMatch = renderHomeRecentMatch;
 window.renderHomePlayerHeader = function() {};
+
+// =========================================
+// Web Push 通知テスト（モックUI制御）
+// =========================================
+function setHomePushFeedback(message, type) {
+  const el = document.getElementById('homePushFeedback');
+  if (!el) return;
+  if (!message) {
+    el.textContent = '';
+    el.className = 'home-push-feedback hidden';
+    return;
+  }
+  el.textContent = message;
+  el.className = 'home-push-feedback ' + (type === 'success' ? 'is-success' : type === 'error' ? 'is-error' : 'is-info');
+}
+
+async function refreshHomePushMockState() {
+  const badgeEl = document.getElementById('homePushStatusBadge');
+  const iosGuideEl = document.getElementById('homePushIosGuide');
+  const enableBtn = document.getElementById('btnHomePushEnable');
+  const enableLabel = document.getElementById('btnHomePushEnableLabel');
+  const testBtn = document.getElementById('btnHomePushTest');
+  const disableBtn = document.getElementById('btnHomePushDisable');
+  const endpointEl = document.getElementById('homePushEndpointInfo');
+
+  if (!badgeEl || !window.SupabaseWebPush) return;
+
+  const env = window.SupabaseWebPush.getEnvironmentStatus();
+  if (iosGuideEl) {
+    iosGuideEl.classList.toggle('hidden', !env.needsIOSHomeScreen);
+  }
+
+  if (env.needsIOSHomeScreen) {
+    badgeEl.textContent = 'PWA起動が必要';
+    badgeEl.className = 'home-push-status-badge status-warn';
+    if (enableLabel) enableLabel.textContent = '通知を有効化';
+    if (disableBtn) disableBtn.classList.add('hidden');
+    if (testBtn) testBtn.disabled = false;
+    if (endpointEl) endpointEl.classList.add('hidden');
+    return;
+  }
+
+  if (!env.supported) {
+    badgeEl.textContent = '非対応環境';
+    badgeEl.className = 'home-push-status-badge status-error';
+    if (enableBtn) enableBtn.disabled = true;
+    if (testBtn) testBtn.disabled = true;
+    if (disableBtn) disableBtn.classList.add('hidden');
+    if (endpointEl) endpointEl.classList.add('hidden');
+    return;
+  }
+
+  let sub = null;
+  try {
+    sub = await window.SupabaseWebPush.getSubscription();
+  } catch (e) {
+    sub = null;
+  }
+
+  if (env.permission === 'denied') {
+    badgeEl.textContent = 'ブロック中';
+    badgeEl.className = 'home-push-status-badge status-error';
+  } else if (sub) {
+    badgeEl.textContent = '購読済み';
+    badgeEl.className = 'home-push-status-badge status-active';
+  } else if (env.permission === 'granted') {
+    badgeEl.textContent = '許可済み（未購読）';
+    badgeEl.className = 'home-push-status-badge status-warn';
+  } else {
+    badgeEl.textContent = '未有効化';
+    badgeEl.className = 'home-push-status-badge status-idle';
+  }
+
+  if (enableLabel) {
+    enableLabel.textContent = sub ? '購読情報を更新' : '通知を有効化';
+  }
+  if (disableBtn) {
+    disableBtn.classList.toggle('hidden', !sub);
+  }
+  if (endpointEl) {
+    if (sub && sub.endpoint) {
+      const ep = sub.endpoint;
+      const preview = ep.length > 68 ? ep.slice(0, 42) + '...' + ep.slice(-20) : ep;
+      endpointEl.textContent = `登録先 Endpoint: ${preview}`;
+      endpointEl.classList.remove('hidden');
+    } else {
+      endpointEl.textContent = '';
+      endpointEl.classList.add('hidden');
+    }
+  }
+}
+
+async function handleHomeEnablePush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushEnable');
+  const label = document.getElementById('btnHomePushEnableLabel');
+  const prevText = label ? label.textContent : '通知を有効化';
+
+  if (btn) btn.disabled = true;
+  if (label) label.textContent = '登録中...';
+  setHomePushFeedback('通知許可と Push 購読を登録しています...', 'info');
+
+  try {
+    const res = await window.SupabaseWebPush.subscribeAndSave(window.currentUser);
+    await refreshHomePushMockState();
+    if (res.savedToDb) {
+      setHomePushFeedback('この端末の Web Push 購読を有効化し、Supabase へ保存しました。', 'success');
+    } else if (res.dbError) {
+      setHomePushFeedback(`端末の購読は完了しました（DB保存警告: ${res.dbError}）。テスト送信は利用できます。`, 'success');
+    } else {
+      setHomePushFeedback('この端末の Web Push 購読を有効化しました。', 'success');
+    }
+  } catch (err) {
+    await refreshHomePushMockState();
+    setHomePushFeedback(err && err.message ? err.message : '通知の有効化に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomePushMockState();
+    if (label && !label.textContent) label.textContent = prevText;
+  }
+}
+
+async function handleHomeSendTestPush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushTest');
+  const titleEl = document.getElementById('homePushTestTitle');
+  const bodyEl = document.getElementById('homePushTestBody');
+  const prevHtml = btn ? btn.innerHTML : '';
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '送信中...';
+  }
+
+  try {
+    let sub = await window.SupabaseWebPush.getSubscription();
+    if (!sub) {
+      setHomePushFeedback('先にこの端末で通知を有効化します...', 'info');
+      await window.SupabaseWebPush.subscribeAndSave(window.currentUser);
+      sub = await window.SupabaseWebPush.getSubscription();
+    }
+
+    if (!sub) {
+      throw new Error('Push 購読情報を取得できませんでした。先に「通知を有効化」を実行してください。');
+    }
+
+    setHomePushFeedback('Supabase Edge Function 経由でテスト通知を送信しています...', 'info');
+    const title = (titleEl && titleEl.value.trim()) || 'FC Benten テスト通知';
+    const body = (bodyEl && bodyEl.value.trim()) || 'ホーム画面からの Web Push 受信テストです。';
+
+    const result = await window.SupabaseWebPush.sendTestPush({
+      subscription: sub.toJSON(),
+      title,
+      body
+    });
+    setHomePushFeedback(`テスト通知を送信しました（送信成功: ${result.sentCount || 1}件）。OSの通知バナーをご確認ください。`, 'success');
+  } catch (err) {
+    setHomePushFeedback(err && err.message ? err.message : 'テスト通知の送信に失敗しました。', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = prevHtml;
+    }
+    await refreshHomePushMockState();
+  }
+}
+
+async function handleHomeDisablePush() {
+  if (!window.SupabaseWebPush) return;
+  const btn = document.getElementById('btnHomePushDisable');
+  if (btn) btn.disabled = true;
+
+  try {
+    await window.SupabaseWebPush.unsubscribeAndClear(window.currentUser);
+    setHomePushFeedback('この端末の Web Push 購読を解除しました。', 'info');
+  } catch (err) {
+    setHomePushFeedback(err && err.message ? err.message : '購読解除に失敗しました。', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+    await refreshHomePushMockState();
+  }
+}
+
+window.refreshHomePushMockState = refreshHomePushMockState;
+window.handleHomeEnablePush = handleHomeEnablePush;
+window.handleHomeSendTestPush = handleHomeSendTestPush;
+window.handleHomeDisablePush = handleHomeDisablePush;
 
 </script>
      <script>

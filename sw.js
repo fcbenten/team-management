@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fc-benten-pwa-v72';
+const CACHE_NAME = 'fc-benten-pwa-v73';
 const ASSETS = [
   './manifest.json',
   './icon-192.png',
@@ -47,6 +47,62 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cached => {
       return cached || fetch(event.request);
+    })
+  );
+});
+
+// Web Push: バックグラウンド通知受信
+self.addEventListener('push', event => {
+  let payload = {
+    title: 'FC Benten 通知',
+    body: '新しいお知らせがあります。',
+    icon: './icon-192.png',
+    badge: './icon-192.png',
+    url: './',
+    tag: 'fcb-notification'
+  };
+
+  if (event.data) {
+    try {
+      const parsed = event.data.json();
+      payload = { ...payload, ...parsed };
+    } catch (e) {
+      const text = event.data.text();
+      if (text) payload.body = text;
+    }
+  }
+
+  const options = {
+    body: payload.body,
+    icon: payload.icon || './icon-192.png',
+    badge: payload.badge || './icon-192.png',
+    tag: payload.tag || 'fcb-notification',
+    renotify: true,
+    data: {
+      url: payload.url || './'
+    }
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'FC Benten', options)
+  );
+});
+
+// Notification Click: 既存ウィンドウへフォーカスまたはアプリ起動
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || './';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
     })
   );
 });
