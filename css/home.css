@@ -3,6 +3,40 @@
    ※ サイト全体のグレー文字基調・クリーンデザインに完全統一
    ========================================= */
 
+/* 0. ホーム最上部 汎用警告・アナウンスコンテナ */
+.home-top-alert-area {
+  display: flex;
+  flex-direction: column;
+}
+
+.home-top-alert-area:empty {
+  display: none;
+}
+
+.home-generic-alert-container:empty {
+  display: none;
+}
+
+.notice-banner-dismiss-btn {
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  color: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  cursor: pointer;
+  opacity: 0.85;
+  flex-shrink: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.notice-banner-dismiss-btn:hover,
+.notice-banner-dismiss-btn.is-touch-active {
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
 /* 1. セクションカード共通 */
 .home-section-card {
   padding: 18px 20px !important;

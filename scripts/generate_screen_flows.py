@@ -142,17 +142,17 @@ FLOW_DEFINITIONS = {
                 "next_screen": None
             },
             {
-                "trigger": "「すべての試合結果を見る ➔」リンク押下",
+                "trigger": "「試合結果 →」/「スケジュール →」/「ランキング →」/「活動記録 →」リンク押下",
                 "flow_type": "navigate",
-                "badge_text": "試合一覧タブ切替 (画面遷移)",
+                "badge_text": "機能タブ切替 (画面遷移)",
                 "arrow1_label": "タブ切替要求",
                 "arrow2_label": "画面描画切替",
                 "engine": "client",
                 "file_name": "js/main.js",
-                "func_name": "switchTab('results')",
+                "func_name": "switchTab(tabId)",
                 "storage_type": "navigate",
-                "storage_name": "SCR03 試合結果一覧画面",
-                "storage_detail": "サイドバーおよびボトムナビゲーションを「結果」タブへ即座に切り替え",
+                "storage_name": "SCR03 / SCR05 / SCR07 / SCR09 各画面",
+                "storage_detail": "各カード内の遷移リンクから対応画面へ即座に切り替え",
                 "next_screen": None
             }
         ]

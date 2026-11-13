@@ -16,6 +16,7 @@ function initHomeView(data) {
     data = window.homeInitialData || {};
   }
 
+  renderHomeGenericAlerts();
   renderHomeNoticeArea(data);
   renderHomeEquipmentNotice(data);
   if (typeof renderHomePinnedAnnouncements === 'function') {
@@ -29,6 +30,110 @@ function initHomeView(data) {
   renderHomeRecentMatch(data);
   refreshHomePushMockState();
 }
+
+/**
+ * ホーム最上部の汎用警告バナー状態管理・描画
+ * @param {Object} alertConfig - { id, level: 'urgent'|'warning'|'info', icon, title, subtitle, actionLabel, onAction, dismissible }
+ */
+window.homeGenericAlerts = window.homeGenericAlerts || [];
+
+function setHomeAlert(alertConfig) {
+  if (!alertConfig || !alertConfig.id) return;
+  const idx = window.homeGenericAlerts.findIndex(a => a.id === alertConfig.id);
+  const item = Object.assign({ level: 'warning', dismissible: false }, alertConfig);
+  if (idx >= 0) {
+    window.homeGenericAlerts[idx] = item;
+  } else {
+    window.homeGenericAlerts.push(item);
+  }
+  renderHomeGenericAlerts();
+}
+
+function removeHomeAlert(id) {
+  if (!id || !Array.isArray(window.homeGenericAlerts)) return;
+  window.homeGenericAlerts = window.homeGenericAlerts.filter(a => a.id !== id);
+  renderHomeGenericAlerts();
+}
+
+function clearHomeAlerts() {
+  window.homeGenericAlerts = [];
+  renderHomeGenericAlerts();
+}
+
+function renderHomeGenericAlerts() {
+  const container = document.getElementById('homeGenericAlertArea');
+  if (!container) return;
+  container.replaceChildren();
+
+  const list = Array.isArray(window.homeGenericAlerts) ? window.homeGenericAlerts : [];
+  if (list.length === 0) return;
+
+  const order = { urgent: 0, warning: 1, info: 2 };
+  const sorted = [...list].sort((a, b) => (order[a.level] ?? 1) - (order[b.level] ?? 1));
+
+  sorted.forEach(item => {
+    const levelClass = item.level === 'urgent'
+      ? 'notice-urgent'
+      : (item.level === 'info' ? 'notice-info' : '');
+    const banner = document.createElement('div');
+    banner.className = ('app-notice-banner ' + levelClass).trim();
+    banner.setAttribute('role', 'alert');
+    banner.setAttribute('data-alert-id', String(item.id));
+
+    const leftWrap = document.createElement('div');
+    leftWrap.className = 'notice-banner-left';
+
+    const iconEl = document.createElement('span');
+    iconEl.className = 'material-symbols-outlined notice-banner-icon' + (item.level === 'urgent' ? '' : ' text-muted');
+    iconEl.textContent = item.icon || (item.level === 'urgent' ? 'priority_high' : (item.level === 'info' ? 'info' : 'warning'));
+    leftWrap.appendChild(iconEl);
+
+    const textWrap = document.createElement('div');
+    textWrap.className = 'notice-banner-text-wrap';
+
+    const titleEl = document.createElement('span');
+    titleEl.className = 'notice-banner-text';
+    titleEl.textContent = item.title || '';
+    textWrap.appendChild(titleEl);
+
+    if (item.subtitle) {
+      const subEl = document.createElement('span');
+      subEl.className = 'notice-banner-subtext';
+      subEl.textContent = item.subtitle;
+      textWrap.appendChild(subEl);
+    }
+
+    leftWrap.appendChild(textWrap);
+    banner.appendChild(leftWrap);
+
+    if (item.actionLabel && typeof item.onAction === 'function') {
+      const actionLink = document.createElement('a');
+      actionLink.className = 'notice-banner-action-link';
+      actionLink.textContent = item.actionLabel;
+      actionLink.addEventListener('click', function(e) {
+        e.preventDefault();
+        item.onAction(item);
+      });
+      banner.appendChild(actionLink);
+    } else if (item.dismissible) {
+      const closeBtn = document.createElement('button');
+      closeBtn.type = 'button';
+      closeBtn.className = 'notice-banner-dismiss-btn';
+      closeBtn.textContent = '閉じる';
+      closeBtn.addEventListener('click', function() {
+        removeHomeAlert(item.id);
+      });
+      banner.appendChild(closeBtn);
+    }
+
+    container.appendChild(banner);
+  });
+}
+
+window.setHomeAlert = setHomeAlert;
+window.removeHomeAlert = removeHomeAlert;
+window.clearHomeAlerts = clearHomeAlerts;
+window.renderHomeGenericAlerts = renderHomeGenericAlerts;
 
 /**
  * 1. 重要なお知らせエリアを描画

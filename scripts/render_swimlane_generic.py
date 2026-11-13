@@ -1050,7 +1050,7 @@ SWIMLANE_SPECS = {
                         "targets": [{"type": "other", "to": "o-mmodal", "label": "試合詳細モーダル起動"}]
                     },
                     {
-                        "t": {"badge": "ナビボタン", "title": "クイックナビ / 各一覧リンク押下", "desc": "「すべて見る」「記録を書く」等ワンタップ操作"},
+                        "t": {"badge": "リンク押下", "title": "「ランキング →」「スケジュール →」「試合結果 →」「活動記録 →」押下", "desc": "各カードおよび汎用警告エリア内遷移リンク"},
                         "j": {"file": "js/main.js", "func": "switchTab(tabId)", "desc": "対象機能タブ切替 ＆ サブビュー初期化実行"},
                         "targets": [{"type": "other", "to": "o-tabs", "label": "各機能タブへSPA遷移"}]
                     }

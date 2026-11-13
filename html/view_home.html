@@ -3,24 +3,30 @@
   <div class="tab-main-content hidden">
 
     <!-- =========================================
-         1. 重要なお知らせエリア（普段は非表示、未入力出欠等がある場合のみ表示）
+         1. ホーム最上部 汎用警告・アナウンス領域（出欠・備品・システム警告・重要お知らせを統一表示）
          ========================================= -->
-    <div id="homeNoticeArea" class="app-notice-banner hidden" role="alert">
-      <div class="notice-banner-left">
-        <span id="homeNoticeIcon" class="material-symbols-outlined notice-banner-icon text-muted">notifications</span>
-        <div class="notice-banner-text-wrap">
-          <span id="homeNoticeText" class="notice-banner-text"></span>
-          <span id="homeNoticeSubtext" class="notice-banner-subtext hidden"></span>
+    <div id="homeTopAlertArea" class="home-top-alert-area">
+      <!-- 汎用システム/運営警告コンテナ（#homeNoticeArea / #homeEquipmentNoticeArea と共通デザインで種別問わず警告を表示） -->
+      <div id="homeGenericAlertArea" class="home-generic-alert-container"></div>
+
+      <!-- 出欠未入力等のスケジュール警告バナー（普段は非表示、未回答予定がある場合のみ表示） -->
+      <div id="homeNoticeArea" class="app-notice-banner hidden" role="alert">
+        <div class="notice-banner-left">
+          <span id="homeNoticeIcon" class="material-symbols-outlined notice-banner-icon text-muted">notifications</span>
+          <div class="notice-banner-text-wrap">
+            <span id="homeNoticeText" class="notice-banner-text"></span>
+            <span id="homeNoticeSubtext" class="notice-banner-subtext hidden"></span>
+          </div>
         </div>
+        <a id="homeNoticeAction" class="notice-banner-action-link" onclick="switchTab('schedule')">スケジュール &rarr;</a>
       </div>
-      <a id="homeNoticeAction" class="notice-banner-action-link" onclick="switchTab('schedule')">スケジュール &rarr;</a>
+
+      <!-- 備品不在・持参警告バナーコンテナ（1イベントにつき1件アラートカードを表示） -->
+      <div id="homeEquipmentNoticeArea" class="home-equipment-notice-container"></div>
+
+      <!-- 活動記録・ピン留めアナウンスコンテナ -->
+      <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
     </div>
-
-    <!-- 備品不在・持参警告バナーコンテナ（1イベントにつき1件アラートカードを表示） -->
-    <div id="homeEquipmentNoticeArea" class="home-equipment-notice-container"></div>
-
-    <!-- 活動記録・ピン留めアナウンスコンテナ -->
-    <div id="homePinnedAnnounceArea" class="home-pinned-announce-container hidden"></div>
 
     <!-- =========================================
          通知テスト（Web Push / LINE 個人通知モックUI）
@@ -291,7 +297,7 @@
               <span class="material-symbols-outlined text-muted">sports_soccer</span>
               直近の試合結果
             </div>
-            <a class="home-section-link" onclick="switchTab('results')">スコア &rarr;</a>
+            <a class="home-section-link" onclick="switchTab('results')">試合結果 &rarr;</a>
           </div>
 
           <!-- 共通 match-card マウント先 -->
