@@ -139,6 +139,21 @@ CREATE TABLE IF NOT EXISTS public.bulletin_comments (
     is_deleted BOOLEAN DEFAULT FALSE
 );
 
+-- 11. システムエラーログ (system_error_logs)
+CREATE TABLE IF NOT EXISTS public.system_error_logs (
+    log_id VARCHAR(50) PRIMARY KEY,
+    source VARCHAR(20) NOT NULL,            -- 'FRONTEND' | 'GAS'
+    screen VARCHAR(100),                    -- 発生画面・機能名
+    action_name VARCHAR(100),               -- 処理名・API名
+    error_message TEXT NOT NULL,            -- 生エラーメッセージ
+    stack_trace TEXT,                       -- スタックトレース・詳細
+    member_id VARCHAR(50) REFERENCES public.members(member_id) ON DELETE SET NULL,
+    member_name VARCHAR(100),               -- 発生時操作ユーザー名
+    user_agent VARCHAR(255),                -- OS/ブラウザ情報
+    line_notified BOOLEAN DEFAULT FALSE,    -- 代表へのLINE通知送信有無
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- ==============================================================================
 -- インデックス作成（高速検索・0.3秒レスポンス保証）
 -- ==============================================================================
@@ -153,6 +168,7 @@ CREATE INDEX IF NOT EXISTS idx_equipment_logs_event ON public.equipment_event_lo
 CREATE INDEX IF NOT EXISTS idx_bulletin_posts_list ON public.bulletin_posts(is_pinned DESC, created_at DESC) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_bulletin_reads_post ON public.bulletin_reads(post_id);
 CREATE INDEX IF NOT EXISTS idx_bulletin_comments_post ON public.bulletin_comments(post_id) WHERE is_deleted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_system_error_logs_created ON public.system_error_logs(created_at DESC);
 
 -- ==============================================================================
 -- Row Level Security (RLS) 設定
@@ -168,6 +184,7 @@ ALTER TABLE public.equipment_event_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bulletin_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bulletin_reads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bulletin_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_error_logs ENABLE ROW LEVEL SECURITY;
 
 -- 全テーブルに対して anon / authenticated ロールへの全権限ポリシーを設定
 DO $$

@@ -767,6 +767,37 @@ TABLES_DATA = [
         "migration": [
             ("試合記録SS (02.活動・試合記録)", "活動記録_コメント", "A列〜G列 (7列)", "bulletin_commentsテーブル", "既存コメント全件を完全移行。")
         ]
+    },
+    {
+        "phys_name": "system_error_logs",
+        "logic_name": "システムエラーログ",
+        "summary": "PWA画面およびGASバックエンドで検知した想定外システムエラーの記録と代表者向けLINE通知履歴",
+        "pk": "log_id",
+        "fk": "member_id ➔ members",
+        "volume": "システムエラー発生時のみ（通常0〜数件/月）",
+        "old_source": "新規（標準console出力からの永続DB化・通知拡張）",
+        "columns": [
+            ("エラーログID", "log_id", "VARCHAR(50)", "ログ一意ID", "PK", "NOT NULL", "なし", "-", "例: ERR-20261116123000-1234。一意識別子。"),
+            ("発生元区分", "source", "VARCHAR(20)", "発生元", "-", "NOT NULL", "なし", "-", "'FRONTEND' (PWA画面) または 'GAS' (サーバー側)。"),
+            ("発生画面・機能名", "screen", "VARCHAR(100)", "画面・機能名", "-", "NULL", "なし", "-", "エラー発生時に表示していた画面タブや機能名。"),
+            ("処理・API名", "action_name", "VARCHAR(100)", "処理名", "-", "NULL", "なし", "-", "SystemLogger呼び出し元やハンドラ識別名。"),
+            ("エラー内容", "error_message", "TEXT", "エラーメッセージ", "-", "NOT NULL", "なし", "-", "画面表示でマスクされた生の例外・DBエラー詳細。"),
+            ("スタックトレース", "stack_trace", "TEXT", "詳細スタック", "-", "NULL", "なし", "-", "例外のスタックトレースまたは補助情報。"),
+            ("操作メンバーID", "member_id", "VARCHAR(50)", "操作ユーザーID", "-", "NULL", "なし", "members(member_id)", "発生時にログインしていた部員ID。"),
+            ("操作メンバー名", "member_name", "VARCHAR(100)", "操作ユーザー名", "-", "NULL", "なし", "-", "発生時の操作ユーザー氏名。"),
+            ("端末・UA情報", "user_agent", "VARCHAR(255)", "ブラウザ情報", "-", "NULL", "なし", "-", "発生端末のUser-Agent抜粋。"),
+            ("LINE通知済みフラグ", "line_notified", "BOOLEAN", "LINE通知済み", "-", "NOT NULL", "FALSE", "-", "TRUE: 代表（role='代表'）へのLINE通知を実行済み。"),
+            ("発生日時", "created_at", "TIMESTAMPTZ", "発生日時", "-", "NOT NULL", "NOW()", "-", "システムエラー記録タイムスタンプ。")
+        ],
+        "indexes": [
+            ("idx_system_error_logs_created", "created_at DESC", "B-Tree", "No", "最新のシステムエラー履歴の時系列降順参照用。")
+        ],
+        "rls": [
+            ("Allow anon full access", "anon, authenticated", "ALL", "true", "PWA画面およびGASバックエンドからのシステムエラー自動記録用。")
+        ],
+        "migration": [
+            ("新規構築 (GAS SystemLogger)", "標準consoleログ", "-", "system_error_logsテーブル", "サーバーローカルファイル不要の永続ログ保存先および代表LINE通知履歴として新規作成。")
+        ]
     }
 ]
 
@@ -778,7 +809,7 @@ def main():
     print("Building Table of Contents & DB Architecture Sheet...")
     build_toc_sheet(wb, TABLES_DATA)
 
-    # 2. 各テーブル個別シート (10シート)
+    # 2. 各テーブル個別シート (11シート)
     for t in TABLES_DATA:
         print(f"Building Table Sheet: {t['phys_name']} ({t['logic_name']})...")
         build_table_sheet(wb, t)

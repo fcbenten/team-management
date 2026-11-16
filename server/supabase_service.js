@@ -157,4 +157,100 @@ class GasSupabaseService {
     }
     return memberMap;
   }
+
+  /**
+   * LINE通知連携済みの「代表」メンバーID一覧を取得する
+   * @returns {Array<string>}
+   */
+  static getRepresentativeMemberIds() {
+    try {
+      const url = `${Config.SUPABASE.URL}/rest/v1/members?role=eq.${encodeURIComponent('代表')}&is_past=eq.false&line_user_id=not.is.null&line_user_id=neq.&select=member_id`;
+      const res = UrlFetchApp.fetch(url, {
+        method: 'get',
+        headers: this.getHeaders(),
+        muteHttpExceptions: true
+      });
+      if (res.getResponseCode() === 200) {
+        const rows = JSON.parse(res.getContentText()) || [];
+        return rows.map(r => r.member_id).filter(Boolean);
+      }
+    } catch (e) {
+      console.warn('[SupabaseService] Failed to fetch representative memberIds:', e);
+    }
+    return [];
+  }
+
+  /**
+   * GAS 側システムエラーを Supabase (system_error_logs) へ記録し、代表へ LINE 通知する
+   * @param {string} message
+   * @param {Error|null} errObj
+   */
+  static reportSystemError(message, errObj = null) {
+    if (this._isReportingError) return;
+    this._isReportingError = true;
+
+    try {
+      const rawMsg = String(message || 'GAS システムエラー');
+      const stackText = errObj ? `${errObj.toString()}\n${errObj.stack || ''}` : '';
+
+      // 同一エラーの5分間クールダウン（LINE連投防止）
+      let onCooldown = false;
+      try {
+        const cache = CacheService.getScriptCache();
+        const keySeed = rawMsg.slice(0, 60).replace(/[^a-zA-Z0-9\u3040-\u9faf]/g, '_');
+        const cacheKey = `sys_err_cd_${keySeed}`;
+        if (cache.get(cacheKey)) {
+          onCooldown = true;
+        } else {
+          cache.put(cacheKey, '1', 300);
+        }
+      } catch (cacheErr) {}
+
+      let notified = false;
+      if (!onCooldown) {
+        const repIds = this.getRepresentativeMemberIds();
+        if (repIds.length > 0) {
+          const edgeUrl = `${Config.SUPABASE.URL}/functions/v1/send-line-push`;
+          const pushPayload = {
+            memberIds: repIds,
+            title: '【システムエラー (GAS)】',
+            body: `内容: ${rawMsg.slice(0, 180)}`,
+            appUrl: Config.PWA_URL
+          };
+          const pushRes = UrlFetchApp.fetch(edgeUrl, {
+            method: 'post',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': Config.SUPABASE.ANON_KEY,
+              'Authorization': 'Bearer ' + Config.SUPABASE.ANON_KEY
+            },
+            payload: JSON.stringify(pushPayload),
+            muteHttpExceptions: true
+          });
+          notified = pushRes.getResponseCode() >= 200 && pushRes.getResponseCode() < 300;
+        }
+      }
+
+      const logUrl = `${Config.SUPABASE.URL}/rest/v1/system_error_logs`;
+      const logPayload = {
+        log_id: `ERR-GAS-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        source: 'GAS',
+        screen: 'GAS Backend',
+        action_name: rawMsg.split(':')[0].slice(0, 100),
+        error_message: rawMsg.slice(0, 2000),
+        stack_trace: stackText ? stackText.slice(0, 4000) : null,
+        line_notified: notified
+      };
+      UrlFetchApp.fetch(logUrl, {
+        method: 'post',
+        headers: this.getHeaders(),
+        payload: JSON.stringify(logPayload),
+        muteHttpExceptions: true
+      });
+    } catch (reportErr) {
+      console.warn('[SupabaseService] reportSystemError failed safely:', reportErr);
+    } finally {
+      this._isReportingError = false;
+    }
+  }
 }

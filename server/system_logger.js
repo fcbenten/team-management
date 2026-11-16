@@ -35,5 +35,13 @@ class SystemLogger {
       : `[ERROR] ${message}`;
     
     console.error(fullMessage);
+
+    try {
+      if (typeof GasSupabaseService !== 'undefined' && typeof GasSupabaseService.reportSystemError === 'function') {
+        GasSupabaseService.reportSystemError(message, errObj);
+      }
+    } catch (e) {
+      console.warn('SystemLogger error reporting skipped:', e);
+    }
   }
 }

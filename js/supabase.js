@@ -2781,4 +2781,77 @@
       sendTestLinePush
     };
 
+    // =========================================
+    // 8. システムエラー自動記録 & 代表者への LINE 通知
+    // =========================================
+    async function reportSystemErrorAndNotify(entry) {
+      const sb = getClient();
+      if (!sb || !entry) return { logged: false, notified: false };
+
+      let notified = false;
+      const shouldNotifyLine = Boolean(entry.notifyLine) &&
+        (entry.forceLineNotify || (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.protocol)));
+
+      if (shouldNotifyLine) {
+        try {
+          const { data: reps, error: repErr } = await sb
+            .from('members')
+            .select('member_id, line_user_id')
+            .eq('role', '代表')
+            .eq('is_past', false)
+            .not('line_user_id', 'is', null)
+            .neq('line_user_id', '');
+
+          if (!repErr && Array.isArray(reps) && reps.length > 0) {
+            const repIds = reps.map(r => r.member_id).filter(Boolean);
+            if (repIds.length > 0) {
+              const title = `【システムエラー】${entry.screen || '画面不明'}`;
+              const actorText = entry.memberName || '未ログイン/不明';
+              const shortErr = String(entry.errorMessage || '').slice(0, 180);
+              const body = `操作者: ${actorText}\n処理: ${entry.actionName || '-'}\n内容: ${shortErr}`;
+              const appUrl = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
+                ? window.location.href.split('#')[0]
+                : undefined;
+
+              const pushRes = await invokeEdgeFunction('send-line-push', {
+                memberIds: repIds,
+                title,
+                body,
+                appUrl
+              });
+              notified = Boolean(pushRes && pushRes.success);
+            }
+          }
+        } catch (notifyErr) {
+          console.warn('[SystemErrorLogger] LINE notification skipped:', notifyErr);
+        }
+      }
+
+      let logged = false;
+      try {
+        const logId = 'ERR-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+        const { error: insertErr } = await sb.from('system_error_logs').insert({
+          log_id: logId,
+          source: 'FRONTEND',
+          screen: String(entry.screen || '').slice(0, 100) || null,
+          action_name: String(entry.actionName || '').slice(0, 100) || null,
+          error_message: String(entry.errorMessage || '不明なエラー').slice(0, 2000),
+          stack_trace: entry.stackTrace ? String(entry.stackTrace).slice(0, 4000) : null,
+          member_id: entry.memberId || null,
+          member_name: entry.memberName ? String(entry.memberName).slice(0, 100) : null,
+          user_agent: entry.userAgent ? String(entry.userAgent).slice(0, 255) : null,
+          line_notified: notified
+        });
+        logged = !insertErr;
+      } catch (dbErr) {
+        console.warn('[SystemErrorLogger] DB insert skipped:', dbErr);
+      }
+
+      return { logged, notified };
+    }
+
+    window.SupabaseErrorLogger = {
+      reportAndNotify: reportSystemErrorAndNotify
+    };
+
   })();

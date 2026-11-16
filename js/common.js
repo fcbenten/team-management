@@ -589,22 +589,32 @@ function appAlertModalClose(e) {
   }
 }
 
+var _isReportingSystemError = false;
+var _errorReportCooldownMap = {};
+var ERROR_REPORT_COOLDOWN_MS = 5 * 60 * 1000;
+
 /**
- * 内部例外やDB・ネットワーク生エラーをマスクし、画面表示用の安全な日本語メッセージを返す。
- * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg に置き換える。
+ * エラー内容が「ユーザー向けの安全な業務エラー」か「マスク対象の内部/システムエラー」かを判定する。
  */
-function getSafeErrorMessage(errOrMsg, fallbackMsg) {
-  var fallback = fallbackMsg || '処理に失敗しました。しばらく経ってから再度お試しください。';
+function classifyErrorSafety(errOrMsg) {
   var raw = '';
+  var stack = '';
   if (typeof errOrMsg === 'string') {
     raw = errOrMsg;
   } else if (errOrMsg && typeof errOrMsg === 'object') {
     raw = errOrMsg.message || errOrMsg.error || '';
+    stack = errOrMsg.stack || '';
   }
   var msg = String(raw || '').trim();
-  if (!msg) return fallback;
+  var isTransientNetwork = /(Failed to fetch|Load failed|Network request failed|NetworkError|AbortError|timeout|ECONNREFUSED)/i.test(msg);
 
-  // 例外クラス名・PostgRESTコード・DB制約・ネットワーク生文言・[object Object]等をマスク
+  if (!msg) {
+    var hasEmptySystemSignal = (errOrMsg instanceof Error) || errOrMsg == null ||
+      (typeof errOrMsg === 'object' && !('registered' in errOrMsg));
+    return { isSafe: false, msg: '', stack: stack, isTransientNetwork: false, isEmptySystem: hasEmptySystemSignal };
+  }
+
+  // 例外クラス名・PostgRESTコード・DB制約・ネットワーク生文言・[object Object]等をマスク対象とする
   var unsafePatterns = [
     /\b(Exception|Error|TypeError|ReferenceError|SyntaxError|NetworkError|AbortError|PGRST\d+)\b/i,
     /(violates |row-level security|constraint|duplicate key|foreign key|syntax error|relation "|column "|Failed to fetch|Load failed|Network request failed|timeout|ECONNREFUSED|status code \d+)/i,
@@ -613,15 +623,133 @@ function getSafeErrorMessage(errOrMsg, fallbackMsg) {
     /\[object Object\]/i
   ];
   for (var i = 0; i < unsafePatterns.length; i++) {
-    if (unsafePatterns[i].test(msg)) return fallback;
+    if (unsafePatterns[i].test(msg)) {
+      return { isSafe: false, msg: msg, stack: stack, isTransientNetwork: isTransientNetwork, isEmptySystem: false };
+    }
   }
 
   // 日本語（ひらがな・カタカナ・漢字）を含まない英語/記号のみのエラーは表示しない
-  if (!/[\u3040-\u30ff\u4e00-\u9faf]/.test(msg)) return fallback;
+  if (!/[\u3040-\u30ff\u4e00-\u9faf]/.test(msg)) {
+    return { isSafe: false, msg: msg, stack: stack, isTransientNetwork: isTransientNetwork, isEmptySystem: false };
+  }
 
-  return msg;
+  return { isSafe: true, msg: msg, stack: stack, isTransientNetwork: false, isEmptySystem: false };
+}
+
+function inferActiveScreenLabel() {
+  try {
+    var activeNav = document.querySelector('.nav-item.active');
+    if (activeNav) {
+      if (typeof activeNav.cloneNode === 'function') {
+        var cloned = activeNav.cloneNode(true);
+        var icons = cloned.querySelectorAll ? cloned.querySelectorAll('.material-symbols-outlined') : [];
+        for (var i = 0; i < icons.length; i++) {
+          if (icons[i].parentNode) icons[i].parentNode.removeChild(icons[i]);
+        }
+        var cleaned = String(cloned.textContent || '').replace(/\s+/g, ' ').trim();
+        if (cleaned) return cleaned;
+      }
+      if (activeNav.textContent) {
+        return String(activeNav.textContent).replace(/\s+/g, ' ').trim();
+      }
+    }
+  } catch (e) {}
+  return 'PWA';
+}
+
+/**
+ * 想定外システムエラーを Supabase (system_error_logs) に記録し、代表（role='代表'）へ LINE 通知する。
+ * 同一内容の連投防止（5分クールダウン）および再帰防止ガード付き。
+ */
+function reportSystemError(contextName, errOrMsg, opts) {
+  opts = opts || {};
+  if (_isReportingSystemError) return Promise.resolve({ skipped: true, reason: 'reentrant' });
+  if (typeof window === 'undefined' || !window.SupabaseErrorLogger || typeof window.SupabaseErrorLogger.reportAndNotify !== 'function') {
+    return Promise.resolve({ skipped: true, reason: 'no_logger' });
+  }
+
+  var info = classifyErrorSafety(errOrMsg);
+  var rawMessage = info.msg || (errOrMsg && typeof errOrMsg === 'object' ? JSON.stringify(errOrMsg) : String(errOrMsg || 'Unknown error'));
+  var screen = contextName || inferActiveScreenLabel();
+  var actionName = opts.actionName || screen;
+  var dedupKey = 'fcb_err_' + screen + '::' + rawMessage.slice(0, 80);
+  var now = Date.now();
+
+  if (_errorReportCooldownMap[dedupKey] && (now - _errorReportCooldownMap[dedupKey] < ERROR_REPORT_COOLDOWN_MS)) {
+    return Promise.resolve({ skipped: true, reason: 'cooldown' });
+  }
+  try {
+    var prevTs = Number(sessionStorage.getItem(dedupKey) || 0);
+    if (prevTs && (now - prevTs < ERROR_REPORT_COOLDOWN_MS)) {
+      _errorReportCooldownMap[dedupKey] = prevTs;
+      return Promise.resolve({ skipped: true, reason: 'cooldown' });
+    }
+    sessionStorage.setItem(dedupKey, String(now));
+  } catch (e) {}
+  _errorReportCooldownMap[dedupKey] = now;
+
+  var isOffline = (typeof navigator !== 'undefined' && navigator.onLine === false);
+  var isTransient = Boolean(opts.isTransientNetwork || info.isTransientNetwork || isOffline);
+  var u = (typeof window !== 'undefined' && window.currentUser) ? window.currentUser : {};
+
+  _isReportingSystemError = true;
+  return Promise.resolve()
+    .then(function () {
+      return window.SupabaseErrorLogger.reportAndNotify({
+        screen: screen,
+        actionName: actionName,
+        errorMessage: rawMessage,
+        stackTrace: info.stack || opts.stackTrace || '',
+        memberId: u.id || u.memberId || null,
+        memberName: u.name || '',
+        userAgent: (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : '',
+        notifyLine: !isTransient,
+        forceLineNotify: Boolean(opts.forceLineNotify)
+      });
+    })
+    .catch(function (reportErr) {
+      console.warn('reportSystemError failed safely:', reportErr);
+      return { logged: false, notified: false };
+    })
+    .finally(function () {
+      _isReportingSystemError = false;
+    });
+}
+window.reportSystemError = reportSystemError;
+
+/**
+ * 内部例外やDB・ネットワーク生エラーをマスクし、画面表示用の安全な日本語メッセージを返す。
+ * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg に置き換え裏でシステム通知を行う。
+ */
+function getSafeErrorMessage(errOrMsg, fallbackMsg, contextName) {
+  var fallback = fallbackMsg || '処理に失敗しました。しばらく経ってから再度お試しください。';
+  var info = classifyErrorSafety(errOrMsg);
+  if (info.isSafe) return info.msg;
+
+  if (info.msg || info.isEmptySystem) {
+    reportSystemError(contextName || inferActiveScreenLabel(), errOrMsg, {
+      isTransientNetwork: info.isTransientNetwork,
+      stackTrace: info.stack
+    });
+  }
+  return fallback;
 }
 window.getSafeErrorMessage = getSafeErrorMessage;
+
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('error', function (ev) {
+    var errObj = (ev && ev.error) || (ev && ev.message) || null;
+    if (errObj) {
+      reportSystemError(inferActiveScreenLabel(), errObj, { actionName: 'window.onerror' });
+    }
+  });
+  window.addEventListener('unhandledrejection', function (ev) {
+    var reason = ev && ev.reason;
+    if (reason) {
+      reportSystemError(inferActiveScreenLabel(), reason, { actionName: 'unhandledrejection' });
+    }
+  });
+}
 
 window.showAppConfirm = showAppConfirm;
 window.handleAppConfirmResult = handleAppConfirmResult;
