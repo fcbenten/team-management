@@ -51,6 +51,7 @@
   --primary-hover: #1d4ed8;  /* ホバー時のブルー */
   --radius: 4px;             /* 直角寄りの角丸に変更（元12px） */
   --sidebar-height: 56px;    /* スマホ上部固定ヘッダーの実測値基準（JSで動的更新） */
+  --font-sans: 'Inter', 'Noto Sans JP', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -67,10 +68,19 @@ body {
   color: var(--text-main) !important;
   padding-top: 0; /* stickyにするため不要 */
   padding-bottom: 24px;
-  font-family: 'Inter', 'Noto Sans JP', sans-serif !important;
+  font-family: var(--font-sans) !important;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* フォーム部品・ボタンにもベースフォントを一括継承 */
+button,
+input,
+select,
+textarea,
+optgroup {
+  font-family: inherit;
 }
 
 /* =========================================
@@ -1046,7 +1056,6 @@ select, input[type="text"], input[type="number"], input[type="date"], input[type
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 2px !important; /* ほぼ直角 */
-  font-family: inherit !important; 
   font-size: 0.95rem;
   transition: all 0.2s ease;
   box-sizing: border-box;
@@ -7582,7 +7591,6 @@ th.sort-active .sort-icon {
   border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 0.95rem;
-  font-family: inherit;
   color: var(--text-main);
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -9050,7 +9058,6 @@ th.sort-active .sort-icon {
 }
 
 .guidance-email-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.92rem;
   font-weight: 700;
   color: #0284c7;
@@ -9521,7 +9528,6 @@ th.sort-active .sort-icon {
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 2px !important;
-  font-family: inherit !important;
   font-size: 0.95rem;
   box-sizing: border-box;
 }
@@ -10387,7 +10393,6 @@ a.btn-member-modal-save:hover {
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius) !important;
-  font-family: inherit !important;
   font-size: 0.95rem;
   box-sizing: border-box;
 }
@@ -11638,7 +11643,6 @@ a.btn-member-modal-save:hover {
 }
 
 .bulletin-content-textarea {
-  font-family: inherit;
   font-size: 0.92rem;
   line-height: 1.6;
   resize: vertical;
@@ -11956,7 +11960,6 @@ textarea.comment-textarea:active {
   margin: 0 !important;
   resize: none !important; /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
   font-size: 0.85rem;
-  font-family: inherit;
   line-height: 1.4;
   min-height: 44px;
   max-height: 120px;
