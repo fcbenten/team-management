@@ -590,7 +590,6 @@
 }
 
 .guidance-email-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 0.92rem;
   font-weight: 700;
   color: #0284c7;
@@ -1061,7 +1060,6 @@
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 2px !important;
-  font-family: inherit !important;
   font-size: 0.95rem;
   box-sizing: border-box;
 }
