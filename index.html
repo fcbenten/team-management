@@ -17,82 +17,6 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#2563eb">
 
-
-  <!-- =========================================
-       GAS Web API Bridge (google.script.run Polyfill)
-       ========================================= -->
-  <script>
-    (function() {
-      const GAS_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec';
-
-      function createProxy(successHandler, failureHandler, userObject) {
-        return new Proxy({}, {
-          get: function(target, prop) {
-            if (prop === 'withSuccessHandler') {
-              return function(handler) {
-                return createProxy(handler, failureHandler, userObject);
-              };
-            }
-            if (prop === 'withFailureHandler') {
-              return function(handler) {
-                return createProxy(successHandler, handler, userObject);
-              };
-            }
-            if (prop === 'withUserObject') {
-              return function(obj) {
-                return createProxy(successHandler, failureHandler, obj);
-              };
-            }
-
-            // Server function invocation via POST JSON
-            return function(...args) {
-              fetch(GAS_ENDPOINT_URL, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'text/plain;charset=utf-8'
-                },
-                body: JSON.stringify({
-                  functionName: prop,
-                  args: args
-                })
-              })
-              .then(function(res) {
-                if (!res.ok) {
-                  throw new Error('HTTP ' + res.status + ' ' + res.statusText);
-                }
-                return res.json();
-              })
-              .then(function(result) {
-                if (result && result.success) {
-                  if (typeof successHandler === 'function') {
-                    successHandler(result.data, userObject);
-                  }
-                } else {
-                  const err = new Error(result && result.error ? result.error : 'サーバー側でエラーが発生しました。');
-                  if (typeof failureHandler === 'function') {
-                    failureHandler(err, userObject);
-                  } else {
-                    console.error('GAS API Execution Error [' + prop + ']:', err);
-                  }
-                }
-              })
-              .catch(function(err) {
-                console.error('GAS Network/Parse Error [' + prop + ']:', err);
-                if (typeof failureHandler === 'function') {
-                  failureHandler(err, userObject);
-                }
-              });
-            };
-          }
-        });
-      }
-
-      window.google = window.google || {};
-      window.google.script = window.google.script || {};
-      window.google.script.run = createProxy(null, null, null);
-    })();
-  </script>
-
      <meta charset="UTF-8">
      <base target="_top">
      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -15674,29 +15598,175 @@ textarea.comment-textarea:active {
           console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
         }
 
-        // バックグラウンドでカレンダー出欠バッチ集計（GAS）も非同期取得
-        fetch(GAS_ENDPOINT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            functionName: 'apiGetCalendarAttendance',
-            args: [String(new Date().getFullYear())]
-          })
-        }).then(r => r.json()).then(calRes => {
-          if (calRes && calRes.success && calRes.data) {
-            try { localStorage.setItem('fcb_cached_cal_attendance', JSON.stringify(calRes.data)); } catch (e) { }
+        // バックグラウンドでカレンダー出欠統計を最新化（Supabase View）
+        try {
+          const calData = await SupabaseService.getCalendarAttendance(String(new Date().getFullYear()));
+          if (calData) {
+            try { localStorage.setItem('fcb_cached_cal_attendance', JSON.stringify(calData)); } catch (e) { }
             window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-            window.calendarAttendanceCache[calRes.data.year || String(new Date().getFullYear())] = calRes.data;
-            window.calendarAttendanceData = calRes.data;
+            window.calendarAttendanceCache[calData.year || String(new Date().getFullYear())] = calData;
+            window.calendarAttendanceData = calData;
             if (typeof filterAndRenderRankings === 'function') {
               filterAndRenderRankings();
             }
           }
-        }).catch(e => console.warn('[CalendarBackground] Attendance fetch warning:', e));
+        } catch (e) {
+          console.warn('[CalendarBackground] Attendance fetch warning:', e);
+        }
 
       } catch (e) {
         console.warn('[CalendarBackground] Error in background fetch:', e);
       }
+    }
+
+    /**
+     * 試合一覧・シーズン配列を構築する共通ヘルパー
+     */
+    function buildMatchesHistoryPayload(rawMatches, rawScoreLogs, idToMember) {
+      const logMap = {};
+      (rawScoreLogs || []).forEach(l => {
+        if (!logMap[l.match_id]) logMap[l.match_id] = [];
+        const pMem = idToMember[l.member_id];
+        const aMem = idToMember[l.assist_member_id];
+        logMap[l.match_id].push({
+          logId: l.log_id,
+          period: l.period || '',
+          min: l.minute || 0,
+          type: l.log_type,
+          player: pMem ? pMem.name : '不明',
+          memberId: l.member_id,
+          assist: aMem ? aMem.name : (l.assist_member_id ? '不明' : ''),
+          assistMemberId: l.assist_member_id
+        });
+      });
+
+      const seasonSet = new Set();
+      const matches = (rawMatches || []).map(m => {
+        const dateStr = normalizeDateStr(m.match_date);
+        const matchYear = dateStr.match(/^(\d{4})/);
+        const yearStr = matchYear ? matchYear[1] : '';
+        if (yearStr) seasonSet.add(yearStr);
+
+        const mLogs = logMap[m.match_id] || [];
+        const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
+        mLogs.forEach(l => {
+          if (l.type === '得点') {
+            if (l.period === '前半') halfScores.my1st++;
+            else if (l.period === '後半') halfScores.my2nd++;
+            else if (l.period === '延長') halfScores.myExt++;
+          } else if (l.type === '相手得点') {
+            if (l.period === '前半') halfScores.opp1st++;
+            else if (l.period === '後半') halfScores.opp2nd++;
+            else if (l.period === '延長') halfScores.oppExt++;
+          }
+        });
+
+        const momMem = idToMember[m.mom_member_id];
+        return {
+          matchId: m.match_id,
+          date: dateStr,
+          year: yearStr,
+          category: m.category || 'TRM',
+          opponent: m.opponent || '未設定',
+          myScore: m.my_score || 0,
+          oppScore: m.opp_score || 0,
+          result: m.result || '引き分け',
+          attended: m.attended_players || '',
+          location: m.location || '',
+          mom: momMem ? momMem.name : (m.mom_member_id ? '不明' : 'なし'),
+          momMemberId: m.mom_member_id,
+          halfScores: halfScores,
+          logs: mLogs
+        };
+      });
+
+      const seasons = Array.from(seasonSet).sort((a, b) => b - a);
+      return { matches: matches, seasons: seasons };
+    }
+
+    /**
+     * カレンダー出欠集計オブジェクトを構築する共通ヘルパー
+     */
+    function buildCalendarAttendancePayload(roster, rawAttStats, rawAttendance, seasonYear) {
+      const targetYear = String(seasonYear || new Date().getFullYear());
+      const currentYearStr = String(new Date().getFullYear());
+      const calPlayers = {};
+      const emptyCat = () => ({ invited: 0, attended: 0, rate: 0 });
+      const ensurePlayer = (name) => {
+        if (!calPlayers[name]) {
+          calPlayers[name] = {
+            name: name,
+            all: emptyCat(),
+            '公式戦': emptyCat(),
+            'TRM': emptyCat(),
+            'TR': emptyCat(),
+            'その他': emptyCat()
+          };
+        }
+        return calPlayers[name];
+      };
+
+      (roster || []).forEach(m => { if (m && m.name) ensurePlayer(m.name); });
+
+      const seasonAttRows = (rawAttendance || []).filter(a => {
+        const y = String(a.event_date || '').replace(/-/g, '/').slice(0, 4);
+        return y === targetYear;
+      });
+
+      if (targetYear !== currentYearStr || !Array.isArray(rawAttStats)) {
+        const idToName = {};
+        (roster || []).forEach(m => { if (m && (m.memberId || m.id)) idToName[m.memberId || m.id] = m.name; });
+        const classifyTitle = (title) => {
+          const t = String(title || '');
+          if (t.includes('公式') || t.includes('リーグ') || t.includes('大会')) return '公式戦';
+          if (t.toUpperCase().includes('TRM') || t.includes('練習試合')) return 'TRM';
+          if (t.toUpperCase().includes('TR') || t.includes('練習')) return 'TR';
+          return 'その他';
+        };
+        seasonAttRows.forEach(a => {
+          const pName = idToName[a.member_id];
+          if (!pName) return;
+          const p = ensurePlayer(pName);
+          const cat = classifyTitle(a.event_title);
+          p.all.invited++;
+          p[cat].invited++;
+          if (String(a.status || '').toLowerCase() === 'yes') {
+            p.all.attended++;
+            p[cat].attended++;
+          }
+        });
+        Object.values(calPlayers).forEach(p => {
+          ['all', '公式戦', 'TRM', 'TR', 'その他'].forEach(k => {
+            p[k].rate = p[k].invited > 0 ? Math.round((p[k].attended / p[k].invited) * 100) : 0;
+          });
+        });
+      } else {
+        (rawAttStats || []).forEach(st => {
+          const mName = st.member_name;
+          if (!mName) return;
+          const p = ensurePlayer(mName);
+          const tot = Number(st.total_events || 0);
+          const att = Number(st.attended_events || 0);
+          p.all = { invited: tot, attended: att, rate: tot > 0 ? Math.round((att / tot) * 100) : 0 };
+          const pairs = [
+            ['公式戦', 'invited_official', 'attended_official'],
+            ['TRM', 'invited_trm', 'attended_trm'],
+            ['TR', 'invited_tr', 'attended_tr'],
+            ['その他', 'invited_other', 'attended_other']
+          ];
+          pairs.forEach(([key, invCol, attCol]) => {
+            const inv = Number(st[invCol] || 0);
+            const atc = Number(st[attCol] || 0);
+            p[key] = { invited: inv, attended: atc, rate: inv > 0 ? Math.round((atc / inv) * 100) : 0 };
+          });
+        });
+      }
+
+      return {
+        year: targetYear,
+        updatedAt: new Date().toISOString(),
+        players: calPlayers
+      };
     }
 
     /**
@@ -15898,67 +15968,8 @@ textarea.comment-textarea:active {
         // 試合記録 & 得点詳細の組み立て
         const rawMatches = resMatches.data || [];
         const rawScoreLogs = resScoreLogs.data || [];
-
-        // ログ辞書
-        const logMap = {};
-        rawScoreLogs.forEach(l => {
-          if (!logMap[l.match_id]) logMap[l.match_id] = [];
-          const pMem = idToMember[l.member_id];
-          const aMem = idToMember[l.assist_member_id];
-          logMap[l.match_id].push({
-            logId: l.log_id,
-            period: l.period || '',
-            min: l.minute || 0,
-            type: l.log_type,
-            player: pMem ? pMem.name : '不明',
-            memberId: l.member_id,
-            assist: aMem ? aMem.name : (l.assist_member_id ? '不明' : ''),
-            assistMemberId: l.assist_member_id
-          });
-        });
-
-        const seasonSet = new Set();
-        const matches = rawMatches.map(m => {
-          const dateStr = normalizeDateStr(m.match_date);
-          const matchYear = dateStr.match(/^(\d{4})/);
-          const yearStr = matchYear ? matchYear[1] : '';
-          if (yearStr) seasonSet.add(yearStr);
-
-          const mLogs = logMap[m.match_id] || [];
-          const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
-          mLogs.forEach(l => {
-            if (l.type === '得点') {
-              if (l.period === '前半') halfScores.my1st++;
-              else if (l.period === '後半') halfScores.my2nd++;
-              else if (l.period === '延長') halfScores.myExt++;
-            } else if (l.type === '相手得点') {
-              if (l.period === '前半') halfScores.opp1st++;
-              else if (l.period === '後半') halfScores.opp2nd++;
-              else if (l.period === '延長') halfScores.oppExt++;
-            }
-          });
-
-          const momMem = idToMember[m.mom_member_id];
-          return {
-            matchId: m.match_id,
-            date: dateStr,
-            year: yearStr,
-            category: m.category || 'TRM',
-            opponent: m.opponent || '未設定',
-            myScore: m.my_score || 0,
-            oppScore: m.opp_score || 0,
-            result: m.result || '引き分け',
-            attended: m.attended_players || '',
-            location: m.location || '',
-            mom: momMem ? momMem.name : (m.mom_member_id ? '不明' : 'なし'),
-            momMemberId: m.mom_member_id,
-            halfScores: halfScores,
-            logs: mLogs
-          };
-        });
-
-        const seasons = Array.from(seasonSet).sort((a, b) => b - a);
-        const history = { matches: matches, seasons: seasons };
+        const history = buildMatchesHistoryPayload(rawMatches, rawScoreLogs, idToMember);
+        const matches = history.matches;
 
         // スタッツ計算 (現役部員のみ対象・OB/特殊枠は完全除外)
         const pastMemberNames = new Set(
@@ -16095,74 +16106,12 @@ textarea.comment-textarea:active {
 
         // 8. Supabase 集計ビュー (view_player_attendance_stats) からカレンダー出欠オブジェクトをリアルタイム構築 (0ms)
         const currentYearStr = new Date().getFullYear().toString();
-        const calPlayers = {};
-        roster.forEach(m => {
-          calPlayers[m.name] = {
-            name: m.name,
-            all: { invited: 0, attended: 0, rate: 0 },
-            '公式戦': { invited: 0, attended: 0, rate: 0 },
-            'TRM': { invited: 0, attended: 0, rate: 0 },
-            'TR': { invited: 0, attended: 0, rate: 0 },
-            'その他': { invited: 0, attended: 0, rate: 0 }
-          };
-        });
-
-        // Supabase view_player_attendance_stats の結果をリアルタイム反映 (深夜バッチ完全不要)
-        (resAttStats.data || []).forEach(st => {
-          const mName = st.member_name;
-          if (!mName) return;
-          if (!calPlayers[mName]) {
-            calPlayers[mName] = {
-              name: mName,
-              all: { invited: 0, attended: 0, rate: 0 },
-              '公式戦': { invited: 0, attended: 0, rate: 0 },
-              'TRM': { invited: 0, attended: 0, rate: 0 },
-              'TR': { invited: 0, attended: 0, rate: 0 },
-              'その他': { invited: 0, attended: 0, rate: 0 }
-            };
-          }
-          const tot = Number(st.total_events || 0);
-          const att = Number(st.attended_events || 0);
-          calPlayers[mName].all = {
-            invited: tot,
-            attended: att,
-            rate: tot > 0 ? Math.round((att / tot) * 100) : 0
-          };
-          const offInv = Number(st.invited_official || 0);
-          const offAtt = Number(st.attended_official || 0);
-          calPlayers[mName]['公式戦'] = {
-            invited: offInv,
-            attended: offAtt,
-            rate: offInv > 0 ? Math.round((offAtt / offInv) * 100) : 0
-          };
-          const trmInv = Number(st.invited_trm || 0);
-          const trmAtt = Number(st.attended_trm || 0);
-          calPlayers[mName]['TRM'] = {
-            invited: trmInv,
-            attended: trmAtt,
-            rate: trmInv > 0 ? Math.round((trmAtt / trmInv) * 100) : 0
-          };
-          const trInv = Number(st.invited_tr || 0);
-          const trAtt = Number(st.attended_tr || 0);
-          calPlayers[mName]['TR'] = {
-            invited: trInv,
-            attended: trAtt,
-            rate: trInv > 0 ? Math.round((trAtt / trInv) * 100) : 0
-          };
-          const othInv = Number(st.invited_other || 0);
-          const othAtt = Number(st.attended_other || 0);
-          calPlayers[mName]['その他'] = {
-            invited: othInv,
-            attended: othAtt,
-            rate: othInv > 0 ? Math.round((othAtt / othInv) * 100) : 0
-          };
-        });
-
-        const calendarAttendancePayload = {
-          year: currentYearStr,
-          updatedAt: new Date().toISOString(),
-          players: calPlayers
-        };
+        const calendarAttendancePayload = buildCalendarAttendancePayload(
+          roster,
+          resAttStats.data || [],
+          resAttendance.data || [],
+          currentYearStr
+        );
         window.calendarAttendanceCache = window.calendarAttendanceCache || {};
         window.calendarAttendanceCache[currentYearStr] = calendarAttendancePayload;
         window.calendarAttendanceData = calendarAttendancePayload;
@@ -16769,6 +16718,128 @@ textarea.comment-textarea:active {
           .map(m => ({ memberId: m.member_id, memberName: m.name }));
 
         return { success: true, readers: readers, unreadMembers: unreadMembers };
+      },
+
+      /**
+       * 試合結果一覧の再取得 (0.1s Direct)
+       */
+      async getMatchHistoryData() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resMembers, resMatches, resScoreLogs] = await Promise.all([
+          sb.from('members').select('member_id, name'),
+          sb.from('matches').select('*').order('match_date', { ascending: false }),
+          sb.from('score_logs').select('*')
+        ]);
+        if (resMatches.error) throw resMatches.error;
+        if (resScoreLogs.error) throw resScoreLogs.error;
+
+        const idToMember = {};
+        (resMembers.data || []).forEach(m => {
+          idToMember[m.member_id] = { memberId: m.member_id, id: m.member_id, name: m.name };
+        });
+
+        const history = buildMatchesHistoryPayload(resMatches.data || [], resScoreLogs.data || [], idToMember);
+        return { matches: history.matches, seasons: history.seasons, error: null };
+      },
+
+      /**
+       * シーズン別カレンダー出欠集計の取得 (0.1s Direct)
+       */
+      async getCalendarAttendance(season) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resMembers, resAttStats, resAttendance] = await Promise.all([
+          sb.from('members').select('member_id, name, is_past, member_type').eq('is_past', false),
+          sb.from('view_player_attendance_stats').select('*'),
+          sb.from('attendance').select('member_id, event_date, event_title, status')
+        ]);
+        if (resMembers.error) throw resMembers.error;
+
+        const roster = (resMembers.data || [])
+          .filter(m => m.member_type !== 'SPECIAL')
+          .map(m => ({ memberId: m.member_id, id: m.member_id, name: m.name }));
+
+        return buildCalendarAttendancePayload(
+          roster,
+          resAttStats.data || [],
+          resAttendance.data || [],
+          season || String(new Date().getFullYear())
+        );
+      },
+
+      /**
+       * 部員ポジションマップの取得 (0.1s Direct)
+       */
+      async getPlayerPositions() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const { data, error } = await sb.from('members').select('name, position').eq('is_past', false);
+        if (error) throw error;
+
+        const posMap = {};
+        (data || []).forEach(m => {
+          if (m.name && m.position) posMap[m.name] = m.position;
+        });
+        return posMap;
+      },
+
+      /**
+       * プロフィール写真の保存 (Supabase Storage member-avatars + members.avatar_url 更新)
+       */
+      async saveProfileImage(userName, base64Data) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        if (!base64Data) throw new Error('画像データが指定されていません。');
+
+        const u = window.currentUser || {};
+        const targetName = (userName || u.name || '').trim();
+        const targetEmail = (u.email || '').trim().toLowerCase();
+        let memberId = (u.memberId || u.id || '').trim();
+
+        if (!memberId) {
+          let findQ = sb.from('members').select('member_id');
+          if (targetEmail) findQ = findQ.eq('email', targetEmail);
+          else if (targetName) findQ = findQ.eq('name', targetName);
+          else throw new Error('対象ユーザーを特定できません。');
+          const { data: foundRows, error: findErr } = await findQ.limit(1);
+          if (findErr) throw findErr;
+          memberId = foundRows && foundRows[0] ? foundRows[0].member_id : '';
+        }
+        if (!memberId) throw new Error('メンバーIDを取得できませんでした。');
+
+        const match = String(base64Data).match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+        const mimeType = match ? match[1] : 'image/jpeg';
+        const rawBase64 = match ? match[2] : String(base64Data);
+        const binaryStr = atob(rawBase64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const ext = mimeType === 'image/png' ? 'png' : 'jpg';
+        const filePath = `${memberId}.${ext}`;
+
+        const { error: uploadErr } = await sb.storage
+          .from('member-avatars')
+          .upload(filePath, new Blob([bytes], { type: mimeType }), { contentType: mimeType, upsert: true });
+        if (uploadErr) throw uploadErr;
+
+        const { data: pubData } = sb.storage.from('member-avatars').getPublicUrl(filePath);
+        const basePublicUrl = (pubData && pubData.publicUrl)
+          ? pubData.publicUrl
+          : `${SUPABASE_URL}/storage/v1/object/public/member-avatars/${filePath}`;
+        const avatarUrl = `${basePublicUrl}?t=${Date.now()}`;
+
+        const { error: updateErr } = await sb
+          .from('members')
+          .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+          .eq('member_id', memberId);
+        if (updateErr) throw updateErr;
+
+        return { success: true, avatarUrl: avatarUrl };
       },
 
       /**
@@ -17762,287 +17833,41 @@ textarea.comment-textarea:active {
     window.SupabaseService = SupabaseService;
 
     // =========================================
-    // 4. google.script.run の透過的バイパスプロキシ
+    // 4. Google サービス専用 GAS API クライアント
     // =========================================
-    // 既存のフロントエンド呼び出しコードを変更することなく、
-    // Supabase で即時実行できる関数を自動的にバイパスして爆速化 (0.3秒)
+    // Google カレンダー操作および Google OAuth 認証のみ GAS バックエンドへ送信する。
+    // DB・Storage 操作はすべて SupabaseService を直接呼び出す。
     // =========================================
-    function createSupabaseBypassProxy(successHandler, failureHandler, userObject) {
-      return new Proxy({}, {
-        get: function (target, prop) {
-          if (prop === 'withSuccessHandler') {
-            return function (h) { return createSupabaseBypassProxy(h, failureHandler, userObject); };
-          }
-          if (prop === 'withFailureHandler') {
-            return function (h) { return createSupabaseBypassProxy(successHandler, h, userObject); };
-          }
-          if (prop === 'withUserObject') {
-            return function (u) { return createSupabaseBypassProxy(successHandler, failureHandler, u); };
-          }
+    const ALLOWED_GAS_FUNCTIONS = new Set([
+      'saveCalendarEvent',
+      'deleteCalendarEvent',
+      'apiGetOAuthAuthUrl',
+      'apiExchangeOAuthCode'
+    ]);
 
-          return function (...args) {
-            // Supabase 直接処理へのルーティング
-            if (prop === 'getInitialData') {
-              console.log('⚡ [Bypass] getInitialData routed to Supabase Direct REST API (0.3s)');
-              SupabaseService.getInitialData(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'updateEventAttendance') {
-              console.log('⚡ [Bypass] updateEventAttendance routed to Supabase Direct UPSERT (0.1s)');
-              SupabaseService.updateEventAttendance(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'saveMatchData' || prop === 'saveScoreRecord') {
-              console.log('⚡ [Bypass] saveMatchData routed to Supabase Direct (0.2s)');
-              SupabaseService.saveScoreRecord(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinData') {
-              console.log('⚡ [Bypass] apiGetBulletinData routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinData()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveBulletinPost') {
-              console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.saveBulletinPost(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiTogglePinBulletinPost') {
-              console.log('⚡ [Bypass] apiTogglePinBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.togglePinBulletinPost(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteBulletinPost') {
-              console.log('⚡ [Bypass] apiDeleteBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteBulletinPost(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiMarkAsRead' || prop === 'apiMarkBulletinPostRead') {
-              console.log('⚡ [Bypass] markBulletinAsRead routed to Supabase Direct (0.1s)');
-              SupabaseService.markBulletinAsRead(args[0], args[1], args[2]);
-              if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
-              return;
-            }
-
-            if (prop === 'apiAddBulletinComment' || prop === 'apiSaveComment') {
-              console.log('⚡ [Bypass] apiAddBulletinComment routed to Supabase Direct (0.1s)');
-              const pId = args[0] && typeof args[0] === 'object' ? args[0].postId : args[0];
-              const cContent = args[0] && typeof args[0] === 'object' ? args[0].content : args[1];
-              const mId = args[0] && typeof args[0] === 'object' ? args[0].authorId : args[2];
-              const mName = args[3];
-              SupabaseService.addBulletinComment(pId, cContent, mId, mName)
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteBulletinComment') {
-              console.log('⚡ [Bypass] apiDeleteBulletinComment routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteBulletinComment(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinComments') {
-              console.log('⚡ [Bypass] apiGetBulletinComments routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinComments(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinPostReaders') {
-              console.log('⚡ [Bypass] apiGetBulletinPostReaders routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinPostReaders(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteProfileImage') {
-              console.log('⚡ [Bypass] apiDeleteProfileImage routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteProfileImage(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetNotificationSettings') {
-              console.log('⚡ [Bypass] apiGetNotificationSettings routed to Supabase Direct (0.1s)');
-              SupabaseService.getNotificationSettings(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveNotificationSettings') {
-              console.log('⚡ [Bypass] apiSaveNotificationSettings routed to Supabase Direct (0.1s)');
-              SupabaseService.saveNotificationSettings(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'updateItemHolder') {
-              SupabaseService.updateItemHolder(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetEquipmentData') {
-              console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
-              SupabaseService.getEquipmentData()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveEquipmentItem') {
-              console.log('⚡ [Bypass] apiSaveEquipmentItem routed to Supabase Direct (0.1s)');
-              SupabaseService.saveEquipmentItem(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteEquipmentItem') {
-              console.log('⚡ [Bypass] apiDeleteEquipmentItem routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteEquipmentItem(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiResolveEquipmentAlert') {
-              console.log('⚡ [Bypass] apiResolveEquipmentAlert routed to Supabase Direct (0.1s)');
-              SupabaseService.resolveEquipmentAlert(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetMemberListForAdmin') {
-              console.log('⚡ [Bypass] apiGetMemberListForAdmin routed to Supabase Direct (0.1s)');
-              SupabaseService.getAdminMemberList()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveMember') {
-              console.log('⚡ [Bypass] apiSaveMember routed to Supabase Direct (0.1s)');
-              SupabaseService.saveMember(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteMember') {
-              console.log('⚡ [Bypass] apiDeleteMember routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteMember(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteMemberPermanently') {
-              console.log('⚡ [Bypass] apiDeleteMemberPermanently routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteMemberPermanently(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiLoginUser') {
-              console.log('⚡ [Bypass] apiLoginUser routed to Supabase Direct (0.1s)');
-              SupabaseService.loginUser(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiChangePassword') {
-              console.log('⚡ [Bypass] apiChangePassword routed to Supabase Direct (0.1s)');
-              SupabaseService.changePassword(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiRegisterMember') {
-              console.log('⚡ [Bypass] apiRegisterMember routed to Supabase Direct (0.1s)');
-              SupabaseService.registerMember(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetMemberListForLogin') {
-              console.log('⚡ [Bypass] apiGetMemberListForLogin routed to Supabase Direct (0.1s)');
-              SupabaseService.getMemberListForLogin()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiCheckMemberEmailForOAuth') {
-              console.log('⚡ [Bypass] apiCheckMemberEmailForOAuth routed to Supabase Direct (0.1s)');
-              SupabaseService.checkMemberEmailForOAuth(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            // その他の関数は従来通り GAS へのフォールバック通信
-            fetch(GAS_ENDPOINT_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ functionName: prop, args: args })
-            })
-              .then(res => res.json())
-              .then(result => {
-                if (result && result.success) {
-                  if (typeof successHandler === 'function') successHandler(result.data, userObject);
-                } else {
-                  const err = new Error(result && result.error ? result.error : 'エラーが発生しました。');
-                  if (typeof failureHandler === 'function') failureHandler(err, userObject);
-                }
-              })
-              .catch(err => {
-                if (typeof failureHandler === 'function') failureHandler(err, userObject);
-              });
-          };
+    const GasApi = {
+      async call(functionName, ...args) {
+        if (!ALLOWED_GAS_FUNCTIONS.has(functionName)) {
+          throw new Error(`許可されていない GAS RPC 呼び出しです: ${functionName}`);
         }
-      });
-    }
+        const res = await fetch(GAS_ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ functionName, args })
+        });
+        const result = await res.json();
+        if (result && result.success) {
+          return result.data;
+        }
+        throw new Error((result && result.error) ? result.error : 'エラーが発生しました。');
+      },
+      saveCalendarEvent(payload) { return this.call('saveCalendarEvent', payload); },
+      deleteCalendarEvent(payload) { return this.call('deleteCalendarEvent', payload); },
+      getOAuthAuthUrl(email) { return this.call('apiGetOAuthAuthUrl', email); },
+      exchangeOAuthCode(code, redirectUri) { return this.call('apiExchangeOAuthCode', code, redirectUri); }
+    };
 
-    // 既存の google.script.run を Supabase バイパスプロキシでオーバーライド
-    window.google = window.google || {};
-    window.google.script = window.google.script || {};
-    window.google.script.run = createSupabaseBypassProxy(null, null, null);
+    window.GasApi = GasApi;
 
     // =========================================
     // 5. 画面復帰検知 (Page Visibility API & window.focus)
@@ -19084,29 +18909,16 @@ function formatDisplayDateTimeWithDay(dateVal) {
 }
 
 /**
- * バックエンド（GAS）のAPIをPromiseでラップして呼び出す
- * @param {string} functionName - 呼び出すGASの関数名（例：'EventController.getEventsWithMatchData'）
+ * GASバックエンドの許可済みAPI（Google連携）をPromiseで呼び出す互換ラッパー
+ * @param {string} functionName - 呼び出す許可済みGAS関数名
  * @param {...any} args - 関数に渡す引数
  * @returns {Promise<any>}
  */
 function callBackendAPI(functionName, ...args) {
-  return new Promise((resolve, reject) => {
-    // google.script.run を使って動的に関数を呼び出す
-    let runner = google.script.run
-      .withSuccessHandler((result) => resolve(result))
-      .withFailureHandler((error) => reject(error));
-    
-    // ネストされた関数（例: "EventController.doSomething"）への対応は
-    // クライアント側の google.script.run ではドット記法を直接呼べない場合があります。
-    // そのため、バックエンド側にルーター関数を用意するか、
-    // GAS側は global 空間に展開した関数を直接呼ぶ形にする必要があります。
-    // 現状は既存のAPI関数（関数名）を直接呼び出します。
-    if (typeof runner[functionName] === 'function') {
-      runner[functionName](...args);
-    } else {
-      reject(new Error('Backend function not found: ' + functionName));
-    }
-  });
+  if (window.GasApi && typeof window.GasApi.call === 'function') {
+    return window.GasApi.call(functionName, ...args);
+  }
+  return Promise.reject(new Error('GasApi is not initialized: ' + functionName));
 }
 
 /**
@@ -21014,8 +20826,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       btn.textContent = '名簿を確認中...';
     }
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.checkMemberEmailForOAuth(email)
+      .then(res => {
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
@@ -21023,15 +20835,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         if (res && res.success && res.registered) {
           startGoogleOAuthFlow(null, res.email || email);
         } else {
-          if (!(res && res.success)) console.error('apiCheckMemberEmailForOAuth error:', res);
+          if (!(res && res.success)) console.error('checkMemberEmailForOAuth error:', res);
           setLoginFieldError(
             'oauthPreCheckEmailInput',
             getSafeErrorMessage(res, '名簿に登録されていないメールアドレスです。')
           );
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiCheckMemberEmailForOAuth failure:', err);
+      .catch(err => {
+        console.error('checkMemberEmailForOAuth failure:', err);
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
@@ -21040,8 +20852,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           'oauthPreCheckEmailInput',
           getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         );
-      })
-      .apiCheckMemberEmailForOAuth(email);
+      });
   }
   window.handleOAuthPreCheckSubmit = handleOAuthPreCheckSubmit;
 
@@ -21108,8 +20919,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     const redirectUri = window.location.origin + window.location.pathname;
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.GasApi.exchangeOAuthCode(code, redirectUri)
+      .then(res => {
         if (res && res.success) {
           if (res.hasPassword) {
             // パスワード設定済み部員は即時自動ログイン
@@ -21132,12 +20943,11 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           showAppAlert({ title: '連携エラー', message: msg, isError: true });
         }
       })
-      .withFailureHandler(fetchErr => {
+      .catch(fetchErr => {
         setLoginCardView('loginCard');
-        console.error('apiExchangeOAuthCode failure:', fetchErr);
+        console.error('exchangeOAuthCode failure:', fetchErr);
         showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(fetchErr, '連携処理中に通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-      })
-      .apiExchangeOAuthCode(code, redirectUri);
+      });
 
     return true;
   }
@@ -21184,8 +20994,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
 
     // Supabase Direct (0.1秒) でパスワードを保存
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.registerMember(oauthPendingEmail, p1)
+      .then(res => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了してログイン';
@@ -21212,7 +21022,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了してログイン';
@@ -21223,8 +21033,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           globalMsg.classList.remove('hidden');
           globalMsg.style.display = 'block';
         }
-      })
-      .apiRegisterMember(oauthPendingEmail, p1);
+      });
   }
   window.handleOAuthPasswordSubmit = handleOAuthPasswordSubmit;
 
@@ -21305,8 +21114,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       submitBtn.textContent = 'ログイン中...';
     }
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.loginUser(email, password)
+      .then(res => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
@@ -21330,14 +21139,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           loadAppInitialData();
         } else {
           if (errorMsg) {
-            console.error('apiLoginUser error:', res);
+            console.error('loginUser error:', res);
             errorMsg.textContent = getSafeErrorMessage(res, 'ログインに失敗しました。メールアドレスまたはパスワードをご確認ください。');
             errorMsg.style.display = 'block';
           }
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiLoginUser failure:', err);
+      .catch(err => {
+        console.error('loginUser failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
@@ -21346,8 +21155,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           errorMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           errorMsg.style.display = 'block';
         }
-      })
-      .apiLoginUser(email, password);
+      });
   }
 
   /**
@@ -21373,8 +21181,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   function loadAppInitialData(forceRefresh = false, onComplete = null) {
     renderHeaderUser();
 
-    google.script.run
-      .withSuccessHandler(response => {
+    window.SupabaseService.getInitialData(forceRefresh)
+      .then(response => {
         if (!response) {
           handleError('eventSelect', 'サーバーからデータが返ってきませんでした。');
           if (typeof onComplete === 'function') onComplete(false, new Error('サーバー応答なし'));
@@ -21507,7 +21315,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
         if (typeof onComplete === 'function') onComplete(true);
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         console.error('getInitialData failure:', err);
         const safeErrMsg = getSafeErrorMessage(err, '通信環境をご確認の上、画面を再読み込みしてください。');
         const resultsList = document.getElementById('resultsList');
@@ -21516,8 +21324,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         }
         handleError('eventSelect', 'データ初期取得エラー: ' + safeErrMsg);
         if (typeof onComplete === 'function') onComplete(false, err);
-      })
-      .getInitialData(forceRefresh);
+      });
   }
 
   /**
@@ -21579,23 +21386,22 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     setPwMsg('更新中...', 'loading');
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.changePassword(u.name, currentPw, newPw)
+      .then(res => {
         if (res && res.success) {
           setPwMsg('パスワードを更新しました。', 'success');
           currentPwInput.value = '';
           newPwInput.value = '';
           confirmPwInput.value = '';
         } else {
-          console.error('apiChangePassword error:', res);
+          console.error('changePassword error:', res);
           setPwMsg(getSafeErrorMessage(res, '更新に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiChangePassword failure:', err);
+      .catch(err => {
+        console.error('changePassword failure:', err);
         setPwMsg(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-      })
-      .apiChangePassword(u.name, currentPw, newPw);
+      });
   }
 
   /**
@@ -21639,10 +21445,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
     setProfileLineMsg('');
 
-    // サーバーから最新設定を取得（非同期で同期）
-    if (typeof google !== 'undefined' && google.script && google.script.run && (u.name || u.email)) {
-      google.script.run
-        .withSuccessHandler(res => {
+    // Supabaseから最新設定を取得（非同期で同期）
+    if (window.SupabaseService && typeof window.SupabaseService.getNotificationSettings === 'function' && (u.name || u.email)) {
+      window.SupabaseService.getNotificationSettings(u.name, u.email)
+        .then(res => {
           if (res && res.success && res.settings) {
             const s = res.settings;
             u.notificationType = s.notificationType || 'none';
@@ -21668,7 +21474,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             syncProfileLineUi();
           }
         })
-        .apiGetNotificationSettings(u.name, u.email);
+        .catch(err => console.warn('getNotificationSettings warning:', err));
     }
   }
 
@@ -22071,21 +21877,20 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
     };
 
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.SupabaseService && typeof window.SupabaseService.saveNotificationSettings === 'function') {
+      window.SupabaseService.saveNotificationSettings(payload, u.name, u.email)
+        .then(res => {
           if (res && res.success) {
             onComplete(true, res.message || '通知設定を保存しました');
           } else {
-            console.error('apiSaveNotificationSettings error:', res);
+            console.error('saveNotificationSettings error:', res);
             onComplete(false, getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'));
           }
         })
-        .withFailureHandler(err => {
-          console.error('apiSaveNotificationSettings failure:', err);
+        .catch(err => {
+          console.error('saveNotificationSettings failure:', err);
           onComplete(false, getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'));
-        })
-        .apiSaveNotificationSettings(payload, u.name, u.email);
+        });
     } else {
       setTimeout(() => {
         onComplete(true, 'モック: 通知設定を保存しました');
@@ -22330,9 +22135,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         // inputの値をリセットして再選択可能に
         e.target.value = '';
 
-        // Google Driveへ保存
-        google.script.run
-          .withSuccessHandler(res => {
+        // Supabase Storage (member-avatars) へ保存
+        window.SupabaseService.saveProfileImage(window.currentUser.name, base64)
+          .then(res => {
             if (res && res.success) {
               const newUrl = res.avatarUrl;
               if (window.currentUser) {
@@ -22352,15 +22157,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
               showAvatarStatus('プロフィール写真を保存しました', 'success');
               setTimeout(() => { showAvatarStatus('', ''); }, 3500);
             } else {
-              console.error('apiSaveProfileImage error:', res);
+              console.error('saveProfileImage error:', res);
               showAvatarStatus(getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'), 'error');
             }
           })
-          .withFailureHandler(err => {
-            console.error('apiSaveProfileImage failure:', err);
+          .catch(err => {
+            console.error('saveProfileImage failure:', err);
             showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-          })
-          .apiSaveProfileImage(window.currentUser.name, base64);
+          });
       };
       img.onerror = function () {
         showAvatarStatus('画像の読み込みに失敗しました。', 'error');
@@ -22390,8 +22194,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
     showAvatarStatus('削除中...', 'uploading');
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.deleteProfileImage(window.currentUser.name)
+      .then(res => {
         if (res && res.success) {
           if (window.currentUser) {
             window.currentUser.avatarUrl = '';
@@ -22410,15 +22214,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
           showAvatarStatus('プロフィール写真を削除しました', 'success');
           setTimeout(() => { showAvatarStatus('', ''); }, 3000);
         } else {
-          console.error('apiDeleteProfileImage error:', res);
+          console.error('deleteProfileImage error:', res);
           showAvatarStatus(getSafeErrorMessage(res, '削除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiDeleteProfileImage failure:', err);
+      .catch(err => {
+        console.error('deleteProfileImage failure:', err);
         showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-      })
-      .apiDeleteProfileImage(window.currentUser.name);
+      });
   }
 
   /**
@@ -22461,10 +22264,10 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
     }
 
-    // まだポジションが取得できていない場合、サーバーから直接最新ポジションを取得して画面を即時更新
-    if (!posVal && u.name) {
-      google.script.run
-        .withSuccessHandler(positions => {
+    // まだポジションが取得できていない場合、Supabaseから最新ポジションを取得して画面を即時更新
+    if (!posVal && u.name && window.SupabaseService && typeof window.SupabaseService.getPlayerPositions === 'function') {
+      window.SupabaseService.getPlayerPositions()
+        .then(positions => {
           if (positions) {
             window.playerPositionsMap = positions;
             const p = findMatchingPosition(u.name, positions);
@@ -22478,7 +22281,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             }
           }
         })
-        .apiGetPlayerPositions();
+        .catch(err => console.warn('getPlayerPositions warning:', err));
     }
 
     if (emailEl) emailEl.textContent = u.email || '-';
@@ -22700,9 +22503,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     }
     if (statusEl) statusEl.classList.add('hidden');
 
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.GasApi && typeof window.GasApi.getOAuthAuthUrl === 'function') {
+      window.GasApi.getOAuthAuthUrl(email)
+        .then(res => {
           resetForceAuthBtn();
           if (res && res.success && res.authUrl) {
             // 別ウィンドウ（ポップアップ）でOAuth認証画面を開く
@@ -22713,23 +22516,22 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             }
           } else {
             if (statusEl) {
-              console.error('apiGetOAuthAuthUrl error:', res);
+              console.error('getOAuthAuthUrl error:', res);
               statusEl.textContent = getSafeErrorMessage(res, '認証URLの取得に失敗しました。しばらく経ってから再度お試しください。');
               statusEl.className = 'form-status-msg form-status-error mb-12';
               statusEl.classList.remove('hidden');
             }
           }
         })
-        .withFailureHandler(err => {
-          console.error('apiGetOAuthAuthUrl failure:', err);
+        .catch(err => {
+          console.error('getOAuthAuthUrl failure:', err);
           resetForceAuthBtn();
           if (statusEl) {
             statusEl.textContent = getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
-        })
-        .apiGetOAuthAuthUrl(email);
+        });
     }
   }
 
@@ -25742,16 +25544,16 @@ function submitData() {
     btn.disabled = true; // 2重送信防止
   }
   
-  // サーバーサイド（GAS）の saveMatchData を呼び出す
-  google.script.run
-    .withSuccessHandler(res => {
+  // Supabase の saveScoreRecord を直接呼び出す
+  window.SupabaseService.saveScoreRecord(payload)
+    .then(res => {
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
       }
       
       if (typeof res === 'string' && res.includes('エラー')) {
-        console.error('saveMatchData server error:', res);
+        console.error('saveScoreRecord server error:', res);
         var safeSaveMsg = (typeof getSafeErrorMessage === 'function')
           ? getSafeErrorMessage(res, '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。')
           : '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。';
@@ -25810,13 +25612,15 @@ function submitData() {
         afterSaveSuccess(updatedMatch.matchId);
         
         // 裏で静かに最新データを取得して同期させておく
-        google.script.run
-          .withSuccessHandler(data => { if (typeof initMatchHistory === 'function') initMatchHistory(data); })
-          .getMatchHistoryData();
+        if (window.SupabaseService && typeof window.SupabaseService.getMatchHistoryData === 'function') {
+          window.SupabaseService.getMatchHistoryData()
+            .then(data => { if (typeof initMatchHistory === 'function') initMatchHistory(data); })
+            .catch(syncErr => console.warn('getMatchHistoryData background sync warning:', syncErr));
+        }
       }
     })
-    .withFailureHandler(err => {
-      console.error('saveMatchData failure:', err);
+    .catch(err => {
+      console.error('saveScoreRecord failure:', err);
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
@@ -25825,8 +25629,7 @@ function submitData() {
         ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
       showAppAlert({ title: '通信エラー', message: safeCommMsg, isError: true });
-    })
-    .saveMatchData(payload);
+    });
 }
 
 /**
@@ -25953,15 +25756,15 @@ function filterAndRenderRankings() {
   // 選択されたシーズンのカレンダー出欠データが未キャッシュなら非同期で先読み
   if (selectedSeason && (!window.calendarAttendanceCache || !window.calendarAttendanceCache[selectedSeason])) {
     window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.SupabaseService && typeof window.SupabaseService.getCalendarAttendance === 'function') {
+      window.SupabaseService.getCalendarAttendance(selectedSeason)
+        .then(res => {
           if (res) {
             window.calendarAttendanceCache[selectedSeason] = res;
             filterAndRenderRankings();
           }
         })
-        .apiGetCalendarAttendance(selectedSeason);
+        .catch(err => console.warn('getCalendarAttendance warning:', err));
     }
   }
   
@@ -26382,14 +26185,16 @@ function toggleRankList(type) {
     // 選択されたシーズンのカレンダー出欠データが未キャッシュなら非同期で先読み
     if (season && (!window.calendarAttendanceCache || !window.calendarAttendanceCache[season])) {
       window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run
-          .withSuccessHandler(res => {
+      if (window.SupabaseService && typeof window.SupabaseService.getCalendarAttendance === 'function') {
+        window.SupabaseService.getCalendarAttendance(season)
+          .then(res => {
             if (res) {
               window.calendarAttendanceCache[season] = res;
+              const curSeason = document.getElementById('personalSeasonFilter')?.value;
+              if (curSeason === season) filterAndRenderPersonalStats();
             }
           })
-          .apiGetCalendarAttendance(season);
+          .catch(err => console.warn('getCalendarAttendance warning:', err));
       }
     }
 
@@ -27294,24 +27099,25 @@ function setMyAttendance(evOrKey, status) {
     userName: myName || ''
   };
 
-  google.script.run
-    .withSuccessHandler(res => {
-      if (res && res.success) {
-        if (res.event && window.eventsData) {
-          const idx = window.eventsData.findIndex(e => (res.event.id && e.id === res.event.id) || (e.date === res.event.date && e.title === res.event.title));
-          if (idx >= 0) {
-            window.eventsData[idx] = res.event;
+  if (window.SupabaseService && typeof window.SupabaseService.updateEventAttendance === 'function') {
+    window.SupabaseService.updateEventAttendance(payload)
+      .then(res => {
+        if (res && res.success) {
+          if (res.event && window.eventsData) {
+            const idx = window.eventsData.findIndex(e => (res.event.id && e.id === res.event.id) || (e.date === res.event.date && e.title === res.event.title));
+            if (idx >= 0) {
+              window.eventsData[idx] = res.event;
+            }
+            updateUnansweredBadges();
           }
-          updateUnansweredBadges();
+        } else {
+          console.error('Calendar update failed on backend:', res ? res.error : 'Unknown error');
         }
-      } else {
-        console.error('Calendar update failed on backend:', res ? res.error : 'Unknown error');
-      }
-    })
-    .withFailureHandler(err => {
-      console.error('updateEventAttendance Error:', err);
-    })
-    .updateEventAttendance(payload);
+      })
+      .catch(err => {
+        console.error('updateEventAttendance Error:', err);
+      });
+  }
 }
 
 // 後方互換性のためエイリアス
@@ -27539,10 +27345,12 @@ function initScheduleView(events, initialRoster) {
       // ⚡ 初期データに同封されている名簿を即座に利用（追加通信ゼロ）
       updateScheduleMemberListOptions(roster);
     } else {
-      // フォールバック（初期データに含まれていなかった場合のみサーバー取得）
-      google.script.run.withSuccessHandler(r => {
-        updateScheduleMemberListOptions(r);
-      }).apiGetMemberListForLogin();
+      // フォールバック（初期データに含まれていなかった場合のみSupabaseから取得）
+      if (window.SupabaseService && typeof window.SupabaseService.getMemberListForLogin === 'function') {
+        window.SupabaseService.getMemberListForLogin()
+          .then(r => updateScheduleMemberListOptions(r))
+          .catch(err => console.warn('getMemberListForLogin warning:', err));
+      }
     }
 
   } catch (err) {
@@ -28518,8 +28326,8 @@ function executeConfirmedDelete() {
   }
 
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.GasApi.deleteCalendarEvent(payload)
+    .then(res => {
       if (execBtn) {
         execBtn.disabled = false;
         execBtn.textContent = '削除';
@@ -28574,7 +28382,7 @@ function executeConfirmedDelete() {
         showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '予定の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (execBtn) {
         execBtn.disabled = false;
         execBtn.textContent = '削除';
@@ -28582,8 +28390,7 @@ function executeConfirmedDelete() {
       closeDeleteConfirmModal();
       console.error('deleteCalendarEvent failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .deleteCalendarEvent(payload);
+    });
 }
 
 /**
@@ -28953,8 +28760,8 @@ window.currentEditRemovedGuests = [];
     submitBtn.textContent = '保存中...';
   }
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.GasApi.saveCalendarEvent(payload)
+    .then(res => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
@@ -29019,15 +28826,14 @@ window.currentEditRemovedGuests = [];
         showAppAlert({ title: '保存エラー', message: getSafeErrorMessage(res, '予定の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
       }
       console.error('saveCalendarEvent failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .saveCalendarEvent(payload);
+    });
 }
 
 /**
@@ -29252,8 +29058,8 @@ function initMembersView(initialRoster) {
     }
   }
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.getAdminMemberList()
+    .then(res => {
       if (res && res.success && Array.isArray(res.roster)) {
         window.adminMemberList = res.roster;
         renderMembersList(window.adminMemberList);
@@ -29262,23 +29068,22 @@ function initMembersView(initialRoster) {
           container.replaceChildren();
           const errBox = document.createElement('div');
           errBox.className = 'card-box error-box text-center p-20';
-          console.error('apiGetMemberListForAdmin error:', res);
+          console.error('getAdminMemberList error:', res);
           errBox.textContent = getSafeErrorMessage(res, 'メンバー情報の取得に失敗しました。しばらく経ってから再度お試しください。');
           container.appendChild(errBox);
         }
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (container) {
         container.replaceChildren();
         const errBox = document.createElement('div');
         errBox.className = 'card-box error-box text-center p-20';
-        console.error('apiGetMemberListForAdmin failure:', err);
+        console.error('getAdminMemberList failure:', err);
         errBox.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
         container.appendChild(errBox);
       }
-    })
-    .apiGetMemberListForAdmin(actorEmail, actorName);
+    });
 }
 
 /**
@@ -30346,8 +30151,8 @@ function handleSaveMemberSubmit(e) {
   // ボタン自体が「更新中...」/「追加中...」に変化するため、ボタン上部のスピナー・ステータス表示は不要
   setMemberFormStatus('', '');
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.saveMember(payload, actorEmail, actorName)
+    .then(res => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
@@ -30376,20 +30181,19 @@ function handleSaveMemberSubmit(e) {
           setMemberFormStatus('', '');
           document.getElementById('memberEditEmail')?.focus();
         } else {
-          console.error('apiSaveMember error:', res);
+          console.error('saveMember error:', res);
           setMemberFormStatus(getSafeErrorMessage(res, '保存処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
       }
-      console.error('apiSaveMember failure:', err);
+      console.error('saveMember failure:', err);
       setMemberFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-    })
-    .apiSaveMember(payload, actorEmail, actorName);
+    });
 }
 
 let currentGuidanceEmail = '';
@@ -30493,9 +30297,9 @@ async function handleRestoreMember(memberName) {
   const actorEmail = u.email || '';
   const actorName = u.name || '';
 
-  // Supabase Direct (バイパス経由で即時更新 0.1s)
-  google.script.run
-    .withSuccessHandler(res => {
+  // Supabase Direct (0.1s)
+  window.SupabaseService.saveMember(payload, actorEmail, actorName)
+    .then(res => {
       if (res && res.success) {
         if (res.roster) {
           if (typeof syncUpdatedMemberList === 'function') {
@@ -30514,11 +30318,10 @@ async function handleRestoreMember(memberName) {
         showAppAlert({ title: '復帰エラー', message: getSafeErrorMessage(res, '復帰処理に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       console.error('handleRestoreMember failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiSaveMember(payload, actorEmail, actorName);
+    });
 }
 
 /**
@@ -30613,8 +30416,8 @@ function executeMemberDeletePermanently() {
 
   setDeleteFormStatus('登録の削除を実行中...', 'loading');
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.deleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName)
+    .then(res => {
       if (deleteBtn) deleteBtn.disabled = false;
 
       if (res && res.success) {
@@ -30638,16 +30441,15 @@ function executeMemberDeletePermanently() {
           window.currentEditingMember = null;
         }, 500);
       } else {
-        console.error('apiDeleteMemberPermanently error:', res);
+        console.error('deleteMemberPermanently error:', res);
         setDeleteFormStatus(getSafeErrorMessage(res, '削除処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (deleteBtn) deleteBtn.disabled = false;
-      console.error('apiDeleteMemberPermanently failure:', err);
+      console.error('deleteMemberPermanently failure:', err);
       setDeleteFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-    })
-    .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
+    });
 }
 
 /**
@@ -30987,14 +30789,16 @@ function refreshEquipmentData(forceRefresh, isBackground = false) {
     if (mainContent) mainContent.classList.add('hidden');
   }
 
-  const actor = getAppActorUser();
-  const actorEmail = actor ? (actor.email || '') : '';
-  const actorName = actor ? (actor.name || '') : '';
+  if (!window.SupabaseService || typeof window.SupabaseService.getEquipmentData !== 'function') {
+    if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
+    if (mainContent) mainContent.classList.remove('hidden');
+    return;
+  }
 
-  google.script.run
-    .withSuccessHandler(function(res) {
+  window.SupabaseService.getEquipmentData()
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiGetEquipmentData error:', res ? res.error : 'Unknown error');
+        console.error('getEquipmentData error:', res ? res.error : 'Unknown error');
         if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
         if (mainContent) mainContent.classList.remove('hidden');
         return;
@@ -31015,12 +30819,11 @@ function refreshEquipmentData(forceRefresh, isBackground = false) {
         updateScheduleModalEquipmentStatus();
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiGetEquipmentData failure:', err);
+    .catch(function(err) {
+      console.error('getEquipmentData failure:', err);
       if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
       if (mainContent) mainContent.classList.remove('hidden');
-    })
-    .apiGetEquipmentData(actorEmail, actorName);
+    });
 }
 
 /**
@@ -31646,11 +31449,11 @@ function handleSaveEquipmentSubmit(e) {
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  // 2. バックグラウンドでGASへ非同期保存
-  google.script.run
-    .withSuccessHandler(function(res) {
+  // 2. バックグラウンドでSupabaseへ非同期保存
+  window.SupabaseService.saveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiSaveEquipmentItem failed:', res ? res.error : 'Unknown');
+        console.error('saveEquipmentItem failed:', res ? res.error : 'Unknown');
         // 保存失敗時は元の状態に戻して再描画
         window.equipmentState.itemsList = previousItems;
         if (window.initialFullData && window.initialFullData.equipmentData) {
@@ -31669,17 +31472,15 @@ function handleSaveEquipmentSubmit(e) {
         }
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiSaveEquipmentItem error:', err);
+    .catch(function(err) {
+      console.error('saveEquipmentItem failure:', err);
       window.equipmentState.itemsList = previousItems;
       if (window.initialFullData && window.initialFullData.equipmentData) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      console.error('apiSaveEquipmentItem failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiSaveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName);
+    });
 }
 
 /**
@@ -31761,11 +31562,11 @@ function executeDeleteEquipmentPermanently() {
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  // 2. バックグラウンドで削除リクエスト（Supabase Direct / GAS Proxy）
-  google.script.run
-    .withSuccessHandler(function(res) {
+  // 2. バックグラウンドで削除リクエスト（Supabase Direct）
+  window.SupabaseService.deleteEquipmentItem(itemId, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiDeleteEquipmentItem failed:', res ? res.error : 'Unknown');
+        console.error('deleteEquipmentItem failed:', res ? res.error : 'Unknown');
         window.equipmentState.itemsList = previousItems;
         if (window.initialFullData && window.initialFullData.equipmentData) {
           window.initialFullData.equipmentData.itemsList = previousItems;
@@ -31774,17 +31575,15 @@ function executeDeleteEquipmentPermanently() {
         showAppAlert({ title: '削除失敗', message: getSafeErrorMessage(res, '備品の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiDeleteEquipmentItem error:', err);
+    .catch(function(err) {
+      console.error('deleteEquipmentItem failure:', err);
       window.equipmentState.itemsList = previousItems;
       if (window.initialFullData && window.initialFullData.equipmentData) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      console.error('apiDeleteEquipmentItem failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
+    });
 }
 
 /**
@@ -31866,15 +31665,15 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  google.script.run
-    .withSuccessHandler(function(res) {
+  window.SupabaseService.resolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.classList.remove('btn-resolving');
           btnEl.textContent = '解決';
         }
-        console.error('apiResolveEquipmentAlert error:', res);
+        console.error('resolveEquipmentAlert error:', res);
         showAppAlert({ title: '解決エラー', message: getSafeErrorMessage(res, '解決の登録に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         refreshEquipmentData(true);
         return;
@@ -31882,17 +31681,16 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
 
       refreshEquipmentData(true);
     })
-    .withFailureHandler(function(err) {
+    .catch(function(err) {
       if (btnEl) {
         btnEl.disabled = false;
         btnEl.classList.remove('btn-resolving');
         btnEl.textContent = '解決';
       }
-      console.error('apiResolveEquipmentAlert failure:', err);
+      console.error('resolveEquipmentAlert failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       refreshEquipmentData(true);
-    })
-    .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);
+    });
 }
 
 </script>
@@ -32026,7 +31824,7 @@ function applyBulletinPayload(res) {
 }
 
 /**
- * 活動記録データをGASバックエンドから取得
+ * 活動記録データをSupabaseから取得
  * @param {boolean} [silent=false]
  */
 function loadBulletinData(silent = false) {
@@ -32042,13 +31840,9 @@ function loadBulletinData(silent = false) {
     mainContent.classList.add('hidden');
   }
 
-  const currentUser = window.currentUser || {};
-  const currentId = currentUser.memberId || currentUser.id || '';
-  const currentName = currentUser.name || '';
-
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinData === 'function') {
+    window.SupabaseService.getBulletinData()
+      .then(res => {
         window.bulletinState.isLoading = false;
         if (placeholder && mainContent) {
           placeholder.classList.add('hidden');
@@ -32062,7 +31856,7 @@ function loadBulletinData(silent = false) {
           renderBulletinEmptyState('データの取得に失敗しました。');
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         window.bulletinState.isLoading = false;
         if (placeholder && mainContent) {
           placeholder.classList.add('hidden');
@@ -32070,8 +31864,7 @@ function loadBulletinData(silent = false) {
         }
         console.error('loadBulletinData error:', err);
         renderBulletinEmptyState('通信エラーが発生しました。');
-      })
-      .apiGetBulletinData(currentId, currentName);
+      });
   } else {
     // モック（オフライン・開発時）
     window.bulletinState.isLoading = false;
@@ -32543,32 +32336,31 @@ function handleBulletinPostSubmit(e) {
     }
   };
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.saveBulletinPost === 'function') {
+    window.SupabaseService.saveBulletinPost(payload)
+      .then(res => {
         enableForm();
         if (res && res.success) {
           closeBulletinEditModalForce();
           loadBulletinData(true);
         } else {
           if (statusEl) {
-            console.error('apiSaveBulletinPost error:', res);
+            console.error('saveBulletinPost error:', res);
             statusEl.textContent = getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         enableForm();
         if (statusEl) {
-          console.error('apiSaveBulletinPost failure:', err);
+          console.error('saveBulletinPost failure:', err);
           statusEl.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusEl.className = 'form-status-msg form-status-error mb-12';
           statusEl.classList.remove('hidden');
         }
-      })
-      .apiSaveBulletinPost(payload);
+      });
   } else {
     enableForm();
     closeBulletinEditModalForce();
@@ -32913,14 +32705,12 @@ function markPostAsReadIfUnread(post) {
     `;
   }
 
-  // 2. GASバックエンドへ非同期送信（UIの待機ゼロ）
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {})
-      .withFailureHandler(err => {
-        console.warn('apiMarkBulletinPostRead error:', err);
-      })
-      .apiMarkBulletinPostRead(post.id, myId, myName);
+  // 2. Supabaseへ非同期送信（UIの待機ゼロ）
+  if (window.SupabaseService && typeof window.SupabaseService.markBulletinAsRead === 'function') {
+    window.SupabaseService.markBulletinAsRead(post.id, myId, myName)
+      .catch(err => {
+        console.warn('markBulletinAsRead error:', err);
+      });
   }
 }
 
@@ -32965,9 +32755,9 @@ function loadBulletinPostReaders(postId) {
   if (containerYes) containerYes.innerHTML = '<div class="text-xs text-muted p-4">読み込み中...</div>';
   if (containerNo) containerNo.innerHTML = '<div class="text-xs text-muted p-4">読み込み中...</div>';
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinPostReaders === 'function') {
+    window.SupabaseService.getBulletinPostReaders(postId)
+      .then(res => {
         if (res && res.success) {
           window.bulletinState.readersData = res;
           renderReadersChips();
@@ -32976,11 +32766,10 @@ function loadBulletinPostReaders(postId) {
           if (containerNo) containerNo.textContent = '一覧の取得に失敗しました。';
         }
       })
-      .withFailureHandler(err => {
+      .catch(() => {
         if (containerYes) containerYes.textContent = '通信エラーが発生しました。';
         if (containerNo) containerNo.textContent = '通信エラーが発生しました。';
-      })
-      .apiGetBulletinPostReaders(postId);
+      });
   } else {
     renderReadersChips();
   }
@@ -33065,19 +32854,18 @@ function loadBulletinComments(postId) {
 
   container.innerHTML = '<div class="comments-loading text-xs text-muted py-8 text-center">コメントを読み込み中...</div>';
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinComments === 'function') {
+    window.SupabaseService.getBulletinComments(postId)
+      .then(res => {
         if (res && res.success) {
           renderBulletinComments(res.comments || []);
         } else {
           container.innerHTML = '<div class="text-xs text-muted py-8 text-center">コメントの取得に失敗しました</div>';
         }
       })
-      .withFailureHandler(err => {
+      .catch(() => {
         container.innerHTML = '<div class="text-xs text-muted py-8 text-center">通信エラーが発生しました</div>';
-      })
-      .apiGetBulletinComments(postId);
+      });
   } else {
     // モック
     renderBulletinComments([]);
@@ -33213,9 +33001,9 @@ function handleSubmitBulletinComment() {
     }
   };
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.addBulletinComment === 'function') {
+    window.SupabaseService.addBulletinComment(current.id, content, myId, myName)
+      .then(res => {
         enableBtn();
         if (res && res.success && res.comment) {
           inputEl.value = '';
@@ -33227,23 +33015,22 @@ function handleSubmitBulletinComment() {
           renderBulletinComments(current.comments);
         } else {
           if (statusMsg) {
-            console.error('apiAddBulletinComment error:', res);
+            console.error('addBulletinComment error:', res);
             statusMsg.textContent = getSafeErrorMessage(res, '送信に失敗しました。しばらく経ってから再度お試しください。');
             statusMsg.className = 'comment-status-msg error';
             statusMsg.classList.remove('hidden');
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         enableBtn();
         if (statusMsg) {
-          console.error('apiAddBulletinComment failure:', err);
+          console.error('addBulletinComment failure:', err);
           statusMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusMsg.className = 'comment-status-msg error';
           statusMsg.classList.remove('hidden');
         }
-      })
-      .apiAddBulletinComment(current.id, content, myId, myName);
+      });
   } else {
     enableBtn();
     inputEl.value = '';
@@ -33269,17 +33056,16 @@ function handleDeleteBulletinComment(commentId) {
     renderBulletinComments(current.comments);
   }
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.deleteBulletinComment === 'function') {
+    window.SupabaseService.deleteBulletinComment(commentId, actorName)
+      .then(res => {
         if (!res || !res.success) {
           console.error('コメント削除の同期に失敗しました:', res ? res.error : '');
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         console.error('通信エラーが発生しました:', err);
-      })
-      .apiDeleteBulletinComment(commentId, actorName);
+      });
   }
 }
 
@@ -33333,12 +33119,9 @@ function handleBdmTogglePinCheckbox(isChecked) {
   renderBulletinTimeline();
   renderHomePinnedAnnouncements();
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
-        // バックエンド保存成功（画面は0秒同期済みのため不要なリロード・チラつきは行わない）
-      })
-      .withFailureHandler(err => {
+  if (window.SupabaseService && typeof window.SupabaseService.togglePinBulletinPost === 'function') {
+    window.SupabaseService.togglePinBulletinPost(current.id, nextPinned)
+      .catch(err => {
         console.error('ピン留め保存エラー:', err);
         // エラー時はロールバック
         if (target) {
@@ -33354,8 +33137,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
         sortBulletinPosts(allPosts);
         renderBulletinTimeline();
         renderHomePinnedAnnouncements();
-      })
-      .apiTogglePinBulletinPost(current.id, nextPinned);
+      });
   }
 }
 
@@ -33407,24 +33189,23 @@ async function deleteBulletinPostById(postId, postTitle) {
     renderHomeRecentBulletins();
   }
 
-  // 2. バックエンドへ送信
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  // 2. Supabaseへ送信
+  if (window.SupabaseService && typeof window.SupabaseService.deleteBulletinPost === 'function') {
+    window.SupabaseService.deleteBulletinPost(postId)
+      .then(res => {
         if (res && res.success) {
           loadBulletinData(true);
         } else {
-          console.error('apiDeleteBulletinPost error:', res);
+          console.error('deleteBulletinPost error:', res);
           showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '投稿の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
           loadBulletinData(true);
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiDeleteBulletinPost failure:', err);
+      .catch(err => {
+        console.error('deleteBulletinPost failure:', err);
         showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
         loadBulletinData(true);
-      })
-      .apiDeleteBulletinPost(postId, actorName);
+      });
   } else {
     showAppAlert({ title: 'モック環境', message: '投稿を削除しました。' });
   }
