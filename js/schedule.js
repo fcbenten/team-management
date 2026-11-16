@@ -1519,6 +1519,18 @@ function executeConfirmedDelete() {
         renderCalendar(window.calYear, window.calMonth);
         renderAgendaList();
 
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'schedule_delete',
+            title: '予定が削除されました',
+            body: `${res.originalDate || payload.originalDate || ''} ${res.originalTitle || payload.originalTitle || ''}`.trim(),
+            targetTab: 'schedule',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
+
         closeDeleteConfirmModal();
         if (isFromDetailModal) {
           closeEventDetailModal();
@@ -1956,6 +1968,19 @@ window.currentEditRemovedGuests = [];
         renderCalendar(window.calYear, window.calMonth);
         renderAgendaList();
         updateUnansweredBadges();
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          const isNewEv = Boolean(res.isNew || payload.isDuplicate);
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewEv ? 'schedule_create' : 'schedule_update',
+            title: isNewEv ? '新しい予定が作成されました' : '予定が更新されました',
+            body: `${res.event ? res.event.date : date} ${title} (${isAllDay ? '終日' : startTime + ' - ' + endTime})`,
+            targetTab: 'schedule',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
 
         closeEventEditModal();
       } else {

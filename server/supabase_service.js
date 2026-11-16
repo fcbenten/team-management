@@ -207,7 +207,23 @@ class GasSupabaseService {
       } catch (cacheErr) {}
 
       let notified = false;
-      if (!onCooldown) {
+      let ruleAllowsLine = true;
+      try {
+        const ruleUrl = `${Config.SUPABASE.URL}/rest/v1/notification_rules?rule_key=eq.system_error_alert&select=external_enabled`;
+        const ruleRes = UrlFetchApp.fetch(ruleUrl, {
+          method: 'get',
+          headers: this.getHeaders(),
+          muteHttpExceptions: true
+        });
+        if (ruleRes.getResponseCode() === 200) {
+          const rRows = JSON.parse(ruleRes.getContentText()) || [];
+          if (rRows[0] && rRows[0].external_enabled === false) {
+            ruleAllowsLine = false;
+          }
+        }
+      } catch (ruleErr) {}
+
+      if (!onCooldown && ruleAllowsLine) {
         const repIds = this.getRepresentativeMemberIds();
         if (repIds.length > 0) {
           const edgeUrl = `${Config.SUPABASE.URL}/functions/v1/send-line-push`;

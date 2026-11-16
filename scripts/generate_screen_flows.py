@@ -668,7 +668,7 @@ FLOW_DEFINITIONS = {
                 "func_name": "apiSaveNotifySettingsDirect(settings)",
                 "storage_type": "db",
                 "storage_name": "Supabase: members.notify_settings",
-                "storage_detail": "雨天中止・出欠リマインド・掲示板通知の個別配信先設定を即座に更新",
+                "storage_detail": "出欠未回答リマインド・備品当番リマインド・その他チーム通知の受信設定を即座に更新",
                 "next_screen": "保存完了フィードバックを表示"
             },
             {
@@ -684,6 +684,54 @@ FLOW_DEFINITIONS = {
                 "storage_name": "SCR01 ログイン・Google連携画面",
                 "storage_detail": "localStorage (fcb_auth_user) を完全消去し、認証前ログイン画面へリダイレクト",
                 "next_screen": None
+            }
+        ]
+    },
+    "SCR12": {
+        "screen_id": "SCR12",
+        "screen_name": "通知管理画面（代表専用）",
+        "flows": [
+            {
+                "trigger": "代表アカウントでの「通知管理」画面表示時",
+                "flow_type": "read",
+                "badge_text": "通知ルール一覧取得 (SELECT)",
+                "arrow1_label": "ルール取得",
+                "arrow2_label": "notification_rules参照",
+                "engine": "supabase",
+                "file_name": "js/notifications.js",
+                "func_name": "initNotificationAdminView()",
+                "storage_type": "db",
+                "storage_name": "Supabase: notification_rules テーブル",
+                "storage_detail": "スケジュール・掲示板・結果・備品・リマインド・システムエラーの全16ルールを描画",
+                "next_screen": "カテゴリ別カードとスイッチ群を描画"
+            },
+            {
+                "trigger": "「お知らせ」/「通知(LINE/Push)」/ リマインド時刻変更時",
+                "flow_type": "write",
+                "badge_text": "通知ルール即時更新 (UPDATE)",
+                "arrow1_label": "パッチ送信",
+                "arrow2_label": "ルールUPDATE",
+                "engine": "supabase",
+                "file_name": "js/notifications.js / supabase.js",
+                "func_name": "handleRulePatch() → saveNotificationRule()",
+                "storage_type": "db",
+                "storage_name": "Supabase: notification_rules テーブル",
+                "storage_detail": "お知らせOFF時はexternal_enabledも自動OFF。リマインド日前日/時刻も即時保存",
+                "next_screen": "毎時定時バッチおよび即時イベントへ反映"
+            },
+            {
+                "trigger": "「自分宛てテスト配信」ボタン押下時",
+                "flow_type": "write",
+                "badge_text": "Edge Function 即時起動 (テスト実行)",
+                "arrow1_label": "テスト実行要求",
+                "arrow2_label": "send-daily-reminders呼出",
+                "engine": "supabase",
+                "file_name": "js/notifications.js / supabase.js",
+                "func_name": "handleRunReminderTestSelf() → runDailyReminderSelfTest()",
+                "storage_type": "db",
+                "storage_name": "Supabase Edge Function: send-daily-reminders",
+                "storage_detail": "代表自身のmemberIdのみを対象にリマインド文面・ベルお知らせ・LINE/Push配信を検証",
+                "next_screen": "実行件数メッセージ表示 ＆ ベル未読バッジ更新"
             }
         ]
     }

@@ -136,12 +136,16 @@
         tab = sessionStorage.getItem('fcb_active_tab') || '';
       } catch (e) {}
     }
-    const validTabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment', 'members'];
+    const validTabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment', 'members', 'notifications'];
     if (!validTabs.includes(tab)) {
       return 'home';
     }
     // メンバー管理タブは管理者権限がなければ home に安全フォールバック
     if (tab === 'members' && typeof isCurrentUserAdmin === 'function' && !isCurrentUserAdmin()) {
+      return 'home';
+    }
+    // 通知管理タブは代表のみアクセス可能
+    if (tab === 'notifications' && typeof isCurrentUserRepresentative === 'function' && !isCurrentUserRepresentative()) {
       return 'home';
     }
     return tab;
@@ -270,6 +274,9 @@
       window.currentUser = savedUser;
       if (typeof updateAdminNavVisibility === 'function') {
         updateAdminNavVisibility();
+        const bellBtn = document.getElementById('headerBellBtn');
+        if (bellBtn) bellBtn.classList.remove('hidden');
+        if (typeof refreshAnnouncementBell === 'function') refreshAnnouncementBell();
       }
       hideLoginScreen();
       applyInitialActiveTab();
@@ -716,6 +723,8 @@
    * ログイン画面を表示
    */
   function showLoginScreen() {
+    const bellBtn = document.getElementById('headerBellBtn');
+    if (bellBtn) bellBtn.classList.add('hidden');
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'flex';
     switchToLoginCard();
@@ -943,6 +952,9 @@
         }
 
         updateAdminNavVisibility();
+        const bellBtn = document.getElementById('headerBellBtn');
+        if (bellBtn) bellBtn.classList.remove('hidden');
+        if (typeof refreshAnnouncementBell === 'function') refreshAnnouncementBell();
 
         if (data.equipmentData) {
           window.initialFullData = window.initialFullData || {};
@@ -1083,7 +1095,7 @@
   function initProfileNotificationSettings() {
     const u = window.currentUser || {};
     const notifType = u.notificationType || 'none';
-    const notifySettings = u.notifySettings || { emergency: true, attendance: true, bulletin: true };
+    const notifySettings = u.notifySettings || { attendance: true, equipment: true, general: true };
 
     // ラジオボタンの選択
     const radios = document.querySelectorAll('input[name="profileNotifType"]');
@@ -1097,12 +1109,12 @@
     });
 
     // チェックボックスの選択
-    const itemEmg = document.getElementById('notifItemEmergency');
     const itemAtt = document.getElementById('notifItemAttendance');
-    const itemBul = document.getElementById('notifItemBulletin');
-    if (itemEmg) itemEmg.checked = notifySettings.emergency !== false;
+    const itemEq = document.getElementById('notifItemEquipment');
+    const itemGen = document.getElementById('notifItemGeneral');
     if (itemAtt) itemAtt.checked = notifySettings.attendance !== false;
-    if (itemBul) itemBul.checked = notifySettings.bulletin !== false;
+    if (itemEq) itemEq.checked = notifySettings.equipment !== false;
+    if (itemGen) itemGen.checked = notifySettings.general !== false;
 
     // ステータスバッジの更新
     updateNotificationBadges();
@@ -1128,7 +1140,7 @@
             u.lineLinked = !!s.lineLinked;
             u.pushLinked = !!s.pushLinked;
             u.lineLinkCode = s.linkCode || '';
-            u.notifySettings = s.notifySettings || { emergency: true, attendance: true, bulletin: true };
+            u.notifySettings = s.notifySettings || { attendance: true, equipment: true, general: true };
             try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch(e) {}
             
             radios.forEach(r => {
@@ -1139,9 +1151,9 @@
                 else card.classList.remove('selected');
               }
             });
-            if (itemEmg) itemEmg.checked = u.notifySettings.emergency !== false;
             if (itemAtt) itemAtt.checked = u.notifySettings.attendance !== false;
-            if (itemBul) itemBul.checked = u.notifySettings.bulletin !== false;
+            if (itemEq) itemEq.checked = u.notifySettings.equipment !== false;
+            if (itemGen) itemGen.checked = u.notifySettings.general !== false;
             updateNotificationBadges();
             handleNotifTypeChange(u.notificationType);
             syncProfileLineUi();
@@ -1508,14 +1520,14 @@
     const checkedRadio = document.querySelector('input[name="profileNotifType"]:checked');
     const notifType = checkedRadio ? checkedRadio.value : 'none';
 
-    const itemEmg = document.getElementById('notifItemEmergency');
     const itemAtt = document.getElementById('notifItemAttendance');
-    const itemBul = document.getElementById('notifItemBulletin');
+    const itemEq = document.getElementById('notifItemEquipment');
+    const itemGen = document.getElementById('notifItemGeneral');
 
     const notifySettings = {
-      emergency: itemEmg ? itemEmg.checked : true,
       attendance: itemAtt ? itemAtt.checked : true,
-      bulletin: itemBul ? itemBul.checked : true
+      equipment: itemEq ? itemEq.checked : true,
+      general: itemGen ? itemGen.checked : true
     };
 
     const payload = {
@@ -1667,15 +1679,51 @@
   }
 
   /**
+   * ログイン中ユーザーが代表（role === '代表'）であるかチェック
+   * @returns {boolean}
+   */
+  function isCurrentUserRepresentative() {
+    const u = window.currentUser;
+    if (!u) return false;
+    const directRole = String(u.role || '').trim();
+    if (directRole === '代表') return true;
+    const roster = window.scheduleRoster || window.adminMemberList;
+    if (roster && Array.isArray(roster)) {
+      const uEmail = String(u.email || '').trim().toLowerCase();
+      const uName = String(u.name || '').trim();
+      const match = roster.find(m =>
+        (uEmail && m.email && String(m.email).trim().toLowerCase() === uEmail) ||
+        (uName && m.name && String(m.name).trim() === uName)
+      );
+      if (match && String(match.role || '').trim() === '代表') {
+        u.role = '代表';
+        try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+        return true;
+      }
+    }
+    return false;
+  }
+  window.isCurrentUserRepresentative = isCurrentUserRepresentative;
+
+  /**
    * 管理者専用ナビゲーション項目の表示・非表示を制御
    */
   function updateAdminNavVisibility() {
     const navItem = document.getElementById('navItemMembers');
-    if (!navItem) return;
-    if (isCurrentUserAdmin()) {
-      navItem.classList.remove('hidden');
-    } else {
-      navItem.classList.add('hidden');
+    if (navItem) {
+      if (isCurrentUserAdmin()) {
+        navItem.classList.remove('hidden');
+      } else {
+        navItem.classList.add('hidden');
+      }
+    }
+    const navNotif = document.getElementById('navItemNotifications');
+    if (navNotif) {
+      if (isCurrentUserRepresentative()) {
+        navNotif.classList.remove('hidden');
+      } else {
+        navNotif.classList.add('hidden');
+      }
     }
   }
 
@@ -2219,6 +2267,15 @@
       }
     }
 
+    // 通知管理タブへの切り替え時：代表権限のみ厳格チェック
+    if (tabName === 'notifications') {
+      if (!isCurrentUserRepresentative()) {
+        showAppAlert({ title: 'アクセス制限', message: '通知管理画面は「代表」のみアクセス可能です。', isError: true });
+        switchTab('home');
+        return;
+      }
+    }
+
     // タブ状態を永続化（'input' は復元時に 'results' へ戻す）
     const tabToPersist = (tabName === 'input') ? 'results' : tabName;
     try {
@@ -2291,6 +2348,13 @@
       if (typeof initMembersView === 'function') {
         const list = (window.adminMemberList && window.adminMemberList.length > 0) ? window.adminMemberList : window.scheduleRoster;
         initMembersView(list);
+      }
+    }
+
+    // 通知管理タブへの切り替え時：設定初期化
+    if (tabName === 'notifications') {
+      if (typeof initNotificationAdminView === 'function') {
+        initNotificationAdminView();
       }
     }
 

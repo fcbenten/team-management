@@ -1646,5 +1646,51 @@ SWIMLANE_SPECS = {
         "lane5_nodes": [
             {"id": "o-scr01", "badge": "遷移先画面", "title": "SCR01 ログイン画面", "desc": "未ログイン状態へ復帰（#loginCard 表示）", "anchor_rows": [5]}
         ]
+    },
+    "SCR12": {
+        "scr_id": "SCR12",
+        "title": "SCR12 通知管理（代表専用）：ルール設定・テスト配信スイムレーン相関図",
+        "lane1_title": "1. 通知管理画面 (view_notifications.html)",
+        "cards": [
+            {
+                "title": "代表専用ロール制御・ルール読み込み (#tab-notifications)",
+                "rows": [
+                    {
+                        "t": {"badge": "タブ初期表示", "title": "代表ユーザーで「通知管理」表示", "desc": "switchTab('notifications') 権限判定（role === '代表'）", "is_init": True},
+                        "j": {"file": "js/notifications.js → supabase.js", "func": "initNotificationAdminView() → getNotificationRules(true)", "desc": "notification_rules 16件を取得しカテゴリ別カードへ描画"},
+                        "targets": [{"type": "direct_db", "to": "d-rules", "label": "ルール一覧SELECT", "bidir": True}]
+                    },
+                    {
+                        "t": {"badge": "スイッチ切替", "title": "「お知らせ」「通知(LINE/Push)」切替", "desc": "お知らせOFF時は外部通知も自動OFF・無効化"},
+                        "j": {"file": "js/notifications.js → supabase.js", "func": "handleRulePatch() → saveNotificationRule()", "desc": "包含制約（お知らせ ON 時のみ外部通知 ON 可）を適用し更新"},
+                        "targets": [{"type": "direct_db", "to": "d-rules", "label": "ルール即時UPDATE"}]
+                    },
+                    {
+                        "t": {"badge": "時刻変更", "title": "リマインド対象日・時刻（JST）変更", "desc": "days_before（0〜7日前） / notify_hour（00:00〜23:00）"},
+                        "j": {"file": "js/notifications.js → supabase.js", "func": "handleRulePatch(ruleKey, patch)", "desc": "pg_cron毎時バッチが参照する開催日前日・時刻を保存"},
+                        "targets": [{"type": "direct_db", "to": "d-rules", "label": "通知タイミング更新"}]
+                    }
+                ]
+            },
+            {
+                "title": "定時リマインド検証 (#btnTestDailyRemindersSelf)",
+                "rows": [
+                    {
+                        "t": {"badge": "テスト配信", "title": "「自分宛てテスト配信」押下", "desc": "代表自身のmemberIdのみ対象に安全検証"},
+                        "j": {"file": "js/notifications.js → supabase.js", "func": "handleRunReminderTestSelf() → runDailyReminderSelfTest()", "desc": "send-daily-reminders Edge Function へ testOnly: true で要求"},
+                        "targets": [
+                            {"type": "direct_db", "to": "d-edge", "label": "Edge Function 実行", "bidir": True},
+                            {"type": "direct_db", "to": "d-ann", "label": "自分宛てお知らせ確認"}
+                        ]
+                    }
+                ]
+            }
+        ],
+        "lane4_nodes": [
+            {"kind": "db", "id": "d-rules", "logical": "通知ルール設定", "physical": "notification_rules (announcement_enabled / external_enabled / notify_hour)", "anchor_rows": [0, 1, 2]},
+            {"kind": "ext", "id": "d-edge", "badge": "Supabase Edge Function", "title": "send-daily-reminders", "desc": "pg_cron (0 * * * *) およびテスト配信で出欠・備品当番を配信", "anchor_rows": [3]},
+            {"kind": "db", "id": "d-ann", "logical": "アプリ内お知らせ・履歴", "physical": "announcements / reminder_dispatch_logs", "anchor_rows": [3]}
+        ],
+        "lane5_nodes": []
     }
 }

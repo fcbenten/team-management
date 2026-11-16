@@ -1,0 +1,459 @@
+/* =========================================
+   ヘッダー・サイドバー内 お知らせベル & お知らせモーダル & 代表通知管理
+   ========================================= */
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-bell-btn {
+  position: relative;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: var(--text-heading, #1e293b);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header-bell-btn:hover,
+.header-bell-btn.is-touch-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.16);
+}
+
+.header-bell-btn .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+.bell-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 1.5px solid #ffffff;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* お知らせ一覧モーダル */
+.announcements-modal-content {
+  max-width: 480px !important;
+  border-radius: var(--radius, 12px) !important;
+  overflow: hidden;
+}
+
+.announcements-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.announcements-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.announcements-header-icon {
+  color: var(--primary, #2563eb);
+  font-size: 20px !important;
+}
+
+.announcements-unread-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.announcements-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-mark-all-read {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-mark-all-read:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.btn-mark-all-read:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.announcements-modal-body {
+  padding: 0 !important;
+  max-height: 68vh;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.announcement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.announcement-item:hover {
+  background: #f8fafc;
+}
+
+/* 未読はメールのように薄い青背景で強調し、既読になると白背景に変わる */
+.announcement-item.is-unread {
+  background: #eff6ff;
+}
+
+.announcement-item.is-unread:hover {
+  background: #e0f2fe;
+}
+
+.announcement-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.announcement-item.is-unread .announcement-item-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.announcement-item-icon .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.announcement-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.announcement-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.announcement-item-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.announcement-item.is-unread .announcement-item-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.announcement-item-time {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.announcement-item-body {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 3px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.announcement-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.announcements-empty {
+  padding: 36px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+/* 代表専用：通知管理画面 */
+.notif-admin-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notif-admin-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-heading, #0f172a);
+}
+
+.notif-admin-title .material-symbols-outlined {
+  color: var(--primary, #2563eb);
+  font-size: 22px;
+}
+
+.notif-admin-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.notif-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-admin-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 7px 12px;
+}
+
+.notif-admin-test-btn .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.notif-admin-status-msg {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  padding: 7px 10px;
+  border-radius: 6px;
+}
+
+.notif-admin-status-msg.is-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.notif-admin-status-msg.is-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.notif-admin-status-msg.is-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.notif-admin-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notif-admin-group-card {
+  padding: 14px 16px;
+}
+
+.notif-admin-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-heading, #0f172a);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notif-admin-group-header .material-symbols-outlined {
+  font-size: 19px;
+  color: var(--primary, #2563eb);
+}
+
+.notif-rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.notif-rule-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.notif-rule-info {
+  flex: 1;
+  min-width: 190px;
+}
+
+.notif-rule-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.notif-rule-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.notif-rule-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.notif-rule-timing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-timing-select {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.notif-switch-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-switch-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.notif-switch-item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* シンプルなピル型トグルスイッチ */
+.notif-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.notif-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.notif-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  transition: background-color 0.18s ease;
+}
+
+.notif-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.notif-toggle-switch input:checked + .notif-toggle-slider {
+  background-color: #2563eb;
+}
+
+.notif-toggle-switch.is-external input:checked + .notif-toggle-slider {
+  background-color: #059669;
+}
+
+.notif-toggle-switch input:checked + .notif-toggle-slider::before {
+  transform: translateX(16px);
+}
+

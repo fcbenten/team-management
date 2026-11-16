@@ -194,16 +194,16 @@
           <div class="notif-target-title">受け取る通知項目</div>
           <div class="notif-target-items">
             <label class="notif-checkbox-label">
-              <input type="checkbox" id="notifItemEmergency" checked>
-              <span>雨天中止・緊急連絡</span>
-            </label>
-            <label class="notif-checkbox-label">
               <input type="checkbox" id="notifItemAttendance" checked>
               <span>出欠未回答リマインド</span>
             </label>
             <label class="notif-checkbox-label">
-              <input type="checkbox" id="notifItemBulletin" checked>
-              <span>活動記録（掲示板）の新着</span>
+              <input type="checkbox" id="notifItemEquipment" checked>
+              <span>備品当番（持参）リマインド</span>
+            </label>
+            <label class="notif-checkbox-label">
+              <input type="checkbox" id="notifItemGeneral" checked>
+              <span>その他のチーム通知（予定・活動記録・試合・備品変更など）</span>
             </label>
           </div>
         </div>
@@ -440,6 +440,30 @@
       <a href="javascript:void(0)" onclick="executeLogout()" class="force-auth-logout-link">
         別のアカウントでログイン（ログアウト）
       </a>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================
+     アプリ内お知らせ一覧モーダル（ベルアイコン押下時）
+     ========================================= -->
+<div id="announcementsModal" class="modal-overlay" onclick="closeAnnouncementsModal(event)">
+  <div class="modal-content announcements-modal-content">
+    <div class="modal-header announcements-modal-header">
+      <div class="announcements-header-left">
+        <span class="material-symbols-outlined announcements-header-icon">notifications</span>
+        <div class="modal-title font-bold">お知らせ</div>
+        <span id="announcementsModalBadge" class="announcements-unread-pill hidden">0件未読</span>
+      </div>
+      <div class="announcements-header-right">
+        <button type="button" id="btnMarkAllAnnouncementsRead" class="btn-mark-all-read" onclick="handleMarkAllAnnouncementsRead()">
+          すべて既読
+        </button>
+        <button type="button" class="modal-close" onclick="closeAnnouncementsModal(event)">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body announcements-modal-body" id="announcementsListContainer">
+      <div class="announcements-empty">お知らせはありません。</div>
     </div>
   </div>
 </div>

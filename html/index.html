@@ -31,6 +31,7 @@
      <link rel="stylesheet" href="../css/members.css">
      <link rel="stylesheet" href="../css/equipment.css">
      <link rel="stylesheet" href="../css/bulletin.css">
+     <link rel="stylesheet" href="../css/notifications.css">
 </head>
 
 <body>
@@ -55,13 +56,21 @@
              <div class="header-title">FC Benten</div>
              <div class="header-subtitle text-muted text-sm">Team Management</div>
            </div>
-           
-           <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
-           <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
-             <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
-               <span class="material-symbols-outlined" id="headerUserIcon">person</span>
-               <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
+
+           <div class="sidebar-header-actions">
+             <!-- お知らせベルボタン（PC・スマホ共通、未読バッジ付き） -->
+             <button type="button" id="headerBellBtn" class="header-bell-btn hidden" onclick="openAnnouncementsModal()" title="お知らせ" aria-label="お知らせ">
+               <span class="material-symbols-outlined">notifications</span>
+               <span id="headerBellBadge" class="bell-unread-badge hidden">0</span>
              </button>
+
+             <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
+             <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
+               <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
+                 <span class="material-symbols-outlined" id="headerUserIcon">person</span>
+                 <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
+               </button>
+             </div>
            </div>
          </div>
 
@@ -103,6 +112,10 @@
              <span class="material-symbols-outlined mr-3">manage_accounts</span>
              メンバー管理
            </a>
+           <a class="nav-item hidden" id="navItemNotifications" onclick="switchTab('notifications')">
+             <span class="material-symbols-outlined mr-3">campaign</span>
+             通知管理
+           </a>
            </nav>
            <button type="button" class="nav-scroll-btn nav-scroll-right hidden" id="navScrollRight" onclick="scrollNavBy(150)" aria-label="次へスクロール">
              <span class="material-symbols-outlined">chevron_right</span>
@@ -140,6 +153,7 @@
      <!-- #include "view_members.html" -->
      <!-- #include "view_equipment.html" -->
      <!-- #include "view_bulletin.html" -->
+     <!-- #include "view_notifications.html" -->
        </main>
      </div> <!-- /app-layout -->
 
@@ -152,6 +166,7 @@
      <script src="../js/supabase.js"></script>
      <!-- 共通スクリプトの読み込み -->
      <script src="../js/common.js"></script>
+     <script src="../js/notifications.js"></script>
      <script src="../js/main.js"></script>
      <script src="../js/home.js"></script>
      <script src="../js/results.js"></script>

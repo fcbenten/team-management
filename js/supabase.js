@@ -122,6 +122,9 @@
           if (typeof updateUnansweredBadges === 'function') {
             updateUnansweredBadges();
           }
+          if (typeof window.refreshAnnouncementBell === 'function') {
+            window.refreshAnnouncementBell();
+          }
           console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
         }
 
@@ -768,6 +771,7 @@
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const matchId = payload.matchId || ('M' + Date.now());
+        const isNewMatch = !payload.matchId;
         const dateStr = normalizeDateStr(payload.date);
         const logs = Array.isArray(payload.logs) ? payload.logs : [];
 
@@ -873,6 +877,18 @@
         }
 
         console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          const oppLabel = payload.opponent ? ('vs ' + payload.opponent + ' ') : '';
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewMatch ? 'match_create' : 'match_update',
+            title: isNewMatch ? '新しい試合結果が登録されました' : '試合結果が更新されました',
+            body: `${dateStr} ${payload.category || ''} ${oppLabel}(${myScore} - ${oppScore})`.trim(),
+            targetTab: 'results',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return "保存が完了しました！";
       },
 
@@ -906,6 +922,17 @@
 
         const { data, error } = await sb.from('bulletin_posts').upsert(record);
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const isNewPost = !payload.id;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewPost ? 'bulletin_create' : 'bulletin_update',
+            title: isNewPost ? '新しい活動記録が投稿されました' : '活動記録が更新されました',
+            body: `「${payload.title || ''}」`,
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: currentMemberId
+          });
+        }
         return { success: true, post: data };
       },
 
@@ -931,6 +958,12 @@
       async deleteBulletinPost(postId) {
         const sb = getClient();
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        let postTitle = '';
+        try {
+          const { data: rows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
+          if (rows && rows[0]) postTitle = rows[0].title || '';
+        } catch (e) {}
+
         const { error } = await sb.from('bulletin_posts')
           .update({
             is_deleted: true,
@@ -938,6 +971,17 @@
           })
           .eq('post_id', postId);
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_delete',
+            title: '活動記録が削除されました',
+            body: postTitle ? `「${postTitle}」が削除されました` : '活動記録が削除されました',
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return { success: true };
       },
 
@@ -1011,6 +1055,22 @@
         });
 
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          let postTitle = '';
+          try {
+            const { data: pRows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
+            if (pRows && pRows[0]) postTitle = pRows[0].title || '';
+          } catch (e) {}
+          const actorName = memberName || (window.currentUser && window.currentUser.name) || 'メンバー';
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_comment_create',
+            title: '活動記録にコメントが追加されました',
+            body: `${actorName}: 「${String(content || '').slice(0, 60)}」` + (postTitle ? ` (${postTitle})` : ''),
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: authorId
+          });
+        }
         return { success: true, commentId: commentId };
       },
 
@@ -1026,6 +1086,17 @@
           .eq('comment_id', commentId);
 
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_comment_delete',
+            title: '活動記録のコメントが削除されました',
+            body: `${actorName || (window.currentUser && window.currentUser.name) || 'メンバー'}さんがコメントを削除しました`,
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return { success: true };
       },
 
@@ -1174,9 +1245,9 @@
             linkCode: hasValidCode ? parsed.linkCode : '',
             linkCodeExpiresAt: hasValidCode ? Number(parsed.linkCodeExpiresAt) : 0,
             notifySettings: {
-              emergency: parsed.emergency !== false,
               attendance: parsed.attendance !== false,
-              bulletin: parsed.bulletin !== false
+              equipment: parsed.equipment !== false,
+              general: parsed.general !== false
             }
           }
         };
@@ -1355,8 +1426,18 @@
         const mId = String(payload.memberId || '').trim();
         const notes = String(payload.notes || '').trim();
         let itemId = String(payload.itemId || '').trim();
+        const isNewEquipment = !itemId;
+        let prevMemberId = '';
+        let resolvedItemName = '備品';
 
         if (itemId) {
+          try {
+            const { data: prevRows } = await sb.from('equipment_items').select('member_id, item_name').eq('item_id', itemId).limit(1);
+            if (prevRows && prevRows[0]) {
+              prevMemberId = String(prevRows[0].member_id || '').trim();
+              resolvedItemName = prevRows[0].item_name || resolvedItemName;
+            }
+          } catch (e) {}
           // 既存更新
           const updateData = {
             member_id: mId || null,
@@ -1388,6 +1469,7 @@
             const { data: mRows } = await sb.from('equipment_master').select('name').eq('equipment_code', itCode).limit(1);
             if (mRows && mRows.length > 0) itemName = mRows[0].name;
           }
+          resolvedItemName = itemName;
 
           const insertData = {
             item_id: itemId,
@@ -1400,6 +1482,30 @@
           };
           const { error: insErr } = await sb.from('equipment_items').insert(insertData);
           if (insErr) throw insErr;
+        }
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          if (isNewEquipment) {
+            window.SupabaseNotificationService.emitAppEvent({
+              ruleKey: 'equipment_create',
+              title: '備品が追加されました',
+              body: `${resolvedItemName} (${itemId}) が備品台帳に追加されました`,
+              targetTab: 'equipment',
+              targetMemberId: null,
+              actorMemberId: actorId
+            });
+          }
+          if (mId && (isNewEquipment || mId !== prevMemberId)) {
+            window.SupabaseNotificationService.emitAppEvent({
+              ruleKey: 'equipment_assign',
+              title: '備品の保管担当にアサインされました',
+              body: `${resolvedItemName} (${itemId}) の保管担当に設定されました`,
+              targetTab: 'equipment',
+              targetMemberId: mId,
+              actorMemberId: actorId
+            });
+          }
         }
 
         const now = new Date();
@@ -1426,8 +1532,26 @@
         const cleanId = String(itemId || '').trim();
         if (!cleanId) throw new Error('削除対象の備品IDが指定されていません。');
 
+        let deletedItemName = '備品';
+        try {
+          const { data: rows } = await sb.from('equipment_items').select('item_name').eq('item_id', cleanId).limit(1);
+          if (rows && rows[0] && rows[0].item_name) deletedItemName = rows[0].item_name;
+        } catch (e) {}
+
         const { error } = await sb.from('equipment_items').delete().eq('item_id', cleanId);
         if (error) throw error;
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'equipment_delete',
+            title: '備品が削除されました',
+            body: `${deletedItemName} (${cleanId}) が備品台帳から削除されました`,
+            targetTab: 'equipment',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
 
         return { success: true, message: '備品を削除しました。' };
       },
@@ -2423,6 +2547,9 @@
           if (typeof updateUnansweredBadges === 'function') {
             updateUnansweredBadges();
           }
+          if (typeof window.refreshAnnouncementBell === 'function') {
+            window.refreshAnnouncementBell();
+          }
         }
       } catch (e) {
         console.warn('[Resume] Quick check error:', e);
@@ -2801,7 +2928,21 @@
       if (!sb || !entry) return { logged: false, notified: false };
 
       let notified = false;
-      const shouldNotifyLine = Boolean(entry.notifyLine) &&
+      let ruleAllowsLine = true;
+      if (entry.notifyLine) {
+        try {
+          const { data: ruleRows } = await sb
+            .from('notification_rules')
+            .select('external_enabled')
+            .eq('rule_key', 'system_error_alert')
+            .limit(1);
+          if (ruleRows && ruleRows[0] && ruleRows[0].external_enabled === false) {
+            ruleAllowsLine = false;
+          }
+        } catch (e) {}
+      }
+
+      const shouldNotifyLine = Boolean(entry.notifyLine) && ruleAllowsLine &&
         (entry.forceLineNotify || (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.protocol)));
 
       if (shouldNotifyLine) {
@@ -2865,6 +3006,278 @@
 
     window.SupabaseErrorLogger = {
       reportAndNotify: reportSystemErrorAndNotify
+    };
+
+    // =========================================
+    // 9. お知らせ（ベル）＆ 代表管理通知ルール＆共通外部通知ディスパッチャ
+    // =========================================
+    let cachedNotificationRules = null;
+    let cachedRulesFetchedAt = 0;
+
+    async function getNotificationRules(forceRefresh) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const now = Date.now();
+      if (!forceRefresh && Array.isArray(cachedNotificationRules) && (now - cachedRulesFetchedAt < 60000)) {
+        return cachedNotificationRules;
+      }
+      const { data, error } = await sb
+        .from('notification_rules')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      cachedNotificationRules = data || [];
+      cachedRulesFetchedAt = now;
+      return cachedNotificationRules;
+    }
+
+    async function getNotificationRuleByKey(ruleKey) {
+      try {
+        const rules = await getNotificationRules(false);
+        return (rules || []).find(r => r.rule_key === ruleKey) || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function saveNotificationRule(ruleKey, patch) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const nextPatch = Object.assign({}, patch || {}, { updated_at: new Date().toISOString() });
+      if (nextPatch.announcement_enabled === false) {
+        nextPatch.external_enabled = false;
+      }
+
+      const { data, error } = await sb
+        .from('notification_rules')
+        .update(nextPatch)
+        .eq('rule_key', ruleKey)
+        .select('*')
+        .limit(1);
+      if (error) throw error;
+
+      if (Array.isArray(cachedNotificationRules) && data && data[0]) {
+        const idx = cachedNotificationRules.findIndex(r => r.rule_key === ruleKey);
+        if (idx >= 0) cachedNotificationRules[idx] = data[0];
+      }
+      return data && data[0] ? data[0] : null;
+    }
+
+    async function getMyAnnouncements(memberId, limitCount) {
+      const sb = getClient();
+      if (!sb || !memberId) return { items: [], unreadCount: 0 };
+
+      const limit = Number(limitCount || 50);
+      const { data: rows, error } = await sb
+        .from('announcements')
+        .select('*')
+        .or(`target_member_id.is.null,target_member_id.eq.${memberId}`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+
+      // 自分自身の操作で自動発行された全員宛てお知らせは非表示にする（リマインド等はactorがNULLのため常に表示）
+      const filtered = (rows || []).filter(r => !r.actor_member_id || r.actor_member_id !== memberId);
+      if (filtered.length === 0) return { items: [], unreadCount: 0 };
+
+      const ids = filtered.map(r => r.announcement_id);
+      const { data: readRows } = await sb
+        .from('announcement_reads')
+        .select('announcement_id')
+        .eq('member_id', memberId)
+        .in('announcement_id', ids);
+
+      const readSet = new Set((readRows || []).map(r => r.announcement_id));
+      const items = filtered.map(r => Object.assign({}, r, { isRead: readSet.has(r.announcement_id) }));
+      const unreadCount = items.reduce((acc, it) => acc + (it.isRead ? 0 : 1), 0);
+      return { items, unreadCount };
+    }
+
+    async function markAnnouncementRead(announcementId, memberId) {
+      const sb = getClient();
+      if (!sb || !announcementId || !memberId) return;
+      try {
+        await sb.from('announcement_reads').upsert({
+          read_id: `ARD_${announcementId}_${memberId}`,
+          announcement_id: announcementId,
+          member_id: memberId,
+          read_at: new Date().toISOString()
+        }, { onConflict: 'announcement_id,member_id' });
+      } catch (e) {
+        console.warn('markAnnouncementRead warning:', e);
+      }
+    }
+
+    async function markAllAnnouncementsRead(announcementIds, memberId) {
+      const sb = getClient();
+      if (!sb || !memberId || !Array.isArray(announcementIds) || announcementIds.length === 0) return;
+      try {
+        const nowIso = new Date().toISOString();
+        const rows = announcementIds.map(aid => ({
+          read_id: `ARD_${aid}_${memberId}`,
+          announcement_id: aid,
+          member_id: memberId,
+          read_at: nowIso
+        }));
+        await sb.from('announcement_reads').upsert(rows, { onConflict: 'announcement_id,member_id' });
+      } catch (e) {
+        console.warn('markAllAnnouncementsRead warning:', e);
+      }
+    }
+
+    function getMemberCategoryPrefKey(ruleCategory) {
+      if (ruleCategory === 'reminder') return 'attendance';
+      return 'general';
+    }
+
+    async function dispatchExternalNotification({ ruleKey, ruleCategory, title, body, targetTab, targetMemberId, actorMemberId }) {
+      const sb = getClient();
+      if (!sb) return { lineSent: 0, pushSent: 0 };
+      if (typeof window !== 'undefined' && window.location && !/^https:/i.test(window.location.protocol)) {
+        return { lineSent: 0, pushSent: 0, skippedNonHttps: true };
+      }
+
+      let query = sb
+        .from('members')
+        .select('member_id, notification_type, line_user_id, push_subscription, notify_settings')
+        .eq('is_past', false)
+        .eq('member_type', 'REGULAR');
+
+      if (targetMemberId) {
+        query = query.eq('member_id', targetMemberId);
+      }
+
+      const { data: members, error } = await query;
+      if (error || !Array.isArray(members)) return { lineSent: 0, pushSent: 0 };
+
+      const prefKey = ruleKey === 'reminder_equipment_duty' ? 'equipment' : getMemberCategoryPrefKey(ruleCategory);
+      const lineTargets = [];
+      const pushTargets = [];
+
+      members.forEach(m => {
+        if (!m.member_id || (actorMemberId && m.member_id === actorMemberId)) return;
+        const nType = String(m.notification_type || 'none').toLowerCase();
+        if (nType === 'none') return;
+
+        let prefs = {};
+        if (m.notify_settings) {
+          try { prefs = typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings; } catch (e) {}
+        }
+        if (prefs[prefKey] === false) return;
+
+        if ((nType === 'line' || nType === 'both') && m.line_user_id) {
+          lineTargets.push(m.member_id);
+        }
+        if ((nType === 'push' || nType === 'both') && m.push_subscription) {
+          pushTargets.push(m.member_id);
+        }
+      });
+
+      const baseHref = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
+        ? window.location.href.split('#')[0]
+        : 'https://fcbenten.github.io/team-management/';
+      const tabSuffix = targetTab ? ('#' + targetTab) : '';
+      const lineUrl = toExternalBrowserLineUrl(baseHref + tabSuffix);
+      const pushUrl = './' + tabSuffix;
+
+      let lineSent = 0;
+      let pushSent = 0;
+      if (lineTargets.length > 0) {
+        try {
+          const r = await invokeEdgeFunction('send-line-push', {
+            memberIds: lineTargets,
+            title,
+            body,
+            appUrl: lineUrl
+          });
+          lineSent = (r && r.sentCount) || lineTargets.length;
+        } catch (e) {
+          console.warn('[ExternalNotify] LINE send warning:', e);
+        }
+      }
+      if (pushTargets.length > 0) {
+        try {
+          const r = await invokeEdgeFunction('send-web-push', {
+            memberIds: pushTargets,
+            title,
+            body,
+            url: pushUrl,
+            tag: 'fcb-' + ruleKey
+          });
+          pushSent = (r && r.sentCount) || pushTargets.length;
+        } catch (e) {
+          console.warn('[ExternalNotify] WebPush send warning:', e);
+        }
+      }
+      return { lineSent, pushSent };
+    }
+
+    async function emitAppEvent({ ruleKey, title, body, targetTab, targetMemberId, actorMemberId }) {
+      const sb = getClient();
+      if (!sb || !ruleKey || !title) return { recorded: false };
+
+      try {
+        const rule = await getNotificationRuleByKey(ruleKey);
+        if (rule && rule.announcement_enabled === false) {
+          return { recorded: false, skippedByRule: true };
+        }
+        if (targetMemberId && actorMemberId && targetMemberId === actorMemberId) {
+          return { recorded: false, skippedSelfAssign: true };
+        }
+
+        const announcementId = 'ANN-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+        const { error } = await sb.from('announcements').insert({
+          announcement_id: announcementId,
+          rule_key: ruleKey,
+          title: String(title).slice(0, 200),
+          body: body ? String(body).slice(0, 1000) : null,
+          target_tab: targetTab || 'home',
+          target_member_id: targetMemberId || null,
+          actor_member_id: actorMemberId || null
+        });
+        if (error) {
+          console.warn('[Announcements] insert skipped:', error);
+          return { recorded: false };
+        }
+
+        if (typeof window !== 'undefined' && typeof window.refreshAnnouncementBell === 'function') {
+          window.refreshAnnouncementBell();
+        }
+
+        if (rule && rule.announcement_enabled && rule.external_enabled) {
+          dispatchExternalNotification({
+            ruleKey,
+            ruleCategory: rule.category,
+            title,
+            body: body || title,
+            targetTab: targetTab || 'home',
+            targetMemberId: targetMemberId || null,
+            actorMemberId: actorMemberId || null
+          });
+        }
+        return { recorded: true, announcementId };
+      } catch (e) {
+        console.warn('[Announcements] emitAppEvent warning:', e);
+        return { recorded: false };
+      }
+    }
+
+    async function runDailyReminderSelfTest(memberId) {
+      return await invokeEdgeFunction('send-daily-reminders', {
+        testOnly: true,
+        memberId: memberId
+      });
+    }
+
+    window.SupabaseNotificationService = {
+      getNotificationRules,
+      saveNotificationRule,
+      getMyAnnouncements,
+      markAnnouncementRead,
+      markAllAnnouncementsRead,
+      emitAppEvent,
+      runDailyReminderSelfTest
     };
 
   })();

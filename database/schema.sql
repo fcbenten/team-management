@@ -154,6 +154,53 @@ CREATE TABLE IF NOT EXISTS public.system_error_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 12. 通知ルール設定 (notification_rules) ※代表専用「通知管理」画面で管理
+CREATE TABLE IF NOT EXISTS public.notification_rules (
+    rule_key VARCHAR(60) PRIMARY KEY,
+    category VARCHAR(30) NOT NULL,          -- 'schedule' | 'bulletin' | 'bulletin_comment' | 'results' | 'equipment' | 'reminder' | 'system'
+    action_label VARCHAR(100) NOT NULL,
+    description TEXT,
+    supports_announcement BOOLEAN NOT NULL DEFAULT TRUE,
+    announcement_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    external_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    days_before INTEGER DEFAULT NULL,
+    notify_hour INTEGER DEFAULT NULL,       -- 0〜23 (JST)
+    sort_order INTEGER DEFAULT 0,
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 13. アプリ内お知らせ (announcements)
+CREATE TABLE IF NOT EXISTS public.announcements (
+    announcement_id VARCHAR(60) PRIMARY KEY,
+    rule_key VARCHAR(60) NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    body TEXT,
+    target_tab VARCHAR(30) DEFAULT 'home',
+    target_member_id VARCHAR(50) REFERENCES public.members(member_id) ON DELETE CASCADE, -- NULL = 現役全員宛て
+    actor_member_id VARCHAR(50) REFERENCES public.members(member_id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 14. お知らせ既読状態 (announcement_reads) ※本人の未読/既読背景切り替え用
+CREATE TABLE IF NOT EXISTS public.announcement_reads (
+    read_id VARCHAR(120) PRIMARY KEY,
+    announcement_id VARCHAR(60) NOT NULL REFERENCES public.announcements(announcement_id) ON DELETE CASCADE,
+    member_id VARCHAR(50) NOT NULL REFERENCES public.members(member_id) ON DELETE CASCADE,
+    read_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_announcement_member_read UNIQUE (announcement_id, member_id)
+);
+
+-- 15. リマインド送信履歴 (reminder_dispatch_logs) ※定時バッチ二重送信防止
+CREATE TABLE IF NOT EXISTS public.reminder_dispatch_logs (
+    dispatch_id VARCHAR(160) PRIMARY KEY,
+    rule_key VARCHAR(60) NOT NULL,
+    event_id VARCHAR(255) NOT NULL,
+    member_id VARCHAR(50) NOT NULL REFERENCES public.members(member_id) ON DELETE CASCADE,
+    target_date VARCHAR(20) NOT NULL,
+    sent_at TIMESTAMPTZ DEFAULT NOW(),
+    CONSTRAINT uq_reminder_once UNIQUE (rule_key, event_id, member_id, target_date)
+);
+
 -- ==============================================================================
 -- インデックス作成（高速検索・0.3秒レスポンス保証）
 -- ==============================================================================
@@ -169,6 +216,9 @@ CREATE INDEX IF NOT EXISTS idx_bulletin_posts_list ON public.bulletin_posts(is_p
 CREATE INDEX IF NOT EXISTS idx_bulletin_reads_post ON public.bulletin_reads(post_id);
 CREATE INDEX IF NOT EXISTS idx_bulletin_comments_post ON public.bulletin_comments(post_id) WHERE is_deleted = FALSE;
 CREATE INDEX IF NOT EXISTS idx_system_error_logs_created ON public.system_error_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcements_created ON public.announcements(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcements_target ON public.announcements(target_member_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_announcement_reads_member ON public.announcement_reads(member_id);
 
 -- ==============================================================================
 -- Row Level Security (RLS) 設定
@@ -185,6 +235,32 @@ ALTER TABLE public.bulletin_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bulletin_reads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bulletin_comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.system_error_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.notification_rules ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.announcement_reads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.reminder_dispatch_logs ENABLE ROW LEVEL SECURITY;
+
+-- 初期通知ルールシード
+INSERT INTO public.notification_rules
+    (rule_key, category, action_label, description, supports_announcement, announcement_enabled, external_enabled, days_before, notify_hour, sort_order)
+VALUES
+    ('schedule_create', 'schedule', '新規作成', 'アプリから新しい予定が作成された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 10),
+    ('schedule_update', 'schedule', '変更・更新', '既存の予定が編集・更新された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 20),
+    ('schedule_delete', 'schedule', '削除', '既存の予定が削除された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 30),
+    ('bulletin_create', 'bulletin', '新規投稿', '活動記録・お知らせが新規投稿された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 40),
+    ('bulletin_update', 'bulletin', '編集・更新', '活動記録・お知らせが更新された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 50),
+    ('bulletin_delete', 'bulletin', '削除', '活動記録・お知らせが削除された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 60),
+    ('bulletin_comment_create', 'bulletin_comment', '新規コメント', '活動記録にコメントが追加された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 70),
+    ('bulletin_comment_delete', 'bulletin_comment', 'コメント削除', '活動記録のコメントが削除された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 80),
+    ('match_create', 'results', '新規登録', '試合結果が新しく登録された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 90),
+    ('match_update', 'results', '編集・更新', '既存の試合結果が編集・更新された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 100),
+    ('equipment_create', 'equipment', '備品追加', '新しい備品が台帳に追加された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 110),
+    ('equipment_assign', 'equipment', '保管担当アサイン', '備品の保管担当者に割り当てられた時（担当本人）', TRUE, TRUE, FALSE, NULL, NULL, 120),
+    ('equipment_delete', 'equipment', '備品削除', '備品が台帳から削除された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 130),
+    ('reminder_attendance', 'reminder', '出欠未回答リマインド', '開催前の指定タイミングに出欠未入力のメンバーへ通知', TRUE, TRUE, TRUE, 1, 9, 140),
+    ('reminder_equipment_duty', 'reminder', '備品当番リマインド', '開催前日の指定時刻に当番メンバーへ持参通知', TRUE, TRUE, TRUE, 1, 9, 150),
+    ('system_error_alert', 'system', 'システムエラー通知（代表LINE）', '想定外システムエラー検知時に代表へLINE通知', FALSE, FALSE, TRUE, NULL, NULL, 160)
+ON CONFLICT (rule_key) DO NOTHING;
 
 -- 全テーブルに対して anon / authenticated ロールへの全権限ポリシーを設定
 DO $$

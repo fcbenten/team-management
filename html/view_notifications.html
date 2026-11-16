@@ -1,0 +1,36 @@
+<!-- =========================================
+     代表専用：通知管理画面（role === '代表' のみ表示・アクセス可能）
+     ========================================= -->
+<div id="tab-notifications" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <div class="card-box mb-16 notif-admin-header-card">
+      <div class="notif-admin-header-top">
+        <div>
+          <div class="notif-admin-title">
+            <span class="material-symbols-outlined">campaign</span>
+            <span>通知管理（代表専用）</span>
+          </div>
+          <p class="notif-admin-subtitle">
+            アプリ内「お知らせ（ベル）」の記録有無と、外部通知（LINE / Web Push）の送信有無を切り替えます。<br>
+            ※「お知らせ」が ON の項目のみ「外部通知」を切り替えられます。
+          </p>
+        </div>
+        <div class="notif-admin-actions">
+          <button type="button" id="btnTestDailyRemindersSelf" class="btn-outline notif-admin-test-btn" onclick="handleRunReminderTestSelf()">
+            <span class="material-symbols-outlined">send</span>
+            <span>自分宛てテスト配信</span>
+          </button>
+        </div>
+      </div>
+      <div id="notifAdminStatusMsg" class="notif-admin-status-msg hidden"></div>
+    </div>
+
+    <div id="notifAdminRulesContainer" class="notif-admin-groups">
+      <div class="loading">ルール設定を読み込み中...</div>
+    </div>
+
+  </div>
+</div>
+

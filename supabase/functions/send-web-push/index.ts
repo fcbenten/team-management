@@ -11,6 +11,7 @@ const corsHeaders: Record<string, string> = {
 interface RequestBody {
   subscription?: webpush.PushSubscription | string;
   memberId?: string;
+  memberIds?: string[];
   targetAll?: boolean;
   title?: string;
   body?: string;
@@ -154,12 +155,14 @@ Deno.serve(async (req: Request) => {
 
       if (body.memberId) {
         query = query.eq("member_id", body.memberId);
+      } else if (body.memberIds && body.memberIds.length > 0) {
+        query = query.in("member_id", body.memberIds);
       } else if (body.targetAll) {
         query = query.eq("is_past", false);
       } else {
         return jsonResponse({
           success: false,
-          error: "subscription, memberId, または targetAll のいずれかを指定してください。",
+          error: "subscription, memberId, memberIds, または targetAll のいずれかを指定してください。",
         }, 400);
       }
 

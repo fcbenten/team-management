@@ -798,6 +798,115 @@ TABLES_DATA = [
         "migration": [
             ("新規構築 (GAS SystemLogger)", "標準consoleログ", "-", "system_error_logsテーブル", "サーバーローカルファイル不要の永続ログ保存先および代表LINE通知履歴として新規作成。")
         ]
+    },
+    {
+        "phys_name": "notification_rules",
+        "logic_name": "通知ルール設定",
+        "summary": "代表専用の通知管理画面で制御するアプリ内お知らせ・外部通知（LINE/Web Push）ON/OFFおよびリマインド時刻ルール",
+        "pk": "rule_key",
+        "fk": "なし",
+        "volume": "固定16ルール（数件/カテゴリ）",
+        "old_source": "新規（通知ルール一元管理）",
+        "columns": [
+            ("ルール識別キー", "rule_key", "VARCHAR(60)", "ルールキー", "PK", "NOT NULL", "なし", "-", "例: schedule_create, reminder_equipment_duty, system_error_alert。"),
+            ("機能カテゴリ", "category", "VARCHAR(30)", "カテゴリ", "-", "NOT NULL", "なし", "-", "'schedule' | 'bulletin' | 'bulletin_comment' | 'results' | 'equipment' | 'reminder' | 'system'。"),
+            ("操作・種別ラベル", "action_label", "VARCHAR(100)", "操作ラベル", "-", "NOT NULL", "なし", "-", "例: 新規作成, 編集・更新, 備品当番リマインド。"),
+            ("ルール説明", "description", "TEXT", "説明文", "-", "NULL", "なし", "-", "管理画面および仕様上のトリガー説明文。"),
+            ("お知らせ機能対応可否", "supports_announcement", "BOOLEAN", "お知らせ対応フラグ", "-", "NOT NULL", "TRUE", "-", "FALSEの場合はアプリ内お知らせ列を持たず外部通知のみ（system_error_alert等）。"),
+            ("お知らせ有効フラグ", "announcement_enabled", "BOOLEAN", "お知らせON/OFF", "-", "NOT NULL", "TRUE", "-", "TRUE時のみアプリ内announcementsへ登録。FALSE時はexternal_enabledも強制FALSE。"),
+            ("外部通知有効フラグ", "external_enabled", "BOOLEAN", "外部通知ON/OFF", "-", "NOT NULL", "FALSE", "-", "TRUE時のみLINE・Web Push統一通知を配信（supports_announcement=TRUE時はお知らせON時のみ有効化可能）。"),
+            ("リマインド前日数", "days_before", "INTEGER", "何日前設定", "-", "NULL", "NULL", "-", "リマインド系ルール専用（例: 0=当日, 1=前日）。非リマインドはNULL。"),
+            ("リマインド通知時刻", "notify_hour", "INTEGER", "通知時刻(JST)", "-", "NULL", "NULL", "-", "リマインド系ルール専用のJST時刻（0〜23）。非リマインドはNULL。"),
+            ("表示順", "sort_order", "INTEGER", "ソート順", "-", "NULL", "0", "-", "通知管理画面での表示順序。"),
+            ("更新日時", "updated_at", "TIMESTAMPTZ", "更新日時", "-", "NULL", "NOW()", "-", "ルール最終更新タイムスタンプ。")
+        ],
+        "indexes": [],
+        "rls": [
+            ("Allow anon full access", "anon, authenticated", "ALL", "true", "全ブラウザからのルール参照および代表画面からのルール更新用。")
+        ],
+        "migration": [
+            ("新規構築 (通知管理画面)", "-", "-", "notification_rulesテーブル", "お知らせ包含モデルおよび外部通知・リマインド時刻制御用のルールマスターとして新規作成（初期16件シード）。")
+        ]
+    },
+    {
+        "phys_name": "announcements",
+        "logic_name": "アプリ内お知らせ",
+        "summary": "チーム内の作成・更新・削除・リマインドイベントをベルマーク通知として蓄積するお知らせフィード",
+        "pk": "announcement_id",
+        "fk": "target_member_id / actor_member_id ➔ members",
+        "volume": "中（月50〜200件程度）",
+        "old_source": "新規（ベルマークお知らせ機能）",
+        "columns": [
+            ("お知らせID", "announcement_id", "VARCHAR(60)", "お知らせ一意ID", "PK", "NOT NULL", "なし", "-", "例: ANN-20261116...-1234。一意識別子。"),
+            ("トリガールールキー", "rule_key", "VARCHAR(60)", "ルールキー", "-", "NOT NULL", "なし", "-", "notification_rules.rule_key に対応。"),
+            ("タイトル", "title", "VARCHAR(200)", "タイトル", "-", "NOT NULL", "なし", "-", "お知らせ一覧・メール風リスト見出し。"),
+            ("本文", "body", "TEXT", "本文", "-", "NULL", "なし", "-", "操作対象・変更概要・リマインド内容の詳細。"),
+            ("遷移先タブ名", "target_tab", "VARCHAR(30)", "遷移先タブ", "-", "NULL", "'home'", "-", "クリック時に遷移するSPAタブ（schedule, bulletin, results, equipment, home 等）。"),
+            ("通知対象メンバーID", "target_member_id", "VARCHAR(50)", "対象メンバーID", "-", "NULL", "NULL", "members(member_id)", "NULLの場合は現役全員宛て。値ありの場合は対象本人宛て（備品アサイン・個別リマインド等）。ON DELETE CASCADE。"),
+            ("操作実行メンバーID", "actor_member_id", "VARCHAR(50)", "操作者ID", "-", "NULL", "NULL", "members(member_id)", "操作を実行した部員ID（自分自身への重複通知除外等にも利用）。ON DELETE SET NULL。"),
+            ("作成日時", "created_at", "TIMESTAMPTZ", "作成日時", "-", "NULL", "NOW()", "-", "お知らせ発行タイムスタンプ。")
+        ],
+        "indexes": [
+            ("idx_announcements_created", "created_at DESC", "B-Tree", "No", "最新お知らせの時系列降順取得用。"),
+            ("idx_announcements_target", "target_member_id, created_at DESC", "B-Tree", "No", "全員宛て(NULL)および個人宛てお知らせの高速絞り込み用。")
+        ],
+        "rls": [
+            ("Allow anon full access", "anon, authenticated", "ALL", "true", "PWAアプリ全体でのお知らせ登録・閲覧用。")
+        ],
+        "migration": [
+            ("新規構築 (お知らせベル機能)", "-", "-", "announcementsテーブル", "スケジュール・活動記録・試合結果・備品・リマインドを集約するアプリ内お知らせフィードとして新規作成。")
+        ]
+    },
+    {
+        "phys_name": "announcement_reads",
+        "logic_name": "お知らせ既読状態",
+        "summary": "アプリ利用者本人ごとにお知らせの未読・既読（背景色切り替え）を管理する既読ログ（他者への既読者一覧表示なし）",
+        "pk": "read_id",
+        "fk": "announcement_id ➔ announcements / member_id ➔ members",
+        "volume": "中〜多（お知らせ数 × 部員数）",
+        "old_source": "新規（メール風個人未読管理）",
+        "columns": [
+            ("既読レコードID", "read_id", "VARCHAR(120)", "既読一意ID", "PK", "NOT NULL", "なし", "-", "'{announcement_id}__{member_id}' 形式の一意識別子。"),
+            ("お知らせID", "announcement_id", "VARCHAR(60)", "お知らせID", "-", "NOT NULL", "なし", "announcements(announcement_id)", "既読となった対象お知らせ。ON DELETE CASCADE。"),
+            ("既読メンバーID", "member_id", "VARCHAR(50)", "メンバーID", "-", "NOT NULL", "なし", "members(member_id)", "既読にしたアプリ利用者本人。ON DELETE CASCADE。"),
+            ("既読日時", "read_at", "TIMESTAMPTZ", "既読日時", "-", "NULL", "NOW()", "-", "既読化タイムスタンプ。")
+        ],
+        "indexes": [
+            ("idx_announcement_reads_member", "member_id", "B-Tree", "No", "ログイン中本人の未読バッジ数・既読済みID一覧の高速取得用。"),
+            ("uq_announcement_member_read", "announcement_id, member_id", "Unique Constraint", "Yes", "同一お知らせ×同一部員の既読重複登録防止。")
+        ],
+        "rls": [
+            ("Allow anon full access", "anon, authenticated", "ALL", "true", "ログインユーザー本人分の未読/既読状態読み書き用。")
+        ],
+        "migration": [
+            ("新規構築 (お知らせ既読判定)", "-", "-", "announcement_readsテーブル", "他者へ誰が読んだかを公開せず、本人のUI背景色・未読バッジ件数のみを管理するために新規作成。")
+        ]
+    },
+    {
+        "phys_name": "reminder_dispatch_logs",
+        "logic_name": "リマインド送信履歴",
+        "summary": "毎時起動するsend-daily-reminders Edge Functionが出欠未回答・備品当番リマインドを同日二重送信しないための送信済みロック履歴",
+        "pk": "dispatch_id",
+        "fk": "member_id ➔ members",
+        "volume": "少（リマインド送信対象件数分）",
+        "old_source": "新規（pg_cron毎時実行デデュープ）",
+        "columns": [
+            ("送信履歴ID", "dispatch_id", "VARCHAR(160)", "送信一意ID", "PK", "NOT NULL", "なし", "-", "'{rule_key}__{event_id}__{member_id}__{target_date}' 形式の識別子。"),
+            ("トリガールールキー", "rule_key", "VARCHAR(60)", "ルールキー", "-", "NOT NULL", "なし", "-", "'reminder_attendance' または 'reminder_equipment_duty'。"),
+            ("対象予定ID", "event_id", "VARCHAR(255)", "イベントID", "-", "NOT NULL", "なし", "-", "attendance / equipment_event_logs 等に対応するカレンダー予定ID。"),
+            ("対象メンバーID", "member_id", "VARCHAR(50)", "メンバーID", "-", "NOT NULL", "なし", "members(member_id)", "リマインド通知送信先の現役部員ID。ON DELETE CASCADE。"),
+            ("対象活動日", "target_date", "VARCHAR(20)", "活動開催日", "-", "NOT NULL", "なし", "-", "YYYY-MM-DD 形式の対象予定開催日（JST）。"),
+            ("送信日時", "sent_at", "TIMESTAMPTZ", "送信日時", "-", "NULL", "NOW()", "-", "Edge Function による送信記録日時。")
+        ],
+        "indexes": [
+            ("uq_reminder_once", "rule_key, event_id, member_id, target_date", "Unique Constraint", "Yes", "毎時pg_cron起動時の同一日・同一予定・同一部員への二重送信完全防止用。")
+        ],
+        "rls": [
+            ("Allow anon full access", "anon, authenticated", "ALL", "true", "Edge Function（Service Role）およびテスト配信ログ制御用。")
+        ],
+        "migration": [
+            ("新規構築 (定時リマインドバッチ)", "-", "-", "reminder_dispatch_logsテーブル", "notification_rulesで変更可能な通知時刻に追従するpg_cron＋Edge Functionの冪等性保証用として新規作成。")
+        ]
     }
 ]
 
@@ -809,7 +918,7 @@ def main():
     print("Building Table of Contents & DB Architecture Sheet...")
     build_toc_sheet(wb, TABLES_DATA)
 
-    # 2. 各テーブル個別シート (11シート)
+    # 2. 各テーブル個別シート (15シート)
     for t in TABLES_DATA:
         print(f"Building Table Sheet: {t['phys_name']} ({t['logic_name']})...")
         build_table_sheet(wb, t)

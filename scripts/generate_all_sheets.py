@@ -137,6 +137,16 @@ def run_generate():
         },
         {
             "type": "area",
+            "name": "共通ヘッダー・サイドバー お知らせベル (#headerBellBtn / #announcementsModal)",
+            "desc": "PCサイドバー上部およびスマホ共通ヘッダーに常時配置されるお知らせベルアイコンと、タップで開くメール風の個人未読/既読お知らせ一覧モーダル",
+            "items": [
+                ("お知らせベルボタン / 未読バッジ", "headerBellBtn / headerBellBadge", "アイコンボタン＋バッジ", "-", "未読時のみ数値表示", "ログイン中に表示。自分宛て＋現役全員宛てお知らせのうち未読件数（99+上限）を赤バッジで表示。"),
+                ("お知らせ一覧モーダル", "announcementsModal / announcementsListContainer", "モーダル一覧", "-", "ベルタップで表示", "未読お知らせは薄い青背景＋青ドット（.is-unread）、既読クリックでメールのように白背景へ即時変化（他者への既読者一覧は非表示）し該当タブへ遷移。"),
+                ("すべて既読ボタン", "btnMarkAllAnnouncementsRead", "ボタン", "-", "未読あり時活性化", "表示中の未読お知らせをログイン本人分のみ一括既読化し、バッジ件数を0へ更新。")
+            ]
+        },
+        {
+            "type": "area",
             "name": "通知テスト（モックUI）",
             "desc": "ブラウザ Web Push 通知および LINE 個人トーク連携通知の動作確認領域（#homePushMockCard）",
             "items": [
@@ -1077,7 +1087,7 @@ def run_generate():
                 ("LINE連携解除ボタン（テスト用）", "profileLineLinkedArea / btnProfileLineUnlink", "ボタン", "-", "連携済時に表示", "テスト段階の検証用として選択カード直下に表示し、押下で members.line_user_id をクリアする。"),
                 ("ブラウザ通知有効化ボタン", "notifActionPushWrap 内ボタン", "ボタン", "-", "この端末の通知を有効化", "未許可時に選択カード直下に表示。タップでNotification API許可およびSupabaseWebPush.subscribeAndSaveを実行し、購読情報を保存。"),
                 ("メッセージ表示領域 (通知設定ガイド)", "notifGuideArea", "案内表示", "-", "未連携/未許可時表示", "LINE連携手順やブラウザ通知許可手順を info（無灯）でガイド表示。"),
-                ("受け取る通知項目チェックボックス", "notifItemEmergency / notifItemAttendance / notifItemBulletin", "チェックボックス", "-", "すべてON", "緊急・中止連絡、出欠リマインド、チーム掲示板の更新それぞれについて通知受け取り対象をON/OFF設定。"),
+                ("受け取る通知項目チェックボックス", "notifItemAttendance / notifItemEquipment / notifItemGeneral", "チェックボックス", "-", "すべてON", "出欠未回答リマインド、備品当番（持参）リマインド、その他のチーム通知それぞれについて通知受け取り対象をON/OFF設定。"),
                 ("通知設定を保存ボタン", "btnSaveNotificationSettings", "ボタン", "-", "通知設定を保存", "選択中の通知方法および受け取る通知項目をSupabaseのmembersテーブルへ保存。"),
                 ("メッセージ表示領域 (通知設定保存)", "notifSaveMsg", "インラインメッセージ", "-", "非表示", "表示レベル別スタイル（info: 無灯 / warning: 黄背景 / error: 赤背景）で通知設定保存結果・注意・エラーを表示。")
             ]
@@ -1146,6 +1156,66 @@ def run_generate():
                              "html/view_common.html, css/layout.css, css/base.css, js/main.js",
                              "プロフィール確認モーダル（写真設定・基本情報・設定導線）と、そこから遷移する設定モーダル（通知設定・パスワード変更・ログアウト）の2モーダル構成。",
                              scr11_tree, scr11_actions, scr11_errors, flow_image_path=flow_images.get("SCR11"))
+
+    # ==============================================================================
+    # SCR12: 通知管理画面（代表専用）
+    # ==============================================================================
+    scr12_tree = [
+        {
+            "type": "item",
+            "name": "メッセージ表示領域",
+            "id": "notifAdminStatusMsg",
+            "elem_type": "メッセージ表示",
+            "req": "-",
+            "init": "非表示",
+            "desc": "通知ルール保存完了、テスト配信実行結果、取得/更新エラーを表示するフィードバック領域（.is-success / .is-info / .is-error）。"
+        },
+        {
+            "type": "area",
+            "name": "通知管理ヘッダー (#tab-notifications)",
+            "desc": "代表（role === '代表'）のみサイドバー・メニューに表示され、直接タブ遷移時も権限ガードで保護される管理ヘッダー",
+            "items": [
+                ("自分宛てテスト配信ボタン", "btnTestDailyRemindersSelf", "アクションボタン", "-", "クリック可能", "send-daily-reminders Edge Function を testOnly: true で呼び出し、ログイン中の代表自身宛てのみにテスト配信を実行。")
+            ]
+        },
+        {
+            "type": "area",
+            "name": "カテゴリ別通知ルール設定カード (#notifAdminRulesContainer)",
+            "desc": "notification_rules テーブルの16ルールを機能カテゴリ別（スケジュール / 活動記録・掲示板 / 活動記録コメント / 試合記録 / 備品管理 / リマインド / システム管理）に表示",
+            "items": [
+                ("お知らせトグルスイッチ", "input[type='checkbox'] (お知らせ)", "トグルスイッチ", "-", "DB設定値（初期ON）", "アプリ内お知らせフィード（announcements）への記録有無を即時保存。OFFへ切り替えると子スイッチ「通知(LINE/Push)」も自動的にOFFかつ非活性となる（包含原則）。"),
+                ("外部通知トグルスイッチ", "input[type='checkbox'] (通知(LINE/Push) / 代表LINE通知)", "トグルスイッチ", "-", "DB設定値", "LINE Messaging API ＋ Web Push の外部通知送信有無を即時保存。supports_announcement=TRUE の項目では「お知らせ」ON時のみ操作可能。"),
+                ("リマインド対象日・通知時刻セレクト", "notif-timing-select (days_before / notify_hour)", "セレクトボックス", "-", "前日（1日前）/ 09:00", "出欠未回答リマインド・備品当番リマインドのみ表示。対象日（当日 / 前日 / 2日前 / 3日前 / 7日前）と通知時刻（00:00〜23:00 JST）を即時保存。")
+            ]
+        }
+    ]
+    scr12_actions = [
+        ("画面初期表示 / タブ遷移時", "代表アカウントでの表示時",
+         "isCurrentUserRepresentative() でロール==='代表' を検証（代表以外はホームへリダイレクト）。notification_rules 全16件をDBから取得し、カテゴリ別カードへ描画。",
+         "initNotificationAdminView() / getNotificationRules(true)", "代表以外の一般部員・副代表にはメニュー非表示かつ遷移ブロック"),
+        ("「お知らせ」トグル切替", "変更時",
+         "handleRulePatch() 経由で announcement_enabled を即時保存。OFFにした場合は包含ルールに基づき external_enabled も自動的に FALSE へ更新し、通知スイッチを disabled 化。",
+         "handleRulePatch(ruleKey, patch) / saveNotificationRule()", "「お知らせ ⊃ 外部通知」の一貫性をDB・UI両面で保証"),
+        ("「通知(LINE/Push)」・時刻セレクト変更", "変更時",
+         "外部通知ON/OFFやリマインドの前日数（days_before）・JST通知時刻（notify_hour）を notification_rules テーブルへ即時UPDATE保存。",
+         "handleRulePatch(ruleKey, patch)", "毎時 pg_cron バッチ（0 * * * *）が更新済みルールを即時参照"),
+        ("自分宛てテスト配信ボタン", "クリック時",
+         "代表本人の memberId のみを指定して send-daily-reminders Edge Function（testOnly: true）を呼び出し、実行結果表示後にベル未読バッジを最新化。",
+         "handleRunReminderTestSelf() / runDailyReminderSelfTest(memberId)", "他部員へ誤配信せずリマインド文面と配信経路を安全確認")
+    ]
+    scr12_errors = [
+        ("I12-01", "info", "メッセージ表示領域", "トグル/セレクト変更時", "notification_rules テーブルの更新が正常完了した場合", "画面表示", "「設定を保存しました。」", "即時反映完了"),
+        ("I12-02", "info", "メッセージ表示領域", "自分宛てテスト配信ボタン. クリック時", "テストリマインド Edge Function が正常完了した場合", "画面表示", "Edge Function からの実行件数サマリーメッセージ（未出力時は「テスト通知を実行しました。」）", "ベルバッジ自動更新"),
+        ("E12-01", "error", "遷移ガード", "タブ遷移時", "role !== '代表' のユーザーが notifications タブへ遷移しようとした場合", "権限ブロック", "ホーム画面（SCR02）へ強制リダイレクト", "代表アカウントのみでアクセス可能"),
+        ("E12-02", "error", "メッセージ表示領域", "画面初期表示時", "notification_rules 取得通信に失敗した場合", "画面表示", "「通知ルールの取得に失敗しました。しばらく経ってから再度お試しください。」（内部詳細マスク）", "画面再読み込みで再試行"),
+        ("E12-03", "error", "メッセージ表示領域", "トグル/セレクト変更時", "notification_rules 更新通信に失敗した場合", "画面表示", "「設定の保存に失敗しました。しばらく経ってから再度お試しください。」（直前状態へ自動ロールバック）", "通信確認後に再操作")
+    ]
+
+    print("Building SCR12...")
+    create_grid_screen_sheet(wb, "SCR12_通知管理", "SCR12", "通知管理（代表専用）", "代表（role === '代表'）のみアクセス可能",
+                             "html/view_notifications.html, css/notifications.css, js/notifications.js, js/supabase.js",
+                             "アプリ内「お知らせ（ベル）」のON/OFF、外部通知（LINE / Web Push）ON/OFF、リマインド対象日・時刻（JST）および自分宛てテスト配信を管理する代表専用画面。",
+                             scr12_tree, scr12_actions, scr12_errors, flow_image_path=flow_images.get("SCR12"))
 
     # ==============================================================================
     # 保存処理

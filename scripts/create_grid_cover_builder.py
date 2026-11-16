@@ -106,9 +106,9 @@ def build_grid_cover_sheet(wb):
             merge_and_style(ws, curr_r, sc, curr_r, ec, value=val, font=fnt, fill=fill_curr, alignment=al)
         curr_r += 1
 
-    # 4. 画面一覧 (全11画面)
+    # 4. 画面一覧 (全12画面)
     curr_r += 1
-    merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value="3. 画面一覧 (全11画面)",
+    merge_and_style(ws, curr_r, 1, curr_r, GRID_TOTAL_COLS, value="3. 画面一覧 (全12画面)",
                     font=f_sec_h1, fill=fill_blue_med, alignment=Alignment(horizontal="left", vertical="center", indent=1))
     ws.row_dimensions[curr_r].height = 24
     curr_r += 1
@@ -133,7 +133,8 @@ def build_grid_cover_sheet(wb):
         ("SCR08", "SCR08_備品管理", "備品管理画面", "view_equipment.html\nequipment.js", "全員閲覧/代理解決", "チーム備品現物台帳の管理、代表・副代表による備品追加・保管者編集・削除。"),
         ("SCR09", "SCR09_活動記録", "活動記録・掲示板画面", "view_bulletin.html\nbulletin.js", "全部員 (Wikiスタイル)", "チーム連絡・活動振り返りのタイムラインフィード、共同編集、ホームピン留め、既読/未読追跡、コメント機能。"),
         ("SCR10", "SCR10_メンバー管理", "メンバー管理画面", "view_members.html\nmembers.js", "代表・副代表専用", "管理者専用の選手名簿管理 (追加・編集・削除・現役復帰)、背番号・ポジション・メール・ロール設定。一般部員アクセス不可。"),
-        ("SCR11", "SCR11_設定", "マイプロフィール・設定画面", "view_common.html\nmain.js", "全部員", "アバター画像設定、通知受信設定、Googleカレンダー連携、ログアウトなどの個人設定。")
+        ("SCR11", "SCR11_設定", "マイプロフィール・設定画面", "view_common.html\nmain.js", "全部員", "アバター画像設定、通知受信設定（出欠/備品当番/その他チーム通知）、Googleカレンダー連携、ログアウトなどの個人設定。"),
+        ("SCR12", "SCR12_通知管理", "通知管理画面", "view_notifications.html\nnotifications.js", "代表専用", "アプリ内「お知らせ（ベル）」のON/OFF、外部通知（LINE/Web Push）ON/OFF（お知らせON時のみ選択可）、リマインド通知日時設定、テスト配信。")
     ]
     for s_idx, s in enumerate(screens_list):
         fill_curr = fill_even if s_idx % 2 == 0 else fill_odd
