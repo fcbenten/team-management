@@ -690,11 +690,13 @@ body {
   }
 
   .sidebar-header {
-    padding: 24px 20px;
+    padding: 22px 20px;
     height: auto;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
     border-bottom: 1px solid var(--border-color);
     box-sizing: border-box;
   }
@@ -12174,6 +12176,469 @@ textarea.comment-textarea:active {
 }
 
 </style>
+     <style>
+/* ../css/notifications.css */
+/* =========================================
+   ヘッダー・サイドバー内 お知らせベル & お知らせモーダル & 代表通知管理
+   ========================================= */
+
+.sidebar-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.header-bell-btn {
+  position: relative;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: var(--text-heading, #1e293b);
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.header-bell-btn:hover,
+.header-bell-btn.is-touch-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: var(--primary, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.16);
+}
+
+.header-bell-btn .material-symbols-outlined {
+  font-size: 1.25rem;
+}
+
+.bell-unread-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 17px;
+  text-align: center;
+  border: 1.5px solid #ffffff;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+
+/* お知らせ一覧モーダル */
+.announcements-modal-content {
+  max-width: 480px !important;
+  border-radius: var(--radius, 12px) !important;
+  overflow: hidden;
+}
+
+.announcements-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.announcements-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.announcements-header-icon {
+  color: var(--primary, #2563eb);
+  font-size: 20px !important;
+}
+
+.announcements-unread-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.announcements-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-mark-all-read {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-mark-all-read:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.btn-mark-all-read:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.announcements-modal-body {
+  padding: 0 !important;
+  max-height: 68vh;
+  overflow-y: auto;
+  background: #f8fafc;
+}
+
+.announcement-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.announcement-item:hover {
+  background: #f8fafc;
+}
+
+/* 未読はメールのように薄い青背景で強調し、既読になると白背景に変わる */
+.announcement-item.is-unread {
+  background: #eff6ff;
+}
+
+.announcement-item.is-unread:hover {
+  background: #e0f2fe;
+}
+
+.announcement-item-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.announcement-item.is-unread .announcement-item-icon {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.announcement-item-icon .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.announcement-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.announcement-item-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.announcement-item-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.35;
+}
+
+.announcement-item.is-unread .announcement-item-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.announcement-item-time {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.announcement-item-body {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 3px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.announcement-unread-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2563eb;
+  margin-top: 7px;
+  flex-shrink: 0;
+}
+
+.announcements-empty {
+  padding: 36px 16px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+/* 代表専用：通知管理画面 */
+.notif-admin-header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notif-admin-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-heading, #0f172a);
+}
+
+.notif-admin-title .material-symbols-outlined {
+  color: var(--primary, #2563eb);
+  font-size: 22px;
+}
+
+.notif-admin-subtitle {
+  font-size: 0.78rem;
+  color: var(--text-muted, #64748b);
+  margin: 6px 0 0;
+  line-height: 1.5;
+}
+
+.notif-admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notif-admin-test-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 7px 12px;
+}
+
+.notif-admin-test-btn .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.notif-admin-status-msg {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  padding: 7px 10px;
+  border-radius: 6px;
+}
+
+.notif-admin-status-msg.is-success {
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.notif-admin-status-msg.is-error {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.notif-admin-status-msg.is-info {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.notif-admin-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.notif-admin-group-card {
+  padding: 14px 16px;
+}
+
+.notif-admin-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-heading, #0f172a);
+  padding-bottom: 10px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notif-admin-group-header .material-symbols-outlined {
+  font-size: 19px;
+  color: var(--primary, #2563eb);
+}
+
+.notif-rule-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px dashed #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.notif-rule-row:last-child {
+  border-bottom: none;
+  padding-bottom: 2px;
+}
+
+.notif-rule-info {
+  flex: 1;
+  min-width: 190px;
+}
+
+.notif-rule-name {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.notif-rule-desc {
+  font-size: 0.74rem;
+  color: #64748b;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.notif-rule-controls {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.notif-rule-timing {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notif-timing-select {
+  font-size: 0.78rem;
+  padding: 4px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #1e293b;
+}
+
+.notif-switch-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notif-switch-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #334155;
+  cursor: pointer;
+  user-select: none;
+}
+
+.notif-switch-item.is-disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* シンプルなピル型トグルスイッチ */
+.notif-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.notif-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.notif-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #cbd5e1;
+  border-radius: 999px;
+  transition: background-color 0.18s ease;
+}
+
+.notif-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #ffffff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.notif-toggle-switch input:checked + .notif-toggle-slider {
+  background-color: #2563eb;
+}
+
+.notif-toggle-switch.is-external input:checked + .notif-toggle-slider {
+  background-color: #059669;
+}
+
+.notif-toggle-switch input:checked + .notif-toggle-slider::before {
+  transform: translateX(16px);
+}
+
+
+</style>
 </head>
 
 <body>
@@ -12377,16 +12842,16 @@ textarea.comment-textarea:active {
           <div class="notif-target-title">受け取る通知項目</div>
           <div class="notif-target-items">
             <label class="notif-checkbox-label">
-              <input type="checkbox" id="notifItemEmergency" checked>
-              <span>雨天中止・緊急連絡</span>
-            </label>
-            <label class="notif-checkbox-label">
               <input type="checkbox" id="notifItemAttendance" checked>
               <span>出欠未回答リマインド</span>
             </label>
             <label class="notif-checkbox-label">
-              <input type="checkbox" id="notifItemBulletin" checked>
-              <span>活動記録（掲示板）の新着</span>
+              <input type="checkbox" id="notifItemEquipment" checked>
+              <span>備品当番（持参）リマインド</span>
+            </label>
+            <label class="notif-checkbox-label">
+              <input type="checkbox" id="notifItemGeneral" checked>
+              <span>その他のチーム通知（予定・活動記録・試合・備品変更など）</span>
             </label>
           </div>
         </div>
@@ -12627,6 +13092,30 @@ textarea.comment-textarea:active {
   </div>
 </div>
 
+<!-- =========================================
+     アプリ内お知らせ一覧モーダル（ベルアイコン押下時）
+     ========================================= -->
+<div id="announcementsModal" class="modal-overlay" onclick="closeAnnouncementsModal(event)">
+  <div class="modal-content announcements-modal-content">
+    <div class="modal-header announcements-modal-header">
+      <div class="announcements-header-left">
+        <span class="material-symbols-outlined announcements-header-icon">notifications</span>
+        <div class="modal-title font-bold">お知らせ</div>
+        <span id="announcementsModalBadge" class="announcements-unread-pill hidden">0件未読</span>
+      </div>
+      <div class="announcements-header-right">
+        <button type="button" id="btnMarkAllAnnouncementsRead" class="btn-mark-all-read" onclick="handleMarkAllAnnouncementsRead()">
+          すべて既読
+        </button>
+        <button type="button" class="modal-close" onclick="closeAnnouncementsModal(event)">&times;</button>
+      </div>
+    </div>
+    <div class="modal-body announcements-modal-body" id="announcementsListContainer">
+      <div class="announcements-empty">お知らせはありません。</div>
+    </div>
+  </div>
+</div>
+
 
      <!-- =========================================
        ログイン画面
@@ -12751,13 +13240,21 @@ textarea.comment-textarea:active {
              <div class="header-title">FC Benten</div>
              <div class="header-subtitle text-muted text-sm">Team Management</div>
            </div>
-           
-           <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
-           <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
-             <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
-               <span class="material-symbols-outlined" id="headerUserIcon">person</span>
-               <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
+
+           <div class="sidebar-header-actions">
+             <!-- お知らせベルボタン（PC・スマホ共通、未読バッジ付き） -->
+             <button type="button" id="headerBellBtn" class="header-bell-btn hidden" onclick="openAnnouncementsModal()" title="お知らせ" aria-label="お知らせ">
+               <span class="material-symbols-outlined">notifications</span>
+               <span id="headerBellBadge" class="bell-unread-badge hidden">0</span>
              </button>
+
+             <!-- スマホ用ユーザーアイコン（PC時は非表示） -->
+             <div class="sidebar-mobile-user hidden" id="headerUserInfoMobile">
+               <button type="button" class="header-user-icon-btn" onclick="openUserProfileModal()" title="プロフィール">
+                 <span class="material-symbols-outlined" id="headerUserIcon">person</span>
+                 <img id="headerUserAvatarImgMobile" class="header-user-avatar-img hidden" alt="">
+               </button>
+             </div>
            </div>
          </div>
 
@@ -12798,6 +13295,10 @@ textarea.comment-textarea:active {
            <a class="nav-item hidden" id="navItemMembers" onclick="switchTab('members')">
              <span class="material-symbols-outlined mr-3">manage_accounts</span>
              メンバー管理
+           </a>
+           <a class="nav-item hidden" id="navItemNotifications" onclick="switchTab('notifications')">
+             <span class="material-symbols-outlined mr-3">campaign</span>
+             通知管理
            </a>
            </nav>
            <button type="button" class="nav-scroll-btn nav-scroll-right hidden" id="navScrollRight" onclick="scrollNavBy(150)" aria-label="次へスクロール">
@@ -14995,6 +15496,43 @@ textarea.comment-textarea:active {
   </div>
 </div>
 
+     <!-- =========================================
+     代表専用：通知管理画面（role === '代表' のみ表示・アクセス可能）
+     ========================================= -->
+<div id="tab-notifications" class="content-area">
+  <div class="tab-loading-placeholder"><div class="loading">読み込み中...</div></div>
+  <div class="tab-main-content hidden">
+
+    <div class="card-box mb-16 notif-admin-header-card">
+      <div class="notif-admin-header-top">
+        <div>
+          <div class="notif-admin-title">
+            <span class="material-symbols-outlined">campaign</span>
+            <span>通知管理（代表専用）</span>
+          </div>
+          <p class="notif-admin-subtitle">
+            アプリ内「お知らせ（ベル）」の記録有無と、外部通知（LINE / Web Push）の送信有無を切り替えます。<br>
+            ※「お知らせ」が ON の項目のみ「外部通知」を切り替えられます。
+          </p>
+        </div>
+        <div class="notif-admin-actions">
+          <button type="button" id="btnTestDailyRemindersSelf" class="btn-outline notif-admin-test-btn" onclick="handleRunReminderTestSelf()">
+            <span class="material-symbols-outlined">send</span>
+            <span>自分宛てテスト配信</span>
+          </button>
+        </div>
+      </div>
+      <div id="notifAdminStatusMsg" class="notif-admin-status-msg hidden"></div>
+    </div>
+
+    <div id="notifAdminRulesContainer" class="notif-admin-groups">
+      <div class="loading">ルール設定を読み込み中...</div>
+    </div>
+
+  </div>
+</div>
+
+
        </main>
      </div> <!-- /app-layout -->
 
@@ -15129,6 +15667,9 @@ textarea.comment-textarea:active {
           }
           if (typeof updateUnansweredBadges === 'function') {
             updateUnansweredBadges();
+          }
+          if (typeof window.refreshAnnouncementBell === 'function') {
+            window.refreshAnnouncementBell();
           }
           console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
         }
@@ -15776,6 +16317,7 @@ textarea.comment-textarea:active {
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const matchId = payload.matchId || ('M' + Date.now());
+        const isNewMatch = !payload.matchId;
         const dateStr = normalizeDateStr(payload.date);
         const logs = Array.isArray(payload.logs) ? payload.logs : [];
 
@@ -15881,6 +16423,18 @@ textarea.comment-textarea:active {
         }
 
         console.log(`[Supabase] Score record saved: ${matchId} (${myScore} - ${oppScore})`);
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          const oppLabel = payload.opponent ? ('vs ' + payload.opponent + ' ') : '';
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewMatch ? 'match_create' : 'match_update',
+            title: isNewMatch ? '新しい試合結果が登録されました' : '試合結果が更新されました',
+            body: `${dateStr} ${payload.category || ''} ${oppLabel}(${myScore} - ${oppScore})`.trim(),
+            targetTab: 'results',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return "保存が完了しました！";
       },
 
@@ -15914,6 +16468,17 @@ textarea.comment-textarea:active {
 
         const { data, error } = await sb.from('bulletin_posts').upsert(record);
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const isNewPost = !payload.id;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewPost ? 'bulletin_create' : 'bulletin_update',
+            title: isNewPost ? '新しい活動記録が投稿されました' : '活動記録が更新されました',
+            body: `「${payload.title || ''}」`,
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: currentMemberId
+          });
+        }
         return { success: true, post: data };
       },
 
@@ -15939,6 +16504,12 @@ textarea.comment-textarea:active {
       async deleteBulletinPost(postId) {
         const sb = getClient();
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        let postTitle = '';
+        try {
+          const { data: rows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
+          if (rows && rows[0]) postTitle = rows[0].title || '';
+        } catch (e) {}
+
         const { error } = await sb.from('bulletin_posts')
           .update({
             is_deleted: true,
@@ -15946,6 +16517,17 @@ textarea.comment-textarea:active {
           })
           .eq('post_id', postId);
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_delete',
+            title: '活動記録が削除されました',
+            body: postTitle ? `「${postTitle}」が削除されました` : '活動記録が削除されました',
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return { success: true };
       },
 
@@ -16019,6 +16601,22 @@ textarea.comment-textarea:active {
         });
 
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          let postTitle = '';
+          try {
+            const { data: pRows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
+            if (pRows && pRows[0]) postTitle = pRows[0].title || '';
+          } catch (e) {}
+          const actorName = memberName || (window.currentUser && window.currentUser.name) || 'メンバー';
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_comment_create',
+            title: '活動記録にコメントが追加されました',
+            body: `${actorName}: 「${String(content || '').slice(0, 60)}」` + (postTitle ? ` (${postTitle})` : ''),
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: authorId
+          });
+        }
         return { success: true, commentId: commentId };
       },
 
@@ -16034,6 +16632,17 @@ textarea.comment-textarea:active {
           .eq('comment_id', commentId);
 
         if (error) throw error;
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'bulletin_comment_delete',
+            title: '活動記録のコメントが削除されました',
+            body: `${actorName || (window.currentUser && window.currentUser.name) || 'メンバー'}さんがコメントを削除しました`,
+            targetTab: 'bulletin',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
         return { success: true };
       },
 
@@ -16182,9 +16791,9 @@ textarea.comment-textarea:active {
             linkCode: hasValidCode ? parsed.linkCode : '',
             linkCodeExpiresAt: hasValidCode ? Number(parsed.linkCodeExpiresAt) : 0,
             notifySettings: {
-              emergency: parsed.emergency !== false,
               attendance: parsed.attendance !== false,
-              bulletin: parsed.bulletin !== false
+              equipment: parsed.equipment !== false,
+              general: parsed.general !== false
             }
           }
         };
@@ -16363,8 +16972,18 @@ textarea.comment-textarea:active {
         const mId = String(payload.memberId || '').trim();
         const notes = String(payload.notes || '').trim();
         let itemId = String(payload.itemId || '').trim();
+        const isNewEquipment = !itemId;
+        let prevMemberId = '';
+        let resolvedItemName = '備品';
 
         if (itemId) {
+          try {
+            const { data: prevRows } = await sb.from('equipment_items').select('member_id, item_name').eq('item_id', itemId).limit(1);
+            if (prevRows && prevRows[0]) {
+              prevMemberId = String(prevRows[0].member_id || '').trim();
+              resolvedItemName = prevRows[0].item_name || resolvedItemName;
+            }
+          } catch (e) {}
           // 既存更新
           const updateData = {
             member_id: mId || null,
@@ -16396,6 +17015,7 @@ textarea.comment-textarea:active {
             const { data: mRows } = await sb.from('equipment_master').select('name').eq('equipment_code', itCode).limit(1);
             if (mRows && mRows.length > 0) itemName = mRows[0].name;
           }
+          resolvedItemName = itemName;
 
           const insertData = {
             item_id: itemId,
@@ -16408,6 +17028,30 @@ textarea.comment-textarea:active {
           };
           const { error: insErr } = await sb.from('equipment_items').insert(insertData);
           if (insErr) throw insErr;
+        }
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          if (isNewEquipment) {
+            window.SupabaseNotificationService.emitAppEvent({
+              ruleKey: 'equipment_create',
+              title: '備品が追加されました',
+              body: `${resolvedItemName} (${itemId}) が備品台帳に追加されました`,
+              targetTab: 'equipment',
+              targetMemberId: null,
+              actorMemberId: actorId
+            });
+          }
+          if (mId && (isNewEquipment || mId !== prevMemberId)) {
+            window.SupabaseNotificationService.emitAppEvent({
+              ruleKey: 'equipment_assign',
+              title: '備品の保管担当にアサインされました',
+              body: `${resolvedItemName} (${itemId}) の保管担当に設定されました`,
+              targetTab: 'equipment',
+              targetMemberId: mId,
+              actorMemberId: actorId
+            });
+          }
         }
 
         const now = new Date();
@@ -16434,8 +17078,26 @@ textarea.comment-textarea:active {
         const cleanId = String(itemId || '').trim();
         if (!cleanId) throw new Error('削除対象の備品IDが指定されていません。');
 
+        let deletedItemName = '備品';
+        try {
+          const { data: rows } = await sb.from('equipment_items').select('item_name').eq('item_id', cleanId).limit(1);
+          if (rows && rows[0] && rows[0].item_name) deletedItemName = rows[0].item_name;
+        } catch (e) {}
+
         const { error } = await sb.from('equipment_items').delete().eq('item_id', cleanId);
         if (error) throw error;
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'equipment_delete',
+            title: '備品が削除されました',
+            body: `${deletedItemName} (${cleanId}) が備品台帳から削除されました`,
+            targetTab: 'equipment',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
 
         return { success: true, message: '備品を削除しました。' };
       },
@@ -17431,6 +18093,9 @@ textarea.comment-textarea:active {
           if (typeof updateUnansweredBadges === 'function') {
             updateUnansweredBadges();
           }
+          if (typeof window.refreshAnnouncementBell === 'function') {
+            window.refreshAnnouncementBell();
+          }
         }
       } catch (e) {
         console.warn('[Resume] Quick check error:', e);
@@ -17809,7 +18474,21 @@ textarea.comment-textarea:active {
       if (!sb || !entry) return { logged: false, notified: false };
 
       let notified = false;
-      const shouldNotifyLine = Boolean(entry.notifyLine) &&
+      let ruleAllowsLine = true;
+      if (entry.notifyLine) {
+        try {
+          const { data: ruleRows } = await sb
+            .from('notification_rules')
+            .select('external_enabled')
+            .eq('rule_key', 'system_error_alert')
+            .limit(1);
+          if (ruleRows && ruleRows[0] && ruleRows[0].external_enabled === false) {
+            ruleAllowsLine = false;
+          }
+        } catch (e) {}
+      }
+
+      const shouldNotifyLine = Boolean(entry.notifyLine) && ruleAllowsLine &&
         (entry.forceLineNotify || (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.protocol)));
 
       if (shouldNotifyLine) {
@@ -17873,6 +18552,278 @@ textarea.comment-textarea:active {
 
     window.SupabaseErrorLogger = {
       reportAndNotify: reportSystemErrorAndNotify
+    };
+
+    // =========================================
+    // 9. お知らせ（ベル）＆ 代表管理通知ルール＆共通外部通知ディスパッチャ
+    // =========================================
+    let cachedNotificationRules = null;
+    let cachedRulesFetchedAt = 0;
+
+    async function getNotificationRules(forceRefresh) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+      const now = Date.now();
+      if (!forceRefresh && Array.isArray(cachedNotificationRules) && (now - cachedRulesFetchedAt < 60000)) {
+        return cachedNotificationRules;
+      }
+      const { data, error } = await sb
+        .from('notification_rules')
+        .select('*')
+        .order('sort_order', { ascending: true });
+      if (error) throw error;
+      cachedNotificationRules = data || [];
+      cachedRulesFetchedAt = now;
+      return cachedNotificationRules;
+    }
+
+    async function getNotificationRuleByKey(ruleKey) {
+      try {
+        const rules = await getNotificationRules(false);
+        return (rules || []).find(r => r.rule_key === ruleKey) || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    async function saveNotificationRule(ruleKey, patch) {
+      const sb = getClient();
+      if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+      const nextPatch = Object.assign({}, patch || {}, { updated_at: new Date().toISOString() });
+      if (nextPatch.announcement_enabled === false) {
+        nextPatch.external_enabled = false;
+      }
+
+      const { data, error } = await sb
+        .from('notification_rules')
+        .update(nextPatch)
+        .eq('rule_key', ruleKey)
+        .select('*')
+        .limit(1);
+      if (error) throw error;
+
+      if (Array.isArray(cachedNotificationRules) && data && data[0]) {
+        const idx = cachedNotificationRules.findIndex(r => r.rule_key === ruleKey);
+        if (idx >= 0) cachedNotificationRules[idx] = data[0];
+      }
+      return data && data[0] ? data[0] : null;
+    }
+
+    async function getMyAnnouncements(memberId, limitCount) {
+      const sb = getClient();
+      if (!sb || !memberId) return { items: [], unreadCount: 0 };
+
+      const limit = Number(limitCount || 50);
+      const { data: rows, error } = await sb
+        .from('announcements')
+        .select('*')
+        .or(`target_member_id.is.null,target_member_id.eq.${memberId}`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+
+      // 自分自身の操作で自動発行された全員宛てお知らせは非表示にする（リマインド等はactorがNULLのため常に表示）
+      const filtered = (rows || []).filter(r => !r.actor_member_id || r.actor_member_id !== memberId);
+      if (filtered.length === 0) return { items: [], unreadCount: 0 };
+
+      const ids = filtered.map(r => r.announcement_id);
+      const { data: readRows } = await sb
+        .from('announcement_reads')
+        .select('announcement_id')
+        .eq('member_id', memberId)
+        .in('announcement_id', ids);
+
+      const readSet = new Set((readRows || []).map(r => r.announcement_id));
+      const items = filtered.map(r => Object.assign({}, r, { isRead: readSet.has(r.announcement_id) }));
+      const unreadCount = items.reduce((acc, it) => acc + (it.isRead ? 0 : 1), 0);
+      return { items, unreadCount };
+    }
+
+    async function markAnnouncementRead(announcementId, memberId) {
+      const sb = getClient();
+      if (!sb || !announcementId || !memberId) return;
+      try {
+        await sb.from('announcement_reads').upsert({
+          read_id: `ARD_${announcementId}_${memberId}`,
+          announcement_id: announcementId,
+          member_id: memberId,
+          read_at: new Date().toISOString()
+        }, { onConflict: 'announcement_id,member_id' });
+      } catch (e) {
+        console.warn('markAnnouncementRead warning:', e);
+      }
+    }
+
+    async function markAllAnnouncementsRead(announcementIds, memberId) {
+      const sb = getClient();
+      if (!sb || !memberId || !Array.isArray(announcementIds) || announcementIds.length === 0) return;
+      try {
+        const nowIso = new Date().toISOString();
+        const rows = announcementIds.map(aid => ({
+          read_id: `ARD_${aid}_${memberId}`,
+          announcement_id: aid,
+          member_id: memberId,
+          read_at: nowIso
+        }));
+        await sb.from('announcement_reads').upsert(rows, { onConflict: 'announcement_id,member_id' });
+      } catch (e) {
+        console.warn('markAllAnnouncementsRead warning:', e);
+      }
+    }
+
+    function getMemberCategoryPrefKey(ruleCategory) {
+      if (ruleCategory === 'reminder') return 'attendance';
+      return 'general';
+    }
+
+    async function dispatchExternalNotification({ ruleKey, ruleCategory, title, body, targetTab, targetMemberId, actorMemberId }) {
+      const sb = getClient();
+      if (!sb) return { lineSent: 0, pushSent: 0 };
+      if (typeof window !== 'undefined' && window.location && !/^https:/i.test(window.location.protocol)) {
+        return { lineSent: 0, pushSent: 0, skippedNonHttps: true };
+      }
+
+      let query = sb
+        .from('members')
+        .select('member_id, notification_type, line_user_id, push_subscription, notify_settings')
+        .eq('is_past', false)
+        .eq('member_type', 'REGULAR');
+
+      if (targetMemberId) {
+        query = query.eq('member_id', targetMemberId);
+      }
+
+      const { data: members, error } = await query;
+      if (error || !Array.isArray(members)) return { lineSent: 0, pushSent: 0 };
+
+      const prefKey = ruleKey === 'reminder_equipment_duty' ? 'equipment' : getMemberCategoryPrefKey(ruleCategory);
+      const lineTargets = [];
+      const pushTargets = [];
+
+      members.forEach(m => {
+        if (!m.member_id || (actorMemberId && m.member_id === actorMemberId)) return;
+        const nType = String(m.notification_type || 'none').toLowerCase();
+        if (nType === 'none') return;
+
+        let prefs = {};
+        if (m.notify_settings) {
+          try { prefs = typeof m.notify_settings === 'string' ? JSON.parse(m.notify_settings) : m.notify_settings; } catch (e) {}
+        }
+        if (prefs[prefKey] === false) return;
+
+        if ((nType === 'line' || nType === 'both') && m.line_user_id) {
+          lineTargets.push(m.member_id);
+        }
+        if ((nType === 'push' || nType === 'both') && m.push_subscription) {
+          pushTargets.push(m.member_id);
+        }
+      });
+
+      const baseHref = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
+        ? window.location.href.split('#')[0]
+        : 'https://fcbenten.github.io/team-management/';
+      const tabSuffix = targetTab ? ('#' + targetTab) : '';
+      const lineUrl = toExternalBrowserLineUrl(baseHref + tabSuffix);
+      const pushUrl = './' + tabSuffix;
+
+      let lineSent = 0;
+      let pushSent = 0;
+      if (lineTargets.length > 0) {
+        try {
+          const r = await invokeEdgeFunction('send-line-push', {
+            memberIds: lineTargets,
+            title,
+            body,
+            appUrl: lineUrl
+          });
+          lineSent = (r && r.sentCount) || lineTargets.length;
+        } catch (e) {
+          console.warn('[ExternalNotify] LINE send warning:', e);
+        }
+      }
+      if (pushTargets.length > 0) {
+        try {
+          const r = await invokeEdgeFunction('send-web-push', {
+            memberIds: pushTargets,
+            title,
+            body,
+            url: pushUrl,
+            tag: 'fcb-' + ruleKey
+          });
+          pushSent = (r && r.sentCount) || pushTargets.length;
+        } catch (e) {
+          console.warn('[ExternalNotify] WebPush send warning:', e);
+        }
+      }
+      return { lineSent, pushSent };
+    }
+
+    async function emitAppEvent({ ruleKey, title, body, targetTab, targetMemberId, actorMemberId }) {
+      const sb = getClient();
+      if (!sb || !ruleKey || !title) return { recorded: false };
+
+      try {
+        const rule = await getNotificationRuleByKey(ruleKey);
+        if (rule && rule.announcement_enabled === false) {
+          return { recorded: false, skippedByRule: true };
+        }
+        if (targetMemberId && actorMemberId && targetMemberId === actorMemberId) {
+          return { recorded: false, skippedSelfAssign: true };
+        }
+
+        const announcementId = 'ANN-' + Date.now() + '-' + Math.floor(1000 + Math.random() * 9000);
+        const { error } = await sb.from('announcements').insert({
+          announcement_id: announcementId,
+          rule_key: ruleKey,
+          title: String(title).slice(0, 200),
+          body: body ? String(body).slice(0, 1000) : null,
+          target_tab: targetTab || 'home',
+          target_member_id: targetMemberId || null,
+          actor_member_id: actorMemberId || null
+        });
+        if (error) {
+          console.warn('[Announcements] insert skipped:', error);
+          return { recorded: false };
+        }
+
+        if (typeof window !== 'undefined' && typeof window.refreshAnnouncementBell === 'function') {
+          window.refreshAnnouncementBell();
+        }
+
+        if (rule && rule.announcement_enabled && rule.external_enabled) {
+          dispatchExternalNotification({
+            ruleKey,
+            ruleCategory: rule.category,
+            title,
+            body: body || title,
+            targetTab: targetTab || 'home',
+            targetMemberId: targetMemberId || null,
+            actorMemberId: actorMemberId || null
+          });
+        }
+        return { recorded: true, announcementId };
+      } catch (e) {
+        console.warn('[Announcements] emitAppEvent warning:', e);
+        return { recorded: false };
+      }
+    }
+
+    async function runDailyReminderSelfTest(memberId) {
+      return await invokeEdgeFunction('send-daily-reminders', {
+        testOnly: true,
+        memberId: memberId
+      });
+    }
+
+    window.SupabaseNotificationService = {
+      getNotificationRules,
+      saveNotificationRule,
+      getMyAnnouncements,
+      markAnnouncementRead,
+      markAllAnnouncementsRead,
+      emitAppEvent,
+      runDailyReminderSelfTest
     };
 
   })();
@@ -19015,6 +19966,490 @@ window.updateScrollbarWidth = updateScrollbarWidth;
 
 </script>
      <script>
+// ../js/notifications.js
+// =========================================
+// アプリ内お知らせ（ベルアイコン・モーダル）＆ 代表専用「通知管理画面」
+// =========================================
+
+(function () {
+  'use strict';
+
+  const ANNOUNCEMENT_CATEGORY_META = {
+    schedule: { label: 'スケジュール', icon: 'calendar_today' },
+    bulletin: { label: '活動記録・掲示板', icon: 'article' },
+    bulletin_comment: { label: '活動記録コメント', icon: 'chat_bubble_outline' },
+    results: { label: '試合記録', icon: 'sports_soccer' },
+    equipment: { label: '備品管理', icon: 'inventory_2' },
+    reminder: { label: 'リマインド', icon: 'alarm' },
+    system: { label: 'システム管理', icon: 'admin_panel_settings' }
+  };
+
+  const TARGET_TAB_ICON_MAP = {
+    schedule: 'calendar_today',
+    bulletin: 'article',
+    results: 'sports_soccer',
+    equipment: 'inventory_2',
+    home: 'notifications'
+  };
+
+  let cachedAnnouncementsState = { items: [], unreadCount: 0 };
+  let cachedRulesList = [];
+
+  function getCurrentActorMemberId() {
+    const u = window.currentUser || {};
+    return u.memberId || u.id || '';
+  }
+
+  function formatAnnouncementRelativeTime(isoStr) {
+    if (!isoStr) return '';
+    const d = new Date(isoStr);
+    if (isNaN(d.getTime())) return '';
+    const diffMs = Date.now() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'たった今';
+    if (diffMin < 60) return diffMin + '分前';
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return diffHour + '時間前';
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' +
+      String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
+  function updateBellBadgeUI(unreadCount) {
+    const bellBtn = document.getElementById('headerBellBtn');
+    const badge = document.getElementById('headerBellBadge');
+    const modalBadge = document.getElementById('announcementsModalBadge');
+    const markAllBtn = document.getElementById('btnMarkAllAnnouncementsRead');
+
+    const count = Math.max(0, Number(unreadCount || 0));
+    if (bellBtn && window.currentUser) {
+      bellBtn.classList.remove('hidden');
+    }
+    if (badge) {
+      badge.textContent = count > 99 ? '99+' : String(count);
+      badge.classList.toggle('hidden', count === 0);
+    }
+    if (modalBadge) {
+      modalBadge.textContent = count + '件未読';
+      modalBadge.classList.toggle('hidden', count === 0);
+    }
+    if (markAllBtn) {
+      markAllBtn.disabled = (count === 0);
+    }
+  }
+
+  /**
+   * ログイン中ユーザーのアプリ内お知らせと未読件数を最新化し、ベルバッジを更新する
+   */
+  async function refreshAnnouncementBell() {
+    const memberId = getCurrentActorMemberId();
+    if (!memberId || !window.SupabaseNotificationService) {
+      updateBellBadgeUI(0);
+      return cachedAnnouncementsState;
+    }
+    try {
+      const res = await window.SupabaseNotificationService.getMyAnnouncements(memberId, 50);
+      cachedAnnouncementsState = res || { items: [], unreadCount: 0 };
+      updateBellBadgeUI(cachedAnnouncementsState.unreadCount);
+      const modal = document.getElementById('announcementsModal');
+      if (modal && modal.classList.contains('active')) {
+        renderAnnouncementsList();
+      }
+      return cachedAnnouncementsState;
+    } catch (e) {
+      console.warn('refreshAnnouncementBell skipped:', e);
+      return cachedAnnouncementsState;
+    }
+  }
+  window.refreshAnnouncementBell = refreshAnnouncementBell;
+
+  function renderAnnouncementsList() {
+    const container = document.getElementById('announcementsListContainer');
+    if (!container) return;
+    container.replaceChildren();
+
+    const items = (cachedAnnouncementsState && cachedAnnouncementsState.items) || [];
+    if (items.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'announcements-empty';
+      empty.textContent = 'お知らせはありません。';
+      container.appendChild(empty);
+      return;
+    }
+
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'announcement-item' + (item.isRead ? '' : ' is-unread');
+      row.setAttribute('data-announcement-id', item.announcement_id);
+      row.onclick = () => handleAnnouncementItemClick(item);
+
+      const iconWrap = document.createElement('div');
+      iconWrap.className = 'announcement-item-icon';
+      const iconSpan = document.createElement('span');
+      iconSpan.className = 'material-symbols-outlined';
+      iconSpan.textContent = TARGET_TAB_ICON_MAP[item.target_tab] || 'notifications';
+      iconWrap.appendChild(iconSpan);
+
+      const main = document.createElement('div');
+      main.className = 'announcement-item-main';
+
+      const top = document.createElement('div');
+      top.className = 'announcement-item-top';
+
+      const titleEl = document.createElement('div');
+      titleEl.className = 'announcement-item-title';
+      titleEl.textContent = item.title || 'お知らせ';
+
+      const timeEl = document.createElement('div');
+      timeEl.className = 'announcement-item-time';
+      timeEl.textContent = formatAnnouncementRelativeTime(item.created_at);
+
+      top.appendChild(titleEl);
+      top.appendChild(timeEl);
+      main.appendChild(top);
+
+      if (item.body) {
+        const bodyEl = document.createElement('div');
+        bodyEl.className = 'announcement-item-body';
+        bodyEl.textContent = item.body;
+        main.appendChild(bodyEl);
+      }
+
+      row.appendChild(iconWrap);
+      row.appendChild(main);
+
+      if (!item.isRead) {
+        const dot = document.createElement('span');
+        dot.className = 'announcement-unread-dot';
+        dot.setAttribute('aria-hidden', 'true');
+        row.appendChild(dot);
+      }
+
+      container.appendChild(row);
+    });
+  }
+
+  async function openAnnouncementsModal() {
+    const modal = document.getElementById('announcementsModal');
+    if (!modal) return;
+    renderAnnouncementsList();
+    modal.classList.add('active');
+    if (typeof lockBodyScroll === 'function') lockBodyScroll();
+    await refreshAnnouncementBell();
+  }
+  window.openAnnouncementsModal = openAnnouncementsModal;
+
+  function closeAnnouncementsModal(e) {
+    if (e && e.target) {
+      const isOverlay = e.target.id === 'announcementsModal';
+      const isCloseBtn = Boolean(e.target.closest('.modal-close'));
+      if (!isOverlay && !isCloseBtn) return;
+    }
+    const modal = document.getElementById('announcementsModal');
+    if (modal) modal.classList.remove('active');
+    if (typeof unlockBodyScroll === 'function') unlockBodyScroll();
+  }
+  window.closeAnnouncementsModal = closeAnnouncementsModal;
+
+  async function handleAnnouncementItemClick(item) {
+    if (!item) return;
+    const memberId = getCurrentActorMemberId();
+    if (!item.isRead) {
+      item.isRead = true;
+      cachedAnnouncementsState.unreadCount = Math.max(0, (cachedAnnouncementsState.unreadCount || 1) - 1);
+      updateBellBadgeUI(cachedAnnouncementsState.unreadCount);
+      renderAnnouncementsList();
+      if (memberId && window.SupabaseNotificationService) {
+        window.SupabaseNotificationService.markAnnouncementRead(item.announcement_id, memberId);
+      }
+    }
+    closeAnnouncementsModal();
+    if (item.target_tab && typeof window.switchTab === 'function') {
+      window.switchTab(item.target_tab);
+    }
+  }
+
+  async function handleMarkAllAnnouncementsRead() {
+    const memberId = getCurrentActorMemberId();
+    const items = (cachedAnnouncementsState && cachedAnnouncementsState.items) || [];
+    const unreadIds = items.filter(it => !it.isRead).map(it => it.announcement_id);
+    if (unreadIds.length === 0) return;
+
+    items.forEach(it => { it.isRead = true; });
+    cachedAnnouncementsState.unreadCount = 0;
+    updateBellBadgeUI(0);
+    renderAnnouncementsList();
+
+    if (memberId && window.SupabaseNotificationService) {
+      await window.SupabaseNotificationService.markAllAnnouncementsRead(unreadIds, memberId);
+    }
+  }
+  window.handleMarkAllAnnouncementsRead = handleMarkAllAnnouncementsRead;
+
+  // =========================================
+  // 代表専用：通知管理画面（#tab-notifications）
+  // =========================================
+  function setNotifAdminStatus(msg, type) {
+    const el = document.getElementById('notifAdminStatusMsg');
+    if (!el) return;
+    if (!msg) {
+      el.textContent = '';
+      el.className = 'notif-admin-status-msg hidden';
+      return;
+    }
+    el.textContent = msg;
+    el.className = 'notif-admin-status-msg ' + (type === 'error' ? 'is-error' : type === 'info' ? 'is-info' : 'is-success');
+  }
+
+  function buildTimingSelects(rule) {
+    const wrap = document.createElement('div');
+    wrap.className = 'notif-rule-timing';
+
+    const daySel = document.createElement('select');
+    daySel.className = 'notif-timing-select';
+    daySel.setAttribute('aria-label', rule.action_label + 'の対象日');
+    const dayOptions = [
+      { value: 0, label: '当日' },
+      { value: 1, label: '前日（1日前）' },
+      { value: 2, label: '2日前' },
+      { value: 3, label: '3日前' },
+      { value: 7, label: '7日前' }
+    ];
+    const currentDay = Number(rule.days_before !== null && rule.days_before !== undefined ? rule.days_before : 1);
+    dayOptions.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = String(opt.value);
+      o.textContent = opt.label;
+      if (opt.value === currentDay) o.selected = true;
+      daySel.appendChild(o);
+    });
+    daySel.onchange = () => handleRulePatch(rule.rule_key, { days_before: Number(daySel.value) });
+
+    const hourSel = document.createElement('select');
+    hourSel.className = 'notif-timing-select';
+    hourSel.setAttribute('aria-label', rule.action_label + 'の通知時刻');
+    const currentHour = Number(rule.notify_hour !== null && rule.notify_hour !== undefined ? rule.notify_hour : 9);
+    for (let h = 0; h < 24; h++) {
+      const o = document.createElement('option');
+      o.value = String(h);
+      o.textContent = String(h).padStart(2, '0') + ':00';
+      if (h === currentHour) o.selected = true;
+      hourSel.appendChild(o);
+    }
+    hourSel.onchange = () => handleRulePatch(rule.rule_key, { notify_hour: Number(hourSel.value) });
+
+    wrap.appendChild(daySel);
+    wrap.appendChild(hourSel);
+    return wrap;
+  }
+
+  function createToggleControl(labelText, checked, disabled, isExternal, onChange) {
+    const label = document.createElement('label');
+    label.className = 'notif-switch-item' + (disabled ? ' is-disabled' : '');
+
+    const switchSpan = document.createElement('span');
+    switchSpan.className = 'notif-toggle-switch' + (isExternal ? ' is-external' : '');
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = Boolean(checked);
+    input.disabled = Boolean(disabled);
+    input.onchange = () => onChange(input.checked);
+
+    const slider = document.createElement('span');
+    slider.className = 'notif-toggle-slider';
+
+    switchSpan.appendChild(input);
+    switchSpan.appendChild(slider);
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = labelText;
+
+    label.appendChild(switchSpan);
+    label.appendChild(textSpan);
+    return label;
+  }
+
+  function renderNotificationRulesAdmin() {
+    const container = document.getElementById('notifAdminRulesContainer');
+    if (!container) return;
+    container.replaceChildren();
+
+    if (!cachedRulesList || cachedRulesList.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'card-box announcements-empty';
+      empty.textContent = '通知ルールが見つかりません。';
+      container.appendChild(empty);
+      return;
+    }
+
+    const grouped = {};
+    const groupOrder = ['schedule', 'bulletin', 'bulletin_comment', 'results', 'equipment', 'reminder', 'system'];
+    cachedRulesList.forEach(rule => {
+      const cat = rule.category || 'system';
+      if (!grouped[cat]) grouped[cat] = [];
+      grouped[cat].push(rule);
+    });
+
+    groupOrder.forEach(cat => {
+      const rules = grouped[cat];
+      if (!rules || rules.length === 0) return;
+
+      const meta = ANNOUNCEMENT_CATEGORY_META[cat] || { label: cat, icon: 'notifications' };
+      const card = document.createElement('div');
+      card.className = 'card-box notif-admin-group-card';
+
+      const header = document.createElement('div');
+      header.className = 'notif-admin-group-header';
+      const icon = document.createElement('span');
+      icon.className = 'material-symbols-outlined';
+      icon.textContent = meta.icon;
+      const title = document.createElement('span');
+      title.textContent = meta.label;
+      header.appendChild(icon);
+      header.appendChild(title);
+      card.appendChild(header);
+
+      rules.forEach(rule => {
+        const row = document.createElement('div');
+        row.className = 'notif-rule-row';
+        row.setAttribute('data-rule-key', rule.rule_key);
+
+        const info = document.createElement('div');
+        info.className = 'notif-rule-info';
+        const nameEl = document.createElement('div');
+        nameEl.className = 'notif-rule-name';
+        nameEl.textContent = rule.action_label;
+        const descEl = document.createElement('div');
+        descEl.className = 'notif-rule-desc';
+        descEl.textContent = rule.description || '';
+        info.appendChild(nameEl);
+        if (rule.description) info.appendChild(descEl);
+
+        const controls = document.createElement('div');
+        controls.className = 'notif-rule-controls';
+
+        if (rule.category === 'reminder') {
+          controls.appendChild(buildTimingSelects(rule));
+        }
+
+        const switchGroup = document.createElement('div');
+        switchGroup.className = 'notif-switch-group';
+
+        if (rule.supports_announcement !== false) {
+          switchGroup.appendChild(
+            createToggleControl('お知らせ', rule.announcement_enabled, false, false, (nextVal) => {
+              const patch = { announcement_enabled: nextVal };
+              if (!nextVal) patch.external_enabled = false;
+              handleRulePatch(rule.rule_key, patch);
+            })
+          );
+          const extDisabled = !rule.announcement_enabled;
+          switchGroup.appendChild(
+            createToggleControl(
+              '通知(LINE/Push)',
+              rule.announcement_enabled && rule.external_enabled,
+              extDisabled,
+              true,
+              (nextVal) => handleRulePatch(rule.rule_key, { external_enabled: nextVal })
+            )
+          );
+        } else {
+          switchGroup.appendChild(
+            createToggleControl('代表LINE通知', rule.external_enabled, false, true, (nextVal) => {
+              handleRulePatch(rule.rule_key, { external_enabled: nextVal });
+            })
+          );
+        }
+
+        controls.appendChild(switchGroup);
+        row.appendChild(info);
+        row.appendChild(controls);
+        card.appendChild(row);
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  async function handleRulePatch(ruleKey, patch) {
+    const target = cachedRulesList.find(r => r.rule_key === ruleKey);
+    if (!target) return;
+    const prevSnapshot = Object.assign({}, target);
+    Object.assign(target, patch);
+    if (target.supports_announcement !== false && !target.announcement_enabled) {
+      target.external_enabled = false;
+    }
+    renderNotificationRulesAdmin();
+
+    if (!window.SupabaseNotificationService) return;
+    try {
+      await window.SupabaseNotificationService.saveNotificationRule(ruleKey, patch);
+      setNotifAdminStatus('設定を保存しました。', 'success');
+    } catch (err) {
+      Object.assign(target, prevSnapshot);
+      renderNotificationRulesAdmin();
+      console.error('saveNotificationRule error:', err);
+      const safeMsg = (typeof getSafeErrorMessage === 'function')
+        ? getSafeErrorMessage(err, '設定の保存に失敗しました。しばらく経ってから再度お試しください。', '通知管理')
+        : '設定の保存に失敗しました。';
+      setNotifAdminStatus(safeMsg, 'error');
+    }
+  }
+
+  async function initNotificationAdminView() {
+    if (typeof window.isCurrentUserRepresentative === 'function' && !window.isCurrentUserRepresentative()) {
+      return;
+    }
+    const tab = document.getElementById('tab-notifications');
+    if (tab) {
+      const ph = tab.querySelector('.tab-loading-placeholder');
+      const mc = tab.querySelector('.tab-main-content');
+      if (ph) ph.classList.add('hidden');
+      if (mc) mc.classList.remove('hidden');
+    }
+    setNotifAdminStatus('', '');
+
+    if (!window.SupabaseNotificationService) return;
+    try {
+      cachedRulesList = await window.SupabaseNotificationService.getNotificationRules(true);
+      renderNotificationRulesAdmin();
+    } catch (err) {
+      console.error('initNotificationAdminView error:', err);
+      const safeMsg = (typeof getSafeErrorMessage === 'function')
+        ? getSafeErrorMessage(err, '通知ルールの取得に失敗しました。しばらく経ってから再度お試しください。', '通知管理')
+        : '通知ルールの取得に失敗しました。';
+      setNotifAdminStatus(safeMsg, 'error');
+    }
+  }
+  window.initNotificationAdminView = initNotificationAdminView;
+
+  async function handleRunReminderTestSelf() {
+    const btn = document.getElementById('btnTestDailyRemindersSelf');
+    const memberId = getCurrentActorMemberId();
+    if (!memberId || !window.SupabaseNotificationService) return;
+
+    if (btn) btn.disabled = true;
+    setNotifAdminStatus('代表の自分のアカウント宛てにテストリマインドを送信しています...', 'info');
+    try {
+      const res = await window.SupabaseNotificationService.runDailyReminderSelfTest(memberId);
+      setNotifAdminStatus(res && res.message ? res.message : 'テスト通知を実行しました。', 'success');
+      await refreshAnnouncementBell();
+    } catch (err) {
+      console.error('handleRunReminderTestSelf error:', err);
+      const safeMsg = (typeof getSafeErrorMessage === 'function')
+        ? getSafeErrorMessage(err, 'テスト通知の実行に失敗しました。しばらく経ってから再度お試しください。', '通知管理')
+        : 'テスト通知の実行に失敗しました。';
+      setNotifAdminStatus(safeMsg, 'error');
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+  window.handleRunReminderTestSelf = handleRunReminderTestSelf;
+})();
+
+
+</script>
+     <script>
 // ../js/main.js
 // =========================================
   // 🌐 アプリケーション全体の状態管理と初期化
@@ -19154,12 +20589,16 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         tab = sessionStorage.getItem('fcb_active_tab') || '';
       } catch (e) {}
     }
-    const validTabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment', 'members'];
+    const validTabs = ['home', 'schedule', 'results', 'bulletin', 'ranking', 'personal', 'equipment', 'members', 'notifications'];
     if (!validTabs.includes(tab)) {
       return 'home';
     }
     // メンバー管理タブは管理者権限がなければ home に安全フォールバック
     if (tab === 'members' && typeof isCurrentUserAdmin === 'function' && !isCurrentUserAdmin()) {
+      return 'home';
+    }
+    // 通知管理タブは代表のみアクセス可能
+    if (tab === 'notifications' && typeof isCurrentUserRepresentative === 'function' && !isCurrentUserRepresentative()) {
       return 'home';
     }
     return tab;
@@ -19288,6 +20727,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       window.currentUser = savedUser;
       if (typeof updateAdminNavVisibility === 'function') {
         updateAdminNavVisibility();
+        const bellBtn = document.getElementById('headerBellBtn');
+        if (bellBtn) bellBtn.classList.remove('hidden');
+        if (typeof refreshAnnouncementBell === 'function') refreshAnnouncementBell();
       }
       hideLoginScreen();
       applyInitialActiveTab();
@@ -19734,6 +21176,8 @@ window.updateScrollbarWidth = updateScrollbarWidth;
    * ログイン画面を表示
    */
   function showLoginScreen() {
+    const bellBtn = document.getElementById('headerBellBtn');
+    if (bellBtn) bellBtn.classList.add('hidden');
     const screen = document.getElementById('loginScreen');
     if (screen) screen.style.display = 'flex';
     switchToLoginCard();
@@ -19961,6 +21405,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
         }
 
         updateAdminNavVisibility();
+        const bellBtn = document.getElementById('headerBellBtn');
+        if (bellBtn) bellBtn.classList.remove('hidden');
+        if (typeof refreshAnnouncementBell === 'function') refreshAnnouncementBell();
 
         if (data.equipmentData) {
           window.initialFullData = window.initialFullData || {};
@@ -20101,7 +21548,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   function initProfileNotificationSettings() {
     const u = window.currentUser || {};
     const notifType = u.notificationType || 'none';
-    const notifySettings = u.notifySettings || { emergency: true, attendance: true, bulletin: true };
+    const notifySettings = u.notifySettings || { attendance: true, equipment: true, general: true };
 
     // ラジオボタンの選択
     const radios = document.querySelectorAll('input[name="profileNotifType"]');
@@ -20115,12 +21562,12 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     });
 
     // チェックボックスの選択
-    const itemEmg = document.getElementById('notifItemEmergency');
     const itemAtt = document.getElementById('notifItemAttendance');
-    const itemBul = document.getElementById('notifItemBulletin');
-    if (itemEmg) itemEmg.checked = notifySettings.emergency !== false;
+    const itemEq = document.getElementById('notifItemEquipment');
+    const itemGen = document.getElementById('notifItemGeneral');
     if (itemAtt) itemAtt.checked = notifySettings.attendance !== false;
-    if (itemBul) itemBul.checked = notifySettings.bulletin !== false;
+    if (itemEq) itemEq.checked = notifySettings.equipment !== false;
+    if (itemGen) itemGen.checked = notifySettings.general !== false;
 
     // ステータスバッジの更新
     updateNotificationBadges();
@@ -20146,7 +21593,7 @@ window.updateScrollbarWidth = updateScrollbarWidth;
             u.lineLinked = !!s.lineLinked;
             u.pushLinked = !!s.pushLinked;
             u.lineLinkCode = s.linkCode || '';
-            u.notifySettings = s.notifySettings || { emergency: true, attendance: true, bulletin: true };
+            u.notifySettings = s.notifySettings || { attendance: true, equipment: true, general: true };
             try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch(e) {}
             
             radios.forEach(r => {
@@ -20157,9 +21604,9 @@ window.updateScrollbarWidth = updateScrollbarWidth;
                 else card.classList.remove('selected');
               }
             });
-            if (itemEmg) itemEmg.checked = u.notifySettings.emergency !== false;
             if (itemAtt) itemAtt.checked = u.notifySettings.attendance !== false;
-            if (itemBul) itemBul.checked = u.notifySettings.bulletin !== false;
+            if (itemEq) itemEq.checked = u.notifySettings.equipment !== false;
+            if (itemGen) itemGen.checked = u.notifySettings.general !== false;
             updateNotificationBadges();
             handleNotifTypeChange(u.notificationType);
             syncProfileLineUi();
@@ -20526,14 +21973,14 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     const checkedRadio = document.querySelector('input[name="profileNotifType"]:checked');
     const notifType = checkedRadio ? checkedRadio.value : 'none';
 
-    const itemEmg = document.getElementById('notifItemEmergency');
     const itemAtt = document.getElementById('notifItemAttendance');
-    const itemBul = document.getElementById('notifItemBulletin');
+    const itemEq = document.getElementById('notifItemEquipment');
+    const itemGen = document.getElementById('notifItemGeneral');
 
     const notifySettings = {
-      emergency: itemEmg ? itemEmg.checked : true,
       attendance: itemAtt ? itemAtt.checked : true,
-      bulletin: itemBul ? itemBul.checked : true
+      equipment: itemEq ? itemEq.checked : true,
+      general: itemGen ? itemGen.checked : true
     };
 
     const payload = {
@@ -20685,15 +22132,51 @@ window.updateScrollbarWidth = updateScrollbarWidth;
   }
 
   /**
+   * ログイン中ユーザーが代表（role === '代表'）であるかチェック
+   * @returns {boolean}
+   */
+  function isCurrentUserRepresentative() {
+    const u = window.currentUser;
+    if (!u) return false;
+    const directRole = String(u.role || '').trim();
+    if (directRole === '代表') return true;
+    const roster = window.scheduleRoster || window.adminMemberList;
+    if (roster && Array.isArray(roster)) {
+      const uEmail = String(u.email || '').trim().toLowerCase();
+      const uName = String(u.name || '').trim();
+      const match = roster.find(m =>
+        (uEmail && m.email && String(m.email).trim().toLowerCase() === uEmail) ||
+        (uName && m.name && String(m.name).trim() === uName)
+      );
+      if (match && String(match.role || '').trim() === '代表') {
+        u.role = '代表';
+        try { localStorage.setItem('fcb_auth_user', JSON.stringify(u)); } catch (e) {}
+        return true;
+      }
+    }
+    return false;
+  }
+  window.isCurrentUserRepresentative = isCurrentUserRepresentative;
+
+  /**
    * 管理者専用ナビゲーション項目の表示・非表示を制御
    */
   function updateAdminNavVisibility() {
     const navItem = document.getElementById('navItemMembers');
-    if (!navItem) return;
-    if (isCurrentUserAdmin()) {
-      navItem.classList.remove('hidden');
-    } else {
-      navItem.classList.add('hidden');
+    if (navItem) {
+      if (isCurrentUserAdmin()) {
+        navItem.classList.remove('hidden');
+      } else {
+        navItem.classList.add('hidden');
+      }
+    }
+    const navNotif = document.getElementById('navItemNotifications');
+    if (navNotif) {
+      if (isCurrentUserRepresentative()) {
+        navNotif.classList.remove('hidden');
+      } else {
+        navNotif.classList.add('hidden');
+      }
     }
   }
 
@@ -21237,6 +22720,15 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       }
     }
 
+    // 通知管理タブへの切り替え時：代表権限のみ厳格チェック
+    if (tabName === 'notifications') {
+      if (!isCurrentUserRepresentative()) {
+        showAppAlert({ title: 'アクセス制限', message: '通知管理画面は「代表」のみアクセス可能です。', isError: true });
+        switchTab('home');
+        return;
+      }
+    }
+
     // タブ状態を永続化（'input' は復元時に 'results' へ戻す）
     const tabToPersist = (tabName === 'input') ? 'results' : tabName;
     try {
@@ -21309,6 +22801,13 @@ window.updateScrollbarWidth = updateScrollbarWidth;
       if (typeof initMembersView === 'function') {
         const list = (window.adminMemberList && window.adminMemberList.length > 0) ? window.adminMemberList : window.scheduleRoster;
         initMembersView(list);
+      }
+    }
+
+    // 通知管理タブへの切り替え時：設定初期化
+    if (tabName === 'notifications') {
+      if (typeof initNotificationAdminView === 'function') {
+        initNotificationAdminView();
       }
     }
 
@@ -26995,6 +28494,18 @@ function executeConfirmedDelete() {
         renderCalendar(window.calYear, window.calMonth);
         renderAgendaList();
 
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: 'schedule_delete',
+            title: '予定が削除されました',
+            body: `${res.originalDate || payload.originalDate || ''} ${res.originalTitle || payload.originalTitle || ''}`.trim(),
+            targetTab: 'schedule',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
+
         closeDeleteConfirmModal();
         if (isFromDetailModal) {
           closeEventDetailModal();
@@ -27432,6 +28943,19 @@ window.currentEditRemovedGuests = [];
         renderCalendar(window.calYear, window.calMonth);
         renderAgendaList();
         updateUnansweredBadges();
+
+        if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
+          const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
+          const isNewEv = Boolean(res.isNew || payload.isDuplicate);
+          window.SupabaseNotificationService.emitAppEvent({
+            ruleKey: isNewEv ? 'schedule_create' : 'schedule_update',
+            title: isNewEv ? '新しい予定が作成されました' : '予定が更新されました',
+            body: `${res.event ? res.event.date : date} ${title} (${isAllDay ? '終日' : startTime + ' - ' + endTime})`,
+            targetTab: 'schedule',
+            targetMemberId: null,
+            actorMemberId: actorId
+          });
+        }
 
         closeEventEditModal();
       } else {
