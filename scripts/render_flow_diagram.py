@@ -7,12 +7,12 @@ render_flow_diagram.py
    - 右側: Google カレンダー API (v3) ＆ 認証 (Google OAuth 2.0)
    - 「特権代行」の文言を撤廃し「バックエンドAPI ＆ 外部連携」に純化
 2. 通信経路（矢印）を実装実態に合わせて完全忠実化:
-   - WEB アプリ ➔ GAS: google.script.run によるバックエンドAPI呼び出し（水平直線）
-   - GAS ➔ Google カレンダー API: 予定同期・出欠パッチ更新（水平直線）
+   - WEB アプリ ➔ GAS: GasApi (HTTPS POST / Google連携専用) によるAPI呼び出し（水平直線）
+   - GAS ➔ Google カレンダー API: 予定作成/更新/削除・取得（水平直線）
    - GAS ➔ 認証 (Google OAuth 2.0): 認可コード交換・トークン発行（水平直線）
-   - GAS ⇄ supabase (DB): OAuthトークン保存・名簿照合（垂直双方向直線）
-   - 定期通知: GAS ➔ LINE Messaging API: 定期トリガー発信（垂直直線）
-   - 手動通知 (パターンA): supabase ➔ LINE Messaging API: Edge Functions経由（右外側C字カーブ）
+   - GAS ⇄ supabase (DB): OAuthトークン保存・名簿照合・エラー設定参照（垂直双方向直線）
+   - GASエラー通知: GAS ➔ LINE Messaging API: システムエラー代表アラート（垂直直線）
+   - 統合通知/定時リマインド: supabase ➔ LINE Messaging API: Edge Functions + pg_cron 経由（右外側C字カーブ）
    - LINE Messaging API ➔ LINE アプリ: プッシュ通知着信（水平直線）
    - GitHub Pages ➔ WEB アプリ: PWA配信（点線カーブ）
    - WEB アプリ ⇄ supabase: Direct CRUD通信（太い水平双方向直線）
@@ -200,10 +200,10 @@ def build_html():
   <div class="arrow-label" style="top: 200px; left: 1058px;">OAuthトークン保存 / 名簿照合</div>
 
   <!-- GAS ➔ LINE API 間の注記 -->
-  <div class="arrow-label" style="top: 498px; left: 888px;">定期バッチリマインド</div>
+  <div class="arrow-label" style="top: 498px; left: 888px;">システムエラー通知 (代表LINE)</div>
 
-  <!-- 手動通知 (Functions) の注記 (右側バイパスの縦書きバッジ) -->
-  <div class="arrow-label-vertical" style="top: 310px; left: 1496px;">手動通知 (Functions)</div>
+  <!-- 統合通知・定時リマインド (Edge Functions) の注記 -->
+  <div class="arrow-label-vertical" style="top: 295px; left: 1496px;">定期・イベント通知 (Functions)</div>
 
 
   <!-- ========================================================
@@ -262,7 +262,7 @@ def build_html():
             <div>・ブラウザ実行 / ホーム画面起動</div>
             <div>・出欠、スコア入力、掲示板、名簿</div>
             <div>・Supabase Direct CRUD 通信</div>
-            <div>・GAS API 呼び出し (google.script.run)</div>
+            <div>・GasApi 呼び出し (Google連携専用)</div>
           </div>
         </div>
         <div style="background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 8px; padding: 6px 10px; text-align: center; font-size: 10px; color: #0369A1; font-weight: 700;">
@@ -277,7 +277,7 @@ def build_html():
       <div>
         <div style="font-size: 16px; font-weight: 800; color: #06C755;">LINE アプリ</div>
         <div style="font-size: 11px; color: #475569; font-weight: 700; margin-top: 2px;">部員個人のスマホアプリ</div>
-        <div style="font-size: 10px; color: #64748B; margin-top: 2px;">雨天中止・出欠リマインドを受信</div>
+        <div style="font-size: 10px; color: #64748B; margin-top: 2px;">定時リマインド・ルール連動通知を受信</div>
       </div>
     </div>
   </div>
@@ -383,7 +383,7 @@ def build_html():
               <div>・Google OAuth 認証 / トークン交換</div>
               <div>・カレンダー同期 ＆ 出欠更新 API</div>
               <div>・Supabase と直接連携 (トークン・名簿)</div>
-              <div>・定期トリガー発信 (LINEリマインド)</div>
+              <div>・システムエラー検知時の代表LINE通知</div>
             </div>
           </div>
         </div>

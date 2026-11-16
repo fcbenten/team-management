@@ -36,7 +36,7 @@ def run_generate():
                 ("メールアドレス入力欄", "loginEmailInput", "テキスト入力 (email)", "必須", "なし", "名簿に登録済みのGmailアドレスと照合。大文字小文字・前後空白無視。"),
                 ("パスワード入力欄", "loginPasswordInput", "パスワード入力", "必須", "なし", "半角英数記号4文字以上。SHA-256ハッシュ照合（エラーは err-loginPasswordInput 等に表示）。"),
                 ("ログイン状態保持チェック", "rememberLoginCheck", "チェックボックス", "任意", "ON (保持)", "ONの場合、認証成功ユーザー情報をlocalStorage (fcb_auth_user) に保存し次回自動ログイン。"),
-                ("ログインボタン", "loginSubmitBtn", "ボタン", "-", "ログイン", "タップでSupabase Direct認証（apiLoginUser）を実行 (0.1s)。成功時はメイン画面へ遷移。"),
+                ("ログインボタン", "loginSubmitBtn", "ボタン", "-", "ログイン", "タップで SupabaseService.loginUser による直接認証を実行 (0.1s)。成功時はメイン画面へ遷移。"),
                 ("新規登録・連携リンク", "loginRegisterLink", "ハイパーリンク", "-", "初めての方はこちら", "タップでカードB（#oauthPreCheckCard）へ画面内カード切替。"),
                 ("メッセージ表示領域 (ログイン)", "loginErrorMsg", "アラートボックス", "-", "非表示", "メールアドレス・パスワード認証エラーや通信エラーを表示。")
             ]
@@ -48,7 +48,7 @@ def run_generate():
             "items": [
                 ("事前登録案内メッセージ", "oauthPreCheckCard .alert-warning", "案内ボックス", "-", "管理者が事前登録済みのGmailで進む旨の注意書き", "warning（黄背景）で管理者が名簿に登録したGoogleアカウントを入力するよう注意喚起。"),
                 ("登録済みGmail入力欄", "oauthPreCheckEmailInput", "テキスト入力 (email)", "必須", "なし", "管理者が事前登録したGmailアドレスの入力欄。エラーは err-oauthPreCheckEmailInput に表示。"),
-                ("Google連携へ進むボタン", "oauthPreCheckBtn", "ボタン", "-", "Google連携へ進む", "Supabase Direct（apiCheckMemberEmailForOAuth）で名簿存在確認後、login_hint付きでGoogle認可画面へ遷移。"),
+                ("Google連携へ進むボタン", "oauthPreCheckBtn", "ボタン", "-", "Google連携へ進む", "SupabaseService.checkMemberEmailForOAuth で名簿存在確認後、login_hint付きでGoogle認可画面へ遷移。"),
                 ("ログイン画面へ戻るリンク", "oauthPreCheckCard .login-register-link", "ハイパーリンク", "-", "ログイン画面へ戻る", "タップでカードA（#loginCard）へ戻り入力エラー表示をクリア。")
             ]
         },
@@ -57,11 +57,11 @@ def run_generate():
             "name": "カードC: 初期パスワード設定 ＆ 認可コールバック (#oauthLoadingOverlay / #oauthPasswordCard)",
             "desc": "Google認可画面からの ?code=... リダイレクト復帰、トークン交換、および初回パスワード設定領域",
             "items": [
-                ("連携中ローディング表示", "oauthLoadingOverlay", "オーバーレイ表示", "-", "初期非表示（?code=... 受信時展開）", "Google認可復帰時に自動展開し、裏側でGAS apiExchangeOAuthCode を実行。"),
+                ("連携中ローディング表示", "oauthLoadingOverlay", "オーバーレイ表示", "-", "初期非表示（?code=... 受信時展開）", "Google認可復帰時に自動展開し、裏側で GasApi.exchangeOAuthCode を実行。"),
                 ("パスワード設定カード (カードC)", "oauthPasswordCard", "カード領域", "-", "初期非表示（未設定時展開）", "Google認証成功・パスワード未設定時にローディング表示から切り替えて展開。"),
                 ("設定パスワード入力欄", "oauthNewPwInput", "パスワード入力", "必須", "なし", "初回登録時のパスワード設定（4文字以上）。エラーは err-oauthNewPwInput に表示。"),
                 ("確認用パスワード入力欄", "oauthConfirmPwInput", "パスワード入力", "必須", "なし", "パスワード再確認入力欄。エラーは err-oauthConfirmPwInput に表示。"),
-                ("設定完了・ログインボタン", "oauthPwSubmitBtn", "ボタン", "-", "設定完了してログイン", "Supabase Direct（apiRegisterMember）でパスワードを保存し、SCR02ホーム画面へ遷移。"),
+                ("設定完了・ログインボタン", "oauthPwSubmitBtn", "ボタン", "-", "設定完了してログイン", "SupabaseService.registerMember でパスワードを保存し、SCR02ホーム画面へ遷移。"),
                 ("メッセージ表示領域 (PW設定)", "oauthPwGlobalMsg", "アラートボックス", "-", "非表示", "info（無灯）・warning（黄背景）・error（赤背景）に応じて全体通知を表示（保存・通信失敗時は error[赤背景] 表示）。")
             ]
         }
@@ -74,8 +74,8 @@ def run_generate():
          "Gmailアドレスの未入力・形式正規表現およびパスワード未入力を検証し、不正時は対象フィールド直下にインラインエラーを表示（入力中再検証）。",
          "validateLoginEmailField() / validateLoginPasswordField()", "リアルタイム入力補助"),
         ("ログインボタン", "クリック時",
-         "入力チェック後、Supabase Direct API（apiLoginUser）へ送信 (0.1s)。成功時はlocalStorageへ保存しSCR02ホーム画面へ遷移。",
-         "handleUserLogin() / apiLoginUser()", "Supabase Direct高速認証 (0.1s)"),
+         "入力チェック後、SupabaseService.loginUser へ直接送信 (0.1s)。成功時はlocalStorageへ保存しSCR02ホーム画面へ遷移。",
+         "handleUserLogin() / SupabaseService.loginUser()", "Supabase Direct高速認証 (0.1s)"),
         ("初めての方はこちらリンク", "クリック時",
          "Google認証画面へ直接飛ばさず、注意書き・メアド入力欄を含むカードB（#oauthPreCheckCard）へ画面内カードを切り替え。",
          "switchToOAuthPreCheckCard()", "カードB（#oauthPreCheckCard）へ切替"),
@@ -83,20 +83,20 @@ def run_generate():
          "事前確認カード上のGmailアドレスの未入力・形式正規表現をフォーカスアウト時に検証し、不正時はフィールド直下にインラインエラーを表示（入力中再検証）。",
          "validateOAuthPreCheckEmailField()", "リアルタイム入力補助（ログイン画面共通基準）"),
         ("Google連携へ進むボタン", "クリック時",
-         "入力チェック後、入力されたGmailアドレスをSupabase Direct（apiCheckMemberEmailForOAuth）で名簿（members）と事前照合。登録済みなら login_hint パラメータを付与してGoogle認可画面へ遷移。",
+         "入力チェック後、入力されたGmailアドレスを SupabaseService.checkMemberEmailForOAuth で名簿（members）と事前照合。登録済みなら login_hint パラメータを付与してGoogle認可画面へ遷移。",
          "handleOAuthPreCheckSubmit() / startGoogleOAuthFlow(e, email)", "名簿事前確認後に login_hint 付きで外部OAuth遷移"),
         ("ログイン画面へ戻るリンク", "クリック時",
          "事前確認カード（カードB）を閉じ、全エラー表示をリセットしてログインカード（カードA）へ復帰。",
          "switchToLoginCard()", "カードA（#loginCard）へ切替"),
         ("Google連携コールバック", "画面読み込み時 (?code=...)",
-         "URL内の認可コードを取得し履歴をクリーンアップ後、連携中ローディング表示（#oauthLoadingOverlay）を展開。GAS API（apiExchangeOAuthCode）でトークン交換と名簿照合を実施し、パスワード設定済みなら即SCR02ホームへ、未設定ならカードC（#oauthPasswordCard）へ切替。",
-         "checkOAuthCallbackOnLoad() / apiExchangeOAuthCode()", "GAS経由トークン交換・分岐切替"),
+         "URL内の認可コードを取得し履歴をクリーンアップ後、連携中ローディング表示（#oauthLoadingOverlay）を展開。GasApi.exchangeOAuthCode でトークン交換と名簿照合を実施し、パスワード設定済みなら即SCR02ホームへ、未設定ならカードC（#oauthPasswordCard）へ切替。",
+         "checkOAuthCallbackOnLoad() / GasApi.exchangeOAuthCode()", "GAS経由トークン交換・分岐切替"),
         ("入力欄 (初期PW設定)", "フォーカスアウト時",
          "パスワード4文字以上および確認用パスワードとの一致をフォーカスアウト時に検証し、不正時は対象フィールド直下にインラインエラーを表示（入力中再検証）。",
          "validateOAuthNewPwField() / validateOAuthConfirmPwField()", "リアルタイム入力補助"),
         ("設定完了・ログインボタン", "クリック時",
-         "パスワード（4文字以上・確認一致）検証後、Supabase Direct（apiRegisterMember）で password_hash を保存し、localStorage登録後にSCR02ホーム画面を起動。",
-         "handleOAuthPasswordSubmit() / apiRegisterMember()", "Supabase Direct即時保存 ＆ ホーム遷移")
+         "パスワード（4文字以上・確認一致）検証後、SupabaseService.registerMember で password_hash を保存し、localStorage登録後にSCR02ホーム画面を起動。",
+         "handleOAuthPasswordSubmit() / SupabaseService.registerMember()", "Supabase Direct即時保存 ＆ ホーム遷移")
     ]
     scr01_errors = [
         ("W01-01", "warning", "事前登録案内メッセージ", "初めての方はこちらリンク. クリック時", "Google連携事前確認画面（#oauthPreCheckCard）を開いた場合", "画面表示", "「事前に管理者が名簿登録したGoogleアカウントで進んでください」", "正常な事前注意喚起（登録済みGmailを入力）"),
@@ -300,7 +300,7 @@ def run_generate():
     scr03_actions = [
         ("試合結果画面", "画面初期表示時",
          "メモリ配列 allHistoryMatches を初期化。登録済みの全シーズン年度を抽出して seasonFilter に option 要素を生成。初期値として最新年度を自動選択し、先頭10件のカードを一覧に描画。",
-         "filterMatchResults()", "初期ロード時にGAS API（doPost）より取得済みの全件データを使用"),
+         "filterMatchResults()", "初期ロード時に SupabaseService.getInitialData() より取得済みの全件データを使用"),
         ("年度選択プルダウン", "選択変更時",
          "選択年度を抽出キーとし、メモリ内の全試合から年度一致する試合を抽出。一覧を先頭から再レンダリング（10件超過時は『更に読み込む』ボタン表示）。",
          "filterMatchResults()", "画面リロードなしで高速描画"),
@@ -397,7 +397,7 @@ def run_generate():
             "items": [
                 ("チーム名ヘッダー", "inputLogHeader", "ヘッダー", "-", "FC Benten vs 相手チーム", "自チーム名およびカレンダーから抽出された対戦相手チーム名を表示。"),
                 ("タイムライン記録一覧", "logList", "タイムライン", "-", "まだ記録はありません", "追加された得点・失点・カード記録を時系列行で表示。各行に「削除」ボタンを内包。"),
-                ("試合結果保存ボタン", "submitBtn", "ボタン", "-", "保存", "全記録をまとめ、GAS API（apiSaveMatchData）へPOST送信してスプレッドシートへ永続化。"),
+                ("試合結果保存ボタン", "submitBtn", "ボタン", "-", "保存", "全記録をまとめ、SupabaseService.saveScoreRecord へ送信してDBへ永続化＋お知らせイベント発行。"),
                 ("メッセージ表示領域", "saveResultMsgArea", "メッセージ表示", "-", "非表示", "表示レベル別スタイル（info: 無灯 / warning: 黄背景 / error: 赤背景）で保存通知・注意・保存失敗エラーを表示する領域。")
             ]
         }
@@ -422,8 +422,8 @@ def run_generate():
          "タイムライン各行の削除ボタン押下時、該当アクションを配列から除去して一覧を再レンダリング。",
          "removeLog(idx)", "確認ダイアログなしで即座に削除"),
         ("試合結果保存ボタン", "クリック時",
-         "試合未選択チェック後、GAS API（saveMatchData）へPOST送信。通信中はボタンを『保存中...』にしてロック。保存成功時は一覧を再描画し試合結果一覧画面へ遷移。失敗時はアラート表示。",
-         "submitData() / saveMatchData(payload)", "二重送信防止ロック")
+         "試合未選択チェック後、SupabaseService.saveScoreRecord へ直接送信し、保存成功後に SupabaseService.getMatchHistoryData でバックグラウンド再同期。失敗時はアラート表示。",
+         "submitMatchData() / SupabaseService.saveScoreRecord(payload)", "二重送信防止ロック ＋ 直接DB保存")
     ]
     scr04_errors = [
         ("I04-01", "info", "タイムライン記録一覧", "試合入力画面. 画面初期表示時", "得点・失点・カード記録がまだ0件の場合（正常空状態）", "画面表示", "「まだ記録はありません」", "エラーではない正常案内（記録追加で自動非表示）"),
@@ -640,8 +640,8 @@ def run_generate():
          "該当イベントのIDに基づき予定詳細モーダル（#eventDetailModal）をポップアップ表示。出欠状況および参加者名簿を展開。",
          "openEventModal(eventId)", "背景スクロール固定"),
         ("出欠ワンタップ回答ボタン群", "クリック時",
-         "○ / × / △ のボタン色を即座にアクティブ切り替えし、裏側でGAS API（apiSaveAttendance）へ非同期保存。",
-         "apiSaveAttendance(eventId, status)", "サイレント保存・即時UI反映"),
+         "○ / × / △ のボタン色を即座にアクティブ切り替えし、裏側で SupabaseService.updateEventAttendance へ直接非同期保存。",
+         "setMyAttendance() / SupabaseService.updateEventAttendance()", "サイレント保存・即時UI反映"),
         ("新規予定作成ボタン", "クリック時",
          "新規予定作成モーダル（#eventEditModal）を開き、日付・時刻・種別（TR/TRM/公式戦）・場所の入力フォームを提示。",
          "openNewEventModal()", "全メンバー作成可能"),
@@ -655,11 +655,11 @@ def run_generate():
          "名簿一致または有効なメールアドレス形式かを検証。不正時は setFieldError('eeGuestInput', ...) を実行。",
          "addGuestToEditList()", "ゲスト入力検証"),
         ("予定保存ボタン", "クリック時",
-         "タイトル・日付のバリデーションを実行後、GAS API（saveCalendarEvent）へPOST送信。明示的に削除操作（×ボタン）されたゲストのみ除外して他出席者の招待を保持し、保存後も最新の出欠表示を維持する。書き込み失敗や通信エラー時は通知ダイアログ表示。",
-         "submitEventEditForm() / saveCalendarEvent(payload)", "カレンダー連動更新（安全差分削除）"),
+         "タイトル・日付のバリデーションを実行後、GasApi.saveCalendarEvent へPOST送信。明示的に削除操作されたゲストのみ除外して他出席者の招待を保持し、成功時にお知らせイベントを発行。",
+         "submitEventEditForm() / GasApi.saveCalendarEvent(payload)", "Googleカレンダー連動更新（安全差分削除）"),
         ("予定削除ボタン", "クリック時",
-         "確認ダイアログ承諾後、GAS API（apiDeleteEvent）を実行。失敗時は通知ダイアログ表示。",
-         "apiDeleteEvent(eventId)", "スプシ＆カレンダー物理削除")
+         "確認ダイアログ承諾後、GasApi.deleteCalendarEvent を実行し、成功時にお知らせイベントを発行。失敗時は通知ダイアログ表示。",
+         "GasApi.deleteCalendarEvent(payload)", "Googleカレンダー予定削除")
     ]
     scr07_errors = [
         ("I07-01", "info", "予定リスト", "スケジュール画面. 画面初期表示時", "表示条件「すべて」で該当する予定が0件の場合（正常空状態）", "画面表示", "「該当する予定はありません」", "エラーではない正常案内（予定登録後に表示）"),
@@ -758,14 +758,14 @@ def run_generate():
          "選択時にインラインエラー（equipmentEditError）を即座に非表示化。",
          "document.getElementById('equipmentEditError').classList.add('hidden')", "リアルタイムエラー解除"),
         ("解決（代理持参）ボタン", "クリック時",
-         "ホームまたは予定詳細モーダルから呼び出され、apiResolveEquipmentAlert により即時「代理」登録を実行。失敗時は通知ダイアログ表示。",
-         "executeEquipmentResolve(...) / apiResolveEquipmentAlert(...)", "不在アラート即時解消"),
+         "ホームまたは予定詳細モーダルから呼び出され、SupabaseService.resolveEquipmentAlert により即時「代理」登録を実行。失敗時は通知ダイアログ表示。",
+         "executeEquipmentResolve(...) / SupabaseService.resolveEquipmentAlert(...)", "不在アラート即時解消"),
         ("登録保存ボタン", "クリック時",
-         "品目コード未選択時はモーダル内エラー表示。正常時は楽観的UIで即時画面反映し裏側でGAS API（apiSaveEquipmentItem）送信。失敗時はロールバックし通知ダイアログ表示。",
-         "handleSaveEquipmentSubmit() / apiSaveEquipmentItem(...)", "0秒楽観的UI更新 ＆ 失敗時ロールバック"),
+         "品目コード未選択時はモーダル内エラー表示。正常時は楽観的UIで即時画面反映し裏側で SupabaseService.saveEquipmentItem 送信（備品追加/アサイン時はお知らせイベント発行）。失敗時はロールバック。",
+         "saveEquipmentItem() / SupabaseService.saveEquipmentItem(...)", "0秒楽観的UI更新 ＆ 失敗時ロールバック"),
         ("備品削除確認ボタン", "クリック時",
-         "楽観的UIで即時除去し、裏側でGAS API（apiDeleteEquipmentItem）を実行。失敗時はロールバックし通知ダイアログ表示。",
-         "executeDeleteEquipmentPermanently() / apiDeleteEquipmentItem(...)", "台帳からの物理削除")
+         "楽観的UIで即時除去し、裏側で SupabaseService.deleteEquipmentItem を実行（お知らせイベント発行）。失敗時はロールバック。",
+         "executeDeleteEquipmentPermanently() / SupabaseService.deleteEquipmentItem(...)", "台帳からの物理削除")
     ]
     scr08_errors = [
         ("I08-01", "info", "備品現物台帳リスト", "備品管理画面. 画面初期表示時", "各品目グループの備品登録が0件の場合（正常空状態）", "画面表示", "「登録なし」", "エラーではない正常案内"),
@@ -858,20 +858,20 @@ def run_generate():
          "投稿データを取得・絞り込みしてフィードを描画。0件時や取得失敗時は一覧内に状態メッセージを表示。",
          "initBulletinView() / filterBulletinList()", "正常0件は「投稿がありません」"),
         ("投稿・更新実行ボタン", "クリック時",
-         "タイトル・本文の未入力チェック後、Supabase Direct API（saveBulletinPost）へ送信。0.1秒で即座に保存・画面同期。",
-         "apiSaveBulletinPost(payload)", "未入力時はポップアップ通知"),
+         "タイトル・本文の未入力チェック後、SupabaseService.saveBulletinPost へ送信し、成功後に loadBulletinData(true)（SupabaseService.getBulletinData）で一覧再描画＋お知らせイベント発行。",
+         "handleBulletinPostSubmit() / SupabaseService.saveBulletinPost(payload)", "未入力時はポップアップ通知"),
         ("掲示板投稿カード", "クリック時",
-         "記事詳細モーダルを展開し、裏側で既読ログを記録。コメントが0件の場合はモーダル内に空状態メッセージを表示。",
-         "openBulletinDetailModal(postId) / apiMarkAsRead(postId, memberId)", "サイレント既読トラッキング"),
+         "記事詳細モーダルを展開し、裏側で SupabaseService.markBulletinAsRead で既読ログを記録。コメントが0件の場合はモーダル内に空状態メッセージを表示。",
+         "openBulletinDetailModal(postId) / SupabaseService.markBulletinAsRead(postId, memberId)", "サイレント既読トラッキング"),
         ("ホームピン留めチェック", "選択変更時",
-         "ピン留めのON/OFF状態をSupabase Direct API（togglePinBulletinPost）へ即時送信。ホーム画面アナウンスカードおよび詳細バッジと0秒同期。",
-         "apiTogglePinBulletinPost(postId, isPinned)", "誰でもワンタップ切り替え"),
+         "ピン留めのON/OFF状態を SupabaseService.togglePinBulletinPost へ即時送信。ホーム画面アナウンスカードおよび詳細バッジと0秒同期。",
+         "SupabaseService.togglePinBulletinPost(postId, isPinned)", "誰でもワンタップ切り替え"),
         ("コメント投稿フォーム", "クリック時",
-         "送信ボタン押下時、未入力チェック後にSupabase Direct API（saveBulletinComment）へ送信。即時フィードバック表示。",
-         "submitBulletinComment() / apiSaveComment(payload)", "モーダル内ステータス表示"),
+         "送信ボタン押下時、未入力チェック後に SupabaseService.addBulletinComment へ送信（お知らせイベント発行）。即時フィードバック表示。",
+         "handleCommentSubmit() / SupabaseService.addBulletinComment(...)", "モーダル内ステータス表示"),
         ("記事削除ボタン", "クリック時",
-         "詳細モーダルまたは編集モーダルから削除ボタン押下時、確認ダイアログを経てSupabase Direct API（deleteBulletinPost）を実行。論理削除し、画面からカードを除去。",
-         "apiDeleteBulletinPost(postId, actorName)", "論理削除・即時画面除去")
+         "詳細モーダルまたは編集モーダルから削除ボタン押下時、確認ダイアログを経て SupabaseService.deleteBulletinPost を実行。論理削除し、画面からカードを除去（お知らせイベント発行）。",
+         "SupabaseService.deleteBulletinPost(postId)", "論理削除・即時画面除去")
     ]
     scr09_errors = [
         ("I09-01", "info", "タイムライン投稿フィード", "活動記録画面. 画面初期表示 / 検索時", "カテゴリ絞り込みや検索条件に合致する投稿が0件の場合（正常空状態）", "画面表示", "「投稿がありません」", "エラーではない正常案内（新規投稿・条件解除で解消）"),
@@ -1125,7 +1125,7 @@ def run_generate():
          "SupabaseWebPush.subscribeAndSave を実行し、ブラウザ通知許可とVAPID Push購読情報をDBへ保存。拒否時は設定案内ダイアログ（showAppAlert）を表示。",
          "handlePushPermissionRequest()", "ブラウザWeb Push通知登録"),
         ("通知設定を保存ボタン", "クリック時",
-         "通知方法と通知対象項目を apiSaveNotificationSettings 経由でSupabase members テーブルへ保存し、localStorage も同期。",
+         "通知方法と通知対象項目を SupabaseService.saveNotificationSettings 経由でSupabase members テーブルへ保存し、localStorage も同期。",
          "handleSaveNotificationSettings()", "DB保存と状態メッセージ表示"),
         ("ログアウトボタン", "クリック時",
          "ログアウト確認モーダルを表示。OK選択後にlocalStorage内の fcb_auth_user を消去し、ログイン画面を表示。",

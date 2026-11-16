@@ -9,7 +9,7 @@ render_swimlane_flow.py
 - js/main.js (DOMContentLoaded / switchToOAuthPreCheckCard / handleOAuthPreCheckSubmit /
               startGoogleOAuthFlow(login_hint) / checkOAuthCallbackOnLoad / handleOAuthPasswordSubmit /
               switchToLoginCard)
-- js/supabase.js (Supabase Direct: apiLoginUser / apiCheckMemberEmailForOAuth / apiRegisterMember)
+- js/supabase.js (Supabase Direct: loginUser / checkMemberEmailForOAuth / registerMember)
 - server/api_auth.js (GAS: apiExchangeOAuthCode)
 """
 import os
@@ -333,7 +333,7 @@ def build_scr01_swimlane_html():
     <div class="header-title">SCR01 ログイン・Google連携：処理・遷移スイムレーン相関図</div>
     <div class="legend-group">
       <div class="legend-item"><div class="legend-line" style="background:#2563EB;"></div><span>通常処理・参照 (JS/GAS)</span></div>
-      <div class="legend-item"><div class="legend-line" style="background:#059669;"></div><span>Supabase Direct バイパス (GAS不要)</span></div>
+      <div class="legend-item"><div class="legend-line" style="background:#059669;"></div><span>Supabase Direct 通信 (GAS不要)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#D97706;"></div><span>画面内カード表示・切替 (SPA)</span></div>
       <div class="legend-item"><div class="legend-line" style="background:#7C3AED; border-top: 2px dashed #7C3AED; height:0;"></div><span>他画面・外部遷移 / コールバック復帰</span></div>
       <div class="legend-item"><span style="color:#475569; font-weight:900;">◀─▶</span><span>双方向(参照/同期) / ─▶ 単方向(更新/遷移)</span></div>
@@ -427,7 +427,7 @@ def build_scr01_swimlane_html():
         <div class="node-item node-js" id="j-login" style="position:absolute; top: 180px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js ➔ supabase.js</span>
           <div class="node-title">handleUserLogin()</div>
-          <div class="node-sub">Bypass: SupabaseService.loginUser()</div>
+          <div class="node-sub">Direct: SupabaseService.loginUser()</div>
         </div>
 
         <div class="node-item node-js" id="j-to-precheck" style="position:absolute; top: 266px; left: 0; right: 0;">
@@ -457,7 +457,7 @@ def build_scr01_swimlane_html():
         <div class="node-item node-js" id="j-pw-submit" style="position:absolute; top: 866px; left: 0; right: 0;">
           <span class="node-tag tag-js">js/main.js ➔ supabase.js</span>
           <div class="node-title">handleOAuthPasswordSubmit()</div>
-          <div class="node-sub">Bypass: SupabaseService.registerMember()</div>
+          <div class="node-sub">Direct: SupabaseService.registerMember()</div>
         </div>
       </div>
     </div>

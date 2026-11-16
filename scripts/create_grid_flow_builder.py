@@ -92,15 +92,15 @@ def build_grid_flow_sheet(wb):
         ("2", "Webホスティング\n(GitHub Pages)", "GitHub Pages Global CDN\n(gh-pages ブランチ)", "https://fcbenten.github.io/team-management/\n・index.html (HTML/CSS/JSバンドル)\n・sw.js / manifest.json",
          "・★Webアプリ本体のホスティング・配信元★\n・ブラウザ初回アクセス時のPWA配信\n・Service Worker キャッシュによるロード",
          "・ソースコード(main)とPWA配信(gh-pages)を完全分離\n・SupabaseではなくGitHub Pagesにアプリが載っている\n・HTTPS GET による静的コンテンツ配信"),
-        ("3", "クラウドデータベース\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)",
-         "・★全業務データの保管・永続化 (90%以上)★\n・全10リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード",
-         "・アプリが載る場所ではなく『データ保管庫』\n・端末のWebアプリから直接REST通信\n・Row Level Security (RLS) によるDB層認可保護"),
-        ("4", "バックエンドAPI ＆ 外部連携\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App / 定期トリガー\n・Google カレンダー API v3\n・LINE Messaging API 連携基盤",
-         "・カレンダー原本データの同期 ＆ 予定一括取得\n・Google OAuth 2.0 認可コード交換とトークン発行\n・雨天中止や前日出欠リマインドの定期トリガー実行\n・Supabase REST API との直接通信 (トークン保管・名簿照合)",
-         "・ブラウザ端末からの API 呼び出し (google.script.run) を受け付け\n・Supabase と直接連携しトークンや名簿データを相互同期\n・Script Properties で OAuth 秘密鍵を安全に隠蔽・隔離"),
+        ("3", "クラウドデータベース\n(Supabase)", "Supabase Cloud\n東京リージョン (ap-northeast-1)", "PostgreSQL 17.11 データベース\nPostgREST API (/rest/v1/*)\nSupabase Storage (/storage/v1/*)\nEdge Functions / pg_cron",
+         "・★全業務データの保管・永続化 (90%以上)★\n・全15リレーショナルテーブルのCRUD\n・アバター写真のCDN配信・アップロード\n・毎時定時リマインド・LINE/Web Push配信",
+         "・アプリが載る場所ではなく『データ保管庫・通知基盤』\n・端末のWebアプリから直接REST通信 (SupabaseService)\n・Row Level Security (RLS) によるDB層認可保護\n・pg_cron + send-daily-reminders で定時実行"),
+        ("4", "バックエンドAPI ＆ 外部連携\n(Google サービス)", "Google Cloud / GAS\n東京 / グローバル サーバーレス", "GAS Web App\n・Google カレンダー API v3\n・Google OAuth 2.0",
+         "・カレンダー原本データの作成・更新・削除 ＆ 予定取得\n・Google OAuth 2.0 認可コード交換とトークン発行\n・GASエラー検知時の代表LINE通知 (notification_rules連動)\n・Supabase REST API との連携 (トークン保管・名簿照合)",
+         "・ブラウザ端末からは GasApi 経由（許可済み4関数のみ HTTPS POST）\n・Supabase と直接連携しトークンや名簿データを相互同期\n・Script Properties で OAuth 秘密鍵を安全に隠蔽・隔離"),
         ("5", "通知配信プラットフォーム\n(LINE Platform)", "LINE Corporation\nGlobal Cloud", "LINE Messaging API\n(FC Benten 公式アカウント)",
-         "・雨天中止などの緊急一斉通知\n・活動前日の出欠未回答者リマインド配信\n・重要アナウンスのプッシュ着信",
-         "・GASからWebhook経由で通知発信\n・部員のスマートフォン(LINEアプリ)へ直接プッシュ着信\n・メールよりも圧倒的に高い即時確認率")
+         "・通知ルールに応じたお知らせ連動外部通知（LINE / Web Push統一配信）\n・出欠未回答・備品当番の定時リマインド配信\n・システムエラー発生時の代表向けLINEアラート",
+         "・Supabase Edge Functions（send-line-push / send-daily-reminders）および GAS エラー通知から発信\n・部員のスマートフォン（LINEアプリ）へ直接プッシュ着信\n・通知管理画面（SCR12）からルールごとに送信制御")
     ]
 
     for s_idx, s in enumerate(servers_data):
@@ -150,18 +150,18 @@ def build_grid_flow_sheet(wb):
          "全業務データのJSONペイロード (members, matches, score_logs, attendance, equipment, bulletin 等)", "全業務画面 (出欠、試合、掲示板、備品、名簿等 全通信の90%以上)"),
         ("COMM-03", "ユーザー端末 [Webアプリ] ⇄ Supabase Storage", "HTTPS GET (CDN閲覧)\nHTTPS POST (Upload)", "Supabase JWT (アップロード時)\n公開バケット (閲覧時)",
          "アバター画像バイナリ (256x256 クロップド JPEG/PNG 画像データ)", "SCR11: プロフィール画像アップロード\n各画面の顔写真アイコン表示"),
-        ("COMM-04", "ユーザー端末 [Webアプリ] ➔ Google (GAS)", "google.script.run (RPC)\n/ HTTPS POST", "Google セッション / OAuth 2.0",
-         "Google OAuth 認可コード交換、カレンダー予定同期リクエスト", "初回部員登録 (OAuth連携)\nSCR07: チーム予定の同期実行"),
+        ("COMM-04", "ユーザー端末 [Webアプリ] ➔ Google (GAS)", "GasApi (HTTPS POST)\n※許可済みGoogle連携4関数のみ", "Google セッション / OAuth 2.0",
+         "Google OAuth URL取得/認可コード交換、カレンダー予定作成・更新・削除リクエスト", "初回部員登録 (OAuth連携)\nSCR07: チーム予定の作成・更新・削除"),
         ("COMM-05\n★重要連携★", "Google (GAS) ⇄ Supabase (DB)", "HTTPS Direct REST\n(PostgREST API)", "Supabase Service Role / API Key",
-         "Google OAuth リフレッシュトークン保存、カレンダー同期用部員名簿照合", "部員初回登録時のトークン保管\n予定同期時の部員名簿マッチング"),
+         "Google OAuth リフレッシュトークン保存、カレンダー同期用部員名簿照合、エラー通知設定参照", "部員初回登録時のトークン保管\n予定同期時の名簿照合・GASエラーログ記録"),
         ("COMM-06", "Google (GAS) ⇄ Google カレンダー API", "Google API v3\n(OAuth 2.0)", "OAuth 2.0 Bearer Token\n(カレンダー編集スコープ)",
          "Google カレンダー予定イベント原本取得、attendees.responseStatus パッチ更新", "SCR07: チーム公式予定の原本同期・出欠反映"),
-        ("COMM-07", "Google (GAS) ➔ LINE Platform", "HTTPS POST\n(Messaging API)", "LINE Channel Access Token\n(Bearer認証)",
-         "活動前日 18:00 の出欠未回答者への自動リマインド通知、雨天中止自動判定", "定期トリガー実行バッチ"),
-        ("COMM-08\n★手動通知★", "Supabase ➔ LINE Platform", "HTTPS POST\n(Supabase Edge Functions)", "LINE Channel Access Token\n(Bearer認証)",
-         "画面操作トリガーによる雨天中止緊急一斉通知、役員手動リマインド配信", "SCR01/02: 画面からの手動LINE通知 (パターンA)"),
-        ("COMM-09", "LINE Platform ➔ ユーザー端末 [LINEアプリ]", "LINE Push\n(APNs / FCM)", "LINE アカウント紐付け",
-         "部員個人のスマートフォン（LINEアプリ）へのプッシュ通知着信", "部員のスマホ通知画面")
+        ("COMM-07", "Google (GAS) ➔ LINE Platform", "HTTPS POST\n(Messaging API / Edge Function)", "notification_rules連動\n(system_error_alert)",
+         "GASバックエンド想定外エラー検知時の代表（role='代表'）向けシステムエラーアラート", "システム監視 / エラー通知"),
+        ("COMM-08\n★統合通知★", "Supabase ➔ LINE / Web Push", "pg_cron (毎時) ＋\nEdge Functions (HTTPS POST)", "LINE Channel Token / VAPID\n(notification_rules 連動)",
+         "定時リマインド（send-daily-reminders）およびイベント連動通知（send-line-push / send-web-push）", "SCR02: ベルお知らせ＆統一外部通知\nSCR12: 代表専用通知管理ルール連動"),
+        ("COMM-09", "LINE / Web Push ➔ ユーザー端末", "LINE Push / Web Push\n(APNs / FCM)", "LINEアカウント / Push購読紐付け",
+         "部員個人のスマートフォン・ブラウザへの通知着信（個人受信設定およびルール設定に従う）", "部員のスマホ・ブラウザ通知")
     ]
 
     for c_idx, c in enumerate(comms_data):
@@ -234,14 +234,13 @@ def build_grid_flow_sheet(wb):
             "【Supabase の役割（クラウドデータベース）】\n"
             "Supabase はアプリの置き場ではなく、端末で動くWebアプリから直接接続する『クラウドデータベース（PostgreSQL 17 / Auth / Storage）』です。\n"
             "出欠、試合記録、掲示板、名簿、備品などの全データを直接REST通信でセキュアに読み書きします。\n\n"
-            "【Google サービスとの通信（Webアプリ ➔ GAS ➔ カレンダー / 認証）】\n"
-            "端末の『Webアプリ』はバックエンドAPIとして『GAS (Google Apps Script)』を呼び出します。\n"
+            "【Google サービスとの通信（Webアプリ ➔ GasApi ➔ GAS ➔ カレンダー / 認証）】\n"
+            "端末の『Webアプリ』からは Google カレンダー作成/更新/削除および Google OAuth 認証の4処理のみ『GasApi』経由で GAS を呼び出します（DB/Storage 処理は SupabaseService を直接呼び出します）。\n"
             "GAS は Google カレンダー API (v3) を操作して予定同期を行い、Google 認証サーバーと通信して OAuth トークンを発行します。\n"
             "さらに GAS は Supabase REST API と直接通信し、OAuthトークンの保管や部員名簿の照合を行います。\n\n"
-            "【LINE通知の2系統（定期自動バッチ ＆ 画面手動通知）】\n"
-            "・定期通知: 活動前日の出欠リマインドは、GAS の定期トリガーから LINE Messaging API 経由で発信されます。\n"
-            "・手動通知 (パターンA): 役員画面からの雨天中止などの手動配信は、Supabase (Edge Functions) を経由して LINE Messaging API へリクエストされます。\n"
-            "いずれも部員のスマートフォン内の『LINE アプリ』へ直接プッシュ通知が届きます。"
+            "【お知らせ ＆ 統一通知アーキテクチャ（お知らせ ⊃ 外部通知）】\n"
+            "・定時リマインド: pg_cron（毎時0分起動）から Supabase Edge Function（send-daily-reminders）を実行し、SCR12 の通知タイミング設定に従いお知らせ記録＋LINE/Web Push配信を行います。\n"
+            "・イベント連動通知: 各操作時に SupabaseNotificationService.emitAppEvent が notification_rules を判定し、「お知らせ」ON 時はベル一覧へ記録、「外部通知」も ON 時は LINE＋Web Push を統一配信します。"
         )
     ]
 

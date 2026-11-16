@@ -959,7 +959,7 @@ function markPostAsReadIfUnread(post) {
 
   const now = new Date();
   const pad = n => ('0' + n).slice(-2);
-  const nowStr = `${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  const nowStr = `${now.getFullYear()}/${pad(now.getMonth() + 1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
   post.readers.push({
     memberId: myId,
@@ -1670,7 +1670,7 @@ function renderHomeRecentBulletins() {
  * @param {string} eventId
  * @returns {Object|null}
  */
-window.getBulletinPostForEvent = function(eventId) {
+window.getBulletinPostForEvent = function (eventId) {
   if (!eventId) return null;
   const posts = window.bulletinState.posts || [];
   return posts.find(p => p.eventId === eventId) || null;

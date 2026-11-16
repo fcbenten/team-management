@@ -1135,8 +1135,8 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "初期表示", "title": "ホーム初期ロード / タブ復帰", "desc": "initHomeView(data) 実行トリガー", "is_init": True},
-                        "j": {"file": "js/main.js → supabase.js", "func": "getInitialData()", "desc": "Bypass: SupabaseService.getInitialData() (0.3s) ＆ BG同期"},
-                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance()", "desc": "最新カレンダー予定・出席状況のバックグラウンド同期", "bidir": True},
+                        "j": {"file": "js/main.js → supabase.js", "func": "SupabaseService.getInitialData()", "desc": "Direct: 全初期データ一括取得 (0.3s) ＆ BG同期"},
+                        "g": {"file": "server/main.js", "func": "getCalendarEvents()", "desc": "最新カレンダー予定のバックグラウンド同期 (doGet)", "bidir": True},
                         "targets": [
                             {"type": "direct_db", "to": "d-core", "label": "Direct一括照会 (0.3s)", "bidir": True},
                             {"type": "gas_db", "to": "d-gcal", "label": "BG予定同期", "bidir": True},
@@ -1155,7 +1155,7 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "代理解決", "title": "備品不在「持参する」ボタン押下", "desc": "#homeTopAlertArea 内 備品持参アラート解除"},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "openEquipmentResolveModal() → apiResolveEquipmentAlert()", "desc": "Bypass: 代理持参ログ即時INSERT ＆ トップ警告バナー解除"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "executeEquipmentResolve() → SupabaseService.resolveEquipmentAlert()", "desc": "Direct: 代理持参ログ即時INSERT ＆ トップ警告バナー解除"},
                         "targets": [{"type": "direct_db", "to": "d-eqlog", "label": "Direct代理記録INSERT (0.1s)"}]
                     },
                     {
@@ -1265,7 +1265,7 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "保存ボタン", "title": "「試合結果を保存する」ボタン押下", "desc": "#submitBtn（二重送信防止ロック実行）"},
-                        "j": {"file": "js/input.js → supabase.js", "func": "submitData() → saveMatchData()", "desc": "Bypass: SupabaseService.saveScoreRecord() ＋ 最新再同期"},
+                        "j": {"file": "js/input.js → supabase.js", "func": "submitMatchData() → SupabaseService.saveScoreRecord()", "desc": "Direct: scores/matches 保存 ＋ getMatchHistoryData() 同期"},
                         "targets": [
                             {"type": "direct_db", "to": "d-matches", "label": "Direct一括UPSERT (0.2s)"},
                             {"type": "other", "to": "o-scr03", "label": "保存完了 ➔ SCR03へ自動遷移"}
@@ -1374,12 +1374,12 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "初期・切替", "title": "画面表示 / 月移動・サブタブ切替", "desc": "renderCalendar / renderAgendaList / フィルター適用", "is_init": True},
-                        "j": {"file": "js/schedule.js → supabase.js", "func": "initScheduleView() / apiGetMemberListForLogin()", "desc": "Bypass: members名簿補完 ＋ 予定・自出欠バッジ描画"},
+                        "j": {"file": "js/schedule.js → supabase.js", "func": "initScheduleView() / SupabaseService.getMemberListForLogin()", "desc": "Direct: members名簿補完 ＋ 予定・自出欠バッジ描画"},
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct名簿参照", "bidir": True}]
                     },
                     {
                         "t": {"badge": "出欠ボタン", "title": "出欠回答（〇/△/×）タップ", "desc": "リスト上・モーダル内のワンタップ出欠更新"},
-                        "j": {"file": "js/schedule.js → supabase.js", "func": "setMyAttendance() → updateEventAttendance()", "desc": "Bypass: 0.1s即時UPSERT ＋ GAS裏側カレンダー同期"},
+                        "j": {"file": "js/schedule.js → supabase.js", "func": "setMyAttendance() → SupabaseService.updateEventAttendance()", "desc": "Direct: 0.1s即時UPSERT ＋ 裏側カレンダー同期"},
                         "g": {"file": "server/api_events.js", "func": "updateEventAttendance(payload)", "desc": "Googleカレンダー側ゲスト出席ステータス同期"},
                         "targets": [
                             {"type": "direct_db", "to": "d-att", "label": "Direct出欠UPSERT (0.1s)"},
@@ -1398,13 +1398,13 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "登録/更新", "title": "予定編集モーダル「保存する」押下", "desc": "#eventEditModal（タイトル/日時/場所/種別/ゲスト）"},
-                        "j": {"file": "js/schedule.js", "func": "saveCalendarEvent(payload)", "desc": "バリデーション後 GAS へ新規作成・更新・複製リクエスト"},
+                        "j": {"file": "js/schedule.js → GasApi", "func": "GasApi.saveCalendarEvent(payload)", "desc": "バリデーション後 GasApi 経由で GAS へ作成・更新リクエスト"},
                         "g": {"file": "server/api_events.js", "func": "saveCalendarEvent(payload)", "desc": "Google カレンダー予定作成・更新API実行"},
                         "targets": [{"type": "gas_db", "to": "d-gcal", "label": "予定書込"}]
                     },
                     {
                         "t": {"badge": "削除ボタン", "title": "「削除」確認モーダル確定", "desc": "executeConfirmedDelete() 実行"},
-                        "j": {"file": "js/schedule.js", "func": "deleteCalendarEvent(payload)", "desc": "GAS へ予定削除リクエスト送信 ＆ 最新再取得"},
+                        "j": {"file": "js/schedule.js → GasApi", "func": "GasApi.deleteCalendarEvent(payload)", "desc": "GasApi 経由で GAS へ予定削除リクエスト送信"},
                         "g": {"file": "server/api_events.js", "func": "deleteCalendarEvent(payload)", "desc": "Google カレンダー予定削除実行"},
                         "targets": [{"type": "gas_db", "to": "d-gcal", "label": "予定削除"}]
                     },
@@ -1435,12 +1435,12 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "初期・更新", "title": "画面表示 / データリフレッシュ", "desc": "initEquipmentView() → refreshEquipmentData()", "is_init": True},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "apiGetEquipmentData()", "desc": "Bypass: SupabaseService.getEquipmentData() ＋ 7日間不在判定"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "SupabaseService.getEquipmentData()", "desc": "Direct: 台帳・マスタ取得 ＋ 7日間不在判定"},
                         "targets": [{"type": "direct_db", "to": "d-eq", "label": "Direct台帳・ログ一括取得", "bidir": True}]
                     },
                     {
                         "t": {"badge": "代理解決", "title": "不在アラート「解決 / 代理引受」押下", "desc": "向こう7日以内の保管者不在イベントを誰でも解消可能"},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "executeEquipmentResolve() → apiResolveEquipmentAlert()", "desc": "Bypass: 代理持参記録をINSERT ＆ 警告バナー即時解除"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "executeEquipmentResolve() → SupabaseService.resolveEquipmentAlert()", "desc": "Direct: 代理持参記録をINSERT ＆ 警告バナー即時解除"},
                         "targets": [
                             {"type": "direct_db", "to": "d-eqlog", "label": "Direct代理記録INSERT (0.1s)"},
                             {"type": "other", "to": "o-home", "label": "不在警告解除 ➔ ホーム連動"}
@@ -1458,12 +1458,12 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "保存ボタン", "title": "「保存する」ボタン押下", "desc": "新規備品追加・保管者引継ぎ・備考更新"},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "handleSaveEquipmentSubmit() → apiSaveEquipmentItem()", "desc": "Bypass: 楽観的UI反映 ＋ Supabase Direct UPSERT"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "saveEquipmentItem() → SupabaseService.saveEquipmentItem()", "desc": "Direct: 楽観的UI反映 ＋ Supabase UPSERT"},
                         "targets": [{"type": "direct_db", "to": "d-eq", "label": "Direct備品UPSERT (0.1s)"}]
                     },
                     {
                         "t": {"badge": "削除ボタン", "title": "「削除」確認モーダル確定", "desc": "executeDeleteEquipmentPermanently() 実行"},
-                        "j": {"file": "js/equipment.js → supabase.js", "func": "apiDeleteEquipmentItem(itemId)", "desc": "Bypass: 備品現物レコードの完全削除"},
+                        "j": {"file": "js/equipment.js → supabase.js", "func": "SupabaseService.deleteEquipmentItem(itemId)", "desc": "Direct: 備品現物レコードの完全削除"},
                         "targets": [{"type": "direct_db", "to": "d-eq", "label": "Direct備品DELETE (0.1s)"}]
                     }
                 ]
@@ -1486,13 +1486,13 @@ SWIMLANE_SPECS = {
                 "title": "タイムライン一覧 ＆ フィルター (#view-bulletin)",
                 "rows": [
                     {
-                        "t": {"badge": "初期・絞り込み", "title": "画面表示 / カテゴリ・検索切替", "desc": "initBulletinTab() / setBulletinCategoryFilter()", "is_init": True},
-                        "j": {"file": "js/bulletin.js → supabase.js", "func": "loadBulletinData() / renderBulletinTimeline()", "desc": "Bypass: 投稿一覧・コメント・既読ログ参照 ＆ 未読数バッジ更新"},
+                        "t": {"badge": "初期・絞り込み", "title": "画面表示 / カテゴリ・検索切替", "desc": "loadBulletinData() / setBulletinCategoryFilter()", "is_init": True},
+                        "j": {"file": "js/bulletin.js → supabase.js", "func": "loadBulletinData() → SupabaseService.getBulletinData()", "desc": "Direct: 投稿一覧・コメント・既読ログ直接取得 ＆ 再描画"},
                         "targets": [{"type": "direct_db", "to": "d-posts", "label": "Directフィード一括取得", "bidir": True}]
                     },
                     {
                         "t": {"badge": "カードタップ", "title": "投稿カードタップ（閲覧・既読記録）", "desc": "詳細モーダル展開 ＋ 未読時は自動既読マーキング"},
-                        "j": {"file": "js/bulletin.js → supabase.js", "func": "openBulletinDetailModal() → apiMarkBulletinPostRead()", "desc": "Bypass: bulletin_reads 自動記録 ＆ 既読者/コメント読込"},
+                        "j": {"file": "js/bulletin.js → supabase.js", "func": "openBulletinDetailModal() → SupabaseService.markBulletinAsRead()", "desc": "Direct: bulletin_reads 自動記録 ＆ 既読者/コメント読込"},
                         "targets": [
                             {"type": "direct_db", "to": "d-reads", "label": "Direct既読記録 ＆ コメント照会", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "詳細モーダル展開"}
@@ -1505,7 +1505,7 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "作成・編集", "title": "「投稿 / 更新」ボタン押下", "desc": "新規起票・共同編集・イベント紐付け・ピン設定"},
-                        "j": {"file": "js/bulletin.js → supabase.js", "func": "handleBulletinPostSubmit() → apiSaveBulletinPost()", "desc": "Bypass: bulletin_posts へ0.1s即時UPSERT ＆ ホーム連動"},
+                        "j": {"file": "js/bulletin.js → supabase.js", "func": "handleBulletinPostSubmit() → SupabaseService.saveBulletinPost()", "desc": "Direct: bulletin_posts UPSERT ＋ loadBulletinData() 再取得"},
                         "targets": [
                             {"type": "direct_db", "to": "d-posts", "label": "Direct投稿UPSERT (0.1s)"},
                             {"type": "other", "to": "o-home", "label": "ピン留め記事 ホーム即反映"}
@@ -1513,12 +1513,12 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "ピン/削除", "title": "ピン留め切替 / 記事削除確定", "desc": "handleBdmTogglePinCheckbox / deleteBulletinPostById"},
-                        "j": {"file": "js/bulletin.js → supabase.js", "func": "apiTogglePinBulletinPost() / apiDeleteBulletinPost()", "desc": "Bypass: is_pinned 更新 / is_deleted=true 論理削除"},
+                        "j": {"file": "js/bulletin.js → supabase.js", "func": "SupabaseService.togglePinBulletinPost() / deleteBulletinPost()", "desc": "Direct: is_pinned 更新 / is_deleted=true 論理削除"},
                         "targets": [{"type": "direct_db", "to": "d-posts", "label": "Directフラグ更新/論理削除"}]
                     },
                     {
                         "t": {"badge": "コメント", "title": "「コメント送信」/ 削除押下", "desc": "詳細モーダル下部コメントスレッド操作"},
-                        "j": {"file": "js/bulletin.js → supabase.js", "func": "apiAddBulletinComment() / apiDeleteBulletinComment()", "desc": "Bypass: bulletin_comments 追記・論理削除"},
+                        "j": {"file": "js/bulletin.js → supabase.js", "func": "SupabaseService.addBulletinComment() / deleteBulletinComment()", "desc": "Direct: bulletin_comments 追記・論理削除"},
                         "targets": [{"type": "direct_db", "to": "d-reads", "label": "DirectコメントINSERT/削除"}]
                     }
                 ]
@@ -1542,7 +1542,7 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "初期・権限制御", "title": "画面アクセス時 ロール判定 ＆ 一覧取得", "desc": "代表・副代表以外は警告表示しホームへ自動強制リダイレクト", "is_init": True},
-                        "j": {"file": "js/members.js → supabase.js", "func": "initMembersView() → apiGetMemberListForAdmin()", "desc": "Bypass: 現役・休部・OB全部員データ一括取得（0.1s）"},
+                        "j": {"file": "js/members.js → supabase.js", "func": "initMembersView() → SupabaseService.getAdminMemberList()", "desc": "Direct: 現役・休部・OB全部員データ一括取得（0.1s）"},
                         "targets": [
                             {"type": "direct_db", "to": "d-members", "label": "Direct全部員照会", "bidir": True},
                             {"type": "other", "to": "o-home", "label": "一般部員はSCR02へ遮断遷移"}
@@ -1560,7 +1560,7 @@ SWIMLANE_SPECS = {
                 "rows": [
                     {
                         "t": {"badge": "保存/復帰", "title": "「保存」押下 / 「現役に復帰」確定", "desc": "全項目blur検証（氏名・背番号重複/メール重複・権限上限）"},
-                        "j": {"file": "js/members.js → supabase.js", "func": "handleSaveMemberSubmit() / handleRestoreMember() → apiSaveMember()", "desc": "Bypass: members即時UPSERT ＋ syncUpdatedMemberList()"},
+                        "j": {"file": "js/members.js → supabase.js", "func": "saveMemberForm() / handleRestoreMember() → SupabaseService.saveMember()", "desc": "Direct: members即時UPSERT ＋ syncUpdatedMemberList()"},
                         "targets": [
                             {"type": "direct_db", "to": "d-members", "label": "Direct名簿UPSERT (0.1s)"},
                             {"type": "other", "to": "o-sync", "label": "全画面キャッシュ即時同期"}
@@ -1568,7 +1568,7 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "完全削除", "title": "完全削除確認「完全に削除」押下", "desc": "過去戦績保護ガード（出場記録有はOB化を案内）"},
-                        "j": {"file": "js/members.js → supabase.js", "func": "executeMemberDeletePermanently() → apiDeleteMemberPermanently()", "desc": "Bypass: 試合実績のない誤登録データのみ物理DELETE"},
+                        "j": {"file": "js/members.js → supabase.js", "func": "executeMemberDeletePermanently() → SupabaseService.deleteMemberPermanently()", "desc": "Direct: 試合実績のない誤登録データのみ物理DELETE"},
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct物理DELETE (0.1s)"}]
                     }
                 ]
@@ -1605,12 +1605,12 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "画像削除", "title": "「写真を削除」確認OK押下", "desc": "handleProfileImageDelete()（showAppConfirm確認）"},
-                        "j": {"file": "js/main.js → supabase.js", "func": "apiDeleteProfileImage(name)", "desc": "Bypass: SupabaseService.deleteProfileImage() (avatar_url解除)"},
+                        "j": {"file": "js/main.js → supabase.js", "func": "SupabaseService.deleteProfileImage(name)", "desc": "Direct: members.avatar_url 解除"},
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct画像URLクリア"}]
                     },
                     {
                         "t": {"badge": "設定遷移", "title": "「設定（歯車）」ボタン押下", "desc": "#btnOpenUserSettings ➔ 通知・PW設定モーダルへ切替"},
-                        "j": {"file": "js/main.js → supabase.js", "func": "openUserSettingsModal() → apiGetNotificationSettings()", "desc": "Bypass: 通知手段設定をDirect読込し設定画面を展開"},
+                        "j": {"file": "js/main.js → supabase.js", "func": "openUserSettingsModal() → SupabaseService.getNotificationSettings()", "desc": "Direct: 通知手段設定を直接読込し設定画面を展開"},
                         "targets": [
                             {"type": "direct_db", "to": "d-members", "label": "Direct通知設定取得 (0.1s)", "bidir": True},
                             {"type": "card_switch", "to_card": 1, "label": "設定モーダルへ切替"}
@@ -1622,8 +1622,8 @@ SWIMLANE_SPECS = {
                 "title": "通知設定・PW変更・ログアウト (#userSettingsModal)",
                 "rows": [
                     {
-                        "t": {"badge": "通知/PW保存", "title": "通知設定変更 / 「PW変更」押下", "desc": "apiSaveNotificationSettings / apiChangePassword"},
-                        "j": {"file": "js/main.js → supabase.js", "func": "apiSaveNotificationSettings() / apiChangePassword()", "desc": "Bypass: members.notify_settings / password_hash 直接更新"},
+                        "t": {"badge": "通知/PW保存", "title": "通知設定変更 / 「PW変更」押下", "desc": "saveNotificationSettings / changePassword"},
+                        "j": {"file": "js/main.js → supabase.js", "func": "SupabaseService.saveNotificationSettings() / changePassword()", "desc": "Direct: members.notify_settings / password_hash 直接更新"},
                         "targets": [{"type": "direct_db", "to": "d-members", "label": "Direct設定・PW更新 (0.1s)"}]
                     },
                     {
