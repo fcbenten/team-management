@@ -251,7 +251,7 @@
 }
 
 .notif-admin-title .material-symbols-outlined {
-  color: var(--primary, #2563eb);
+  color: var(--text-heading, #64748b);
   font-size: 22px;
 }
 
@@ -329,7 +329,7 @@
 
 .notif-admin-group-header .material-symbols-outlined {
   font-size: 19px;
-  color: var(--primary, #2563eb);
+  color: var(--text-heading, #64748b);
 }
 
 .notif-rule-row {
