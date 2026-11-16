@@ -2735,10 +2735,22 @@
       return { success: true };
     }
 
+    function toExternalBrowserLineUrl(rawUrl) {
+      if (!rawUrl || !/^https:/i.test(rawUrl)) return rawUrl;
+      try {
+        const u = new URL(rawUrl.split('#')[0] + (rawUrl.includes('#') ? '#' + rawUrl.split('#')[1] : ''));
+        u.searchParams.set('openExternalBrowser', '1');
+        return u.toString();
+      } catch (e) {
+        return rawUrl;
+      }
+    }
+
     async function sendTestLinePush({ memberId, lineUserId, title, body, appUrl }) {
       const u = window.currentUser || {};
       const resolvedMemberId = memberId || (u.id || u.memberId || '').trim() || undefined;
-      const resolvedUrl = appUrl || (window.location && /^https:/i.test(window.location.href) ? window.location.href.split('#')[0] : undefined);
+      const rawUrl = appUrl || (window.location && /^https:/i.test(window.location.href) ? window.location.href.split('#')[0] : undefined);
+      const resolvedUrl = toExternalBrowserLineUrl(rawUrl);
 
       return await invokeEdgeFunction('send-line-push', {
         memberId: lineUserId ? undefined : resolvedMemberId,
@@ -2809,9 +2821,10 @@
               const actorText = entry.memberName || '未ログイン/不明';
               const shortErr = String(entry.errorMessage || '').slice(0, 180);
               const body = `操作者: ${actorText}\n処理: ${entry.actionName || '-'}\n内容: ${shortErr}`;
-              const appUrl = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
+              const rawAppUrl = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
                 ? window.location.href.split('#')[0]
                 : undefined;
+              const appUrl = toExternalBrowserLineUrl(rawAppUrl);
 
               const pushRes = await invokeEdgeFunction('send-line-push', {
                 memberIds: repIds,

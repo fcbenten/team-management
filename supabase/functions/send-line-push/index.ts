@@ -24,8 +24,20 @@ function jsonResponse(payload: unknown, status = 200): Response {
   });
 }
 
+function withExternalBrowserUrl(appUrl?: string): string | null {
+  const trimmed = appUrl ? appUrl.trim() : "";
+  if (!trimmed || !/^https:\/\//i.test(trimmed)) return null;
+  try {
+    const parsed = new URL(trimmed);
+    parsed.searchParams.set("openExternalBrowser", "1");
+    return parsed.toString();
+  } catch {
+    return trimmed;
+  }
+}
+
 function buildLineMessages(title: string, body: string, appUrl?: string) {
-  const safeUrl = (appUrl && /^https:\/\//i.test(appUrl.trim())) ? appUrl.trim() : null;
+  const safeUrl = withExternalBrowserUrl(appUrl);
 
   if (!safeUrl) {
     return [
@@ -97,6 +109,15 @@ function buildLineMessages(title: string, body: string, appUrl?: string) {
                 label: "アプリを開く",
                 uri: safeUrl,
               },
+            },
+            {
+              type: "text",
+              text: "※iPhoneではSafariで開きます",
+              size: "xxs",
+              color: "#94A3B8",
+              align: "center",
+              margin: "sm",
+              wrap: true,
             },
           ],
         },

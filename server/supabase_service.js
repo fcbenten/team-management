@@ -211,11 +211,15 @@ class GasSupabaseService {
         const repIds = this.getRepresentativeMemberIds();
         if (repIds.length > 0) {
           const edgeUrl = `${Config.SUPABASE.URL}/functions/v1/send-line-push`;
+          const basePwaUrl = String(Config.PWA_URL || '');
+          const extAppUrl = basePwaUrl.includes('openExternalBrowser=1')
+            ? basePwaUrl
+            : basePwaUrl + (basePwaUrl.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
           const pushPayload = {
             memberIds: repIds,
             title: '【システムエラー (GAS)】',
             body: `内容: ${rawMsg.slice(0, 180)}`,
-            appUrl: Config.PWA_URL
+            appUrl: extAppUrl
           };
           const pushRes = UrlFetchApp.fetch(edgeUrl, {
             method: 'post',
