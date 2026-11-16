@@ -9556,6 +9556,7 @@ th.sort-active .sort-icon {
   padding: 8px 12px;
   border-radius: 6px;
   margin-bottom: 12px;
+  white-space: pre-line;
 }
 
 .form-status-msg.error {
@@ -18586,9 +18587,34 @@ function reportSystemError(contextName, errOrMsg, opts) {
 }
 window.reportSystemError = reportSystemError;
 
+var ADMIN_CONTACT_NOTE = '※改善しない場合は管理者へお問い合わせください。';
+
+/**
+ * 画面全体の未捕捉エラーハンドラで無視すべきブラウザ・拡張機能由来の無害ノイズかを判定する。
+ */
+function isHarmlessGlobalError(errOrMsg, ev) {
+  var msg = '';
+  if (typeof errOrMsg === 'string') {
+    msg = errOrMsg;
+  } else if (errOrMsg && typeof errOrMsg === 'object') {
+    msg = errOrMsg.message || errOrMsg.error || String(errOrMsg);
+  }
+  msg = String(msg || '').trim();
+
+  if (/(ResizeObserver loop|Script error\.?)/i.test(msg)) return true;
+  if (errOrMsg && errOrMsg.name === 'AbortError') return true;
+  if (/\bAbortError\b/i.test(msg)) return true;
+
+  var filename = (ev && ev.filename) ? String(ev.filename) : '';
+  if (/^(chrome-extension|moz-extension|safari-extension):\/\//i.test(filename)) return true;
+  if (msg === 'Script error.' && !filename) return true;
+
+  return false;
+}
+
 /**
  * 内部例外やDB・ネットワーク生エラーをマスクし、画面表示用の安全な日本語メッセージを返す。
- * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg に置き換え裏でシステム通知を行う。
+ * 意図した業務エラー（日本語メッセージ）のみをそのまま表示し、不明・例外メッセージは fallbackMsg＋管理者案内へ置き換え裏でシステム通知を行う。
  */
 function getSafeErrorMessage(errOrMsg, fallbackMsg, contextName) {
   var fallback = fallbackMsg || '処理に失敗しました。しばらく経ってから再度お試しください。';
@@ -18601,22 +18627,48 @@ function getSafeErrorMessage(errOrMsg, fallbackMsg, contextName) {
       stackTrace: info.stack
     });
   }
+  if (!fallback.includes('管理者へお問い合わせ')) {
+    return fallback + '\n' + ADMIN_CONTACT_NOTE;
+  }
   return fallback;
 }
 window.getSafeErrorMessage = getSafeErrorMessage;
 
+/**
+ * 未捕捉のJS実行エラー発生時に、既にダイアログが開いていなければメンバー向けの案内ダイアログを表示する。
+ */
+function showUnexpectedRuntimeAlert() {
+  try {
+    var modal = document.getElementById('appAlertModal');
+    if (modal && modal.classList.contains('active')) return;
+    if (typeof showAppAlert === 'function') {
+      showAppAlert({
+        title: 'エラーが発生しました',
+        message: '予期しないエラーが発生しました。画面を再読み込みして再度お試しください。\n' + ADMIN_CONTACT_NOTE,
+        isError: true
+      });
+    }
+  } catch (e) {}
+}
+
+function handleGlobalRuntimeError(errOrMsg, actionName, ev) {
+  if (!errOrMsg || isHarmlessGlobalError(errOrMsg, ev)) return;
+  reportSystemError(inferActiveScreenLabel(), errOrMsg, { actionName: actionName })
+    .then(function (res) {
+      if (!res || res.reason !== 'cooldown') {
+        showUnexpectedRuntimeAlert();
+      }
+    });
+}
+
 if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
   window.addEventListener('error', function (ev) {
     var errObj = (ev && ev.error) || (ev && ev.message) || null;
-    if (errObj) {
-      reportSystemError(inferActiveScreenLabel(), errObj, { actionName: 'window.onerror' });
-    }
+    handleGlobalRuntimeError(errObj, 'window.onerror', ev);
   });
   window.addEventListener('unhandledrejection', function (ev) {
     var reason = ev && ev.reason;
-    if (reason) {
-      reportSystemError(inferActiveScreenLabel(), reason, { actionName: 'unhandledrejection' });
-    }
+    handleGlobalRuntimeError(reason, 'unhandledrejection', ev);
   });
 }
 
