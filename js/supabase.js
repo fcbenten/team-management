@@ -71,8 +71,25 @@
         const finalNo = Array.from(new Set([...noNames, ...(existingDetail.no || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
         const finalMaybe = Array.from(new Set([...maybeNames, ...(existingDetail.maybe || []).filter(n => !eventAtts.some(a => idToMember[a.member_id] && idToMember[a.member_id].name === n))]));
 
+        const mergedGoogleGuests = Array.isArray(ev.googleGuests) ? ev.googleGuests.map(g => Object.assign({}, g)) : [];
+        eventAtts.forEach(att => {
+          const mem = idToMember[att.member_id];
+          const mEmail = mem && mem.email ? String(mem.email).trim().toLowerCase() : '';
+          if (!mEmail) return;
+          const st = String(att.status || '').toLowerCase();
+          const stCode = st === 'yes' ? 'YES' : (st === 'no' ? 'NO' : (st === 'maybe' ? 'MAYBE' : 'UNKNOWN'));
+          const existingG = mergedGoogleGuests.find(g => String(g.email || '').trim().toLowerCase() === mEmail);
+          if (existingG) {
+            existingG.status = stCode;
+            if (mem.name && !existingG.name) existingG.name = mem.name;
+          } else {
+            mergedGoogleGuests.push({ email: mEmail, name: mem.name || '', status: stCode });
+          }
+        });
+
         return {
           ...ev,
+          googleGuests: mergedGoogleGuests,
           attendeesDetail: {
             ...existingDetail,
             yes: finalYes,

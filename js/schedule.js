@@ -188,6 +188,17 @@ function setMyAttendance(evOrKey, status) {
       }
     }
     ev.calendarAttended = (ev.attendeesDetail.yes || []).join(', ');
+    if (myEmail) {
+      if (!Array.isArray(ev.googleGuests)) ev.googleGuests = [];
+      const guestStatusCode = status === 'yes' ? 'YES' : (status === 'no' ? 'NO' : (status === 'maybe' ? 'MAYBE' : 'UNKNOWN'));
+      const existingGuest = ev.googleGuests.find(g => String(g.email || '').trim().toLowerCase() === myEmail);
+      if (existingGuest) {
+        existingGuest.status = guestStatusCode;
+        if (myName && !existingGuest.name) existingGuest.name = myName;
+      } else {
+        ev.googleGuests.push({ email: myEmail, name: myName || '', status: guestStatusCode });
+      }
+    }
 
     // 詳細モーダルが開いていれば出欠状況の表示を 0 秒で即座に再描画！
     const overlay = document.getElementById('eventDetailModalOverlay');
@@ -1642,11 +1653,30 @@ function openEventEditModal(ev, isDuplicate, defaultDate) {
   if (descInput) descInput.value = (ev && ev.description) ? ev.description : '';
   
   window.currentEditGuests = [];
+  window.currentEditRemovedGuests = [];
   if (ev && ev.googleGuests) {
     window.currentEditGuests = JSON.parse(JSON.stringify(ev.googleGuests));
-    if (isDuplicate) {
-      window.currentEditGuests.forEach(g => { g.status = 'UNKNOWN'; });
-    }
+  }
+  if (ev && ev.attendeesDetail) {
+    const emailGroups = [
+      { emails: ev.attendeesDetail.yesEmails, names: ev.attendeesDetail.yes, status: 'YES' },
+      { emails: ev.attendeesDetail.noEmails, names: ev.attendeesDetail.no, status: 'NO' },
+      { emails: ev.attendeesDetail.maybeEmails, names: ev.attendeesDetail.maybe, status: 'MAYBE' },
+      { emails: ev.attendeesDetail.unansweredEmails, names: ev.attendeesDetail.unanswered, status: 'UNKNOWN' }
+    ];
+    emailGroups.forEach(grp => {
+      (grp.emails || []).forEach((em, idx) => {
+        const cleanEm = String(em || '').trim().toLowerCase();
+        if (!cleanEm || !cleanEm.includes('@')) return;
+        const found = window.currentEditGuests.find(g => String(g.email || '').trim().toLowerCase() === cleanEm);
+        if (!found) {
+          window.currentEditGuests.push({ email: cleanEm, name: (grp.names && grp.names[idx]) || '', status: grp.status });
+        }
+      });
+    });
+  }
+  if (isDuplicate) {
+    window.currentEditGuests.forEach(g => { g.status = 'UNKNOWN'; });
   }
   renderEditGuestList();
 
@@ -1695,6 +1725,7 @@ function closeEventEditModal(e) {
 }
 
 window.currentEditGuests = [];
+window.currentEditRemovedGuests = [];
 
   /**
    * 予定編集モーダルで入力された名前またはメールアドレスをゲスト一覧に追加する
@@ -1726,8 +1757,12 @@ window.currentEditGuests = [];
     
     if (targetEmail && targetEmail.includes('@')) {
       clearFieldError('eeGuestInput');
-      if (!window.currentEditGuests.find(g => g.email === targetEmail)) {
-        window.currentEditGuests.push({ email: targetEmail, name: targetName !== targetEmail ? targetName : '', status: 'UNKNOWN' });
+      const cleanLower = targetEmail.trim().toLowerCase();
+      if (Array.isArray(window.currentEditRemovedGuests)) {
+        window.currentEditRemovedGuests = window.currentEditRemovedGuests.filter(e => String(e || '').trim().toLowerCase() !== cleanLower);
+      }
+      if (!window.currentEditGuests.find(g => String(g.email || '').trim().toLowerCase() === cleanLower)) {
+        window.currentEditGuests.push({ email: targetEmail.trim(), name: targetName !== targetEmail ? targetName : '', status: 'UNKNOWN' });
         renderEditGuestList();
       }
       input.value = '';
@@ -1742,7 +1777,14 @@ window.currentEditGuests = [];
    * @returns {void}
    */
   function removeGuestFromEditList(email) {
-    window.currentEditGuests = window.currentEditGuests.filter(g => g.email !== email);
+    const cleanLower = String(email || '').trim().toLowerCase();
+    if (cleanLower) {
+      if (!Array.isArray(window.currentEditRemovedGuests)) window.currentEditRemovedGuests = [];
+      if (!window.currentEditRemovedGuests.includes(cleanLower)) {
+        window.currentEditRemovedGuests.push(cleanLower);
+      }
+    }
+    window.currentEditGuests = window.currentEditGuests.filter(g => String(g.email || '').trim().toLowerCase() !== cleanLower);
     renderEditGuestList();
   }
 
@@ -1831,6 +1873,7 @@ window.currentEditGuests = [];
   const location = document.getElementById('eeLocation').value.trim();
   const description = document.getElementById('eeDescription').value.trim();
   const guests = window.currentEditGuests ? window.currentEditGuests.map(g => g.email) : [];
+  const removedGuests = Array.isArray(window.currentEditRemovedGuests) ? window.currentEditRemovedGuests.slice() : [];
 
   clearFieldError('eeTitle');
   clearFieldError('eeDate');
@@ -1857,7 +1900,8 @@ window.currentEditGuests = [];
     endTime: endTime,
     location: location,
     description: description,
-    guests: guests
+    guests: guests,
+    removedGuests: removedGuests
   };
 
   const submitBtn = document.getElementById('eeSubmitBtn');
@@ -1907,9 +1951,11 @@ window.currentEditGuests = [];
           }
         }
         
-        // カレンダーと今後の予定を即時更新
+        // カレンダーと今後の予定・キャッシュを即時更新
+        try { localStorage.setItem('fcb_cached_events', JSON.stringify(window.eventsData)); } catch (e) {}
         renderCalendar(window.calYear, window.calMonth);
         renderAgendaList();
+        updateUnansweredBadges();
 
         closeEventEditModal();
       } else {

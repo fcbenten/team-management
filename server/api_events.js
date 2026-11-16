@@ -382,6 +382,91 @@ function getCalendarEvents(memberMap) {
 }
 
 /**
+ * CalendarApp イベントのゲスト一覧から画面互換の出欠詳細・ゲスト配列を構築する
+ * @param {GoogleAppsScript.Calendar.CalendarEvent} event
+ * @param {Object} [memberMap]
+ * @returns {Object} { calendarAttended, attendeesDetail, googleGuests }
+ */
+function buildCalendarAppGuestSummary(event, memberMap) {
+  memberMap = memberMap || {};
+  const teamCalEmail = Config.CALENDAR_ID.toLowerCase();
+  const yesList = [];
+  const noList = [];
+  const maybeList = [];
+  const unansweredList = [];
+  const yesEmails = [];
+  const noEmails = [];
+  const maybeEmails = [];
+  const unansweredEmails = [];
+  const googleGuests = [];
+
+  if (!event) {
+    return {
+      calendarAttended: '',
+      attendeesDetail: {
+        yes: yesList, no: noList, maybe: maybeList, unanswered: unansweredList,
+        yesEmails: yesEmails, noEmails: noEmails, maybeEmails: maybeEmails, unansweredEmails: unansweredEmails
+      },
+      googleGuests: googleGuests
+    };
+  }
+
+  try {
+    const guestList = event.getGuestList(true) || [];
+    guestList.forEach(g => {
+      const email = String(g.getEmail() || '').trim().toLowerCase();
+      if (!email || email === teamCalEmail) return;
+
+      let mappedName = memberMap[email] || g.getName() || email;
+      if (mappedName === '私' || mappedName === 'me') {
+        mappedName = memberMap[email] || (email ? email.split('@')[0] : '');
+      }
+      if (!mappedName) return;
+
+      const gStatus = g.getGuestStatus();
+      let statusCode = 'UNKNOWN';
+      if (gStatus === CalendarApp.GuestStatus.YES) {
+        statusCode = 'YES';
+        if (!yesList.includes(mappedName)) yesList.push(mappedName);
+        if (!yesEmails.includes(email)) yesEmails.push(email);
+      } else if (gStatus === CalendarApp.GuestStatus.NO) {
+        statusCode = 'NO';
+        if (!noList.includes(mappedName)) noList.push(mappedName);
+        if (!noEmails.includes(email)) noEmails.push(email);
+      } else if (gStatus === CalendarApp.GuestStatus.MAYBE) {
+        statusCode = 'MAYBE';
+        if (!maybeList.includes(mappedName)) maybeList.push(mappedName);
+        if (!maybeEmails.includes(email)) maybeEmails.push(email);
+      } else {
+        if (!unansweredList.includes(mappedName)) unansweredList.push(mappedName);
+        if (!unansweredEmails.includes(email)) unansweredEmails.push(email);
+      }
+
+      if (!googleGuests.some(gg => gg.email === email)) {
+        googleGuests.push({ email: email, name: mappedName, status: statusCode });
+      }
+    });
+  } catch (guestErr) {
+    SystemLogger.error('buildCalendarAppGuestSummary error: ' + guestErr.toString());
+  }
+
+  return {
+    calendarAttended: yesList.join(', '),
+    attendeesDetail: {
+      yes: yesList,
+      no: noList,
+      maybe: maybeList,
+      unanswered: unansweredList,
+      yesEmails: yesEmails,
+      noEmails: noEmails,
+      maybeEmails: maybeEmails,
+      unansweredEmails: unansweredEmails
+    },
+    googleGuests: googleGuests
+  };
+}
+
+/**
  * Googleカレンダーのイベントを保存（新規作成・複製・編集）する
  * 
  * @param {Object} payload - イベント情報
@@ -482,13 +567,41 @@ function saveCalendarEvent(payload) {
 
     // ゲスト（参加者）の追加・削除の同期
     if (event) {
-      const existingGuests = event.getGuestList().map(g => g.getEmail());
-      const submittedGuests = guests.map(g => String(g).trim()).filter(g => g && g.includes('@'));
-      
-      // 追加すべきゲスト
-      const toAdd = submittedGuests.filter(g => !existingGuests.includes(g));
-      // 削除すべきゲスト
-      const toRemove = existingGuests.filter(g => !submittedGuests.includes(g));
+      const existingGuestsRaw = event.getGuestList().map(g => String(g.getEmail() || '').trim()).filter(Boolean);
+      const existingLowerMap = {};
+      existingGuestsRaw.forEach(em => {
+        existingLowerMap[em.toLowerCase()] = em;
+      });
+
+      const submittedMap = {};
+      guests.forEach(g => {
+        const trimmed = String(g || '').trim();
+        if (trimmed && trimmed.includes('@')) {
+          submittedMap[trimmed.toLowerCase()] = trimmed;
+        }
+      });
+
+      // 追加すべきゲスト（大文字小文字を無視して既存と照合）
+      const toAdd = Object.keys(submittedMap)
+        .filter(lowerEm => !existingLowerMap[lowerEm])
+        .map(lowerEm => submittedMap[lowerEm]);
+
+      // 削除すべきゲスト: 明示的に削除リスト (removedGuests) が送信された場合はその対象のみ削除し、
+      // クライアント側の古いキャッシュにより他ユーザーの招待を意図せず削除してしまう事故を防止する
+      const hasExplicitRemoved = Array.isArray(payload.removedGuests);
+      let toRemove = [];
+      if (hasExplicitRemoved) {
+        const removedLowerSet = new Set(
+          payload.removedGuests.map(g => String(g || '').trim().toLowerCase()).filter(Boolean)
+        );
+        toRemove = Object.keys(existingLowerMap)
+          .filter(lowerEm => removedLowerSet.has(lowerEm) && !submittedMap[lowerEm])
+          .map(lowerEm => existingLowerMap[lowerEm]);
+      } else {
+        toRemove = Object.keys(existingLowerMap)
+          .filter(lowerEm => !submittedMap[lowerEm])
+          .map(lowerEm => existingLowerMap[lowerEm]);
+      }
 
       toAdd.forEach(em => {
         try {
@@ -497,7 +610,7 @@ function saveCalendarEvent(payload) {
           SystemLogger.error('Guest add error (' + em + '): ' + gErr.toString());
         }
       });
-      
+
       toRemove.forEach(em => {
         try {
           event.removeGuest(em);
@@ -531,11 +644,8 @@ function saveCalendarEvent(payload) {
       category = 'イベント';
     }
 
-    const returnGuests = (event ? event.getGuestList() : []).map(g => ({
-      email: g.getEmail(),
-      name: g.getName() || '',
-      status: String(g.getGuestStatus())
-    }));
+    const memberMap = GasSupabaseService.getMemberMap();
+    const guestSummary = buildCalendarAppGuestSummary(event, memberMap);
 
     const eventResult = {
       id: event ? event.getId() : (eventId || ''),
@@ -550,9 +660,9 @@ function saveCalendarEvent(payload) {
       category: category,
       isMatch: isMatch,
       opponent: opponent,
-      calendarAttended: '',
-      attendeesDetail: { yes: [], no: [], maybe: [] },
-      googleGuests: returnGuests,
+      calendarAttended: guestSummary.calendarAttended,
+      attendeesDetail: guestSummary.attendeesDetail,
+      googleGuests: guestSummary.googleGuests,
       isRegistered: false
     };
 

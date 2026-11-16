@@ -645,8 +645,8 @@ def run_generate():
          "名簿一致または有効なメールアドレス形式かを検証。不正時は setFieldError('eeGuestInput', ...) を実行。",
          "addGuestToEditList()", "ゲスト入力検証"),
         ("予定保存ボタン", "クリック時",
-         "タイトル・日付のバリデーションを実行後、GAS API（apiSaveEvent）へPOST送信。書き込み失敗や通信エラー時は通知ダイアログ表示。",
-         "apiSaveEvent(data)", "スプシ＆カレンダー連動更新"),
+         "タイトル・日付のバリデーションを実行後、GAS API（saveCalendarEvent）へPOST送信。明示的に削除操作（×ボタン）されたゲストのみ除外して他出席者の招待を保持し、保存後も最新の出欠表示を維持する。書き込み失敗や通信エラー時は通知ダイアログ表示。",
+         "submitEventEditForm() / saveCalendarEvent(payload)", "カレンダー連動更新（安全差分削除）"),
         ("予定削除ボタン", "クリック時",
          "確認ダイアログ承諾後、GAS API（apiDeleteEvent）を実行。失敗時は通知ダイアログ表示。",
          "apiDeleteEvent(eventId)", "スプシ＆カレンダー物理削除")
