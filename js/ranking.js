@@ -88,15 +88,15 @@ function filterAndRenderRankings() {
   // 選択されたシーズンのカレンダー出欠データが未キャッシュなら非同期で先読み
   if (selectedSeason && (!window.calendarAttendanceCache || !window.calendarAttendanceCache[selectedSeason])) {
     window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.SupabaseService && typeof window.SupabaseService.getCalendarAttendance === 'function') {
+      window.SupabaseService.getCalendarAttendance(selectedSeason)
+        .then(res => {
           if (res) {
             window.calendarAttendanceCache[selectedSeason] = res;
             filterAndRenderRankings();
           }
         })
-        .apiGetCalendarAttendance(selectedSeason);
+        .catch(err => console.warn('getCalendarAttendance warning:', err));
     }
   }
   

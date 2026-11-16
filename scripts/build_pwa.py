@@ -13,83 +13,6 @@ print("=== Building FC Benten Static PWA (Pure CSS/JS Modular) ===")
 with open(html_index_path, "r", encoding="utf-8") as f:
     content = f.read()
 
-polyfill_code = """
-  <!-- =========================================
-       GAS Web API Bridge (google.script.run Polyfill)
-       ========================================= -->
-  <script>
-    (function() {
-      const GAS_ENDPOINT_URL = 'https://script.google.com/macros/s/AKfycbwhp8W6iNNXy8kdZsIsT4RyPb6B7s9e0Q-plumcst0ChfjG8ck3XJ6irlGlx0c_GpLS/exec';
-
-      function createProxy(successHandler, failureHandler, userObject) {
-        return new Proxy({}, {
-          get: function(target, prop) {
-            if (prop === 'withSuccessHandler') {
-              return function(handler) {
-                return createProxy(handler, failureHandler, userObject);
-              };
-            }
-            if (prop === 'withFailureHandler') {
-              return function(handler) {
-                return createProxy(successHandler, handler, userObject);
-              };
-            }
-            if (prop === 'withUserObject') {
-              return function(obj) {
-                return createProxy(successHandler, failureHandler, obj);
-              };
-            }
-
-            // Server function invocation via POST JSON
-            return function(...args) {
-              fetch(GAS_ENDPOINT_URL, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'text/plain;charset=utf-8'
-                },
-                body: JSON.stringify({
-                  functionName: prop,
-                  args: args
-                })
-              })
-              .then(function(res) {
-                if (!res.ok) {
-                  throw new Error('HTTP ' + res.status + ' ' + res.statusText);
-                }
-                return res.json();
-              })
-              .then(function(result) {
-                if (result && result.success) {
-                  if (typeof successHandler === 'function') {
-                    successHandler(result.data, userObject);
-                  }
-                } else {
-                  const err = new Error(result && result.error ? result.error : 'サーバー側でエラーが発生しました。');
-                  if (typeof failureHandler === 'function') {
-                    failureHandler(err, userObject);
-                  } else {
-                    console.error('GAS API Execution Error [' + prop + ']:', err);
-                  }
-                }
-              })
-              .catch(function(err) {
-                console.error('GAS Network/Parse Error [' + prop + ']:', err);
-                if (typeof failureHandler === 'function') {
-                  failureHandler(err, userObject);
-                }
-              });
-            };
-          }
-        });
-      }
-
-      window.google = window.google || {};
-      window.google.script = window.google.script || {};
-      window.google.script.run = createProxy(null, null, null);
-    })();
-  </script>
-"""
-
 pwa_meta_tags = """
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="./manifest.json">
@@ -125,7 +48,7 @@ sw_register_code = """
 
 head_pos = content.find("<head>")
 if head_pos != -1:
-    content = content[:head_pos + 6] + "\n" + pwa_meta_tags + "\n" + polyfill_code + content[head_pos + 6:]
+    content = content[:head_pos + 6] + "\n" + pwa_meta_tags + content[head_pos + 6:]
 
 body_close_pos = content.rfind("</body>")
 if body_close_pos != -1:

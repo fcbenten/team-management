@@ -194,29 +194,16 @@ function formatDisplayDateTimeWithDay(dateVal) {
 }
 
 /**
- * バックエンド（GAS）のAPIをPromiseでラップして呼び出す
- * @param {string} functionName - 呼び出すGASの関数名（例：'EventController.getEventsWithMatchData'）
+ * GASバックエンドの許可済みAPI（Google連携）をPromiseで呼び出す互換ラッパー
+ * @param {string} functionName - 呼び出す許可済みGAS関数名
  * @param {...any} args - 関数に渡す引数
  * @returns {Promise<any>}
  */
 function callBackendAPI(functionName, ...args) {
-  return new Promise((resolve, reject) => {
-    // google.script.run を使って動的に関数を呼び出す
-    let runner = google.script.run
-      .withSuccessHandler((result) => resolve(result))
-      .withFailureHandler((error) => reject(error));
-    
-    // ネストされた関数（例: "EventController.doSomething"）への対応は
-    // クライアント側の google.script.run ではドット記法を直接呼べない場合があります。
-    // そのため、バックエンド側にルーター関数を用意するか、
-    // GAS側は global 空間に展開した関数を直接呼ぶ形にする必要があります。
-    // 現状は既存のAPI関数（関数名）を直接呼び出します。
-    if (typeof runner[functionName] === 'function') {
-      runner[functionName](...args);
-    } else {
-      reject(new Error('Backend function not found: ' + functionName));
-    }
-  });
+  if (window.GasApi && typeof window.GasApi.call === 'function') {
+    return window.GasApi.call(functionName, ...args);
+  }
+  return Promise.reject(new Error('GasApi is not initialized: ' + functionName));
 }
 
 /**

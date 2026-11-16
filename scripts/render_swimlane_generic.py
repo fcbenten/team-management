@@ -1597,10 +1597,9 @@ SWIMLANE_SPECS = {
                     },
                     {
                         "t": {"badge": "画像保存", "title": "アバター画像選択（256x256圧縮送信）", "desc": "Canvasリサイズ後 Base64 画像アップロード"},
-                        "j": {"file": "js/main.js", "func": "handleAvatarUpload()", "desc": "GAS へ画像送信後 localStorage・ヘッダーアイコン即時反映"},
-                        "g": {"file": "server/api (GAS)", "func": "apiSaveProfileImage(name, base64)", "desc": "Google Drive へ画像保存 ＆ 公開URL発行", "bidir": True},
+                        "j": {"file": "js/main.js → supabase.js", "func": "SupabaseService.saveProfileImage(name, base64)", "desc": "Storage (member-avatars) 保存 ＆ members.avatar_url 直接更新"},
                         "targets": [
-                            {"type": "gas_db", "to": "d-gdrive", "label": "Drive画像保存", "bidir": True},
+                            {"type": "direct_db", "to": "d-members", "label": "Storage＆URL保存", "bidir": True},
                             {"type": "direct_cache", "to": "d-ls", "label": "URLセッション更新"}
                         ]
                     },
@@ -1640,8 +1639,7 @@ SWIMLANE_SPECS = {
         ],
         "lane4_nodes": [
             {"kind": "storage", "id": "d-ls", "badge": "Browser Storage", "title": "localStorage (fcb_auth_user)", "desc": "ユーザー情報参照・アバターURL更新・ログアウト時の消去", "anchor_rows": [0]},
-            {"kind": "ext", "id": "d-gdrive", "badge": "Google API / Drive", "title": "Google Drive ストレージ", "desc": "プロフィールアバター画像のアップロード保存先", "anchor_rows": [1]},
-            {"kind": "db", "id": "d-members", "logical": "メンバー名簿・通知設定", "physical": "members (avatar_url / notify_settings / password_hash)", "anchor_rows": [3, 4]}
+            {"kind": "db", "id": "d-members", "logical": "メンバー名簿・画像URL", "physical": "members / Storage: member-avatars", "anchor_rows": [1, 3, 4]}
         ],
         "lane5_nodes": [
             {"id": "o-scr01", "badge": "遷移先画面", "title": "SCR01 ログイン画面", "desc": "未ログイン状態へ復帰（#loginCard 表示）", "anchor_rows": [5]}

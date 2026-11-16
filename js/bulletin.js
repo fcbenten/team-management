@@ -126,7 +126,7 @@ function applyBulletinPayload(res) {
 }
 
 /**
- * 活動記録データをGASバックエンドから取得
+ * 活動記録データをSupabaseから取得
  * @param {boolean} [silent=false]
  */
 function loadBulletinData(silent = false) {
@@ -142,13 +142,9 @@ function loadBulletinData(silent = false) {
     mainContent.classList.add('hidden');
   }
 
-  const currentUser = window.currentUser || {};
-  const currentId = currentUser.memberId || currentUser.id || '';
-  const currentName = currentUser.name || '';
-
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinData === 'function') {
+    window.SupabaseService.getBulletinData()
+      .then(res => {
         window.bulletinState.isLoading = false;
         if (placeholder && mainContent) {
           placeholder.classList.add('hidden');
@@ -162,7 +158,7 @@ function loadBulletinData(silent = false) {
           renderBulletinEmptyState('データの取得に失敗しました。');
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         window.bulletinState.isLoading = false;
         if (placeholder && mainContent) {
           placeholder.classList.add('hidden');
@@ -170,8 +166,7 @@ function loadBulletinData(silent = false) {
         }
         console.error('loadBulletinData error:', err);
         renderBulletinEmptyState('通信エラーが発生しました。');
-      })
-      .apiGetBulletinData(currentId, currentName);
+      });
   } else {
     // モック（オフライン・開発時）
     window.bulletinState.isLoading = false;
@@ -643,32 +638,31 @@ function handleBulletinPostSubmit(e) {
     }
   };
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.saveBulletinPost === 'function') {
+    window.SupabaseService.saveBulletinPost(payload)
+      .then(res => {
         enableForm();
         if (res && res.success) {
           closeBulletinEditModalForce();
           loadBulletinData(true);
         } else {
           if (statusEl) {
-            console.error('apiSaveBulletinPost error:', res);
+            console.error('saveBulletinPost error:', res);
             statusEl.textContent = getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         enableForm();
         if (statusEl) {
-          console.error('apiSaveBulletinPost failure:', err);
+          console.error('saveBulletinPost failure:', err);
           statusEl.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusEl.className = 'form-status-msg form-status-error mb-12';
           statusEl.classList.remove('hidden');
         }
-      })
-      .apiSaveBulletinPost(payload);
+      });
   } else {
     enableForm();
     closeBulletinEditModalForce();
@@ -1013,14 +1007,12 @@ function markPostAsReadIfUnread(post) {
     `;
   }
 
-  // 2. GASバックエンドへ非同期送信（UIの待機ゼロ）
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {})
-      .withFailureHandler(err => {
-        console.warn('apiMarkBulletinPostRead error:', err);
-      })
-      .apiMarkBulletinPostRead(post.id, myId, myName);
+  // 2. Supabaseへ非同期送信（UIの待機ゼロ）
+  if (window.SupabaseService && typeof window.SupabaseService.markBulletinAsRead === 'function') {
+    window.SupabaseService.markBulletinAsRead(post.id, myId, myName)
+      .catch(err => {
+        console.warn('markBulletinAsRead error:', err);
+      });
   }
 }
 
@@ -1065,9 +1057,9 @@ function loadBulletinPostReaders(postId) {
   if (containerYes) containerYes.innerHTML = '<div class="text-xs text-muted p-4">読み込み中...</div>';
   if (containerNo) containerNo.innerHTML = '<div class="text-xs text-muted p-4">読み込み中...</div>';
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinPostReaders === 'function') {
+    window.SupabaseService.getBulletinPostReaders(postId)
+      .then(res => {
         if (res && res.success) {
           window.bulletinState.readersData = res;
           renderReadersChips();
@@ -1076,11 +1068,10 @@ function loadBulletinPostReaders(postId) {
           if (containerNo) containerNo.textContent = '一覧の取得に失敗しました。';
         }
       })
-      .withFailureHandler(err => {
+      .catch(() => {
         if (containerYes) containerYes.textContent = '通信エラーが発生しました。';
         if (containerNo) containerNo.textContent = '通信エラーが発生しました。';
-      })
-      .apiGetBulletinPostReaders(postId);
+      });
   } else {
     renderReadersChips();
   }
@@ -1165,19 +1156,18 @@ function loadBulletinComments(postId) {
 
   container.innerHTML = '<div class="comments-loading text-xs text-muted py-8 text-center">コメントを読み込み中...</div>';
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.getBulletinComments === 'function') {
+    window.SupabaseService.getBulletinComments(postId)
+      .then(res => {
         if (res && res.success) {
           renderBulletinComments(res.comments || []);
         } else {
           container.innerHTML = '<div class="text-xs text-muted py-8 text-center">コメントの取得に失敗しました</div>';
         }
       })
-      .withFailureHandler(err => {
+      .catch(() => {
         container.innerHTML = '<div class="text-xs text-muted py-8 text-center">通信エラーが発生しました</div>';
-      })
-      .apiGetBulletinComments(postId);
+      });
   } else {
     // モック
     renderBulletinComments([]);
@@ -1313,9 +1303,9 @@ function handleSubmitBulletinComment() {
     }
   };
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.addBulletinComment === 'function') {
+    window.SupabaseService.addBulletinComment(current.id, content, myId, myName)
+      .then(res => {
         enableBtn();
         if (res && res.success && res.comment) {
           inputEl.value = '';
@@ -1327,23 +1317,22 @@ function handleSubmitBulletinComment() {
           renderBulletinComments(current.comments);
         } else {
           if (statusMsg) {
-            console.error('apiAddBulletinComment error:', res);
+            console.error('addBulletinComment error:', res);
             statusMsg.textContent = getSafeErrorMessage(res, '送信に失敗しました。しばらく経ってから再度お試しください。');
             statusMsg.className = 'comment-status-msg error';
             statusMsg.classList.remove('hidden');
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         enableBtn();
         if (statusMsg) {
-          console.error('apiAddBulletinComment failure:', err);
+          console.error('addBulletinComment failure:', err);
           statusMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           statusMsg.className = 'comment-status-msg error';
           statusMsg.classList.remove('hidden');
         }
-      })
-      .apiAddBulletinComment(current.id, content, myId, myName);
+      });
   } else {
     enableBtn();
     inputEl.value = '';
@@ -1369,17 +1358,16 @@ function handleDeleteBulletinComment(commentId) {
     renderBulletinComments(current.comments);
   }
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  if (window.SupabaseService && typeof window.SupabaseService.deleteBulletinComment === 'function') {
+    window.SupabaseService.deleteBulletinComment(commentId, actorName)
+      .then(res => {
         if (!res || !res.success) {
           console.error('コメント削除の同期に失敗しました:', res ? res.error : '');
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         console.error('通信エラーが発生しました:', err);
-      })
-      .apiDeleteBulletinComment(commentId, actorName);
+      });
   }
 }
 
@@ -1433,12 +1421,9 @@ function handleBdmTogglePinCheckbox(isChecked) {
   renderBulletinTimeline();
   renderHomePinnedAnnouncements();
 
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
-        // バックエンド保存成功（画面は0秒同期済みのため不要なリロード・チラつきは行わない）
-      })
-      .withFailureHandler(err => {
+  if (window.SupabaseService && typeof window.SupabaseService.togglePinBulletinPost === 'function') {
+    window.SupabaseService.togglePinBulletinPost(current.id, nextPinned)
+      .catch(err => {
         console.error('ピン留め保存エラー:', err);
         // エラー時はロールバック
         if (target) {
@@ -1454,8 +1439,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
         sortBulletinPosts(allPosts);
         renderBulletinTimeline();
         renderHomePinnedAnnouncements();
-      })
-      .apiTogglePinBulletinPost(current.id, nextPinned);
+      });
   }
 }
 
@@ -1507,24 +1491,23 @@ async function deleteBulletinPostById(postId, postTitle) {
     renderHomeRecentBulletins();
   }
 
-  // 2. バックエンドへ送信
-  if (typeof google !== 'undefined' && google.script && google.script.run) {
-    google.script.run
-      .withSuccessHandler(res => {
+  // 2. Supabaseへ送信
+  if (window.SupabaseService && typeof window.SupabaseService.deleteBulletinPost === 'function') {
+    window.SupabaseService.deleteBulletinPost(postId)
+      .then(res => {
         if (res && res.success) {
           loadBulletinData(true);
         } else {
-          console.error('apiDeleteBulletinPost error:', res);
+          console.error('deleteBulletinPost error:', res);
           showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '投稿の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
           loadBulletinData(true);
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiDeleteBulletinPost failure:', err);
+      .catch(err => {
+        console.error('deleteBulletinPost failure:', err);
         showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
         loadBulletinData(true);
-      })
-      .apiDeleteBulletinPost(postId, actorName);
+      });
   } else {
     showAppAlert({ title: 'モック環境', message: '投稿を削除しました。' });
   }

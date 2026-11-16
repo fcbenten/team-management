@@ -132,8 +132,8 @@ function initMembersView(initialRoster) {
     }
   }
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.getAdminMemberList()
+    .then(res => {
       if (res && res.success && Array.isArray(res.roster)) {
         window.adminMemberList = res.roster;
         renderMembersList(window.adminMemberList);
@@ -142,23 +142,22 @@ function initMembersView(initialRoster) {
           container.replaceChildren();
           const errBox = document.createElement('div');
           errBox.className = 'card-box error-box text-center p-20';
-          console.error('apiGetMemberListForAdmin error:', res);
+          console.error('getAdminMemberList error:', res);
           errBox.textContent = getSafeErrorMessage(res, 'メンバー情報の取得に失敗しました。しばらく経ってから再度お試しください。');
           container.appendChild(errBox);
         }
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (container) {
         container.replaceChildren();
         const errBox = document.createElement('div');
         errBox.className = 'card-box error-box text-center p-20';
-        console.error('apiGetMemberListForAdmin failure:', err);
+        console.error('getAdminMemberList failure:', err);
         errBox.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
         container.appendChild(errBox);
       }
-    })
-    .apiGetMemberListForAdmin(actorEmail, actorName);
+    });
 }
 
 /**
@@ -1226,8 +1225,8 @@ function handleSaveMemberSubmit(e) {
   // ボタン自体が「更新中...」/「追加中...」に変化するため、ボタン上部のスピナー・ステータス表示は不要
   setMemberFormStatus('', '');
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.saveMember(payload, actorEmail, actorName)
+    .then(res => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
@@ -1256,20 +1255,19 @@ function handleSaveMemberSubmit(e) {
           setMemberFormStatus('', '');
           document.getElementById('memberEditEmail')?.focus();
         } else {
-          console.error('apiSaveMember error:', res);
+          console.error('saveMember error:', res);
           setMemberFormStatus(getSafeErrorMessage(res, '保存処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = origBtnText;
       }
-      console.error('apiSaveMember failure:', err);
+      console.error('saveMember failure:', err);
       setMemberFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-    })
-    .apiSaveMember(payload, actorEmail, actorName);
+    });
 }
 
 let currentGuidanceEmail = '';
@@ -1373,9 +1371,9 @@ async function handleRestoreMember(memberName) {
   const actorEmail = u.email || '';
   const actorName = u.name || '';
 
-  // Supabase Direct (バイパス経由で即時更新 0.1s)
-  google.script.run
-    .withSuccessHandler(res => {
+  // Supabase Direct (0.1s)
+  window.SupabaseService.saveMember(payload, actorEmail, actorName)
+    .then(res => {
       if (res && res.success) {
         if (res.roster) {
           if (typeof syncUpdatedMemberList === 'function') {
@@ -1394,11 +1392,10 @@ async function handleRestoreMember(memberName) {
         showAppAlert({ title: '復帰エラー', message: getSafeErrorMessage(res, '復帰処理に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       console.error('handleRestoreMember failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiSaveMember(payload, actorEmail, actorName);
+    });
 }
 
 /**
@@ -1493,8 +1490,8 @@ function executeMemberDeletePermanently() {
 
   setDeleteFormStatus('登録の削除を実行中...', 'loading');
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.SupabaseService.deleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName)
+    .then(res => {
       if (deleteBtn) deleteBtn.disabled = false;
 
       if (res && res.success) {
@@ -1518,16 +1515,15 @@ function executeMemberDeletePermanently() {
           window.currentEditingMember = null;
         }, 500);
       } else {
-        console.error('apiDeleteMemberPermanently error:', res);
+        console.error('deleteMemberPermanently error:', res);
         setDeleteFormStatus(getSafeErrorMessage(res, '削除処理に失敗しました。しばらく経ってから再度お試しください。'), 'error');
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (deleteBtn) deleteBtn.disabled = false;
-      console.error('apiDeleteMemberPermanently failure:', err);
+      console.error('deleteMemberPermanently failure:', err);
       setDeleteFormStatus(getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-    })
-    .apiDeleteMemberPermanently({ memberId: member.memberId || member.id, name: member.name, email: member.email }, actorEmail, actorName);
+    });
 }
 
 /**

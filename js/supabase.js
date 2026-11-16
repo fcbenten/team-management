@@ -128,29 +128,175 @@
           console.log(`⚡ [CalendarBackground] Successfully refreshed ${res.events.length} events in background.`);
         }
 
-        // バックグラウンドでカレンダー出欠バッチ集計（GAS）も非同期取得
-        fetch(GAS_ENDPOINT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            functionName: 'apiGetCalendarAttendance',
-            args: [String(new Date().getFullYear())]
-          })
-        }).then(r => r.json()).then(calRes => {
-          if (calRes && calRes.success && calRes.data) {
-            try { localStorage.setItem('fcb_cached_cal_attendance', JSON.stringify(calRes.data)); } catch (e) { }
+        // バックグラウンドでカレンダー出欠統計を最新化（Supabase View）
+        try {
+          const calData = await SupabaseService.getCalendarAttendance(String(new Date().getFullYear()));
+          if (calData) {
+            try { localStorage.setItem('fcb_cached_cal_attendance', JSON.stringify(calData)); } catch (e) { }
             window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-            window.calendarAttendanceCache[calRes.data.year || String(new Date().getFullYear())] = calRes.data;
-            window.calendarAttendanceData = calRes.data;
+            window.calendarAttendanceCache[calData.year || String(new Date().getFullYear())] = calData;
+            window.calendarAttendanceData = calData;
             if (typeof filterAndRenderRankings === 'function') {
               filterAndRenderRankings();
             }
           }
-        }).catch(e => console.warn('[CalendarBackground] Attendance fetch warning:', e));
+        } catch (e) {
+          console.warn('[CalendarBackground] Attendance fetch warning:', e);
+        }
 
       } catch (e) {
         console.warn('[CalendarBackground] Error in background fetch:', e);
       }
+    }
+
+    /**
+     * 試合一覧・シーズン配列を構築する共通ヘルパー
+     */
+    function buildMatchesHistoryPayload(rawMatches, rawScoreLogs, idToMember) {
+      const logMap = {};
+      (rawScoreLogs || []).forEach(l => {
+        if (!logMap[l.match_id]) logMap[l.match_id] = [];
+        const pMem = idToMember[l.member_id];
+        const aMem = idToMember[l.assist_member_id];
+        logMap[l.match_id].push({
+          logId: l.log_id,
+          period: l.period || '',
+          min: l.minute || 0,
+          type: l.log_type,
+          player: pMem ? pMem.name : '不明',
+          memberId: l.member_id,
+          assist: aMem ? aMem.name : (l.assist_member_id ? '不明' : ''),
+          assistMemberId: l.assist_member_id
+        });
+      });
+
+      const seasonSet = new Set();
+      const matches = (rawMatches || []).map(m => {
+        const dateStr = normalizeDateStr(m.match_date);
+        const matchYear = dateStr.match(/^(\d{4})/);
+        const yearStr = matchYear ? matchYear[1] : '';
+        if (yearStr) seasonSet.add(yearStr);
+
+        const mLogs = logMap[m.match_id] || [];
+        const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
+        mLogs.forEach(l => {
+          if (l.type === '得点') {
+            if (l.period === '前半') halfScores.my1st++;
+            else if (l.period === '後半') halfScores.my2nd++;
+            else if (l.period === '延長') halfScores.myExt++;
+          } else if (l.type === '相手得点') {
+            if (l.period === '前半') halfScores.opp1st++;
+            else if (l.period === '後半') halfScores.opp2nd++;
+            else if (l.period === '延長') halfScores.oppExt++;
+          }
+        });
+
+        const momMem = idToMember[m.mom_member_id];
+        return {
+          matchId: m.match_id,
+          date: dateStr,
+          year: yearStr,
+          category: m.category || 'TRM',
+          opponent: m.opponent || '未設定',
+          myScore: m.my_score || 0,
+          oppScore: m.opp_score || 0,
+          result: m.result || '引き分け',
+          attended: m.attended_players || '',
+          location: m.location || '',
+          mom: momMem ? momMem.name : (m.mom_member_id ? '不明' : 'なし'),
+          momMemberId: m.mom_member_id,
+          halfScores: halfScores,
+          logs: mLogs
+        };
+      });
+
+      const seasons = Array.from(seasonSet).sort((a, b) => b - a);
+      return { matches: matches, seasons: seasons };
+    }
+
+    /**
+     * カレンダー出欠集計オブジェクトを構築する共通ヘルパー
+     */
+    function buildCalendarAttendancePayload(roster, rawAttStats, rawAttendance, seasonYear) {
+      const targetYear = String(seasonYear || new Date().getFullYear());
+      const currentYearStr = String(new Date().getFullYear());
+      const calPlayers = {};
+      const emptyCat = () => ({ invited: 0, attended: 0, rate: 0 });
+      const ensurePlayer = (name) => {
+        if (!calPlayers[name]) {
+          calPlayers[name] = {
+            name: name,
+            all: emptyCat(),
+            '公式戦': emptyCat(),
+            'TRM': emptyCat(),
+            'TR': emptyCat(),
+            'その他': emptyCat()
+          };
+        }
+        return calPlayers[name];
+      };
+
+      (roster || []).forEach(m => { if (m && m.name) ensurePlayer(m.name); });
+
+      const seasonAttRows = (rawAttendance || []).filter(a => {
+        const y = String(a.event_date || '').replace(/-/g, '/').slice(0, 4);
+        return y === targetYear;
+      });
+
+      if (targetYear !== currentYearStr || !Array.isArray(rawAttStats)) {
+        const idToName = {};
+        (roster || []).forEach(m => { if (m && (m.memberId || m.id)) idToName[m.memberId || m.id] = m.name; });
+        const classifyTitle = (title) => {
+          const t = String(title || '');
+          if (t.includes('公式') || t.includes('リーグ') || t.includes('大会')) return '公式戦';
+          if (t.toUpperCase().includes('TRM') || t.includes('練習試合')) return 'TRM';
+          if (t.toUpperCase().includes('TR') || t.includes('練習')) return 'TR';
+          return 'その他';
+        };
+        seasonAttRows.forEach(a => {
+          const pName = idToName[a.member_id];
+          if (!pName) return;
+          const p = ensurePlayer(pName);
+          const cat = classifyTitle(a.event_title);
+          p.all.invited++;
+          p[cat].invited++;
+          if (String(a.status || '').toLowerCase() === 'yes') {
+            p.all.attended++;
+            p[cat].attended++;
+          }
+        });
+        Object.values(calPlayers).forEach(p => {
+          ['all', '公式戦', 'TRM', 'TR', 'その他'].forEach(k => {
+            p[k].rate = p[k].invited > 0 ? Math.round((p[k].attended / p[k].invited) * 100) : 0;
+          });
+        });
+      } else {
+        (rawAttStats || []).forEach(st => {
+          const mName = st.member_name;
+          if (!mName) return;
+          const p = ensurePlayer(mName);
+          const tot = Number(st.total_events || 0);
+          const att = Number(st.attended_events || 0);
+          p.all = { invited: tot, attended: att, rate: tot > 0 ? Math.round((att / tot) * 100) : 0 };
+          const pairs = [
+            ['公式戦', 'invited_official', 'attended_official'],
+            ['TRM', 'invited_trm', 'attended_trm'],
+            ['TR', 'invited_tr', 'attended_tr'],
+            ['その他', 'invited_other', 'attended_other']
+          ];
+          pairs.forEach(([key, invCol, attCol]) => {
+            const inv = Number(st[invCol] || 0);
+            const atc = Number(st[attCol] || 0);
+            p[key] = { invited: inv, attended: atc, rate: inv > 0 ? Math.round((atc / inv) * 100) : 0 };
+          });
+        });
+      }
+
+      return {
+        year: targetYear,
+        updatedAt: new Date().toISOString(),
+        players: calPlayers
+      };
     }
 
     /**
@@ -352,67 +498,8 @@
         // 試合記録 & 得点詳細の組み立て
         const rawMatches = resMatches.data || [];
         const rawScoreLogs = resScoreLogs.data || [];
-
-        // ログ辞書
-        const logMap = {};
-        rawScoreLogs.forEach(l => {
-          if (!logMap[l.match_id]) logMap[l.match_id] = [];
-          const pMem = idToMember[l.member_id];
-          const aMem = idToMember[l.assist_member_id];
-          logMap[l.match_id].push({
-            logId: l.log_id,
-            period: l.period || '',
-            min: l.minute || 0,
-            type: l.log_type,
-            player: pMem ? pMem.name : '不明',
-            memberId: l.member_id,
-            assist: aMem ? aMem.name : (l.assist_member_id ? '不明' : ''),
-            assistMemberId: l.assist_member_id
-          });
-        });
-
-        const seasonSet = new Set();
-        const matches = rawMatches.map(m => {
-          const dateStr = normalizeDateStr(m.match_date);
-          const matchYear = dateStr.match(/^(\d{4})/);
-          const yearStr = matchYear ? matchYear[1] : '';
-          if (yearStr) seasonSet.add(yearStr);
-
-          const mLogs = logMap[m.match_id] || [];
-          const halfScores = { my1st: 0, opp1st: 0, my2nd: 0, opp2nd: 0, myExt: 0, oppExt: 0 };
-          mLogs.forEach(l => {
-            if (l.type === '得点') {
-              if (l.period === '前半') halfScores.my1st++;
-              else if (l.period === '後半') halfScores.my2nd++;
-              else if (l.period === '延長') halfScores.myExt++;
-            } else if (l.type === '相手得点') {
-              if (l.period === '前半') halfScores.opp1st++;
-              else if (l.period === '後半') halfScores.opp2nd++;
-              else if (l.period === '延長') halfScores.oppExt++;
-            }
-          });
-
-          const momMem = idToMember[m.mom_member_id];
-          return {
-            matchId: m.match_id,
-            date: dateStr,
-            year: yearStr,
-            category: m.category || 'TRM',
-            opponent: m.opponent || '未設定',
-            myScore: m.my_score || 0,
-            oppScore: m.opp_score || 0,
-            result: m.result || '引き分け',
-            attended: m.attended_players || '',
-            location: m.location || '',
-            mom: momMem ? momMem.name : (m.mom_member_id ? '不明' : 'なし'),
-            momMemberId: m.mom_member_id,
-            halfScores: halfScores,
-            logs: mLogs
-          };
-        });
-
-        const seasons = Array.from(seasonSet).sort((a, b) => b - a);
-        const history = { matches: matches, seasons: seasons };
+        const history = buildMatchesHistoryPayload(rawMatches, rawScoreLogs, idToMember);
+        const matches = history.matches;
 
         // スタッツ計算 (現役部員のみ対象・OB/特殊枠は完全除外)
         const pastMemberNames = new Set(
@@ -549,74 +636,12 @@
 
         // 8. Supabase 集計ビュー (view_player_attendance_stats) からカレンダー出欠オブジェクトをリアルタイム構築 (0ms)
         const currentYearStr = new Date().getFullYear().toString();
-        const calPlayers = {};
-        roster.forEach(m => {
-          calPlayers[m.name] = {
-            name: m.name,
-            all: { invited: 0, attended: 0, rate: 0 },
-            '公式戦': { invited: 0, attended: 0, rate: 0 },
-            'TRM': { invited: 0, attended: 0, rate: 0 },
-            'TR': { invited: 0, attended: 0, rate: 0 },
-            'その他': { invited: 0, attended: 0, rate: 0 }
-          };
-        });
-
-        // Supabase view_player_attendance_stats の結果をリアルタイム反映 (深夜バッチ完全不要)
-        (resAttStats.data || []).forEach(st => {
-          const mName = st.member_name;
-          if (!mName) return;
-          if (!calPlayers[mName]) {
-            calPlayers[mName] = {
-              name: mName,
-              all: { invited: 0, attended: 0, rate: 0 },
-              '公式戦': { invited: 0, attended: 0, rate: 0 },
-              'TRM': { invited: 0, attended: 0, rate: 0 },
-              'TR': { invited: 0, attended: 0, rate: 0 },
-              'その他': { invited: 0, attended: 0, rate: 0 }
-            };
-          }
-          const tot = Number(st.total_events || 0);
-          const att = Number(st.attended_events || 0);
-          calPlayers[mName].all = {
-            invited: tot,
-            attended: att,
-            rate: tot > 0 ? Math.round((att / tot) * 100) : 0
-          };
-          const offInv = Number(st.invited_official || 0);
-          const offAtt = Number(st.attended_official || 0);
-          calPlayers[mName]['公式戦'] = {
-            invited: offInv,
-            attended: offAtt,
-            rate: offInv > 0 ? Math.round((offAtt / offInv) * 100) : 0
-          };
-          const trmInv = Number(st.invited_trm || 0);
-          const trmAtt = Number(st.attended_trm || 0);
-          calPlayers[mName]['TRM'] = {
-            invited: trmInv,
-            attended: trmAtt,
-            rate: trmInv > 0 ? Math.round((trmAtt / trmInv) * 100) : 0
-          };
-          const trInv = Number(st.invited_tr || 0);
-          const trAtt = Number(st.attended_tr || 0);
-          calPlayers[mName]['TR'] = {
-            invited: trInv,
-            attended: trAtt,
-            rate: trInv > 0 ? Math.round((trAtt / trInv) * 100) : 0
-          };
-          const othInv = Number(st.invited_other || 0);
-          const othAtt = Number(st.attended_other || 0);
-          calPlayers[mName]['その他'] = {
-            invited: othInv,
-            attended: othAtt,
-            rate: othInv > 0 ? Math.round((othAtt / othInv) * 100) : 0
-          };
-        });
-
-        const calendarAttendancePayload = {
-          year: currentYearStr,
-          updatedAt: new Date().toISOString(),
-          players: calPlayers
-        };
+        const calendarAttendancePayload = buildCalendarAttendancePayload(
+          roster,
+          resAttStats.data || [],
+          resAttendance.data || [],
+          currentYearStr
+        );
         window.calendarAttendanceCache = window.calendarAttendanceCache || {};
         window.calendarAttendanceCache[currentYearStr] = calendarAttendancePayload;
         window.calendarAttendanceData = calendarAttendancePayload;
@@ -1223,6 +1248,128 @@
           .map(m => ({ memberId: m.member_id, memberName: m.name }));
 
         return { success: true, readers: readers, unreadMembers: unreadMembers };
+      },
+
+      /**
+       * 試合結果一覧の再取得 (0.1s Direct)
+       */
+      async getMatchHistoryData() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resMembers, resMatches, resScoreLogs] = await Promise.all([
+          sb.from('members').select('member_id, name'),
+          sb.from('matches').select('*').order('match_date', { ascending: false }),
+          sb.from('score_logs').select('*')
+        ]);
+        if (resMatches.error) throw resMatches.error;
+        if (resScoreLogs.error) throw resScoreLogs.error;
+
+        const idToMember = {};
+        (resMembers.data || []).forEach(m => {
+          idToMember[m.member_id] = { memberId: m.member_id, id: m.member_id, name: m.name };
+        });
+
+        const history = buildMatchesHistoryPayload(resMatches.data || [], resScoreLogs.data || [], idToMember);
+        return { matches: history.matches, seasons: history.seasons, error: null };
+      },
+
+      /**
+       * シーズン別カレンダー出欠集計の取得 (0.1s Direct)
+       */
+      async getCalendarAttendance(season) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const [resMembers, resAttStats, resAttendance] = await Promise.all([
+          sb.from('members').select('member_id, name, is_past, member_type').eq('is_past', false),
+          sb.from('view_player_attendance_stats').select('*'),
+          sb.from('attendance').select('member_id, event_date, event_title, status')
+        ]);
+        if (resMembers.error) throw resMembers.error;
+
+        const roster = (resMembers.data || [])
+          .filter(m => m.member_type !== 'SPECIAL')
+          .map(m => ({ memberId: m.member_id, id: m.member_id, name: m.name }));
+
+        return buildCalendarAttendancePayload(
+          roster,
+          resAttStats.data || [],
+          resAttendance.data || [],
+          season || String(new Date().getFullYear())
+        );
+      },
+
+      /**
+       * 部員ポジションマップの取得 (0.1s Direct)
+       */
+      async getPlayerPositions() {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+
+        const { data, error } = await sb.from('members').select('name, position').eq('is_past', false);
+        if (error) throw error;
+
+        const posMap = {};
+        (data || []).forEach(m => {
+          if (m.name && m.position) posMap[m.name] = m.position;
+        });
+        return posMap;
+      },
+
+      /**
+       * プロフィール写真の保存 (Supabase Storage member-avatars + members.avatar_url 更新)
+       */
+      async saveProfileImage(userName, base64Data) {
+        const sb = getClient();
+        if (!sb) throw new Error('Supabase クライアントが利用できません。');
+        if (!base64Data) throw new Error('画像データが指定されていません。');
+
+        const u = window.currentUser || {};
+        const targetName = (userName || u.name || '').trim();
+        const targetEmail = (u.email || '').trim().toLowerCase();
+        let memberId = (u.memberId || u.id || '').trim();
+
+        if (!memberId) {
+          let findQ = sb.from('members').select('member_id');
+          if (targetEmail) findQ = findQ.eq('email', targetEmail);
+          else if (targetName) findQ = findQ.eq('name', targetName);
+          else throw new Error('対象ユーザーを特定できません。');
+          const { data: foundRows, error: findErr } = await findQ.limit(1);
+          if (findErr) throw findErr;
+          memberId = foundRows && foundRows[0] ? foundRows[0].member_id : '';
+        }
+        if (!memberId) throw new Error('メンバーIDを取得できませんでした。');
+
+        const match = String(base64Data).match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+        const mimeType = match ? match[1] : 'image/jpeg';
+        const rawBase64 = match ? match[2] : String(base64Data);
+        const binaryStr = atob(rawBase64);
+        const bytes = new Uint8Array(binaryStr.length);
+        for (let i = 0; i < binaryStr.length; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const ext = mimeType === 'image/png' ? 'png' : 'jpg';
+        const filePath = `${memberId}.${ext}`;
+
+        const { error: uploadErr } = await sb.storage
+          .from('member-avatars')
+          .upload(filePath, new Blob([bytes], { type: mimeType }), { contentType: mimeType, upsert: true });
+        if (uploadErr) throw uploadErr;
+
+        const { data: pubData } = sb.storage.from('member-avatars').getPublicUrl(filePath);
+        const basePublicUrl = (pubData && pubData.publicUrl)
+          ? pubData.publicUrl
+          : `${SUPABASE_URL}/storage/v1/object/public/member-avatars/${filePath}`;
+        const avatarUrl = `${basePublicUrl}?t=${Date.now()}`;
+
+        const { error: updateErr } = await sb
+          .from('members')
+          .update({ avatar_url: avatarUrl, updated_at: new Date().toISOString() })
+          .eq('member_id', memberId);
+        if (updateErr) throw updateErr;
+
+        return { success: true, avatarUrl: avatarUrl };
       },
 
       /**
@@ -2216,287 +2363,41 @@
     window.SupabaseService = SupabaseService;
 
     // =========================================
-    // 4. google.script.run の透過的バイパスプロキシ
+    // 4. Google サービス専用 GAS API クライアント
     // =========================================
-    // 既存のフロントエンド呼び出しコードを変更することなく、
-    // Supabase で即時実行できる関数を自動的にバイパスして爆速化 (0.3秒)
+    // Google カレンダー操作および Google OAuth 認証のみ GAS バックエンドへ送信する。
+    // DB・Storage 操作はすべて SupabaseService を直接呼び出す。
     // =========================================
-    function createSupabaseBypassProxy(successHandler, failureHandler, userObject) {
-      return new Proxy({}, {
-        get: function (target, prop) {
-          if (prop === 'withSuccessHandler') {
-            return function (h) { return createSupabaseBypassProxy(h, failureHandler, userObject); };
-          }
-          if (prop === 'withFailureHandler') {
-            return function (h) { return createSupabaseBypassProxy(successHandler, h, userObject); };
-          }
-          if (prop === 'withUserObject') {
-            return function (u) { return createSupabaseBypassProxy(successHandler, failureHandler, u); };
-          }
+    const ALLOWED_GAS_FUNCTIONS = new Set([
+      'saveCalendarEvent',
+      'deleteCalendarEvent',
+      'apiGetOAuthAuthUrl',
+      'apiExchangeOAuthCode'
+    ]);
 
-          return function (...args) {
-            // Supabase 直接処理へのルーティング
-            if (prop === 'getInitialData') {
-              console.log('⚡ [Bypass] getInitialData routed to Supabase Direct REST API (0.3s)');
-              SupabaseService.getInitialData(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'updateEventAttendance') {
-              console.log('⚡ [Bypass] updateEventAttendance routed to Supabase Direct UPSERT (0.1s)');
-              SupabaseService.updateEventAttendance(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'saveMatchData' || prop === 'saveScoreRecord') {
-              console.log('⚡ [Bypass] saveMatchData routed to Supabase Direct (0.2s)');
-              SupabaseService.saveScoreRecord(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinData') {
-              console.log('⚡ [Bypass] apiGetBulletinData routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinData()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveBulletinPost') {
-              console.log('⚡ [Bypass] apiSaveBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.saveBulletinPost(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiTogglePinBulletinPost') {
-              console.log('⚡ [Bypass] apiTogglePinBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.togglePinBulletinPost(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteBulletinPost') {
-              console.log('⚡ [Bypass] apiDeleteBulletinPost routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteBulletinPost(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiMarkAsRead' || prop === 'apiMarkBulletinPostRead') {
-              console.log('⚡ [Bypass] markBulletinAsRead routed to Supabase Direct (0.1s)');
-              SupabaseService.markBulletinAsRead(args[0], args[1], args[2]);
-              if (typeof successHandler === 'function') successHandler({ success: true }, userObject);
-              return;
-            }
-
-            if (prop === 'apiAddBulletinComment' || prop === 'apiSaveComment') {
-              console.log('⚡ [Bypass] apiAddBulletinComment routed to Supabase Direct (0.1s)');
-              const pId = args[0] && typeof args[0] === 'object' ? args[0].postId : args[0];
-              const cContent = args[0] && typeof args[0] === 'object' ? args[0].content : args[1];
-              const mId = args[0] && typeof args[0] === 'object' ? args[0].authorId : args[2];
-              const mName = args[3];
-              SupabaseService.addBulletinComment(pId, cContent, mId, mName)
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteBulletinComment') {
-              console.log('⚡ [Bypass] apiDeleteBulletinComment routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteBulletinComment(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinComments') {
-              console.log('⚡ [Bypass] apiGetBulletinComments routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinComments(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetBulletinPostReaders') {
-              console.log('⚡ [Bypass] apiGetBulletinPostReaders routed to Supabase Direct (0.1s)');
-              SupabaseService.getBulletinPostReaders(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteProfileImage') {
-              console.log('⚡ [Bypass] apiDeleteProfileImage routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteProfileImage(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetNotificationSettings') {
-              console.log('⚡ [Bypass] apiGetNotificationSettings routed to Supabase Direct (0.1s)');
-              SupabaseService.getNotificationSettings(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveNotificationSettings') {
-              console.log('⚡ [Bypass] apiSaveNotificationSettings routed to Supabase Direct (0.1s)');
-              SupabaseService.saveNotificationSettings(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'updateItemHolder') {
-              SupabaseService.updateItemHolder(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetEquipmentData') {
-              console.log('⚡ [Bypass] apiGetEquipmentData routed to Supabase Direct (0.1s)');
-              SupabaseService.getEquipmentData()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveEquipmentItem') {
-              console.log('⚡ [Bypass] apiSaveEquipmentItem routed to Supabase Direct (0.1s)');
-              SupabaseService.saveEquipmentItem(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteEquipmentItem') {
-              console.log('⚡ [Bypass] apiDeleteEquipmentItem routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteEquipmentItem(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiResolveEquipmentAlert') {
-              console.log('⚡ [Bypass] apiResolveEquipmentAlert routed to Supabase Direct (0.1s)');
-              SupabaseService.resolveEquipmentAlert(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetMemberListForAdmin') {
-              console.log('⚡ [Bypass] apiGetMemberListForAdmin routed to Supabase Direct (0.1s)');
-              SupabaseService.getAdminMemberList()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiSaveMember') {
-              console.log('⚡ [Bypass] apiSaveMember routed to Supabase Direct (0.1s)');
-              SupabaseService.saveMember(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteMember') {
-              console.log('⚡ [Bypass] apiDeleteMember routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteMember(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiDeleteMemberPermanently') {
-              console.log('⚡ [Bypass] apiDeleteMemberPermanently routed to Supabase Direct (0.1s)');
-              SupabaseService.deleteMemberPermanently(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiLoginUser') {
-              console.log('⚡ [Bypass] apiLoginUser routed to Supabase Direct (0.1s)');
-              SupabaseService.loginUser(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiChangePassword') {
-              console.log('⚡ [Bypass] apiChangePassword routed to Supabase Direct (0.1s)');
-              SupabaseService.changePassword(args[0], args[1], args[2])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiRegisterMember') {
-              console.log('⚡ [Bypass] apiRegisterMember routed to Supabase Direct (0.1s)');
-              SupabaseService.registerMember(args[0], args[1])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiGetMemberListForLogin') {
-              console.log('⚡ [Bypass] apiGetMemberListForLogin routed to Supabase Direct (0.1s)');
-              SupabaseService.getMemberListForLogin()
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            if (prop === 'apiCheckMemberEmailForOAuth') {
-              console.log('⚡ [Bypass] apiCheckMemberEmailForOAuth routed to Supabase Direct (0.1s)');
-              SupabaseService.checkMemberEmailForOAuth(args[0])
-                .then(res => { if (typeof successHandler === 'function') successHandler(res, userObject); })
-                .catch(err => { if (typeof failureHandler === 'function') failureHandler(err, userObject); });
-              return;
-            }
-
-            // その他の関数は従来通り GAS へのフォールバック通信
-            fetch(GAS_ENDPOINT_URL, {
-              method: 'POST',
-              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-              body: JSON.stringify({ functionName: prop, args: args })
-            })
-              .then(res => res.json())
-              .then(result => {
-                if (result && result.success) {
-                  if (typeof successHandler === 'function') successHandler(result.data, userObject);
-                } else {
-                  const err = new Error(result && result.error ? result.error : 'エラーが発生しました。');
-                  if (typeof failureHandler === 'function') failureHandler(err, userObject);
-                }
-              })
-              .catch(err => {
-                if (typeof failureHandler === 'function') failureHandler(err, userObject);
-              });
-          };
+    const GasApi = {
+      async call(functionName, ...args) {
+        if (!ALLOWED_GAS_FUNCTIONS.has(functionName)) {
+          throw new Error(`許可されていない GAS RPC 呼び出しです: ${functionName}`);
         }
-      });
-    }
+        const res = await fetch(GAS_ENDPOINT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify({ functionName, args })
+        });
+        const result = await res.json();
+        if (result && result.success) {
+          return result.data;
+        }
+        throw new Error((result && result.error) ? result.error : 'エラーが発生しました。');
+      },
+      saveCalendarEvent(payload) { return this.call('saveCalendarEvent', payload); },
+      deleteCalendarEvent(payload) { return this.call('deleteCalendarEvent', payload); },
+      getOAuthAuthUrl(email) { return this.call('apiGetOAuthAuthUrl', email); },
+      exchangeOAuthCode(code, redirectUri) { return this.call('apiExchangeOAuthCode', code, redirectUri); }
+    };
 
-    // 既存の google.script.run を Supabase バイパスプロキシでオーバーライド
-    window.google = window.google || {};
-    window.google.script = window.google.script || {};
-    window.google.script.run = createSupabaseBypassProxy(null, null, null);
+    window.GasApi = GasApi;
 
     // =========================================
     // 5. 画面復帰検知 (Page Visibility API & window.focus)

@@ -149,14 +149,16 @@ function refreshEquipmentData(forceRefresh, isBackground = false) {
     if (mainContent) mainContent.classList.add('hidden');
   }
 
-  const actor = getAppActorUser();
-  const actorEmail = actor ? (actor.email || '') : '';
-  const actorName = actor ? (actor.name || '') : '';
+  if (!window.SupabaseService || typeof window.SupabaseService.getEquipmentData !== 'function') {
+    if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
+    if (mainContent) mainContent.classList.remove('hidden');
+    return;
+  }
 
-  google.script.run
-    .withSuccessHandler(function(res) {
+  window.SupabaseService.getEquipmentData()
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiGetEquipmentData error:', res ? res.error : 'Unknown error');
+        console.error('getEquipmentData error:', res ? res.error : 'Unknown error');
         if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
         if (mainContent) mainContent.classList.remove('hidden');
         return;
@@ -177,12 +179,11 @@ function refreshEquipmentData(forceRefresh, isBackground = false) {
         updateScheduleModalEquipmentStatus();
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiGetEquipmentData failure:', err);
+    .catch(function(err) {
+      console.error('getEquipmentData failure:', err);
       if (loadingPlaceholder) loadingPlaceholder.style.display = 'none';
       if (mainContent) mainContent.classList.remove('hidden');
-    })
-    .apiGetEquipmentData(actorEmail, actorName);
+    });
 }
 
 /**
@@ -808,11 +809,11 @@ function handleSaveEquipmentSubmit(e) {
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  // 2. バックグラウンドでGASへ非同期保存
-  google.script.run
-    .withSuccessHandler(function(res) {
+  // 2. バックグラウンドでSupabaseへ非同期保存
+  window.SupabaseService.saveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiSaveEquipmentItem failed:', res ? res.error : 'Unknown');
+        console.error('saveEquipmentItem failed:', res ? res.error : 'Unknown');
         // 保存失敗時は元の状態に戻して再描画
         window.equipmentState.itemsList = previousItems;
         if (window.initialFullData && window.initialFullData.equipmentData) {
@@ -831,17 +832,15 @@ function handleSaveEquipmentSubmit(e) {
         }
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiSaveEquipmentItem error:', err);
+    .catch(function(err) {
+      console.error('saveEquipmentItem failure:', err);
       window.equipmentState.itemsList = previousItems;
       if (window.initialFullData && window.initialFullData.equipmentData) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      console.error('apiSaveEquipmentItem failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiSaveEquipmentItem({ itemId: itemId, itemCode: itemCode, memberId: memberId, notes: notes }, actorEmail, actorName);
+    });
 }
 
 /**
@@ -923,11 +922,11 @@ function executeDeleteEquipmentPermanently() {
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  // 2. バックグラウンドで削除リクエスト（Supabase Direct / GAS Proxy）
-  google.script.run
-    .withSuccessHandler(function(res) {
+  // 2. バックグラウンドで削除リクエスト（Supabase Direct）
+  window.SupabaseService.deleteEquipmentItem(itemId, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
-        console.error('apiDeleteEquipmentItem failed:', res ? res.error : 'Unknown');
+        console.error('deleteEquipmentItem failed:', res ? res.error : 'Unknown');
         window.equipmentState.itemsList = previousItems;
         if (window.initialFullData && window.initialFullData.equipmentData) {
           window.initialFullData.equipmentData.itemsList = previousItems;
@@ -936,17 +935,15 @@ function executeDeleteEquipmentPermanently() {
         showAppAlert({ title: '削除失敗', message: getSafeErrorMessage(res, '備品の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(function(err) {
-      console.error('apiDeleteEquipmentItem error:', err);
+    .catch(function(err) {
+      console.error('deleteEquipmentItem failure:', err);
       window.equipmentState.itemsList = previousItems;
       if (window.initialFullData && window.initialFullData.equipmentData) {
         window.initialFullData.equipmentData.itemsList = previousItems;
       }
       renderEquipmentUI();
-      console.error('apiDeleteEquipmentItem failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .apiDeleteEquipmentItem(itemId, actorEmail, actorName);
+    });
 }
 
 /**
@@ -1028,15 +1025,15 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
   const actorEmail = actor ? (actor.email || '') : '';
   const actorName = actor ? (actor.name || '') : '';
 
-  google.script.run
-    .withSuccessHandler(function(res) {
+  window.SupabaseService.resolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName)
+    .then(function(res) {
       if (!res || !res.success) {
         if (btnEl) {
           btnEl.disabled = false;
           btnEl.classList.remove('btn-resolving');
           btnEl.textContent = '解決';
         }
-        console.error('apiResolveEquipmentAlert error:', res);
+        console.error('resolveEquipmentAlert error:', res);
         showAppAlert({ title: '解決エラー', message: getSafeErrorMessage(res, '解決の登録に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
         refreshEquipmentData(true);
         return;
@@ -1044,15 +1041,14 @@ function executeEquipmentResolve(eventId, eventDate, itemCode, itemName, btnEl) 
 
       refreshEquipmentData(true);
     })
-    .withFailureHandler(function(err) {
+    .catch(function(err) {
       if (btnEl) {
         btnEl.disabled = false;
         btnEl.classList.remove('btn-resolving');
         btnEl.textContent = '解決';
       }
-      console.error('apiResolveEquipmentAlert failure:', err);
+      console.error('resolveEquipmentAlert failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
       refreshEquipmentData(true);
-    })
-    .apiResolveEquipmentAlert({ eventId: eventId, eventDate: eventDate, itemCode: itemCode, proxyMemberId: '代理' }, actorEmail, actorName);
+    });
 }

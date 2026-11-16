@@ -37,8 +37,8 @@
     }
     if (alertBox) alertBox.classList.add('hidden');
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.registerMember(email, pass1)
+      .then(res => {
         if (res && res.success) {
           // 自動ログイン用に localStorage にユーザー情報を保存（オプトイン）
           if (res.user) {
@@ -58,15 +58,15 @@
             submitBtn.disabled = false;
             submitBtn.textContent = '設定完了';
           }
-          console.error('apiRegisterMember error:', res);
+          console.error('registerMember error:', res);
           const safeRegErr = (typeof getSafeErrorMessage === 'function')
             ? getSafeErrorMessage(res, '登録処理に失敗しました。しばらく経ってから再度お試しください。')
             : '登録処理に失敗しました。しばらく経ってから再度お試しください。';
           showAlert(safeRegErr, true);
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiRegisterMember failure:', err);
+      .catch(err => {
+        console.error('registerMember failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了';
@@ -75,8 +75,7 @@
           ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
           : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
         showAlert(safeCommErr, true);
-      })
-      .apiRegisterMember(email, pass1);
+      });
   }
 
   /**

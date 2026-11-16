@@ -263,24 +263,25 @@ function setMyAttendance(evOrKey, status) {
     userName: myName || ''
   };
 
-  google.script.run
-    .withSuccessHandler(res => {
-      if (res && res.success) {
-        if (res.event && window.eventsData) {
-          const idx = window.eventsData.findIndex(e => (res.event.id && e.id === res.event.id) || (e.date === res.event.date && e.title === res.event.title));
-          if (idx >= 0) {
-            window.eventsData[idx] = res.event;
+  if (window.SupabaseService && typeof window.SupabaseService.updateEventAttendance === 'function') {
+    window.SupabaseService.updateEventAttendance(payload)
+      .then(res => {
+        if (res && res.success) {
+          if (res.event && window.eventsData) {
+            const idx = window.eventsData.findIndex(e => (res.event.id && e.id === res.event.id) || (e.date === res.event.date && e.title === res.event.title));
+            if (idx >= 0) {
+              window.eventsData[idx] = res.event;
+            }
+            updateUnansweredBadges();
           }
-          updateUnansweredBadges();
+        } else {
+          console.error('Calendar update failed on backend:', res ? res.error : 'Unknown error');
         }
-      } else {
-        console.error('Calendar update failed on backend:', res ? res.error : 'Unknown error');
-      }
-    })
-    .withFailureHandler(err => {
-      console.error('updateEventAttendance Error:', err);
-    })
-    .updateEventAttendance(payload);
+      })
+      .catch(err => {
+        console.error('updateEventAttendance Error:', err);
+      });
+  }
 }
 
 // 後方互換性のためエイリアス
@@ -508,10 +509,12 @@ function initScheduleView(events, initialRoster) {
       // ⚡ 初期データに同封されている名簿を即座に利用（追加通信ゼロ）
       updateScheduleMemberListOptions(roster);
     } else {
-      // フォールバック（初期データに含まれていなかった場合のみサーバー取得）
-      google.script.run.withSuccessHandler(r => {
-        updateScheduleMemberListOptions(r);
-      }).apiGetMemberListForLogin();
+      // フォールバック（初期データに含まれていなかった場合のみSupabaseから取得）
+      if (window.SupabaseService && typeof window.SupabaseService.getMemberListForLogin === 'function') {
+        window.SupabaseService.getMemberListForLogin()
+          .then(r => updateScheduleMemberListOptions(r))
+          .catch(err => console.warn('getMemberListForLogin warning:', err));
+      }
     }
 
   } catch (err) {
@@ -1487,8 +1490,8 @@ function executeConfirmedDelete() {
   }
 
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.GasApi.deleteCalendarEvent(payload)
+    .then(res => {
       if (execBtn) {
         execBtn.disabled = false;
         execBtn.textContent = '削除';
@@ -1543,7 +1546,7 @@ function executeConfirmedDelete() {
         showAppAlert({ title: '削除エラー', message: getSafeErrorMessage(res, '予定の削除に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (execBtn) {
         execBtn.disabled = false;
         execBtn.textContent = '削除';
@@ -1551,8 +1554,7 @@ function executeConfirmedDelete() {
       closeDeleteConfirmModal();
       console.error('deleteCalendarEvent failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .deleteCalendarEvent(payload);
+    });
 }
 
 /**
@@ -1922,8 +1924,8 @@ window.currentEditRemovedGuests = [];
     submitBtn.textContent = '保存中...';
   }
 
-  google.script.run
-    .withSuccessHandler(res => {
+  window.GasApi.saveCalendarEvent(payload)
+    .then(res => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
@@ -1988,15 +1990,14 @@ window.currentEditRemovedGuests = [];
         showAppAlert({ title: '保存エラー', message: getSafeErrorMessage(res, '予定の保存に失敗しました。しばらく経ってから再度お試しください。'), isError: true });
       }
     })
-    .withFailureHandler(err => {
+    .catch(err => {
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = isDuplicate ? '新規予定として作成' : 'カレンダーを更新';
       }
       console.error('saveCalendarEvent failure:', err);
       showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-    })
-    .saveCalendarEvent(payload);
+    });
 }
 
 /**

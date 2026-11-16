@@ -394,16 +394,16 @@ function submitData() {
     btn.disabled = true; // 2重送信防止
   }
   
-  // サーバーサイド（GAS）の saveMatchData を呼び出す
-  google.script.run
-    .withSuccessHandler(res => {
+  // Supabase の saveScoreRecord を直接呼び出す
+  window.SupabaseService.saveScoreRecord(payload)
+    .then(res => {
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
       }
       
       if (typeof res === 'string' && res.includes('エラー')) {
-        console.error('saveMatchData server error:', res);
+        console.error('saveScoreRecord server error:', res);
         var safeSaveMsg = (typeof getSafeErrorMessage === 'function')
           ? getSafeErrorMessage(res, '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。')
           : '試合結果の保存に失敗しました。しばらく経ってから再度お試しください。';
@@ -462,13 +462,15 @@ function submitData() {
         afterSaveSuccess(updatedMatch.matchId);
         
         // 裏で静かに最新データを取得して同期させておく
-        google.script.run
-          .withSuccessHandler(data => { if (typeof initMatchHistory === 'function') initMatchHistory(data); })
-          .getMatchHistoryData();
+        if (window.SupabaseService && typeof window.SupabaseService.getMatchHistoryData === 'function') {
+          window.SupabaseService.getMatchHistoryData()
+            .then(data => { if (typeof initMatchHistory === 'function') initMatchHistory(data); })
+            .catch(syncErr => console.warn('getMatchHistoryData background sync warning:', syncErr));
+        }
       }
     })
-    .withFailureHandler(err => {
-      console.error('saveMatchData failure:', err);
+    .catch(err => {
+      console.error('saveScoreRecord failure:', err);
       if (btn) {
         btn.textContent = currentMatchId ? '上書き保存' : '新規保存';
         btn.disabled = false;
@@ -477,8 +479,7 @@ function submitData() {
         ? getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         : '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。';
       showAppAlert({ title: '通信エラー', message: safeCommMsg, isError: true });
-    })
-    .saveMatchData(payload);
+    });
 }
 
 /**

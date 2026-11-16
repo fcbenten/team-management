@@ -505,8 +505,8 @@
       btn.textContent = '名簿を確認中...';
     }
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.checkMemberEmailForOAuth(email)
+      .then(res => {
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
@@ -514,15 +514,15 @@
         if (res && res.success && res.registered) {
           startGoogleOAuthFlow(null, res.email || email);
         } else {
-          if (!(res && res.success)) console.error('apiCheckMemberEmailForOAuth error:', res);
+          if (!(res && res.success)) console.error('checkMemberEmailForOAuth error:', res);
           setLoginFieldError(
             'oauthPreCheckEmailInput',
             getSafeErrorMessage(res, '名簿に登録されていないメールアドレスです。')
           );
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiCheckMemberEmailForOAuth failure:', err);
+      .catch(err => {
+        console.error('checkMemberEmailForOAuth failure:', err);
         if (btn) {
           btn.disabled = false;
           btn.textContent = 'Google連携へ進む';
@@ -531,8 +531,7 @@
           'oauthPreCheckEmailInput',
           getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。')
         );
-      })
-      .apiCheckMemberEmailForOAuth(email);
+      });
   }
   window.handleOAuthPreCheckSubmit = handleOAuthPreCheckSubmit;
 
@@ -599,8 +598,8 @@
 
     const redirectUri = window.location.origin + window.location.pathname;
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.GasApi.exchangeOAuthCode(code, redirectUri)
+      .then(res => {
         if (res && res.success) {
           if (res.hasPassword) {
             // パスワード設定済み部員は即時自動ログイン
@@ -623,12 +622,11 @@
           showAppAlert({ title: '連携エラー', message: msg, isError: true });
         }
       })
-      .withFailureHandler(fetchErr => {
+      .catch(fetchErr => {
         setLoginCardView('loginCard');
-        console.error('apiExchangeOAuthCode failure:', fetchErr);
+        console.error('exchangeOAuthCode failure:', fetchErr);
         showAppAlert({ title: '通信エラー', message: getSafeErrorMessage(fetchErr, '連携処理中に通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), isError: true });
-      })
-      .apiExchangeOAuthCode(code, redirectUri);
+      });
 
     return true;
   }
@@ -675,8 +673,8 @@
     }
 
     // Supabase Direct (0.1秒) でパスワードを保存
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.registerMember(oauthPendingEmail, p1)
+      .then(res => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了してログイン';
@@ -703,7 +701,7 @@
           }
         }
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = '設定完了してログイン';
@@ -714,8 +712,7 @@
           globalMsg.classList.remove('hidden');
           globalMsg.style.display = 'block';
         }
-      })
-      .apiRegisterMember(oauthPendingEmail, p1);
+      });
   }
   window.handleOAuthPasswordSubmit = handleOAuthPasswordSubmit;
 
@@ -796,8 +793,8 @@
       submitBtn.textContent = 'ログイン中...';
     }
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.loginUser(email, password)
+      .then(res => {
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
@@ -821,14 +818,14 @@
           loadAppInitialData();
         } else {
           if (errorMsg) {
-            console.error('apiLoginUser error:', res);
+            console.error('loginUser error:', res);
             errorMsg.textContent = getSafeErrorMessage(res, 'ログインに失敗しました。メールアドレスまたはパスワードをご確認ください。');
             errorMsg.style.display = 'block';
           }
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiLoginUser failure:', err);
+      .catch(err => {
+        console.error('loginUser failure:', err);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = 'ログイン';
@@ -837,8 +834,7 @@
           errorMsg.textContent = getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。');
           errorMsg.style.display = 'block';
         }
-      })
-      .apiLoginUser(email, password);
+      });
   }
 
   /**
@@ -864,8 +860,8 @@
   function loadAppInitialData(forceRefresh = false, onComplete = null) {
     renderHeaderUser();
 
-    google.script.run
-      .withSuccessHandler(response => {
+    window.SupabaseService.getInitialData(forceRefresh)
+      .then(response => {
         if (!response) {
           handleError('eventSelect', 'サーバーからデータが返ってきませんでした。');
           if (typeof onComplete === 'function') onComplete(false, new Error('サーバー応答なし'));
@@ -998,7 +994,7 @@
 
         if (typeof onComplete === 'function') onComplete(true);
       })
-      .withFailureHandler(err => {
+      .catch(err => {
         console.error('getInitialData failure:', err);
         const safeErrMsg = getSafeErrorMessage(err, '通信環境をご確認の上、画面を再読み込みしてください。');
         const resultsList = document.getElementById('resultsList');
@@ -1007,8 +1003,7 @@
         }
         handleError('eventSelect', 'データ初期取得エラー: ' + safeErrMsg);
         if (typeof onComplete === 'function') onComplete(false, err);
-      })
-      .getInitialData(forceRefresh);
+      });
   }
 
   /**
@@ -1070,23 +1065,22 @@
 
     setPwMsg('更新中...', 'loading');
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.changePassword(u.name, currentPw, newPw)
+      .then(res => {
         if (res && res.success) {
           setPwMsg('パスワードを更新しました。', 'success');
           currentPwInput.value = '';
           newPwInput.value = '';
           confirmPwInput.value = '';
         } else {
-          console.error('apiChangePassword error:', res);
+          console.error('changePassword error:', res);
           setPwMsg(getSafeErrorMessage(res, '更新に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiChangePassword failure:', err);
+      .catch(err => {
+        console.error('changePassword failure:', err);
         setPwMsg(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-      })
-      .apiChangePassword(u.name, currentPw, newPw);
+      });
   }
 
   /**
@@ -1130,10 +1124,10 @@
     }
     setProfileLineMsg('');
 
-    // サーバーから最新設定を取得（非同期で同期）
-    if (typeof google !== 'undefined' && google.script && google.script.run && (u.name || u.email)) {
-      google.script.run
-        .withSuccessHandler(res => {
+    // Supabaseから最新設定を取得（非同期で同期）
+    if (window.SupabaseService && typeof window.SupabaseService.getNotificationSettings === 'function' && (u.name || u.email)) {
+      window.SupabaseService.getNotificationSettings(u.name, u.email)
+        .then(res => {
           if (res && res.success && res.settings) {
             const s = res.settings;
             u.notificationType = s.notificationType || 'none';
@@ -1159,7 +1153,7 @@
             syncProfileLineUi();
           }
         })
-        .apiGetNotificationSettings(u.name, u.email);
+        .catch(err => console.warn('getNotificationSettings warning:', err));
     }
   }
 
@@ -1562,21 +1556,20 @@
       }
     };
 
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.SupabaseService && typeof window.SupabaseService.saveNotificationSettings === 'function') {
+      window.SupabaseService.saveNotificationSettings(payload, u.name, u.email)
+        .then(res => {
           if (res && res.success) {
             onComplete(true, res.message || '通知設定を保存しました');
           } else {
-            console.error('apiSaveNotificationSettings error:', res);
+            console.error('saveNotificationSettings error:', res);
             onComplete(false, getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'));
           }
         })
-        .withFailureHandler(err => {
-          console.error('apiSaveNotificationSettings failure:', err);
+        .catch(err => {
+          console.error('saveNotificationSettings failure:', err);
           onComplete(false, getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'));
-        })
-        .apiSaveNotificationSettings(payload, u.name, u.email);
+        });
     } else {
       setTimeout(() => {
         onComplete(true, 'モック: 通知設定を保存しました');
@@ -1821,9 +1814,9 @@
         // inputの値をリセットして再選択可能に
         e.target.value = '';
 
-        // Google Driveへ保存
-        google.script.run
-          .withSuccessHandler(res => {
+        // Supabase Storage (member-avatars) へ保存
+        window.SupabaseService.saveProfileImage(window.currentUser.name, base64)
+          .then(res => {
             if (res && res.success) {
               const newUrl = res.avatarUrl;
               if (window.currentUser) {
@@ -1843,15 +1836,14 @@
               showAvatarStatus('プロフィール写真を保存しました', 'success');
               setTimeout(() => { showAvatarStatus('', ''); }, 3500);
             } else {
-              console.error('apiSaveProfileImage error:', res);
+              console.error('saveProfileImage error:', res);
               showAvatarStatus(getSafeErrorMessage(res, '保存に失敗しました。しばらく経ってから再度お試しください。'), 'error');
             }
           })
-          .withFailureHandler(err => {
-            console.error('apiSaveProfileImage failure:', err);
+          .catch(err => {
+            console.error('saveProfileImage failure:', err);
             showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-          })
-          .apiSaveProfileImage(window.currentUser.name, base64);
+          });
       };
       img.onerror = function () {
         showAvatarStatus('画像の読み込みに失敗しました。', 'error');
@@ -1881,8 +1873,8 @@
 
     showAvatarStatus('削除中...', 'uploading');
 
-    google.script.run
-      .withSuccessHandler(res => {
+    window.SupabaseService.deleteProfileImage(window.currentUser.name)
+      .then(res => {
         if (res && res.success) {
           if (window.currentUser) {
             window.currentUser.avatarUrl = '';
@@ -1901,15 +1893,14 @@
           showAvatarStatus('プロフィール写真を削除しました', 'success');
           setTimeout(() => { showAvatarStatus('', ''); }, 3000);
         } else {
-          console.error('apiDeleteProfileImage error:', res);
+          console.error('deleteProfileImage error:', res);
           showAvatarStatus(getSafeErrorMessage(res, '削除に失敗しました。しばらく経ってから再度お試しください。'), 'error');
         }
       })
-      .withFailureHandler(err => {
-        console.error('apiDeleteProfileImage failure:', err);
+      .catch(err => {
+        console.error('deleteProfileImage failure:', err);
         showAvatarStatus(getSafeErrorMessage(err, '通信エラーが発生しました。通信環境をご確認の上、再度お試しください。'), 'error');
-      })
-      .apiDeleteProfileImage(window.currentUser.name);
+      });
   }
 
   /**
@@ -1952,10 +1943,10 @@
       }
     }
 
-    // まだポジションが取得できていない場合、サーバーから直接最新ポジションを取得して画面を即時更新
-    if (!posVal && u.name) {
-      google.script.run
-        .withSuccessHandler(positions => {
+    // まだポジションが取得できていない場合、Supabaseから最新ポジションを取得して画面を即時更新
+    if (!posVal && u.name && window.SupabaseService && typeof window.SupabaseService.getPlayerPositions === 'function') {
+      window.SupabaseService.getPlayerPositions()
+        .then(positions => {
           if (positions) {
             window.playerPositionsMap = positions;
             const p = findMatchingPosition(u.name, positions);
@@ -1969,7 +1960,7 @@
             }
           }
         })
-        .apiGetPlayerPositions();
+        .catch(err => console.warn('getPlayerPositions warning:', err));
     }
 
     if (emailEl) emailEl.textContent = u.email || '-';
@@ -2191,9 +2182,9 @@
     }
     if (statusEl) statusEl.classList.add('hidden');
 
-    if (typeof google !== 'undefined' && google.script && google.script.run) {
-      google.script.run
-        .withSuccessHandler(res => {
+    if (window.GasApi && typeof window.GasApi.getOAuthAuthUrl === 'function') {
+      window.GasApi.getOAuthAuthUrl(email)
+        .then(res => {
           resetForceAuthBtn();
           if (res && res.success && res.authUrl) {
             // 別ウィンドウ（ポップアップ）でOAuth認証画面を開く
@@ -2204,23 +2195,22 @@
             }
           } else {
             if (statusEl) {
-              console.error('apiGetOAuthAuthUrl error:', res);
+              console.error('getOAuthAuthUrl error:', res);
               statusEl.textContent = getSafeErrorMessage(res, '認証URLの取得に失敗しました。しばらく経ってから再度お試しください。');
               statusEl.className = 'form-status-msg form-status-error mb-12';
               statusEl.classList.remove('hidden');
             }
           }
         })
-        .withFailureHandler(err => {
-          console.error('apiGetOAuthAuthUrl failure:', err);
+        .catch(err => {
+          console.error('getOAuthAuthUrl failure:', err);
           resetForceAuthBtn();
           if (statusEl) {
             statusEl.textContent = getSafeErrorMessage(err, 'エラーが発生しました。通信環境をご確認の上、再度お試しください。');
             statusEl.className = 'form-status-msg form-status-error mb-12';
             statusEl.classList.remove('hidden');
           }
-        })
-        .apiGetOAuthAuthUrl(email);
+        });
     }
   }
 
