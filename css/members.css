@@ -288,7 +288,7 @@
 }
 
 .member-card-name {
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
@@ -903,7 +903,7 @@
   }
 
   .member-card-name {
-    font-size: var(--fs-md) !important;
+    font-size: var(--fs-sm) !important;
     font-weight: var(--fw-medium) !important;
     line-height: 1.3 !important;
   }

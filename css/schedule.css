@@ -1005,7 +1005,7 @@
 /* 鬆・岼蛟､・医う繝ｳ繝・Φ繝医ｒ驕ｩ逕ｨ縺励※髫主ｱ､繧呈・遒ｺ蛹厄ｼ・*/
 .event-detail-val {
   padding-left: 12px;
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   color: var(--text-heading);
   line-height: 1.5;
 }

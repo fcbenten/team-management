@@ -596,7 +596,7 @@ select:focus, input:focus, textarea:focus {
 }
 
 .modal-title {
-  font-size: var(--fs-lg);
+  font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin: 0;
@@ -669,7 +669,10 @@ select:focus, input:focus, textarea:focus {
 .text-right { text-align: right; }
 .text-center { text-align: center; }
 .text-muted { color: var(--text-muted) !important; }
+.text-xs { font-size: var(--fs-xs); }
 .text-sm { font-size: var(--fs-sm); }
+.text-base { font-size: var(--fs-md); }
+.text-lg { font-size: var(--fs-lg); }
 
 .font-bold { font-weight: var(--fw-bold); }
 .font-semibold { font-weight: var(--fw-medium); }
@@ -773,80 +776,6 @@ html.no-scroll {
   visibility: hidden !important;
   pointer-events: none !important;
   opacity: 0 !important;
-}
-
-#app-toast.visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-@media (min-width: 768px) {
-  #app-toast.visible {
-    transform: translate(-50%, 0);
-  }
-}
-
-/* 薄い緑（サイトの alert-success と統一） */
-#app-toast.success {
-  background-color: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #15803d;
-  box-shadow: 0 4px 16px rgba(22, 163, 74, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-/* 薄い赤（サイトの alert-error と統一） */
-#app-toast.error {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #b91c1c;
-  box-shadow: 0 4px 16px rgba(220, 38, 38, 0.12), 0 2px 4px rgba(0, 0, 0, 0.04);
-}
-
-.toast-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-#app-toast.success .toast-icon {
-  color: #16a34a;
-}
-
-#app-toast.error .toast-icon {
-  color: #dc2626;
-}
-
-.toast-content {
-  flex: 1;
-  word-break: break-word;
-}
-
-.toast-close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.35rem;
-  line-height: 1;
-  cursor: pointer;
-  padding: 2px 4px;
-  border-radius: 4px;
-  opacity: 0.65;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#app-toast.success .toast-close-btn {
-  color: #15803d;
-}
-
-#app-toast.error .toast-close-btn {
-  color: #b91c1c;
-}
-
-.toast-close-btn:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.05);
 }
 
 /* =========================================
@@ -1220,7 +1149,7 @@ html.no-scroll {
   background: #ffffff;
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -1316,7 +1245,7 @@ html.no-scroll {
 }
 
 .kpi-card-record-text {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: var(--text-main);
 }
@@ -1415,8 +1344,8 @@ html.no-scroll {
 .kpi-lead-name-group {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: var(--fs-sm);
+  gap: 4px;
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: var(--text-main);
   min-width: 0;

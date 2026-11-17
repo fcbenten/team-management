@@ -210,7 +210,7 @@
 }
 
 .home-shared-card-wrap .match-card .match-team {
-  font-size: var(--fs-md) !important;
+  font-size: var(--fs-sm) !important;
   font-weight: var(--fw-bold) !important;
 }
 

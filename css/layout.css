@@ -9,7 +9,7 @@
   border-top: 1px solid var(--border-color);
 }
 .pw-section-title {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-md);
   font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 10px;

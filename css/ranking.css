@@ -198,7 +198,7 @@
   display: block;
 }
 
-/* 選手情報（名前 ＋ 背番号：1〜3位は太字で強調、4位以降は標準の太さ） */
+/* 選手情報（名前 ＋ 背番号） */
 .rank-player-info { 
   display: flex;
   flex-direction: column;

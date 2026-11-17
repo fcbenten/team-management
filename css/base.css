@@ -15,7 +15,7 @@
   --border-color: #e2e8f0;   /* 境界線 */
   --primary: #2563eb;        /* アクセントのブルー */
   --primary-hover: #1d4ed8;  /* ホバー時のブルー */
-  --radius: 4px;             /* 直角寄りの角丸に変更（元12px） */
+  --radius: 4px;             /* 角丸 */
   --sidebar-height: 56px;    /* スマホ上部固定ヘッダーの実測値基準（JSで動的更新） */
   --font-sans: 'Inter', 'Noto Sans JP', sans-serif;
 
@@ -530,8 +530,8 @@ optgroup {
   padding: 12px 0; border-bottom: 1px solid #f1f5f9;
 }
 .profile-item-row:last-child { border-bottom: none; }
-.profile-label { font-size: var(--fs-xs); font-weight: var(--fw-medium); color: var(--text-muted); }
-.profile-value { font-size: var(--fs-md); color: var(--text-heading); }
+.profile-label { font-size: var(--fs-sm); font-weight: var(--fw-normal); color: var(--text-muted); }
+.profile-value { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-heading); }
 .pos-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: var(--fs-xs); letter-spacing: 0.5px; }
 .pos-badge-fp { background: #e0f2fe; color: #0369a1; }
 .pos-badge-gk { background: #fef3c7; color: #92400e; }

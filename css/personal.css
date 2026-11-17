@@ -40,11 +40,11 @@
 }
 
 .stats-table th.th-number {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
 }
 
 .stats-table th.th-name {
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
 }
 
 .stats-table td {
@@ -475,7 +475,7 @@ th.sort-active .sort-icon {
     max-width: 34px !important;
     text-align: center !important;
     padding: 10px 1px !important;
-    font-size: 0.82rem !important;
+    font-size: var(--fs-xs) !important;
     font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-number {
@@ -493,7 +493,7 @@ th.sort-active .sort-icon {
     width: auto !important;
     text-align: left !important;
     padding: 10px 3px 10px 6px !important;
-    font-size: var(--fs-sm) !important;
+    font-size: var(--fs-xs) !important;
     font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-name-cell {
@@ -758,7 +758,7 @@ th.sort-active .sort-icon {
 
 .modal-player-name {
   font-size: var(--fs-lg);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-bold);
   color: var(--text-main) !important;
 }
 

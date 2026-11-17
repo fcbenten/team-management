@@ -245,7 +245,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: var(--fs-md);
+  font-size: var(--fs-lg);
   font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
