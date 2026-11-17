@@ -1197,7 +1197,7 @@ select:focus, input:focus, textarea:focus {
 .btn-cancel-action.is-touch-active {
   background-color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
@@ -2030,7 +2030,7 @@ html.no-scroll {
 
 .app-notice-banner.notice-urgent .notice-banner-action-link {
   color: #b91c1c;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
 }
 
 @media (max-width: 767px) {
@@ -2477,14 +2477,14 @@ html.no-scroll {
   border-top: 1px solid var(--border-color);
 }
 .pw-section-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 10px;
 }
 .pw-msg {
   display: none;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 8px 10px;
   border-radius: 6px;
   margin-bottom: 10px;
@@ -2498,7 +2498,7 @@ html.no-scroll {
 }
 .pw-msg.loading {
   background: #f8fafc;
-  color: #475569;
+  color: var(--text-main);
 }
 .pw-msg.success {
   background: #f0fdf4;
@@ -2511,11 +2511,11 @@ html.no-scroll {
   margin-bottom: 10px;
 }
 .pw-input {
-  font-size: 0.85rem !important;
+  font-size: var(--fs-sm) !important;
   padding: 8px 10px !important;
 }
 .pw-submit-btn {
-  font-size: 0.85rem !important;
+  font-size: var(--fs-sm) !important;
   padding: 8px 12px !important;
 }
 
@@ -2570,12 +2570,12 @@ html.no-scroll {
   min-width: 0;
 }
 .profile-settings-nav-title {
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 .profile-settings-nav-desc {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 .profile-settings-nav-arrow {
@@ -2616,7 +2616,7 @@ html.no-scroll {
   font-size: 20px;
 }
 .notif-section-desc {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-bottom: 12px;
   line-height: 1.4;
@@ -2683,13 +2683,13 @@ html.no-scroll {
 .notif-icon-none { color: #94a3b8; }
 
 .notif-type-name {
-  font-size: 0.86rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 .notif-status-badge {
   font-size: 0.68rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   padding: 2px 6px;
   border-radius: 4px;
   margin-left: auto;
@@ -2697,7 +2697,7 @@ html.no-scroll {
 }
 .notif-status-badge.badge-gray {
   background: #f1f5f9;
-  color: #64748b;
+  color: var(--text-muted);
   border: 1px solid #e2e8f0;
 }
 .notif-status-badge.badge-green {
@@ -2713,22 +2713,22 @@ html.no-scroll {
   border: none;
   padding: 0;
   color: #15803d;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
 }
 .notif-status-badge.badge-verified .material-symbols-outlined {
   font-size: 16px;
   color: #16a34a;
 }
 .notif-guide-text {
-  font-size: 0.73rem;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   color: var(--text-muted);
   text-align: center;
   margin-top: 6px;
 }
 .notif-radio-desc {
-  font-size: 0.73rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 2px;
   padding-left: 24px;
@@ -2742,8 +2742,8 @@ html.no-scroll {
 .btn-notif-action {
   width: 100%;
   padding: 8px 12px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   border-radius: 6px;
   border: none;
   cursor: pointer;
@@ -2783,13 +2783,13 @@ html.no-scroll {
   flex-wrap: wrap;
 }
 .profile-line-code-label {
-  font-size: 0.74rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: #166534;
 }
 .profile-line-code-val {
-  font-size: 0.9rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.05em;
   color: #15803d;
   background: #ffffff;
@@ -2810,8 +2810,8 @@ html.no-scroll {
   width: auto !important;
   height: 30px !important;
   padding: 0 9px !important;
-  font-size: 0.73rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-xs) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 5px !important;
   cursor: pointer;
 }
@@ -2821,8 +2821,8 @@ html.no-scroll {
   gap: 4px;
   height: 30px;
   padding: 0 10px;
-  font-size: 0.73rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: #06c755;
   border: 1px solid #06c755;
@@ -2844,8 +2844,8 @@ html.no-scroll {
   justify-content: center;
   gap: 6px;
   height: 34px !important;
-  font-size: 0.76rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-xs) !important;
+  font-weight: var(--fw-medium) !important;
   color: var(--text-muted) !important;
   background: #ffffff !important;
   border-color: #cbd5e1 !important;
@@ -2863,9 +2863,9 @@ html.no-scroll {
   margin-top: 8px;
   padding: 6px 10px;
   border-radius: 5px;
-  font-size: 0.73rem;
+  font-size: var(--fs-xs);
   line-height: 1.4;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   text-align: center;
 }
 .profile-line-msg.success {
@@ -2890,8 +2890,8 @@ html.no-scroll {
   border: 1px solid #e2e8f0;
 }
 .notif-target-title {
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 6px;
 }
@@ -2904,7 +2904,7 @@ html.no-scroll {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
   cursor: pointer;
   margin-bottom: 0;
@@ -2916,7 +2916,7 @@ html.no-scroll {
   accent-color: var(--primary, #0284c7);
 }
 .notif-status-msg {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   padding: 6px 10px;
   border-radius: 6px;
   text-align: center;
@@ -2940,8 +2940,8 @@ html.no-scroll {
   color: #ffffff !important;
   border: 1px solid var(--primary, #0284c7) !important;
   border-radius: var(--radius, 4px) !important;
-  font-size: 0.9rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
@@ -2971,13 +2971,13 @@ html.no-scroll {
   text-align: center;
 }
 .logout-modal-title {
-  font-weight: 800;
-  font-size: 1.05rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-md);
   margin-bottom: 6px;
   color: var(--text-heading);
 }
 .logout-modal-desc {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 .logout-modal-footer {
@@ -2999,7 +2999,7 @@ html.no-scroll {
   background: #dc2626 !important;
   border-color: #dc2626 !important;
   color: #ffffff !important;
-  font-weight: 600 !important;
+  font-weight: var(--fw-medium) !important;
 }
 .logout-btn-danger:hover:not(:disabled) {
   background: #b91c1c !important;
@@ -3022,8 +3022,8 @@ html.no-scroll {
   background: #fff !important;
   border: 1px solid #fca5a5 !important;
   color: #ef4444 !important;
-  font-weight: 600 !important;
-  font-size: 0.9rem !important;
+  font-weight: var(--fw-medium) !important;
+  font-size: var(--fs-sm) !important;
   padding: 9px 16px !important;
   border-radius: 6px !important;
   cursor: pointer;
@@ -3066,13 +3066,13 @@ html.no-scroll {
   color: #3b82f6;
 }
 .force-auth-title {
-  font-size: 1.2rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   margin-bottom: 8px;
   color: var(--text-heading);
 }
 .force-auth-desc {
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.6;
   margin-bottom: 18px;
@@ -3086,13 +3086,13 @@ html.no-scroll {
   text-align: left;
 }
 .force-auth-email-label {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-bottom: 2px;
 }
 .force-auth-email-val {
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   word-break: break-all;
 }
@@ -3103,13 +3103,13 @@ html.no-scroll {
   justify-content: center;
   gap: 8px;
   padding: 12px 16px !important;
-  font-size: 0.92rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: var(--radius) !important;
   box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
 }
 .force-auth-note {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 10px;
   line-height: 1.4;
@@ -3122,7 +3122,7 @@ html.no-scroll {
   background: #ffffff !important;
 }
 .force-auth-logout-link {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   text-decoration: underline;
   cursor: pointer;
@@ -3160,8 +3160,8 @@ html.no-scroll {
   border: 1px solid currentColor;
   border-radius: 4px;
   color: inherit;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 3px 10px;
   cursor: pointer;
   opacity: 0.85;
@@ -3245,8 +3245,8 @@ html.no-scroll {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -3256,8 +3256,8 @@ html.no-scroll {
 }
 
 .home-section-link {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-muted);
   text-decoration: none;
   cursor: pointer;
@@ -3348,8 +3348,8 @@ html.no-scroll {
 }
 
 .home-shared-card-wrap .match-card .match-team {
-  font-size: 0.95rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
 }
 
 /* 5. 空状態共通 */
@@ -3357,8 +3357,8 @@ html.no-scroll {
   text-align: center;
   padding: 24px 16px;
   color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   background: #f8fafc;
   border: 1px dashed var(--border-color);
   border-radius: var(--radius);
@@ -3370,8 +3370,8 @@ html.no-scroll {
 }
 
 .home-block-label {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-muted);
   letter-spacing: 0.03em;
   margin-bottom: 8px;
@@ -3429,15 +3429,15 @@ html.no-scroll {
 .tbd-status-pill {
   display: inline-block;
   padding: 2px 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   background: #e2e8f0;
   border-radius: 4px;
 }
 
 .home-tbd-desc {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.4;
 }
@@ -3460,7 +3460,7 @@ html.no-scroll {
   align-items: center;
   padding: 2px 7px;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   color: #1d4ed8;
   background: #eff6ff;
   border: 1px solid #bfdbfe;
@@ -3486,8 +3486,8 @@ html.no-scroll {
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 4px 10px;
   border-radius: 5px;
   cursor: pointer;
@@ -3532,14 +3532,14 @@ html.no-scroll {
 }
 
 .home-line-code-label {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: #166534;
 }
 
 .home-line-code-value {
-  font-size: 0.95rem;
-  font-weight: 800;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   letter-spacing: 0.06em;
   color: #15803d;
   background: #ffffff;
@@ -3562,8 +3562,8 @@ html.no-scroll {
   width: auto !important;
   height: 30px !important;
   padding: 0 10px !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-xs) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 5px !important;
   cursor: pointer;
 }
@@ -3574,8 +3574,8 @@ html.no-scroll {
   gap: 4px;
   height: 30px;
   padding: 0 11px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: #06C755;
   border: 1px solid #06C755;
@@ -3599,8 +3599,8 @@ html.no-scroll {
   display: inline-flex;
   align-items: center;
   padding: 3px 9px;
-  font-size: 0.74rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 999px;
 }
 
@@ -3610,7 +3610,7 @@ html.no-scroll {
 }
 
 .home-push-status-badge.status-idle {
-  color: #475569;
+  color: var(--text-main);
   background: #f1f5f9;
 }
 
@@ -3626,7 +3626,7 @@ html.no-scroll {
 
 .home-push-mock-desc {
   margin: 0 0 10px 0;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.45;
 }
@@ -3634,7 +3634,7 @@ html.no-scroll {
 .home-push-ios-guide {
   margin-bottom: 10px;
   padding: 8px 10px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: #92400e;
   background: #fffbeb;
   border: 1px solid #fde68a;
@@ -3653,7 +3653,7 @@ html.no-scroll {
   width: 100%;
   height: 36px;
   padding: 6px 10px;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
   background: #f8fafc;
   border: 1px solid var(--border-color);
@@ -3682,8 +3682,8 @@ html.no-scroll {
   width: auto !important;
   height: 36px !important;
   padding: 0 14px !important;
-  font-size: 0.82rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 6px !important;
   cursor: pointer;
 }
@@ -3696,8 +3696,8 @@ html.no-scroll {
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 6px 8px;
   cursor: pointer;
 }
@@ -3709,7 +3709,7 @@ html.no-scroll {
 
 .home-push-endpoint-info {
   margin-top: 8px;
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   word-break: break-all;
 }
@@ -3717,8 +3717,8 @@ html.no-scroll {
 .home-push-feedback {
   margin-top: 8px;
   padding: 8px 10px;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 6px;
   line-height: 1.4;
 }
@@ -3759,7 +3759,7 @@ html.no-scroll {
     flex: 1 1 100%;
     min-width: 0;
     padding: 0 12px !important;
-    font-size: 0.82rem !important;
+    font-size: var(--fs-sm) !important;
   }
 }
 
@@ -3802,7 +3802,7 @@ html.no-scroll {
 
 /* チェックボックスのラベル */
 .login-remember-label {
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   cursor: pointer;
   user-select: none;
@@ -3817,10 +3817,10 @@ html.no-scroll {
 }
 
 .login-register-link {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--primary, #2563eb);
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -3859,7 +3859,7 @@ html.no-scroll {
 }
 
 .oauth-loading-text {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -3881,21 +3881,21 @@ html.no-scroll {
 }
 
 .oauth-account-badge {
-  font-size: 0.76rem;
-  color: var(--text-muted, #64748b);
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-bold);
   margin-bottom: 4px;
 }
 
 .oauth-account-name {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--text-heading, #1e293b);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .oauth-account-email {
-  font-size: 0.85rem;
-  color: var(--text-muted, #475569);
+  font-size: var(--fs-sm);
+  color: var(--text-main);
 }
 
 .oauth-global-msg {
@@ -3965,10 +3965,10 @@ html.no-scroll {
   justify-content: center;
   gap: 4px;
   background-color: #f1f5f9 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 8px !important;
-  font-weight: 700;
+  font-weight: var(--fw-medium);
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
 }
 
@@ -3980,7 +3980,7 @@ html.no-scroll {
 .btn-load-more.is-touch-active {
   background-color: #e2e8f0 !important;
   border-color: #cbd5e1 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
@@ -4079,7 +4079,7 @@ html.no-scroll {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
 }
 
 .category-badge {
@@ -4087,15 +4087,15 @@ html.no-scroll {
   border: 1px solid var(--border-color) !important;
   padding: 4px 10px;
   border-radius: 4px;
-  font-weight: 700;
+  font-weight: var(--fw-medium);
   color: var(--text-muted) !important;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
 }
 
 .result-date {
   color: var(--text-muted) !important;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
 }
 
 .result-body,
@@ -4103,12 +4103,12 @@ html.no-scroll {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-weight: bold;
+  font-weight: var(--fw-bold);
 }
 
 .result-team {
   flex: 1;
-  font-size: 1rem;
+  font-size: var(--fs-md);
   color: var(--text-heading) !important;
   word-break: break-word;
 }
@@ -4119,8 +4119,8 @@ html.no-scroll {
 
 .result-score,
 .match-score {
-  font-size: 1.3rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   padding: 4px 12px;
   border-radius: 6px;
   text-align: center;
@@ -4130,7 +4130,7 @@ html.no-scroll {
 
 .result-score.win, .match-score.win { color: #16a34a !important; background: #f0fdf4 !important; border: 1px solid #86efac !important; }
 .result-score.lose, .match-score.lose { color: #dc2626 !important; background: #fef2f2 !important; border: 1px solid #fca5a5 !important; }
-.result-score.draw, .match-score.draw { color: #475569 !important; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
+.result-score.draw, .match-score.draw { color: var(--text-main) !important; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; }
 
 
 /* =========================================
@@ -4167,20 +4167,20 @@ html.no-scroll {
 }
 
 .modal-match-date {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
 }
 
 .modal-match-location-row {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #475569;
-  font-size: 0.85rem;
+  color: var(--text-main);
+  font-size: var(--fs-sm);
 }
 
 .modal-loc-icon {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .modal-match-header-right {
@@ -4204,8 +4204,8 @@ html.no-scroll {
 }
 
 .modal-score-board .team-name {
-  font-size: 1.05rem !important;
-  font-weight: 700;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold);
   color: var(--text-heading) !important;
   word-break: break-word;
   line-height: 1.3;
@@ -4224,7 +4224,7 @@ html.no-scroll {
 .score-hyphen {
   margin: 0 6px;
   opacity: 0.5;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .score-hyphen-sm {
@@ -4246,9 +4246,9 @@ html.no-scroll {
 }
 
 .match-card-meta .category-badge {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   padding: 2px 8px;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   border-radius: 4px;
 }
 
@@ -4256,8 +4256,8 @@ html.no-scroll {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #475569;
-  font-size: 0.85rem;
+  color: var(--text-main);
+  font-size: var(--fs-sm);
 }
 
 /* 2段目: チーム名とスコア */
@@ -4271,11 +4271,11 @@ html.no-scroll {
 
 .match-team {
   flex: 1;
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-md);
   line-height: 1.3;
   word-break: break-word;
-  color: #475569;
+  color: var(--text-main);
 }
 
 .match-team-left {
@@ -4291,8 +4291,8 @@ html.no-scroll {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #64748b;
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
   padding-top: 6px;
   border-top: 1px dashed var(--border-color);
   max-width: 100%;
@@ -4310,7 +4310,7 @@ html.no-scroll {
 
 .date-icon, .loc-icon {
   font-size: 1.0rem;
-  color: #64748b;
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
@@ -4320,10 +4320,10 @@ html.no-scroll {
     gap: 8px;
   }
   .match-team {
-    font-size: 0.9rem;
+    font-size: var(--fs-sm);
   }
   .match-card-date-row {
-    font-size: 0.8rem;
+    font-size: var(--fs-xs);
   }
 }
 
@@ -4332,13 +4332,13 @@ html.no-scroll {
   align-items: center;
   justify-content: center;
   padding: 3px 12px;
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   border-radius: 4px;
   flex-shrink: 0;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
+  color: var(--text-main);
   min-width: 68px;
 }
 
@@ -4366,13 +4366,13 @@ html.no-scroll {
   justify-content: center;
   padding: 4px 14px;
   border-radius: 6px;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   line-height: 1.2;
   min-width: 72px;
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
+  color: var(--text-main);
   flex-shrink: 0;
 }
 
@@ -4391,7 +4391,7 @@ html.no-scroll {
 .modal-score-box.draw {
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 @media (max-width: 600px) {
@@ -4403,11 +4403,11 @@ html.no-scroll {
   }
   .modal-score-box {
     padding: 3px 10px !important;
-    font-size: 1.15rem !important;
+    font-size: var(--fs-lg) !important;
     min-width: 64px !important;
   }
   .modal-score-board .team-name {
-    font-size: 0.95rem !important;
+    font-size: var(--fs-sm) !important;
   }
 }
 
@@ -4416,8 +4416,8 @@ html.no-scroll {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   margin-top: 8px;
   width: 100%;
 }
@@ -4444,8 +4444,8 @@ html.no-scroll {
 
 
 .modal-section-title {
-  font-size: 1rem !important;
-  font-weight: 800 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
   color: var(--text-heading) !important;
   text-transform: none !important;
   letter-spacing: 0 !important;
@@ -4461,7 +4461,7 @@ html.no-scroll {
 }
 
 .modal-section-content {
-  font-size: 0.95rem;
+  font-size: var(--fs-sm);
   color: var(--text-main) !important;
   line-height: 1.6;
   padding: 0 8px;
@@ -4477,9 +4477,9 @@ html.no-scroll {
 .btn-match-edit {
   width: 100%;
   padding: 14px;
-  font-weight: bold;
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
-  font-size: 1rem;
+  font-size: var(--fs-sm);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4498,10 +4498,10 @@ html.no-scroll {
 .tl-header { display: none; }
 
 .tl-period-label {
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   color: var(--text-heading) !important;
   margin: 16px 0 12px 0;
-  font-size: 0.95rem;
+  font-size: var(--fs-sm);
   display: inline-block;
   padding-bottom: 2px;
 }
@@ -4511,8 +4511,8 @@ html.no-scroll {
 .tl-time {
   width: 55px;
   color: var(--text-muted) !important;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   padding-top: 1px;
   text-align: right;
   padding-right: 16px;
@@ -4532,8 +4532,8 @@ html.no-scroll {
 .tl-row:last-child .tl-line { background-color: transparent !important; }
 
 .tl-action-title {
-  font-weight: 700;
-  font-size: 0.75rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -4571,8 +4571,8 @@ html.no-scroll {
   color: #b91c1c !important;
 }
 
-.tl-player { margin-top: 4px; font-size: 0.9rem; color: var(--text-main) !important; font-weight: 600; }
-.tl-assist { font-size: 0.8rem; color: var(--text-muted) !important; margin-top: 2px; }
+.tl-player { margin-top: 4px; font-size: var(--fs-sm); color: var(--text-main) !important; font-weight: var(--fw-medium); }
+.tl-assist { font-size: var(--fs-xs); color: var(--text-muted) !important; margin-top: 2px; }
 
 /* PC用 試合結果カードのスタイル調整（左: 日付・開催地エリア / 中央: スコアエリア / 右: 対戦相手） */
 @media (min-width: 768px) {
@@ -4621,8 +4621,8 @@ html.no-scroll {
     padding-top: 0 !important;
     margin: 0 !important;
     min-width: 0;
-    font-size: 0.82rem;
-    color: #64748b;
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
     display: flex;
     align-items: center;
     gap: 4px;
@@ -4655,8 +4655,8 @@ html.no-scroll {
     line-height: 1;
     padding: 0 14px;
     box-sizing: border-box;
-    font-size: 1.1rem;
-    font-weight: 700;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
     flex-shrink: 0;
     margin: 0 14px;
   }
@@ -4664,9 +4664,9 @@ html.no-scroll {
   .match-team {
     white-space: nowrap !important;
     word-break: keep-all !important;
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: #475569;
+    font-size: var(--fs-md);
+    font-weight: var(--fw-bold);
+    color: var(--text-main);
     line-height: 1;
     display: flex;
     align-items: center;
@@ -4718,8 +4718,8 @@ html.no-scroll {
 
 /* ★ 読み取り専用テキストの見栄えをリッチに */
 .readonly-text {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   padding: 2px 0 0 0;
   word-break: break-word;
@@ -4728,10 +4728,10 @@ html.no-scroll {
 
 /* 出席者は少し行間を開けて見やすく */
 .attended-list {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-medium);
 }
 
 /* =========================================
@@ -4739,15 +4739,15 @@ html.no-scroll {
    ========================================= */
 .timeline-log-container {
   padding-left: 4px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .input-tl-header {
   border-bottom: 1px dashed var(--border-color);
   margin-bottom: 16px;
   padding-bottom: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -4806,13 +4806,13 @@ html.no-scroll {
 }
 
 .log-period-title {
-  font-weight: bold;
+  font-weight: var(--fw-bold);
   color: var(--primary-light);
   margin-top: 10px;
   margin-bottom: 4px;
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 2px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .log-period-title:first-child {
@@ -4822,20 +4822,20 @@ html.no-scroll {
 .log-item {
   padding-left: 8px;
   margin: 6px 0;
-  color: #475569;
+  color: var(--text-main);
   line-height: 1.4;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .log-time {
-  font-weight: bold;
-  color: #64748b;
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   display: inline-block;
   min-width: 36px;
 }
 
 .log-type {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .log-type.type-goal {
@@ -4859,8 +4859,8 @@ html.no-scroll {
   display: inline-block;
   padding: 4px 12px;
   border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: bold;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   margin-bottom: 12px;
 }
 
@@ -4899,13 +4899,13 @@ html.no-scroll {
   flex: 1;
   text-align: center;
   padding: 8px 10px; 
-  font-size: 0.82rem; 
+  font-size: var(--fs-sm); 
   border-radius: 4px; /* 試合結果カードと同じ4px */
   background: transparent !important; 
-  color: #64748b !important; 
+  color: var(--text-muted) !important; 
   border: none !important;
   cursor: pointer; 
-  font-weight: 600; 
+  font-weight: var(--fw-medium); 
   transition: transform 0.15s ease, background-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
@@ -4927,7 +4927,7 @@ html.no-scroll {
   background: #ffffff !important; 
   color: var(--primary) !important; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* ランキンググリッドコンテナ */
@@ -4959,14 +4959,14 @@ html.no-scroll {
 }
 
 .ranking-column-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-heading, #475569);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .ranking-column-badge {
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   padding: 2px 8px;
   border-radius: 4px;
   letter-spacing: 0.5px;
@@ -5044,9 +5044,9 @@ html.no-scroll {
 }
 
 .rank-card.rank-other .rank-num { 
-  color: #94a3b8; 
-  font-weight: 700; 
-  font-size: 1.15rem;
+  color: var(--text-subtle); 
+  font-weight: var(--fw-bold); 
+  font-size: var(--fs-lg);
 }
 
 /* アバター（全順位共通・円形・丸型に統一） */
@@ -5055,7 +5055,7 @@ html.no-scroll {
   height: 32px;
   border-radius: 50% !important;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -5088,17 +5088,17 @@ html.no-scroll {
 
 .rank-name { 
   color: var(--text-heading);
-  font-weight: 500 !important; /* 1〜3位も含め全順位統一で500（標準）に統一 */
-  font-size: 0.88rem;
+  font-weight: var(--fw-medium) !important; /* 1〜3位も含め全順位統一で500（標準）に統一 */
+  font-size: var(--fs-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .rank-number {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 400; /* 背番号は細めで控えめに */
+  color: var(--text-subtle);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal); /* 背番号は細めで控えめに */
   margin-top: 1px;
 }
 
@@ -5114,20 +5114,20 @@ html.no-scroll {
 }
 
 .rank-score-val { 
-  font-size: 1.22rem; 
+  font-size: var(--fs-lg); 
   line-height: 1.1;
   text-align: right;
 }
 
-.rank-card.rank-1 .rank-score-val { color: #d97706; font-weight: 800; }
-.rank-card.rank-2 .rank-score-val { color: #5c728a; font-weight: 800; }
-.rank-card.rank-3 .rank-score-val { color: #9a3412; font-weight: 800; }
-.rank-card.rank-other .rank-score-val { color: #475569; font-weight: 700; }
+.rank-card.rank-1 .rank-score-val { color: #d97706; font-weight: var(--fw-bold); }
+.rank-card.rank-2 .rank-score-val { color: #5c728a; font-weight: var(--fw-bold); }
+.rank-card.rank-3 .rank-score-val { color: #9a3412; font-weight: var(--fw-bold); }
+.rank-card.rank-other .rank-score-val { color: var(--text-main); font-weight: var(--fw-bold); }
 
 .rank-score-label {
   font-size: 0.58rem;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   letter-spacing: 0.5px;
   margin-top: 1px;
   text-align: right;
@@ -5146,9 +5146,9 @@ html.no-scroll {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: var(--text-muted, #64748b) !important;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-muted) !important;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -5184,8 +5184,8 @@ html.no-scroll {
   padding: 24px 0;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
 }
 
 /* =========================================
@@ -5324,7 +5324,7 @@ html.no-scroll {
 .stats-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   white-space: nowrap;
   color: var(--text-heading);
 }
@@ -5337,8 +5337,8 @@ html.no-scroll {
 
 .stats-table th {
   color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.82rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0;
   padding: 12px 8px;
@@ -5354,24 +5354,24 @@ html.no-scroll {
 }
 
 .stats-table th.th-number {
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table th.th-name {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table td {
   padding: 12px 8px;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
-  font-weight: 500;
+  font-weight: var(--fw-normal);
 }
 
 .stats-table td.col-number {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
-  font-size: 0.95rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table tbody tr {
@@ -5433,7 +5433,7 @@ html.no-scroll {
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.3px;
   line-height: 1.2;
   flex-shrink: 0;
@@ -5486,8 +5486,8 @@ html.no-scroll {
 }
 
 .rate-text {
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   min-width: 32px;
   text-align: left;
@@ -5504,7 +5504,7 @@ html.no-scroll {
   justify-content: center;
   min-width: 24px;
   height: 24px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   box-sizing: border-box;
 }
 
@@ -5521,7 +5521,7 @@ html.no-scroll {
   border-radius: 999px;
   background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(254, 243, 199, 0) 75%) !important;
   color: #b45309 !important;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1.05;
 }
 
@@ -5541,7 +5541,7 @@ html.no-scroll {
 }
 
 .stat-top-value {
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1;
 }
 
@@ -5554,8 +5554,8 @@ html.no-scroll {
 .player-link {
   color: var(--text-heading) !important;
   text-decoration: none !important;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
 }
 
 /* 行全体をタップ可能にして詳細モーダルを開くスタイル */
@@ -5579,7 +5579,7 @@ html.no-scroll {
 }
 
 .stats-table .font-semibold {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .stats-table-header {
@@ -5594,8 +5594,8 @@ html.no-scroll {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
 }
 
 .stats-tap-hint-inline .material-symbols-outlined {
@@ -5609,8 +5609,8 @@ html.no-scroll {
 
 .stats-table-title {
   display: block;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-md);
   color: var(--text-heading);
   letter-spacing: normal;
   line-height: 1.4;
@@ -5688,8 +5688,8 @@ th.sort-active .sort-icon {
     gap: 5px !important;
     padding: 6px 10px !important;
     font-size: 0.72rem !important;
-    font-weight: 500 !important;
-    color: #475569 !important;
+    font-weight: var(--fw-medium) !important;
+    color: var(--text-main) !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
   }
@@ -5790,7 +5790,7 @@ th.sort-active .sort-icon {
     text-align: center !important;
     padding: 10px 1px !important;
     font-size: 0.82rem !important;
-    font-weight: 600 !important;
+    font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-number {
     width: 34px !important;
@@ -5798,7 +5798,7 @@ th.sort-active .sort-icon {
     text-align: center !important;
     padding: 7px 1px !important;
     font-size: 0.84rem !important;
-    font-weight: 600 !important;
+    font-weight: var(--fw-medium) !important;
     color: var(--text-heading) !important;
   }
 
@@ -5807,8 +5807,8 @@ th.sort-active .sort-icon {
     width: auto !important;
     text-align: left !important;
     padding: 10px 3px 10px 6px !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-name-cell {
     width: auto !important;
@@ -5844,8 +5844,8 @@ th.sort-active .sort-icon {
 
   .player-name,
   .player-link {
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-medium) !important;
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
@@ -5955,7 +5955,7 @@ th.sort-active .sort-icon {
 
   .stat-top-value {
     font-size: 0.8rem !important;
-    font-weight: 800 !important;
+    font-weight: var(--fw-bold) !important;
   }
 
   .stats-table th.th-stat .th-icon {
@@ -6071,9 +6071,9 @@ th.sort-active .sort-icon {
 }
 
 .modal-player-name {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #475569 !important;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--text-main) !important;
 }
 
 #playerModalOverlay #pm-badges {
@@ -6101,16 +6101,16 @@ th.sort-active .sort-icon {
 }
 
 .summary-grid-5 .stat-label {
-  font-size: 0.75rem !important;
-  color: #64748b !important;
+  font-size: var(--fs-xs) !important;
+  color: var(--text-muted) !important;
   margin-bottom: 4px !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
   white-space: nowrap;
 }
 
 .summary-grid-5 .stat-value {
-  font-size: 1.25rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-lg) !important;
+  font-weight: var(--fw-medium) !important;
   color: #2563eb !important;
   white-space: nowrap;
   line-height: 1.2;
@@ -6118,7 +6118,7 @@ th.sort-active .sort-icon {
 
 .summary-grid-5 .rate-unit {
   font-size: 0.72rem !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
   margin-left: 1px;
   color: #2563eb !important;
 }
@@ -6140,9 +6140,9 @@ th.sort-active .sort-icon {
 
 /* 勝敗ブロック */
 #playerModalOverlay .modal-section-title {
-  font-size: 0.82rem !important;
-  font-weight: 600 !important;
-  color: #475569 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
+  color: var(--text-main) !important;
   margin-bottom: 8px !important;
 }
 
@@ -6157,15 +6157,15 @@ th.sort-active .sort-icon {
   text-align: center;
   padding: 8px 4px;
   border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
 }
 
 .box-win { color: #16a34a !important; border-color: #86efac !important; background: #f0fdf4 !important; }
 .box-lose { color: #dc2626 !important; border-color: #fca5a5 !important; background: #fef2f2 !important; }
-.box-draw { color: #475569 !important; border-color: #cbd5e1 !important; background: #f8fafc !important; }
+.box-draw { color: var(--text-main) !important; border-color: #cbd5e1 !important; background: #f8fafc !important; }
 
 /* 参加履歴（タイムライン）の箱 */
 .history-container {
@@ -6206,32 +6206,32 @@ th.sort-active .sort-icon {
 }
 
 .pm-match-header-left .category-badge {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 2px 7px;
   border-radius: 4px;
 }
 
 /* 日付 */
 .pm-match-date {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   letter-spacing: -0.2px;
   white-space: nowrap;
 }
 
 /* vs と 対戦相手名 */
 .pm-match-vs {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+  font-weight: var(--fw-normal);
 }
 
 .pm-match-opp {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
@@ -6247,8 +6247,8 @@ th.sort-active .sort-icon {
   padding: 2px 10px;
   min-width: 54px;
   border-radius: 4px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.5px;
 }
 
@@ -6282,8 +6282,8 @@ th.sort-active .sort-icon {
   background: #fefce8;
   border: 1px solid #fef08a;
   color: #b45309;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -6303,9 +6303,9 @@ th.sort-active .sort-icon {
 
 .pm-event-time {
   min-width: 60px;
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
 }
 
@@ -6316,12 +6316,12 @@ th.sort-active .sort-icon {
   justify-content: center;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   white-space: nowrap;
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .pm-action-goal,
@@ -6330,23 +6330,23 @@ th.sort-active .sort-icon {
 .pm-action-red {
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .pm-action-none {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
-  color: #64748b !important;
-  font-size: 0.78rem !important;
-  font-weight: 400 !important;
+  color: var(--text-muted) !important;
+  font-size: var(--fs-xs) !important;
+  font-weight: var(--fw-normal) !important;
 }
 
 /* 詳細テキスト（アシスト元・ゴール者等） */
 .pm-event-detail {
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
   margin-left: 2px;
 }
@@ -6404,9 +6404,9 @@ th.sort-active .sort-icon {
   background: transparent;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -6420,7 +6420,7 @@ th.sort-active .sort-icon {
   background: #ffffff;
   color: var(--primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  font-weight: 800;
+  font-weight: var(--fw-bold);
 }
 
 /* 繝薙Η繝ｼ繧ｻ繧ｯ繧ｷ繝ｧ繝ｳ蛻・ｊ譖ｿ縺・(Mobile Default) */
@@ -6452,8 +6452,8 @@ th.sort-active .sort-icon {
 
 /* 予定リストタイトル */
 .schedule-list-title {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 16px;
 }
@@ -6479,8 +6479,8 @@ th.sort-active .sort-icon {
   background: #ffffff;
   border: 1px solid var(--border-color);
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 7px 14px;
   border-radius: 4px; /* 四角ベース（角丸4px） */
   cursor: pointer;
@@ -6503,10 +6503,10 @@ th.sort-active .sort-icon {
 
 /* 全タブ共通の選択中スタイル（5色分けを撤廃し単色統一） */
 .filter-pill-btn.active {
-  background: #475569 !important;
-  border-color: #475569 !important;
+  background: var(--text-main) !important;
+  border-color: var(--text-main) !important;
   color: #ffffff !important;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* 予定リストの「未入力」フィルターボタン 右上バッジ */
@@ -6546,7 +6546,7 @@ th.sort-active .sort-icon {
   background-color: #ef4444;
   color: #ffffff !important;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1;
   border: 1.5px solid #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -6574,8 +6574,8 @@ th.sort-active .sort-icon {
 }
 
 .cal-month-title {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   text-align: center;
   letter-spacing: 0.5px;
@@ -6594,7 +6594,7 @@ th.sort-active .sort-icon {
   justify-content: center;
   cursor: pointer;
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   transition: all 0.2s ease;
 }
 
@@ -6612,8 +6612,8 @@ th.sort-active .sort-icon {
   background: rgba(37, 99, 235, 0.1);
   border: 1px solid var(--primary);
   color: var(--primary);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -6639,8 +6639,8 @@ th.sort-active .sort-icon {
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -6664,8 +6664,8 @@ th.sort-active .sort-icon {
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -6688,8 +6688,8 @@ th.sort-active .sort-icon {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-weight: 800;
-  font-size: 0.8rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
@@ -6822,7 +6822,7 @@ th.sort-active .sort-icon {
 .cal-event-item.status-maybe {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
 }
 
 .cal-event-text {
@@ -6843,7 +6843,7 @@ th.sort-active .sort-icon {
 
 .cal-event-title {
   font-size: 0.60rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
@@ -6875,8 +6875,8 @@ th.sort-active .sort-icon {
   .schedule-subtab {
     height: 32px !important;
     padding: 0 14px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-bold) !important;
     border-radius: 4px !important;
     display: flex !important;
     align-items: center !important;
@@ -6912,17 +6912,17 @@ th.sort-active .sort-icon {
     gap: 6px !important;
   }
   .cal-month-title {
-    font-size: 0.95rem !important;
+    font-size: var(--fs-md) !important;
     min-width: 80px !important;
   }
   .cal-nav-btn {
     width: 28px !important;
     height: 28px !important;
-    font-size: 0.85rem !important;
+    font-size: var(--fs-sm) !important;
   }
   .cal-today-btn {
     padding: 3px 10px !important;
-    font-size: 0.75rem !important;
+    font-size: var(--fs-xs) !important;
   }
   .cal-weekdays-row {
     position: sticky !important;
@@ -6976,7 +6976,7 @@ th.sort-active .sort-icon {
   .cal-event-title {
     font-size: 0.58rem;
     line-height: 1.05;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
   }
 
   /* 予定作成・編集モーダルのスマホ最適化（横スクロール防止＆フッターボタン1段横並び） */
@@ -6997,7 +6997,7 @@ th.sort-active .sort-icon {
     padding: 12px 16px !important;
   }
   .event-edit-modal .modal-header #eventEditModalTitle {
-    font-size: 1.05rem !important;
+    font-size: var(--fs-md) !important;
   }
   .event-edit-modal .event-modal-body {
     padding: 12px 14px 16px !important;
@@ -7106,8 +7106,8 @@ th.sort-active .sort-icon {
   }
   .schedule-filter-bar .filter-pill-btn {
     padding: 6px 12px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
   }
   .schedule-agenda-list {
     max-height: none !important;
@@ -7244,8 +7244,8 @@ th.sort-active .sort-icon {
   padding: 8px 14px;
   border: none;
   background: transparent;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-main);
   cursor: pointer;
   text-align: left;
@@ -7270,8 +7270,8 @@ th.sort-active .sort-icon {
   background: #f1f5f9;
   border: 1px solid var(--border-color);
   color: var(--text-heading);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -7340,8 +7340,8 @@ th.sort-active .sort-icon {
 }
 
 .event-modal-title {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   line-height: 1.35;
   margin: 0;
@@ -7370,9 +7370,9 @@ th.sort-active .sort-icon {
 
 /* 鬆・岼隕句・縺励Λ繝吶Ν */
 .event-detail-label {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -7383,7 +7383,7 @@ th.sort-active .sort-icon {
 /* 鬆・岼蛟､・医う繝ｳ繝・Φ繝医ｒ驕ｩ逕ｨ縺励※髫主ｱ､繧呈・遒ｺ蛹厄ｼ・*/
 .event-detail-val {
   padding-left: 12px;
-  font-size: 0.98rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
   line-height: 1.5;
 }
@@ -7396,7 +7396,7 @@ th.sort-active .sort-icon {
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.5;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--text-main);
   margin-top: 4px;
 }
@@ -7417,8 +7417,8 @@ th.sort-active .sort-icon {
   border: 1px solid rgba(37, 99, 235, 0.3);
   color: var(--primary);
   border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   text-decoration: none;
   transition: all 0.15s ease;
 }
@@ -7446,20 +7446,19 @@ th.sort-active .sort-icon {
 }
 
 .attend-group-title {
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-/* 蜃ｺ谺閠・・蜷榊燕繝ｪ繧ｹ繝茨ｼ医＆繧峨↓繧､繝ｳ繝・Φ繝茨ｼ・*/
 .attend-names {
   padding-left: 14px;
   line-height: 1.5;
   color: var(--text-main);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .text-success { color: #16a34a; }
@@ -7487,8 +7486,8 @@ th.sort-active .sort-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -7502,11 +7501,11 @@ th.sort-active .sort-icon {
   object-fit: cover;
 }
 .guest-email {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
 }
 .guest-status {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   background: #f1f5f9;
   padding: 2px 6px;
@@ -7553,7 +7552,7 @@ th.sort-active .sort-icon {
 }
 
 #edmUnansweredNames {
-  color: #94a3b8;
+  color: var(--text-subtle);
 }
 
 /* 削除確認モーダル */
@@ -7603,8 +7602,8 @@ th.sort-active .sort-icon {
 
 .event-edit-modal .form-label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   margin-bottom: 5px;
 }
@@ -7615,7 +7614,7 @@ th.sort-active .sort-icon {
   padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: var(--text-main);
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -7631,8 +7630,8 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-main);
   cursor: pointer;
   user-select: none;
@@ -7693,8 +7692,8 @@ th.sort-active .sort-icon {
   background: none;
   border: none;
   color: #dc2626;
-  font-weight: 500;
-  font-size: 0.82rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 6px 4px;
   border-radius: 4px;
   cursor: pointer;
@@ -7718,8 +7717,8 @@ th.sort-active .sort-icon {
   background: #f1f5f9;
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 9px 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -7789,8 +7788,8 @@ th.sort-active .sort-icon {
   color: var(--text-main);
   padding: 8px 0;
   border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -7841,8 +7840,8 @@ th.sort-active .sort-icon {
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   line-height: 1;
   border-radius: 6px;
   box-sizing: border-box;
@@ -7878,8 +7877,8 @@ th.sort-active .sort-icon {
   background: #dc2626;
   border: 1px solid #dc2626;
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   line-height: 1;
   border-radius: 6px;
   box-sizing: border-box;
@@ -7914,8 +7913,8 @@ th.sort-active .sort-icon {
    搭 莠亥ｮ壹Μ繧ｹ繝茨ｼ医い繧ｸ繧ｧ繝ｳ繝€・臥畑繧ｹ繧ｿ繧､繝ｫ・・牡蛻・￠
    ========================================= */
 .schedule-title { 
-  font-weight: 800; 
-  font-size: 1rem;
+  font-weight: var(--fw-bold); 
+  font-size: var(--fs-md);
   margin: 0 0 12px 4px; 
   color: var(--text-heading); 
 }
@@ -7968,7 +7967,7 @@ th.sort-active .sort-icon {
 }
 
 .schedule-date {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
 }
 
@@ -7980,13 +7979,13 @@ th.sort-active .sort-icon {
 }
 
 .schedule-vs {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
 }
 
 .schedule-opponent-name {
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
 }
 
@@ -8019,9 +8018,9 @@ th.sort-active .sort-icon {
 }
 
 .same-day-tabs-label {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -8035,8 +8034,8 @@ th.sort-active .sort-icon {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   color: var(--text-main);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -8147,7 +8146,7 @@ th.sort-active .sort-icon {
 }
 .schedule-agenda-card.card-maybe .schedule-agenda-title,
 .schedule-agenda-card.card-maybe .schedule-agenda-date {
-  color: #334155;
+  color: var(--text-main);
 }
 
 /* 未入力 (Unanswered) - 白 (デフォルトと同じ) */
@@ -8170,7 +8169,7 @@ th.sort-active .sort-icon {
 
 .schedule-agenda-badge {
   font-size: 0.70rem;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   padding: 3px 8px;
   border-radius: 4px;
   white-space: nowrap;
@@ -8301,14 +8300,14 @@ th.sort-active .sort-icon {
 }
 
 .schedule-agenda-date {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
 }
 
 .schedule-agenda-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   margin: 0 0 8px 0;
   color: var(--text-heading);
 }
@@ -8324,7 +8323,7 @@ th.sort-active .sort-icon {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -8339,11 +8338,11 @@ th.sort-active .sort-icon {
 }
 
 .schedule-agenda-count-text {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 .schedule-agenda-count {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .schedule-agenda-buttons-container {
@@ -8358,8 +8357,8 @@ th.sort-active .sort-icon {
 .btn-inline-attend {
   flex: 1;
   padding: 7px 0;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 0;
   border: none;
   background: transparent;
@@ -8398,7 +8397,7 @@ th.sort-active .sort-icon {
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   border: 1px solid var(--border-color);
   background: #f8fafc;
   color: var(--text-main);
@@ -8414,29 +8413,29 @@ th.sort-active .sort-icon {
   background: #f0fdf4;
   border-color: #bbf7d0;
   color: #15803d;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .edm-gear-chip.gear-alert-red {
   background: #fef2f2;
   border-color: #fca5a5;
   color: #b91c1c;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .edm-gear-chip.gear-alert-yellow {
   background: #fffbeb;
   border-color: #fde68a;
   color: #92400e;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .gear-chip-title {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .gear-chip-holder {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .btn-edm-resolve {
@@ -8444,8 +8443,8 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 3px;
   padding: 3px 9px;
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
   border: 1px solid #b91c1c;
   cursor: pointer;
@@ -8523,8 +8522,8 @@ th.sort-active .sort-icon {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -8535,7 +8534,7 @@ th.sort-active .sort-icon {
 }
 
 .members-header-subtitle {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -8554,9 +8553,9 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 5px;
   padding: 7px 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: var(--radius);
@@ -8583,7 +8582,7 @@ th.sort-active .sort-icon {
 
 .btn-gcp-header-link .material-symbols-outlined {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .btn-gcp-header-link:hover .material-symbols-outlined {
@@ -8596,8 +8595,8 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 4px;
   padding: 7px 14px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: var(--primary);
   border: 1px solid var(--primary);
@@ -8642,17 +8641,17 @@ th.sort-active .sort-icon {
   border: 1px solid #e2e8f0;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .stat-pill-label {
-  color: #64748b;
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .stat-pill-val {
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-bold);
 }
 
 /* 検索クリアボタン */
@@ -8664,7 +8663,7 @@ th.sort-active .sort-icon {
   background: none;
   border: none;
   font-size: 18px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   cursor: pointer;
   padding: 4px 6px;
   line-height: 1;
@@ -8744,7 +8743,7 @@ th.sort-active .sort-icon {
   height: 100%;
   border-radius: 50% !important;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8770,9 +8769,9 @@ th.sort-active .sort-icon {
 
 .member-number-badge {
   display: inline-block;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.2px;
   line-height: 1.3;
@@ -8781,8 +8780,8 @@ th.sort-active .sort-icon {
 }
 
 .member-card-name {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
   overflow: hidden;
@@ -8795,7 +8794,7 @@ th.sort-active .sort-icon {
   flex-wrap: wrap;
   row-gap: 4px;
   column-gap: 14px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -8808,7 +8807,7 @@ th.sort-active .sort-icon {
 
 .member-info-item .material-symbols-outlined {
   font-size: 15px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   flex-shrink: 0;
 }
 
@@ -8838,7 +8837,7 @@ th.sort-active .sort-icon {
 .badge-role-fuku,
 .badge-role-member {
   background: #f1f5f9 !important;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   border: 1px solid #e2e8f0 !important;
 }
 
@@ -8931,9 +8930,9 @@ th.sort-active .sort-icon {
 }
 
 .section-title {
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
   margin: 0;
   letter-spacing: -0.01em;
 }
@@ -8943,11 +8942,11 @@ th.sort-active .sort-icon {
   align-items: center;
   justify-content: center;
   padding: 2px 9px;
-  font-size: 0.76rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 9999px;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-main);
   line-height: 1.2;
 }
 
@@ -8955,8 +8954,8 @@ th.sort-active .sort-icon {
 .member-section-empty {
   padding: 16px;
   text-align: center;
-  font-size: 0.82rem;
-  color: #94a3b8;
+  font-size: var(--fs-sm);
+  color: var(--text-subtle);
   background: #f8fafc;
   border: 1px dashed #e2e8f0;
   border-radius: var(--radius);
@@ -9003,9 +9002,9 @@ th.sort-active .sort-icon {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .ob-toggle-icon {
@@ -9023,7 +9022,7 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 3px;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   padding: 1px 6px;
   border-radius: 4px;
   line-height: 1.2;
@@ -9054,7 +9053,7 @@ th.sort-active .sort-icon {
    OAuth設定案内モーダル専用スタイル（共通部品に準拠）
    ========================================= */
 .guidance-lead-text {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
   margin-bottom: 12px;
   line-height: 1.5;
@@ -9069,9 +9068,9 @@ th.sort-active .sort-icon {
 }
 
 .guidance-email-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -9083,8 +9082,8 @@ th.sort-active .sort-icon {
 }
 
 .guidance-email-code {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: #0284c7;
   word-break: break-all;
   user-select: all;
@@ -9095,9 +9094,9 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 4px;
   padding: 5px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -9171,13 +9170,13 @@ th.sort-active .sort-icon {
   justify-content: center;
   gap: 3px;
   padding: 4px 9px;
-  font-size: 0.78rem;
-  font-weight: 400 !important;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal) !important;
   letter-spacing: 0.02em;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   border-radius: 4px;
-  color: #475569;
+  color: var(--text-main);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -9207,8 +9206,8 @@ th.sort-active .sort-icon {
   justify-content: center;
   gap: 3px;
   padding: 4px 9px;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.02em;
   border: 1px solid #a7f3d0;
   background: #ecfdf5;
@@ -9236,7 +9235,7 @@ th.sort-active .sort-icon {
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   cursor: default;
@@ -9270,7 +9269,7 @@ th.sort-active .sort-icon {
   }
 
   .members-header-title {
-    font-size: 1.05rem;
+    font-size: var(--fs-md);
     gap: 6px;
   }
 
@@ -9279,7 +9278,7 @@ th.sort-active .sort-icon {
   }
 
   .members-header-subtitle {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -9329,8 +9328,8 @@ th.sort-active .sort-icon {
   }
 
   .stat-pill-val {
-    font-size: 0.98rem !important;
-    font-weight: 800 !important;
+    font-size: var(--fs-md) !important;
+    font-weight: var(--fw-bold) !important;
     line-height: 1.1 !important;
   }
 
@@ -9388,16 +9387,16 @@ th.sort-active .sort-icon {
   }
 
   .member-number-badge {
-    font-size: 0.92rem !important;
-    font-weight: 700 !important;
-    color: #64748b !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-bold) !important;
+    color: var(--text-muted) !important;
     line-height: 1.3 !important;
     margin-right: 2px !important;
   }
 
   .member-card-name {
-    font-size: 0.98rem !important;
-    font-weight: 700 !important;
+    font-size: var(--fs-md) !important;
+    font-weight: var(--fw-medium) !important;
     line-height: 1.3 !important;
   }
 
@@ -9464,8 +9463,8 @@ th.sort-active .sort-icon {
 }
 
 .member-modal-content .modal-title {
-  font-size: 1.05rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
   color: var(--text-heading) !important;
   line-height: 1.35 !important;
   letter-spacing: -0.01em;
@@ -9501,7 +9500,7 @@ th.sort-active .sort-icon {
 
 .badge-required {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: #ef4444;
   background: #fee2e2;
   padding: 1px 5px;
@@ -9510,7 +9509,7 @@ th.sort-active .sort-icon {
 }
 
 .form-status-msg {
-  font-size: 0.82rem;
+  font-size: var(--fs-xs);
   padding: 8px 12px;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -9525,7 +9524,7 @@ th.sort-active .sort-icon {
 
 .form-status-msg.loading {
   background: #f8fafc;
-  color: #475569;
+  color: var(--text-main);
   border: 1px solid #e2e8f0;
 }
 
@@ -9538,7 +9537,7 @@ th.sort-active .sort-icon {
 /* 読み取り専用インプット */
 .input-readonly {
   background-color: #f1f5f9 !important;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   cursor: not-allowed !important;
   border-color: #e2e8f0 !important;
 }
@@ -9553,14 +9552,14 @@ th.sort-active .sort-icon {
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 2px !important;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   box-sizing: border-box;
 }
 
 /* フィールド単位のエラー表示 */
 .field-error-msg {
   color: #ef4444;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   margin-top: 4px;
   line-height: 1.35;
 }
@@ -9611,10 +9610,10 @@ th.sort-active .sort-icon {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
-  color: #475569;
+  color: var(--text-main);
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -9628,7 +9627,7 @@ th.sort-active .sort-icon {
 .btn-member-modal-cancel:hover {
   background: #e2e8f0;
   border-color: #94a3b8;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .btn-member-modal-save,
@@ -9639,8 +9638,8 @@ a.btn-member-modal-save {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
@@ -9674,8 +9673,8 @@ a.btn-member-modal-save:hover {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff;
   background: #dc2626;
@@ -9735,7 +9734,7 @@ a.btn-member-modal-save:hover {
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
 }
 
 .delete-confirm-avatar-placeholder .material-symbols-outlined {
@@ -9743,14 +9742,14 @@ a.btn-member-modal-save:hover {
 }
 
 .delete-confirm-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 8px;
 }
 
 .delete-confirm-desc {
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.5;
 }
@@ -9785,8 +9784,8 @@ a.btn-member-modal-save:hover {
   justify-content: center !important;
   text-align: center !important;
   padding: 0 12px !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 6px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
@@ -9801,8 +9800,8 @@ a.btn-member-modal-save:hover {
   border: none;
   padding: 6px 4px;
   color: #dc2626;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -9828,11 +9827,11 @@ a.btn-member-modal-save:hover {
   gap: 6px;
   padding: 8px 12px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  color: #475569;
+  color: var(--text-main);
 }
 
 .member-status-hint-box.hint-suspended {
@@ -9844,7 +9843,7 @@ a.btn-member-modal-save:hover {
 .member-status-hint-box.hint-ob {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .member-status-hint-box .status-hint-icon {
@@ -9860,7 +9859,7 @@ a.btn-member-modal-save:hover {
   gap: 8px;
   padding: 10px 14px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -9880,7 +9879,7 @@ a.btn-member-modal-save:hover {
 }
 
 .text-muted-meta {
-  color: #94a3b8 !important;
+  color: var(--text-subtle) !important;
 }
 
 /* モーダルフッター スマホ用レスポンシブ配置（1列固定・2行折り返し防止） */
@@ -9969,8 +9968,8 @@ a.btn-member-modal-save:hover {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -9981,7 +9980,7 @@ a.btn-member-modal-save:hover {
 }
 
 .equipment-header-subtitle {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -9998,9 +9997,9 @@ a.btn-member-modal-save:hover {
   align-items: center;
   gap: 5px;
   padding: 7px 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: var(--radius);
@@ -10025,7 +10024,7 @@ a.btn-member-modal-save:hover {
 
 .btn-refresh-equipment .material-symbols-outlined {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .btn-refresh-equipment:hover .material-symbols-outlined {
@@ -10037,8 +10036,8 @@ a.btn-member-modal-save:hover {
   align-items: center;
   gap: 4px;
   padding: 7px 14px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: var(--primary);
   border: 1px solid var(--primary);
@@ -10082,17 +10081,17 @@ a.btn-member-modal-save:hover {
   border: 1px solid #e2e8f0;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .equipment-stat-pills .stat-pill-label {
-  color: #64748b;
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .equipment-stat-pills .stat-pill-val {
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-bold);
 }
 
 /* 2. 備品グループセクション（左寄・幅比率6:4〜7:3レイアウト） */
@@ -10139,14 +10138,14 @@ a.btn-member-modal-save:hover {
 }
 
 .equipment-section-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
 .equipment-section-count {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-muted);
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -10169,8 +10168,8 @@ a.btn-member-modal-save:hover {
 }
 
 .equipment-empty-hint {
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
   font-style: italic;
   padding: 8px 12px;
   text-align: center;
@@ -10195,8 +10194,8 @@ a.btn-member-modal-save:hover {
 }
 
 .equipment-subbox-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -10226,8 +10225,8 @@ a.btn-member-modal-save:hover {
 
 /* 品目ラベル（審判道具・その他など）: 固定幅で名前の開始位置を完全統一 */
 .equipment-item-label {
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
   flex-shrink: 0;
@@ -10237,9 +10236,9 @@ a.btn-member-modal-save:hover {
 
 /* 備考（文字色を薄くし、名前と被らないようマージンと最小幅を確保） */
 .equipment-item-note {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -10299,7 +10298,7 @@ a.btn-member-modal-save:hover {
 
 .holder-avatar-icon {
   font-size: 16px !important;
-  color: #64748b;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10316,25 +10315,25 @@ a.btn-member-modal-save:hover {
 .holder-number-pill,
 .holder-number-text {
   display: inline-block;
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
   flex-shrink: 0;
 }
 
 .holder-name {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
 }
 
 .holder-name-unassigned {
-  color: #94a3b8;
+  color: var(--text-subtle);
   font-style: italic;
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 
 /* 操作（編集ボタン） */
@@ -10354,8 +10353,8 @@ a.btn-member-modal-save:hover {
   color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -10397,8 +10396,8 @@ a.btn-member-modal-save:hover {
 }
 
 .equipment-modal-content .modal-title {
-  font-size: 1.05rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
   color: var(--text-heading) !important;
   line-height: 1.35 !important;
   letter-spacing: -0.01em;
@@ -10418,7 +10417,7 @@ a.btn-member-modal-save:hover {
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius) !important;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   box-sizing: border-box;
 }
 
@@ -10460,8 +10459,8 @@ a.btn-member-modal-save:hover {
   border: none;
   padding: 6px 4px;
   color: #dc2626;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -10485,8 +10484,8 @@ a.btn-member-modal-save:hover {
   background: transparent;
   border: 1px solid #fca5a5;
   color: #dc2626;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 8px 16px;
   border-radius: var(--radius);
   cursor: pointer;
@@ -10510,10 +10509,10 @@ a.btn-member-modal-save:hover {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
-  color: #475569;
+  color: var(--text-main);
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -10527,7 +10526,7 @@ a.btn-member-modal-save:hover {
 .btn-equipment-modal-cancel:hover {
   background: #e2e8f0;
   border-color: #94a3b8;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .btn-equipment-modal-save {
@@ -10537,8 +10536,8 @@ a.btn-member-modal-save:hover {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
@@ -10590,7 +10589,7 @@ a.btn-member-modal-save:hover {
   background: #ffffff;
   border: 1px solid #fecaca;
   border-radius: var(--radius);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -10599,7 +10598,7 @@ a.btn-member-modal-save:hover {
 }
 
 .notice-gear-item-name {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: var(--text-main);
 }
 
@@ -10608,8 +10607,8 @@ a.btn-member-modal-save:hover {
   align-items: center;
   gap: 3px;
   padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
   border: 1px solid #b91c1c;
   background: #dc2626;
@@ -10680,7 +10679,7 @@ a.btn-member-modal-save:hover {
   }
 
   .equipment-header-title {
-    font-size: 1.05rem;
+    font-size: var(--fs-md);
   }
 
   .equipment-title-icon {
@@ -10733,7 +10732,7 @@ a.btn-member-modal-save:hover {
   }
 
   .equipment-section-title {
-    font-size: 0.95rem;
+    font-size: var(--fs-sm);
   }
 
   /* ビブスのサブボックス（水色・黄色）: 1カラム化して横幅を最大確保 */
@@ -10770,9 +10769,9 @@ a.btn-member-modal-save:hover {
     width: auto !important;
     min-width: auto !important;
     max-width: 96px !important;
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
-    color: var(--text-heading, #1e293b) !important;
+    font-size: var(--fs-xs) !important;
+    font-weight: var(--fw-bold) !important;
+    color: var(--text-heading) !important;
     background: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 4px !important;
@@ -10861,7 +10860,7 @@ a.btn-member-modal-save:hover {
     background: #f8fafc !important;
     border-radius: 4px !important;
     font-size: 0.72rem !important;
-    color: #64748b !important;
+    color: var(--text-muted) !important;
     border-left: 2px solid #cbd5e1 !important;
     white-space: normal !important;
     word-break: break-word !important;
@@ -10871,7 +10870,7 @@ a.btn-member-modal-save:hover {
 
   /* 空表示プレースホルダー */
   .equipment-empty-hint {
-    font-size: 0.75rem !important;
+    font-size: var(--fs-xs) !important;
     padding: 6px 8px !important;
   }
 
@@ -10887,7 +10886,7 @@ a.btn-member-modal-save:hover {
   }
 
   .equipment-modal-content .modal-title {
-    font-size: 0.98rem !important;
+    font-size: var(--fs-md) !important;
   }
 
   .equipment-modal-body {
@@ -11001,8 +11000,8 @@ a.btn-member-modal-save:hover {
   border: none;
   border-radius: var(--radius);
   padding: 8px 16px;
-  font-size: 0.88rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
   transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease;
@@ -11097,7 +11096,7 @@ a.btn-member-modal-save:hover {
 }
 
 .bulletin-card-date {
-  font-size: 0.80rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   white-space: nowrap;
 }
@@ -11113,8 +11112,8 @@ a.btn-member-modal-save:hover {
   height: 24px;
   box-sizing: border-box;
   padding: 0 8px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   line-height: 1;
   border-radius: 4px;
   white-space: nowrap;
@@ -11146,7 +11145,7 @@ a.btn-member-modal-save:hover {
   gap: 4px !important;
   background: #f1f5f9 !important;
   border: 1px solid #e2e8f0 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .bulletin-card-event-pill .event-pill-icon {
@@ -11165,8 +11164,8 @@ a.btn-member-modal-save:hover {
 }
 
 .bulletin-card-title {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin: 0;
   line-height: 1.4;
@@ -11190,9 +11189,9 @@ a.btn-member-modal-save:hover {
   border: 1px solid var(--border-color);
   padding: 3px 8px;
   border-radius: 4px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -11201,7 +11200,7 @@ a.btn-member-modal-save:hover {
   font-size: 13px !important;
   line-height: 1 !important;
   vertical-align: middle !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .btn-card-read-summary:hover,
@@ -11219,7 +11218,7 @@ a.btn-member-modal-save:hover {
 .btn-card-read-summary.unread-alert {
   background: #f8fafc;
   border-color: var(--border-color);
-  color: #475569;
+  color: var(--text-main);
 }
 
 /* 詳細モーダルヘッダー・本文 */
@@ -11230,8 +11229,8 @@ a.btn-member-modal-save:hover {
 }
 
 .bulletin-detail-title {
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin: 0 0 10px 0;
   line-height: 1.35;
@@ -11246,7 +11245,7 @@ a.btn-member-modal-save:hover {
   padding-bottom: 12px;
   margin-bottom: 16px;
   border-bottom: 1px solid var(--border-color);
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -11282,7 +11281,7 @@ a.btn-member-modal-save:hover {
   height: 100%;
   border-radius: 50%;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -11290,17 +11289,17 @@ a.btn-member-modal-save:hover {
 
 .bulletin-author-avatar-placeholder .material-symbols-outlined {
   font-size: 16px;
-  color: #94a3b8;
+  color: var(--text-subtle);
 }
 
 .bulletin-detail-author-box .author-name {
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   color: var(--text-heading);
 }
 
 .bulletin-detail-author-box .created-at {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -11358,7 +11357,7 @@ a.btn-member-modal-save:hover {
 
 /* 本文テキスト */
 .bulletin-detail-content-text {
-  font-size: 0.95rem;
+  font-size: var(--fs-sm);
   line-height: 1.7;
   color: var(--text-main);
   white-space: pre-wrap;
@@ -11385,16 +11384,16 @@ a.btn-member-modal-save:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   min-width: 0;
   white-space: nowrap;
 }
 
 .readers-stat-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-muted);
   background: #ffffff;
   border: 1px solid #e2e8f0;
@@ -11408,8 +11407,8 @@ a.btn-member-modal-save:hover {
 .btn-readers-toggle {
   background: transparent;
   border: none;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--primary);
   display: flex;
   align-items: center;
@@ -11442,8 +11441,8 @@ a.btn-member-modal-save:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -11464,8 +11463,8 @@ a.btn-member-modal-save:hover {
   border: 1px solid #e2e8f0;
   border-radius: 4px;
   padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
 }
 
@@ -11519,7 +11518,7 @@ a.btn-member-modal-save:hover {
   margin-left: auto !important;
 }
 
-/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・フォント0.85rem・weight 600・角丸6px） */
+/* モーダルフッター内の全ボタンサイズ完全統一（高さ38px・基底サイズ・weight 500・角丸6px） */
 .bulletin-modal-footer .btn-cancel-action,
 .bulletin-modal-footer .btn-submit-action,
 .bulletin-modal-footer .bdm-action-btn {
@@ -11528,8 +11527,8 @@ a.btn-member-modal-save:hover {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 6px !important;
   padding: 0 16px !important;
   margin: 0 !important;
@@ -11553,13 +11552,13 @@ a.btn-member-modal-save:hover {
 .bulletin-modal-footer .btn-cancel-action {
   background: #f1f5f9 !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .bulletin-modal-footer .btn-cancel-action:hover {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
 }
 
 /* モーダル内アクションボタンの完全統一（高さ・フォントサイズ・角丸・行揃え） */
@@ -11567,8 +11566,8 @@ a.btn-member-modal-save:hover {
   height: 38px !important;
   box-sizing: border-box !important;
   padding: 0 16px !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 6px !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -11614,7 +11613,7 @@ a.btn-member-modal-save:hover {
   background: transparent !important;
   border: none !important;
   color: #dc2626 !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
   padding: 0 8px !important;
   box-shadow: none !important;
 }
@@ -11631,16 +11630,16 @@ a.btn-member-modal-save:hover {
 .bdm-action-btn.btn-edit-action {
   background: #f1f5f9 !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   box-shadow: none !important;
 }
 .bdm-action-btn.btn-edit-action:hover {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 .bdm-action-btn.btn-edit-action .material-symbols-outlined {
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 /* 編集モーダルフォーム */
@@ -11656,7 +11655,7 @@ a.btn-member-modal-save:hover {
   align-items: center;
   gap: 8px;
   cursor: pointer;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: #92400e;
 }
 
@@ -11668,7 +11667,7 @@ a.btn-member-modal-save:hover {
 }
 
 .bulletin-content-textarea {
-  font-size: 0.92rem;
+  font-size: var(--fs-sm);
   line-height: 1.6;
   resize: vertical;
   min-height: 140px;
@@ -11724,8 +11723,8 @@ a.btn-member-modal-save:hover {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: #b45309;
   background-color: #fef3c7;
   border: 1px solid #fde68a;
@@ -11741,8 +11740,8 @@ a.btn-member-modal-save:hover {
 }
 
 .home-pinned-title {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin: 0;
   line-height: 1.4;
@@ -11795,8 +11794,8 @@ a.btn-member-modal-save:hover {
 }
 
 .home-recent-bulletin-title {
-  font-size: 0.90rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin: 0;
   line-height: 1.4;
@@ -11804,7 +11803,7 @@ a.btn-member-modal-save:hover {
 }
 
 .home-recent-bulletin-read {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   flex-shrink: 0;
 }
@@ -11834,13 +11833,14 @@ a.btn-member-modal-save:hover {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
 .comment-count-badge {
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   background: #e0f2fe;
   color: #0284c7;
   padding: 1px 7px;
@@ -11862,7 +11862,7 @@ a.btn-member-modal-save:hover {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
 }
 
 .comment-header {
@@ -11921,13 +11921,13 @@ a.btn-member-modal-save:hover {
 }
 
 .comment-author-name {
-  font-weight: 700;
-  font-size: 0.82rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
   color: var(--text-heading);
 }
 
 .comment-time {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-left: 6px;
 }
@@ -11935,7 +11935,7 @@ a.btn-member-modal-save:hover {
 .btn-comment-delete {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--text-subtle);
   cursor: pointer;
   padding: 2px;
   display: inline-flex;
@@ -11984,7 +11984,7 @@ textarea.comment-textarea:active {
   padding: 0 !important;
   margin: 0 !important;
   resize: none !important; /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   line-height: 1.4;
   min-height: 44px;
   max-height: 120px;
@@ -12002,17 +12002,17 @@ textarea.comment-textarea:active {
 }
 
 .comment-char-counter {
-  font-size: 0.72rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   user-select: none;
 }
 .comment-char-counter.warning {
   color: #f59e0b;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 .comment-char-counter.limit {
   color: #ef4444;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .btn-comment-submit {
@@ -12024,8 +12024,8 @@ textarea.comment-textarea:active {
   border: none;
   padding: 6px 14px;
   border-radius: 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -12040,7 +12040,7 @@ textarea.comment-textarea:active {
 }
 
 .comment-status-msg {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   margin-top: 4px;
   text-align: right;
 }
@@ -12073,7 +12073,7 @@ textarea.comment-textarea:active {
   }
 
   .readers-summary-title {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     gap: 3px;
   }
 
@@ -12089,7 +12089,7 @@ textarea.comment-textarea:active {
 
   .btn-readers-toggle {
     margin-left: auto;
-    font-size: 0.72rem;
+    font-size: var(--fs-xs);
     padding: 2px 0;
   }
 
@@ -12145,7 +12145,7 @@ textarea.comment-textarea:active {
   position: relative;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  color: var(--text-heading, #1e293b);
+  color: var(--text-heading);
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -12219,7 +12219,7 @@ textarea.comment-textarea:active {
 
 .announcements-unread-pill {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   padding: 2px 8px;
   border-radius: 999px;
   background: #dbeafe;
@@ -12236,9 +12236,9 @@ textarea.comment-textarea:active {
 .btn-mark-all-read {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
-  font-size: 0.75rem;
-  font-weight: 600;
+  color: var(--text-main);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -12292,7 +12292,7 @@ textarea.comment-textarea:active {
   height: 34px;
   border-radius: 50%;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -12322,27 +12322,27 @@ textarea.comment-textarea:active {
 }
 
 .announcement-item-title {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
   line-height: 1.35;
 }
 
 .announcement-item.is-unread .announcement-item-title {
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: var(--fw-bold);
+  color: var(--text-main);
 }
 
 .announcement-item-time {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .announcement-item-body {
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin-top: 3px;
   line-height: 1.45;
   word-break: break-word;
@@ -12360,8 +12360,8 @@ textarea.comment-textarea:active {
 .announcements-empty {
   padding: 36px 16px;
   text-align: center;
-  color: #94a3b8;
-  font-size: 0.85rem;
+  color: var(--text-subtle);
+  font-size: var(--fs-sm);
 }
 
 /* 代表専用：通知管理画面 */
@@ -12377,19 +12377,19 @@ textarea.comment-textarea:active {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-heading, #0f172a);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .notif-admin-title .material-symbols-outlined {
-  color: var(--text-heading, #64748b);
+  color: var(--text-heading);
   font-size: 22px;
 }
 
 .notif-admin-subtitle {
-  font-size: 0.78rem;
-  color: var(--text-muted, #64748b);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin: 6px 0 0;
   line-height: 1.5;
 }
@@ -12404,7 +12404,7 @@ textarea.comment-textarea:active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 7px 12px;
 }
 
@@ -12414,7 +12414,7 @@ textarea.comment-textarea:active {
 
 .notif-admin-status-msg {
   margin-top: 10px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 7px 10px;
   border-radius: 6px;
 }
@@ -12451,9 +12451,9 @@ textarea.comment-textarea:active {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-heading, #0f172a);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
   padding-bottom: 10px;
   margin-bottom: 6px;
   border-bottom: 1px solid #e2e8f0;
@@ -12461,7 +12461,7 @@ textarea.comment-textarea:active {
 
 .notif-admin-group-header .material-symbols-outlined {
   font-size: 19px;
-  color: var(--text-heading, #64748b);
+  color: var(--text-heading);
 }
 
 .notif-rule-row {
@@ -12485,14 +12485,14 @@ textarea.comment-textarea:active {
 }
 
 .notif-rule-name {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .notif-rule-desc {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin-top: 2px;
   line-height: 1.4;
 }
@@ -12511,12 +12511,12 @@ textarea.comment-textarea:active {
 }
 
 .notif-timing-select {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   padding: 4px 8px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: #ffffff;
-  color: #1e293b;
+  color: var(--text-main);
 }
 
 .notif-switch-group {
@@ -12529,9 +12529,9 @@ textarea.comment-textarea:active {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
   cursor: pointer;
   user-select: none;
 }
