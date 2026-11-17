@@ -953,7 +953,7 @@ th.sort-active .sort-icon {
 .pm-score-draw {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
+  color: var(--text-main);
 }
 
 /* MVP選出バッジ (MVPはそのまま) */

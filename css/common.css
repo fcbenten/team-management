@@ -489,7 +489,7 @@ select:focus, input:focus, textarea:focus {
 .category-badge.badge-event,
 .category-badge.badge-other {
   background: rgba(100, 116, 139, 0.1) !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border-color: rgba(100, 116, 139, 0.25) !important;
 }
 

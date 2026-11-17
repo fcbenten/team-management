@@ -447,7 +447,7 @@
 .match-card-score-box.draw {
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .modal-score-box {

@@ -613,10 +613,12 @@
   color: #92400e !important;
   cursor: pointer;
 }
+
 .bdm-action-btn.bdm-pin-btn:hover {
   background: #fef3c7 !important;
   border-color: #f59e0b !important;
 }
+
 .bdm-action-btn.bdm-pin-btn input[type="checkbox"] {
   accent-color: #d97706;
   width: 16px;
@@ -625,6 +627,7 @@
   margin: 0;
   vertical-align: middle;
 }
+
 .bdm-action-btn.bdm-pin-btn .material-symbols-outlined {
   color: #d97706 !important;
 }
@@ -638,11 +641,13 @@
   padding: 0 8px !important;
   box-shadow: none !important;
 }
+
 .bdm-action-btn.btn-delete-action:hover {
   background: #fef2f2 !important;
   color: #b91c1c !important;
   text-decoration: underline !important;
 }
+
 .bdm-action-btn.btn-delete-action .material-symbols-outlined {
   color: #dc2626 !important;
 }
@@ -654,11 +659,13 @@
   color: var(--text-main) !important;
   box-shadow: none !important;
 }
+
 .bdm-action-btn.btn-edit-action:hover {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
   color: var(--text-main) !important;
 }
+
 .bdm-action-btn.btn-edit-action .material-symbols-outlined {
   color: var(--text-main) !important;
 }
@@ -1004,13 +1011,15 @@ textarea.comment-textarea:active {
   background-color: transparent !important;
   padding: 0 !important;
   margin: 0 !important;
-  resize: none !important; /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
+  resize: none !important;
+  /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
   font-size: var(--fs-sm);
   line-height: 1.4;
   min-height: 44px;
   max-height: 120px;
   box-sizing: border-box;
-  overflow-y: hidden; /* 短文時は親モーダルへマウスホイールを素通し */
+  overflow-y: hidden;
+  /* 短文時は親モーダルへマウスホイールを素通し */
 }
 
 .comment-input-actions {
@@ -1027,10 +1036,12 @@ textarea.comment-textarea:active {
   color: var(--text-muted);
   user-select: none;
 }
+
 .comment-char-counter.warning {
   color: #f59e0b;
   font-weight: var(--fw-bold);
 }
+
 .comment-char-counter.limit {
   color: #ef4444;
   font-weight: var(--fw-bold);
@@ -1065,6 +1076,7 @@ textarea.comment-textarea:active {
   margin-top: 4px;
   text-align: right;
 }
+
 .comment-status-msg.error {
   color: #ef4444;
 }
@@ -1075,9 +1087,11 @@ textarea.comment-textarea:active {
     align-items: stretch;
     gap: 10px;
   }
+
   .bulletin-header-actions {
     width: 100%;
   }
+
   .btn-create-post {
     width: 100%;
     justify-content: center;

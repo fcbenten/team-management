@@ -157,7 +157,8 @@
 /* 2. 備品グループセクション（左寄・幅比率6:4〜7:3レイアウト） */
 .equipment-layout-container {
   display: grid;
-  grid-template-columns: 1.6fr 1fr; /* 左62% : 右38% の黄金バランス */
+  grid-template-columns: 1.6fr 1fr;
+  /* 左62% : 右38% の黄金バランス */
   gap: 16px;
   align-items: start;
 }
@@ -165,7 +166,8 @@
 .equipment-col-left {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* ビブス・審判道具・その他の隙間を綺麗に詰める */
+  gap: 10px;
+  /* ビブス・審判道具・その他の隙間を綺麗に詰める */
 }
 
 .equipment-col-right {
@@ -305,7 +307,8 @@
   min-width: 0;
   flex: 1;
   padding: 0 4px;
-  margin-left: 8px; /* 保管メンバー名と絶対に被らないよう必ず間隔を確保 */
+  margin-left: 8px;
+  /* 保管メンバー名と絶対に被らないよう必ず間隔を確保 */
 }
 
 /* ビブス行での保管メンバー情報（左寄せ・名前が絶対に見切れない幅を確保） */
@@ -716,6 +719,7 @@
    スマホ・タブレット表示最適化 (max-width: 767px)
    ========================================= */
 @media (max-width: 767px) {
+
   /* 1カラム化と横幅100%制御 */
   .equipment-layout-container {
     grid-template-columns: 1fr !important;
@@ -970,7 +974,7 @@
     flex-shrink: 0 !important;
   }
 
-  .equipment-footer-right > button {
+  .equipment-footer-right>button {
     width: auto !important;
     height: 36px !important;
     padding: 0 12px !important;
