@@ -1358,9 +1358,9 @@ select:focus, input:focus, textarea:focus {
 }
 .modal-overlay.active { display: flex !important; }
 
-/* 全画面共通 汎用ダイアログ (appConfirm / appAlert) */
+/* 全画面共通 汎用ダイアログ (appConfirm / appAlert): 全モーダル・強制連携・ライトボックスより常に最前面 */
 .app-dialog-overlay {
-  z-index: 10000 !important;
+  z-index: 100010 !important;
 }
 
 .app-dialog-icon-wrap {
