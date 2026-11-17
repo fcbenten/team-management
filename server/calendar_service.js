@@ -272,7 +272,7 @@ class CalendarService {
       
       const getResp = UrlFetchApp.fetch(url, getOptions);
       if (getResp.getResponseCode() !== 200) {
-        SystemLogger.error(`[CalendarSync] GET Event failed for ${cleanId}. Status: ${getResp.getResponseCode()} Response: ${getResp.getContentText()}`);
+        this._logPersonalSyncHttpFailure('GET', cleanId, getResp);
         return false;
       }
       
@@ -319,12 +319,28 @@ class CalendarService {
         SystemLogger.info(`[CalendarSync] PATCH Event success for ${cleanId}. Updated ${userEmail} to ${targetResponse}.`);
         return true;
       } else {
-        SystemLogger.error(`[CalendarSync] PATCH Event failed for ${cleanId}. Status: ${patchResp.getResponseCode()} Response: ${patchResp.getContentText()}`);
+        this._logPersonalSyncHttpFailure('PATCH', cleanId, patchResp);
         return false;
       }
     } catch (e) {
       SystemLogger.error(`[CalendarSync] Error in updateMemberCalendarAttendanceViaToken`, e);
       return false;
+    }
+  }
+
+  /**
+   * 個人カレンダー同期API失敗時のログ出力（404/410は未招待・削除済みのためWARN扱い）
+   * @param {string} phase
+   * @param {string} cleanId
+   * @param {GoogleAppsScript.URL_Fetch.HTTPResponse} resp
+   */
+  static _logPersonalSyncHttpFailure(phase, cleanId, resp) {
+    const statusCode = resp.getResponseCode();
+    const msg = `[CalendarSync] ${phase} Event failed for ${cleanId}. Status: ${statusCode} Response: ${resp.getContentText()}`;
+    if (statusCode === 404 || statusCode === 410) {
+      SystemLogger.warn(msg);
+    } else {
+      SystemLogger.error(msg);
     }
   }
 }
