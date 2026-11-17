@@ -147,15 +147,6 @@ def run_generate():
         },
         {
             "type": "area",
-            "name": "通知テスト（モックUI）",
-            "desc": "ブラウザ Web Push 通知および LINE 個人トーク連携通知の動作確認領域（#homePushMockCard）",
-            "items": [
-                ("Web Push / LINE 切替タブ", "tabBtnMockWebPush / tabBtnMockLine", "タブ", "-", "Web Push 選択", "テスト対象の通知チャネル（ブラウザプッシュ通知 / LINE 1対1連携通知）を切り替え。"),
-                ("連携・テスト送信アクション", "btnHomePushTest / btnHomeLineTest", "ボタン", "-", "有効状態に応じ活性化", "Push購読有効化/解除、LINE連携コード発行/確認、任意タイトル・本文での即時テスト送信を実行。")
-            ]
-        },
-        {
-            "type": "area",
             "name": "今シーズン チーム戦績（KPIダッシュボード）",
             "desc": "最新シーズンのチーム成績・出席率・個人タイトルおよびランキング画面への遷移リンクを集約表示するヒーローカード（#homeSeasonStatsCard）",
             "items": [

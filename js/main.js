@@ -1351,9 +1351,6 @@
         updateNotificationBadges();
         handleNotifTypeChange(currentVal);
         setProfileNotifMsg('この端末のプッシュ通知を有効化しました', true);
-        if (typeof window.refreshHomePushMockState === 'function') {
-          window.refreshHomePushMockState();
-        }
       } catch (err) {
         console.error('Push notification enable error:', err);
         updateNotificationBadges();
@@ -1411,9 +1408,6 @@
         ? `コード「${res.code}」を発行しました。「LINEを開く（入力済み）」からそのまま送信し、戻ってから「連携確認」を押してください。`
         : `コード「${res.code}」を発行しました。「コピー」してからスマホのLINEトークへ送信し、「連携確認」を押してください。`;
       setProfileLineMsg(issuedMsg, 'success');
-      if (typeof window.refreshHomeLineMockState === 'function') {
-        window.refreshHomeLineMockState(false);
-      }
     } catch (err) {
       console.error('issueLinkCode failure:', err);
       setProfileLineMsg(getSafeErrorMessage(err, '連携コードの発行に失敗しました。しばらく経ってから再度お試しください。'), 'error');
@@ -1457,9 +1451,6 @@
       syncProfileLineUi();
       const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
       handleNotifTypeChange(currentVal);
-      if (typeof window.refreshHomeLineMockState === 'function') {
-        window.refreshHomeLineMockState(false);
-      }
 
       if (status.linked) {
         setProfileLineMsg('');
@@ -1492,9 +1483,6 @@
       syncProfileLineUi();
       const currentVal = document.querySelector('input[name="profileNotifType"]:checked')?.value || 'line';
       handleNotifTypeChange(currentVal);
-      if (typeof window.refreshHomeLineMockState === 'function') {
-        window.refreshHomeLineMockState(false);
-      }
       setProfileLineMsg('LINEの連携を解除しました。', 'info');
     } catch (err) {
       console.error('unlinkLine failure:', err);

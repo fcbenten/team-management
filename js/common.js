@@ -1001,7 +1001,6 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     '.sub-tab',
     '.filter-pill-btn',
     '.same-day-tab-btn',
-    '.home-notif-tab',
     '.home-section-link',
     '.btn',
     '.btn-primary-action',
@@ -1028,9 +1027,6 @@ window.updateScrollbarWidth = updateScrollbarWidth;
     '.btn-card-read-summary',
     '.btn-linked-event-action',
     '.bdm-action-btn',
-    '.home-line-open-btn',
-    '.home-line-copy-btn',
-    '.home-push-reset-btn',
     '.notice-banner-action-link',
     '.notice-banner-dismiss-btn',
     '#btnSaveNotificationSettings'
