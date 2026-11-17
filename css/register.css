@@ -4,10 +4,10 @@
 
 /* エラー画面の案内テキスト */
 .reg-error-desc {
-  font-size: 0.85rem;
-  color: #475569;
+  font-size: var(--fs-sm);
+  color: var(--text-main);
   margin-bottom: 16px;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   text-align: center;
 }
 
@@ -19,30 +19,30 @@
   padding: 16px;
 }
 .reg-account-label {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin-bottom: 4px;
 }
 .reg-account-name {
-  font-size: 1.1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 2px;
 }
 .reg-account-email {
-  font-size: 0.85rem;
-  color: #475569;
+  font-size: var(--fs-sm);
+  color: var(--text-main);
 }
 
 /* 警告ボックス内のテキスト */
 .reg-warning-title {
   margin: 0;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   margin-bottom: 8px;
 }
 .reg-warning-text {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   line-height: 1.5;
 }
 
@@ -72,14 +72,14 @@
 }
 
 .reg-success-title {
-  font-size: 1.15rem;
+  font-size: var(--fs-lg);
   color: var(--text-heading);
 }
 
 .reg-success-sub {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   line-height: 1.6;
-  color: #475569;
+  color: var(--text-main);
 }
 
 .reg-fallback-wrap {
@@ -89,8 +89,8 @@
 }
 
 .reg-fallback-link {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   text-decoration: underline;
   transition: color 0.2s;
 }
@@ -116,14 +116,14 @@
 .auth-success-title {
   color: var(--success, #10b981);
   margin: 0 0 12px 0;
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   text-align: center;
 }
 
 .auth-success-desc {
-  color: var(--text-muted, #64748b);
-  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
   line-height: 1.6;
   margin: 0 0 20px 0;
   text-align: center;

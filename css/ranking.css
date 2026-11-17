@@ -20,13 +20,13 @@
   flex: 1;
   text-align: center;
   padding: 8px 10px; 
-  font-size: 0.82rem; 
+  font-size: var(--fs-sm); 
   border-radius: 4px; /* 試合結果カードと同じ4px */
   background: transparent !important; 
-  color: #64748b !important; 
+  color: var(--text-muted) !important; 
   border: none !important;
   cursor: pointer; 
-  font-weight: 600; 
+  font-weight: var(--fw-medium); 
   transition: transform 0.15s ease, background-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
@@ -48,7 +48,7 @@
   background: #ffffff !important; 
   color: var(--primary) !important; 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* ランキンググリッドコンテナ */
@@ -80,14 +80,14 @@
 }
 
 .ranking-column-title {
-  font-size: 1.05rem;
-  font-weight: 800;
-  color: var(--text-heading, #475569);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .ranking-column-badge {
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   padding: 2px 8px;
   border-radius: 4px;
   letter-spacing: 0.5px;
@@ -165,9 +165,9 @@
 }
 
 .rank-card.rank-other .rank-num { 
-  color: #94a3b8; 
-  font-weight: 700; 
-  font-size: 1.15rem;
+  color: var(--text-subtle); 
+  font-weight: var(--fw-bold); 
+  font-size: var(--fs-lg);
 }
 
 /* アバター（全順位共通・円形・丸型に統一） */
@@ -176,7 +176,7 @@
   height: 32px;
   border-radius: 50% !important;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -209,17 +209,17 @@
 
 .rank-name { 
   color: var(--text-heading);
-  font-weight: 500 !important; /* 1〜3位も含め全順位統一で500（標準）に統一 */
-  font-size: 0.88rem;
+  font-weight: var(--fw-medium) !important; /* 1〜3位も含め全順位統一で500（標準）に統一 */
+  font-size: var(--fs-sm);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .rank-number {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 400; /* 背番号は細めで控えめに */
+  color: var(--text-subtle);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal); /* 背番号は細めで控えめに */
   margin-top: 1px;
 }
 
@@ -235,20 +235,20 @@
 }
 
 .rank-score-val { 
-  font-size: 1.22rem; 
+  font-size: var(--fs-lg); 
   line-height: 1.1;
   text-align: right;
 }
 
-.rank-card.rank-1 .rank-score-val { color: #d97706; font-weight: 800; }
-.rank-card.rank-2 .rank-score-val { color: #5c728a; font-weight: 800; }
-.rank-card.rank-3 .rank-score-val { color: #9a3412; font-weight: 800; }
-.rank-card.rank-other .rank-score-val { color: #475569; font-weight: 700; }
+.rank-card.rank-1 .rank-score-val { color: #d97706; font-weight: var(--fw-bold); }
+.rank-card.rank-2 .rank-score-val { color: #5c728a; font-weight: var(--fw-bold); }
+.rank-card.rank-3 .rank-score-val { color: #9a3412; font-weight: var(--fw-bold); }
+.rank-card.rank-other .rank-score-val { color: var(--text-main); font-weight: var(--fw-bold); }
 
 .rank-score-label {
   font-size: 0.58rem;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   letter-spacing: 0.5px;
   margin-top: 1px;
   text-align: right;
@@ -267,9 +267,9 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: var(--text-muted, #64748b) !important;
-  font-size: 0.8rem;
-  font-weight: 600;
+  color: var(--text-muted) !important;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -305,8 +305,8 @@
   padding: 24px 0;
   text-align: center;
   color: var(--text-muted);
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
 }
 
 /* =========================================

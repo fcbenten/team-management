@@ -348,7 +348,7 @@ select:focus, input:focus, textarea:focus {
 .btn-cancel-action.is-touch-active {
   background-color: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
   transform: translateY(-1px);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
 }
@@ -1181,7 +1181,7 @@ html.no-scroll {
 
 .app-notice-banner.notice-urgent .notice-banner-action-link {
   color: #b91c1c;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
 }
 
 @media (max-width: 767px) {

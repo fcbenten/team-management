@@ -28,8 +28,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -40,7 +40,7 @@
 }
 
 .equipment-header-subtitle {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -57,9 +57,9 @@
   align-items: center;
   gap: 5px;
   padding: 7px 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: var(--radius);
@@ -84,7 +84,7 @@
 
 .btn-refresh-equipment .material-symbols-outlined {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .btn-refresh-equipment:hover .material-symbols-outlined {
@@ -96,8 +96,8 @@
   align-items: center;
   gap: 4px;
   padding: 7px 14px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: var(--primary);
   border: 1px solid var(--primary);
@@ -141,17 +141,17 @@
   border: 1px solid #e2e8f0;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .equipment-stat-pills .stat-pill-label {
-  color: #64748b;
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .equipment-stat-pills .stat-pill-val {
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-bold);
 }
 
 /* 2. 備品グループセクション（左寄・幅比率6:4〜7:3レイアウト） */
@@ -198,14 +198,14 @@
 }
 
 .equipment-section-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
 .equipment-section-count {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   color: var(--text-muted);
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
@@ -228,8 +228,8 @@
 }
 
 .equipment-empty-hint {
-  font-size: 0.78rem;
-  color: #94a3b8;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
   font-style: italic;
   padding: 8px 12px;
   text-align: center;
@@ -254,8 +254,8 @@
 }
 
 .equipment-subbox-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -285,8 +285,8 @@
 
 /* 品目ラベル（審判道具・その他など）: 固定幅で名前の開始位置を完全統一 */
 .equipment-item-label {
-  font-size: 0.84rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
   flex-shrink: 0;
@@ -296,9 +296,9 @@
 
 /* 備考（文字色を薄くし、名前と被らないようマージンと最小幅を確保） */
 .equipment-item-note {
-  font-size: 0.75rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -358,7 +358,7 @@
 
 .holder-avatar-icon {
   font-size: 16px !important;
-  color: #64748b;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -375,25 +375,25 @@
 .holder-number-pill,
 .holder-number-text {
   display: inline-block;
-  font-size: 0.84rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   line-height: 1.25;
   flex-shrink: 0;
 }
 
 .holder-name {
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
 }
 
 .holder-name-unassigned {
-  color: #94a3b8;
+  color: var(--text-subtle);
   font-style: italic;
-  font-weight: 400;
+  font-weight: var(--fw-normal);
 }
 
 /* 操作（編集ボタン） */
@@ -413,8 +413,8 @@
   color: var(--text-main);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -456,8 +456,8 @@
 }
 
 .equipment-modal-content .modal-title {
-  font-size: 1.05rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
   color: var(--text-heading) !important;
   line-height: 1.35 !important;
   letter-spacing: -0.01em;
@@ -477,7 +477,7 @@
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: var(--radius) !important;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   box-sizing: border-box;
 }
 
@@ -519,8 +519,8 @@
   border: none;
   padding: 6px 4px;
   color: #dc2626;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.15s ease;
@@ -544,8 +544,8 @@
   background: transparent;
   border: 1px solid #fca5a5;
   color: #dc2626;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 8px 16px;
   border-radius: var(--radius);
   cursor: pointer;
@@ -569,10 +569,10 @@
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
-  color: #475569;
+  color: var(--text-main);
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -586,7 +586,7 @@
 .btn-equipment-modal-cancel:hover {
   background: #e2e8f0;
   border-color: #94a3b8;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .btn-equipment-modal-save {
@@ -596,8 +596,8 @@
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
@@ -649,7 +649,7 @@
   background: #ffffff;
   border: 1px solid #fecaca;
   border-radius: var(--radius);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
@@ -658,7 +658,7 @@
 }
 
 .notice-gear-item-name {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: var(--text-main);
 }
 
@@ -667,8 +667,8 @@
   align-items: center;
   gap: 3px;
   padding: 4px 10px;
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
   border: 1px solid #b91c1c;
   background: #dc2626;
@@ -739,7 +739,7 @@
   }
 
   .equipment-header-title {
-    font-size: 1.05rem;
+    font-size: var(--fs-md);
   }
 
   .equipment-title-icon {
@@ -792,7 +792,7 @@
   }
 
   .equipment-section-title {
-    font-size: 0.95rem;
+    font-size: var(--fs-sm);
   }
 
   /* ビブスのサブボックス（水色・黄色）: 1カラム化して横幅を最大確保 */
@@ -829,9 +829,9 @@
     width: auto !important;
     min-width: auto !important;
     max-width: 96px !important;
-    font-size: 0.75rem !important;
-    font-weight: 700 !important;
-    color: var(--text-heading, #1e293b) !important;
+    font-size: var(--fs-xs) !important;
+    font-weight: var(--fw-bold) !important;
+    color: var(--text-heading) !important;
     background: #f1f5f9 !important;
     border: 1px solid #cbd5e1 !important;
     border-radius: 4px !important;
@@ -920,7 +920,7 @@
     background: #f8fafc !important;
     border-radius: 4px !important;
     font-size: 0.72rem !important;
-    color: #64748b !important;
+    color: var(--text-muted) !important;
     border-left: 2px solid #cbd5e1 !important;
     white-space: normal !important;
     word-break: break-word !important;
@@ -930,7 +930,7 @@
 
   /* 空表示プレースホルダー */
   .equipment-empty-hint {
-    font-size: 0.75rem !important;
+    font-size: var(--fs-xs) !important;
     padding: 6px 8px !important;
   }
 
@@ -946,7 +946,7 @@
   }
 
   .equipment-modal-content .modal-title {
-    font-size: 0.98rem !important;
+    font-size: var(--fs-md) !important;
   }
 
   .equipment-modal-body {

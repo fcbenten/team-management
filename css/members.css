@@ -30,8 +30,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .members-header-subtitle {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   margin-top: 2px;
 }
@@ -61,9 +61,9 @@
   align-items: center;
   gap: 5px;
   padding: 7px 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: var(--radius);
@@ -90,7 +90,7 @@
 
 .btn-gcp-header-link .material-symbols-outlined {
   font-size: 16px;
-  color: #64748b;
+  color: var(--text-muted);
 }
 
 .btn-gcp-header-link:hover .material-symbols-outlined {
@@ -103,8 +103,8 @@
   align-items: center;
   gap: 4px;
   padding: 7px 14px;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: #ffffff;
   background: var(--primary);
   border: 1px solid var(--primary);
@@ -149,17 +149,17 @@
   border: 1px solid #e2e8f0;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
 }
 
 .stat-pill-label {
-  color: #64748b;
-  font-weight: 500;
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .stat-pill-val {
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-bold);
 }
 
 /* 検索クリアボタン */
@@ -171,7 +171,7 @@
   background: none;
   border: none;
   font-size: 18px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   cursor: pointer;
   padding: 4px 6px;
   line-height: 1;
@@ -251,7 +251,7 @@
   height: 100%;
   border-radius: 50% !important;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -277,9 +277,9 @@
 
 .member-number-badge {
   display: inline-block;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.2px;
   line-height: 1.3;
@@ -288,8 +288,8 @@
 }
 
 .member-card-name {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   white-space: nowrap;
   overflow: hidden;
@@ -302,7 +302,7 @@
   flex-wrap: wrap;
   row-gap: 4px;
   column-gap: 14px;
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 
@@ -315,7 +315,7 @@
 
 .member-info-item .material-symbols-outlined {
   font-size: 15px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   flex-shrink: 0;
 }
 
@@ -345,7 +345,7 @@
 .badge-role-fuku,
 .badge-role-member {
   background: #f1f5f9 !important;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   border: 1px solid #e2e8f0 !important;
 }
 
@@ -438,9 +438,9 @@
 }
 
 .section-title {
-  font-size: 0.98rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
   margin: 0;
   letter-spacing: -0.01em;
 }
@@ -450,11 +450,11 @@
   align-items: center;
   justify-content: center;
   padding: 2px 9px;
-  font-size: 0.76rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 9999px;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-main);
   line-height: 1.2;
 }
 
@@ -462,8 +462,8 @@
 .member-section-empty {
   padding: 16px;
   text-align: center;
-  font-size: 0.82rem;
-  color: #94a3b8;
+  font-size: var(--fs-sm);
+  color: var(--text-subtle);
   background: #f8fafc;
   border: 1px dashed #e2e8f0;
   border-radius: var(--radius);
@@ -510,9 +510,9 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-medium);
 }
 
 .ob-toggle-icon {
@@ -530,7 +530,7 @@
   align-items: center;
   gap: 3px;
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   padding: 1px 6px;
   border-radius: 4px;
   line-height: 1.2;
@@ -561,7 +561,7 @@
    OAuth設定案内モーダル専用スタイル（共通部品に準拠）
    ========================================= */
 .guidance-lead-text {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
   margin-bottom: 12px;
   line-height: 1.5;
@@ -576,9 +576,9 @@
 }
 
 .guidance-email-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -590,8 +590,8 @@
 }
 
 .guidance-email-code {
-  font-size: 0.92rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: #0284c7;
   word-break: break-all;
   user-select: all;
@@ -602,9 +602,9 @@
   align-items: center;
   gap: 4px;
   padding: 5px 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -678,13 +678,13 @@
   justify-content: center;
   gap: 3px;
   padding: 4px 9px;
-  font-size: 0.78rem;
-  font-weight: 400 !important;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal) !important;
   letter-spacing: 0.02em;
   border: 1px solid #cbd5e1;
   background: #ffffff;
   border-radius: 4px;
-  color: #475569;
+  color: var(--text-main);
   cursor: pointer;
   transition: all 0.15s ease;
 }
@@ -714,8 +714,8 @@
   justify-content: center;
   gap: 3px;
   padding: 4px 9px;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.02em;
   border: 1px solid #a7f3d0;
   background: #ecfdf5;
@@ -743,7 +743,7 @@
   width: 28px;
   height: 28px;
   border-radius: 4px;
-  color: #94a3b8;
+  color: var(--text-subtle);
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   cursor: default;
@@ -777,7 +777,7 @@
   }
 
   .members-header-title {
-    font-size: 1.05rem;
+    font-size: var(--fs-md);
     gap: 6px;
   }
 
@@ -786,7 +786,7 @@
   }
 
   .members-header-subtitle {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -836,8 +836,8 @@
   }
 
   .stat-pill-val {
-    font-size: 0.98rem !important;
-    font-weight: 800 !important;
+    font-size: var(--fs-md) !important;
+    font-weight: var(--fw-bold) !important;
     line-height: 1.1 !important;
   }
 
@@ -895,16 +895,16 @@
   }
 
   .member-number-badge {
-    font-size: 0.92rem !important;
-    font-weight: 700 !important;
-    color: #64748b !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-bold) !important;
+    color: var(--text-muted) !important;
     line-height: 1.3 !important;
     margin-right: 2px !important;
   }
 
   .member-card-name {
-    font-size: 0.98rem !important;
-    font-weight: 700 !important;
+    font-size: var(--fs-md) !important;
+    font-weight: var(--fw-medium) !important;
     line-height: 1.3 !important;
   }
 
@@ -971,8 +971,8 @@
 }
 
 .member-modal-content .modal-title {
-  font-size: 1.05rem !important;
-  font-weight: 700 !important;
+  font-size: var(--fs-md) !important;
+  font-weight: var(--fw-bold) !important;
   color: var(--text-heading) !important;
   line-height: 1.35 !important;
   letter-spacing: -0.01em;
@@ -1008,7 +1008,7 @@
 
 .badge-required {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: #ef4444;
   background: #fee2e2;
   padding: 1px 5px;
@@ -1017,7 +1017,7 @@
 }
 
 .form-status-msg {
-  font-size: 0.82rem;
+  font-size: var(--fs-xs);
   padding: 8px 12px;
   border-radius: 6px;
   margin-bottom: 12px;
@@ -1032,7 +1032,7 @@
 
 .form-status-msg.loading {
   background: #f8fafc;
-  color: #475569;
+  color: var(--text-main);
   border: 1px solid #e2e8f0;
 }
 
@@ -1045,7 +1045,7 @@
 /* 読み取り専用インプット */
 .input-readonly {
   background-color: #f1f5f9 !important;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   cursor: not-allowed !important;
   border-color: #e2e8f0 !important;
 }
@@ -1060,14 +1060,14 @@
   color: var(--text-heading) !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 2px !important;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   box-sizing: border-box;
 }
 
 /* フィールド単位のエラー表示 */
 .field-error-msg {
   color: #ef4444;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   margin-top: 4px;
   line-height: 1.35;
 }
@@ -1118,10 +1118,10 @@
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
-  color: #475569;
+  color: var(--text-main);
   background: #f1f5f9;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
@@ -1135,7 +1135,7 @@
 .btn-member-modal-cancel:hover {
   background: #e2e8f0;
   border-color: #94a3b8;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .btn-member-modal-save,
@@ -1146,8 +1146,8 @@ a.btn-member-modal-save {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff !important;
   background: var(--primary);
@@ -1181,8 +1181,8 @@ a.btn-member-modal-save:hover {
   gap: 5px;
   height: 38px;
   padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   line-height: 1;
   color: #ffffff;
   background: #dc2626;
@@ -1242,7 +1242,7 @@ a.btn-member-modal-save:hover {
   align-items: center;
   justify-content: center;
   background: #f1f5f9;
-  color: #94a3b8;
+  color: var(--text-subtle);
 }
 
 .delete-confirm-avatar-placeholder .material-symbols-outlined {
@@ -1250,14 +1250,14 @@ a.btn-member-modal-save:hover {
 }
 
 .delete-confirm-title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 8px;
 }
 
 .delete-confirm-desc {
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   line-height: 1.5;
 }
@@ -1292,8 +1292,8 @@ a.btn-member-modal-save:hover {
   justify-content: center !important;
   text-align: center !important;
   padding: 0 12px !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
   border-radius: 6px !important;
   box-sizing: border-box !important;
   margin: 0 !important;
@@ -1308,8 +1308,8 @@ a.btn-member-modal-save:hover {
   border: none;
   padding: 6px 4px;
   color: #dc2626;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1335,11 +1335,11 @@ a.btn-member-modal-save:hover {
   gap: 6px;
   padding: 8px 12px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  color: #475569;
+  color: var(--text-main);
 }
 
 .member-status-hint-box.hint-suspended {
@@ -1351,7 +1351,7 @@ a.btn-member-modal-save:hover {
 .member-status-hint-box.hint-ob {
   background: #f1f5f9;
   border-color: #cbd5e1;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .member-status-hint-box .status-hint-icon {
@@ -1367,7 +1367,7 @@ a.btn-member-modal-save:hover {
   gap: 8px;
   padding: 10px 14px;
   border-radius: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   line-height: 1.45;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -1387,7 +1387,7 @@ a.btn-member-modal-save:hover {
 }
 
 .text-muted-meta {
-  color: #94a3b8 !important;
+  color: var(--text-subtle) !important;
 }
 
 /* モーダルフッター スマホ用レスポンシブ配置（1列固定・2行折り返し防止） */

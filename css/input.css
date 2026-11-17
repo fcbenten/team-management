@@ -28,8 +28,8 @@
 
 /* ★ 読み取り専用テキストの見栄えをリッチに */
 .readonly-text {
-  font-size: 1.05rem;
-  font-weight: 800;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   padding: 2px 0 0 0;
   word-break: break-word;
@@ -38,10 +38,10 @@
 
 /* 出席者は少し行間を開けて見やすく */
 .attended-list {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
-  color: #475569;
-  font-weight: 700;
+  color: var(--text-main);
+  font-weight: var(--fw-medium);
 }
 
 /* =========================================
@@ -49,15 +49,15 @@
    ========================================= */
 .timeline-log-container {
   padding-left: 4px;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .input-tl-header {
   border-bottom: 1px dashed var(--border-color);
   margin-bottom: 16px;
   padding-bottom: 8px;
-  font-weight: 700;
-  font-size: 0.85rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -116,13 +116,13 @@
 }
 
 .log-period-title {
-  font-weight: bold;
+  font-weight: var(--fw-bold);
   color: var(--primary-light);
   margin-top: 10px;
   margin-bottom: 4px;
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 2px;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .log-period-title:first-child {
@@ -132,20 +132,20 @@
 .log-item {
   padding-left: 8px;
   margin: 6px 0;
-  color: #475569;
+  color: var(--text-main);
   line-height: 1.4;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
 }
 
 .log-time {
-  font-weight: bold;
-  color: #64748b;
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   display: inline-block;
   min-width: 36px;
 }
 
 .log-type {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .log-type.type-goal {
@@ -169,8 +169,8 @@
   display: inline-block;
   padding: 4px 12px;
   border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: bold;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   margin-bottom: 12px;
 }
 

@@ -26,9 +26,9 @@
   background: transparent;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #64748b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -42,7 +42,7 @@
   background: #ffffff;
   color: var(--primary);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  font-weight: 800;
+  font-weight: var(--fw-bold);
 }
 
 /* 繝薙Η繝ｼ繧ｻ繧ｯ繧ｷ繝ｧ繝ｳ蛻・ｊ譖ｿ縺・(Mobile Default) */
@@ -74,8 +74,8 @@
 
 /* 予定リストタイトル */
 .schedule-list-title {
-  font-size: 1.15rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   margin-bottom: 16px;
 }
@@ -101,8 +101,8 @@
   background: #ffffff;
   border: 1px solid var(--border-color);
   color: var(--text-muted);
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 7px 14px;
   border-radius: 4px; /* 四角ベース（角丸4px） */
   cursor: pointer;
@@ -125,10 +125,10 @@
 
 /* 全タブ共通の選択中スタイル（5色分けを撤廃し単色統一） */
 .filter-pill-btn.active {
-  background: #475569 !important;
-  border-color: #475569 !important;
+  background: var(--text-main) !important;
+  border-color: var(--text-main) !important;
   color: #ffffff !important;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 /* 予定リストの「未入力」フィルターボタン 右上バッジ */
@@ -168,7 +168,7 @@
   background-color: #ef4444;
   color: #ffffff !important;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1;
   border: 1.5px solid #ffffff;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
@@ -196,8 +196,8 @@
 }
 
 .cal-month-title {
-  font-size: 1.1rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   text-align: center;
   letter-spacing: 0.5px;
@@ -216,7 +216,7 @@
   justify-content: center;
   cursor: pointer;
   color: var(--text-main);
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   transition: all 0.2s ease;
 }
 
@@ -234,8 +234,8 @@
   background: rgba(37, 99, 235, 0.1);
   border: 1px solid var(--primary);
   color: var(--primary);
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -261,8 +261,8 @@
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -286,8 +286,8 @@
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 8px 14px;
   border-radius: 4px;
   cursor: pointer;
@@ -310,8 +310,8 @@
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-weight: 800;
-  font-size: 0.8rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   padding-bottom: 8px;
   border-bottom: 1px solid var(--border-color);
@@ -444,7 +444,7 @@
 .cal-event-item.status-maybe {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
-  color: #334155 !important;
+  color: var(--text-main) !important;
 }
 
 .cal-event-text {
@@ -465,7 +465,7 @@
 
 .cal-event-title {
   font-size: 0.60rem;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   line-height: 1.15;
   white-space: nowrap;
   overflow: hidden;
@@ -497,8 +497,8 @@
   .schedule-subtab {
     height: 32px !important;
     padding: 0 14px !important;
-    font-size: 0.85rem !important;
-    font-weight: 700 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-bold) !important;
     border-radius: 4px !important;
     display: flex !important;
     align-items: center !important;
@@ -534,17 +534,17 @@
     gap: 6px !important;
   }
   .cal-month-title {
-    font-size: 0.95rem !important;
+    font-size: var(--fs-md) !important;
     min-width: 80px !important;
   }
   .cal-nav-btn {
     width: 28px !important;
     height: 28px !important;
-    font-size: 0.85rem !important;
+    font-size: var(--fs-sm) !important;
   }
   .cal-today-btn {
     padding: 3px 10px !important;
-    font-size: 0.75rem !important;
+    font-size: var(--fs-xs) !important;
   }
   .cal-weekdays-row {
     position: sticky !important;
@@ -598,7 +598,7 @@
   .cal-event-title {
     font-size: 0.58rem;
     line-height: 1.05;
-    font-weight: 600;
+    font-weight: var(--fw-medium);
   }
 
   /* 予定作成・編集モーダルのスマホ最適化（横スクロール防止＆フッターボタン1段横並び） */
@@ -619,7 +619,7 @@
     padding: 12px 16px !important;
   }
   .event-edit-modal .modal-header #eventEditModalTitle {
-    font-size: 1.05rem !important;
+    font-size: var(--fs-md) !important;
   }
   .event-edit-modal .event-modal-body {
     padding: 12px 14px 16px !important;
@@ -728,8 +728,8 @@
   }
   .schedule-filter-bar .filter-pill-btn {
     padding: 6px 12px;
-    font-size: 0.78rem;
-    font-weight: 600;
+    font-size: var(--fs-xs);
+    font-weight: var(--fw-medium);
   }
   .schedule-agenda-list {
     max-height: none !important;
@@ -866,8 +866,8 @@
   padding: 8px 14px;
   border: none;
   background: transparent;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-main);
   cursor: pointer;
   text-align: left;
@@ -892,8 +892,8 @@
   background: #f1f5f9;
   border: 1px solid var(--border-color);
   color: var(--text-heading);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
@@ -962,8 +962,8 @@
 }
 
 .event-modal-title {
-  font-size: 1.2rem;
-  font-weight: 800;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   line-height: 1.35;
   margin: 0;
@@ -992,9 +992,9 @@
 
 /* 鬆・岼隕句・縺励Λ繝吶Ν */
 .event-detail-label {
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -1005,7 +1005,7 @@
 /* 鬆・岼蛟､・医う繝ｳ繝・Φ繝医ｒ驕ｩ逕ｨ縺励※髫主ｱ､繧呈・遒ｺ蛹厄ｼ・*/
 .event-detail-val {
   padding-left: 12px;
-  font-size: 0.98rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
   line-height: 1.5;
 }
@@ -1018,7 +1018,7 @@
   white-space: pre-wrap;
   word-break: break-word;
   line-height: 1.5;
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
   color: var(--text-main);
   margin-top: 4px;
 }
@@ -1039,8 +1039,8 @@
   border: 1px solid rgba(37, 99, 235, 0.3);
   color: var(--primary);
   border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   text-decoration: none;
   transition: all 0.15s ease;
 }
@@ -1068,20 +1068,19 @@
 }
 
 .attend-group-title {
-  font-weight: 800;
-  font-size: 0.85rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   margin-bottom: 4px;
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-/* 蜃ｺ谺閠・・蜷榊燕繝ｪ繧ｹ繝茨ｼ医＆繧峨↓繧､繝ｳ繝・Φ繝茨ｼ・*/
 .attend-names {
   padding-left: 14px;
   line-height: 1.5;
   color: var(--text-main);
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .text-success { color: #16a34a; }
@@ -1109,8 +1108,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  font-size: 0.9rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-sm);
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -1124,11 +1123,11 @@
   object-fit: cover;
 }
 .guest-email {
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
 }
 .guest-status {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   background: #f1f5f9;
   padding: 2px 6px;
@@ -1175,7 +1174,7 @@
 }
 
 #edmUnansweredNames {
-  color: #94a3b8;
+  color: var(--text-subtle);
 }
 
 /* 削除確認モーダル */
@@ -1225,8 +1224,8 @@
 
 .event-edit-modal .form-label {
   display: block;
-  font-size: 0.82rem;
-  font-weight: 800;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
   margin-bottom: 5px;
 }
@@ -1237,7 +1236,7 @@
   padding: 10px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-size: 0.95rem;
+  font-size: var(--fs-md);
   color: var(--text-main);
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -1253,8 +1252,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   color: var(--text-main);
   cursor: pointer;
   user-select: none;
@@ -1315,8 +1314,8 @@
   background: none;
   border: none;
   color: #dc2626;
-  font-weight: 500;
-  font-size: 0.82rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 6px 4px;
   border-radius: 4px;
   cursor: pointer;
@@ -1340,8 +1339,8 @@
   background: #f1f5f9;
   border: 1px solid var(--border-color);
   color: var(--text-main);
-  font-weight: 700;
-  font-size: 0.88rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   padding: 9px 16px;
   border-radius: 4px;
   cursor: pointer;
@@ -1411,8 +1410,8 @@
   color: var(--text-main);
   padding: 8px 0;
   border-radius: 4px;
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1463,8 +1462,8 @@
   background: var(--primary);
   border: 1px solid var(--primary);
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   line-height: 1;
   border-radius: 6px;
   box-sizing: border-box;
@@ -1500,8 +1499,8 @@
   background: #dc2626;
   border: 1px solid #dc2626;
   color: #ffffff;
-  font-weight: 600;
-  font-size: 0.85rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
   line-height: 1;
   border-radius: 6px;
   box-sizing: border-box;
@@ -1536,8 +1535,8 @@
    搭 莠亥ｮ壹Μ繧ｹ繝茨ｼ医い繧ｸ繧ｧ繝ｳ繝€・臥畑繧ｹ繧ｿ繧､繝ｫ・・牡蛻・￠
    ========================================= */
 .schedule-title { 
-  font-weight: 800; 
-  font-size: 1rem;
+  font-weight: var(--fw-bold); 
+  font-size: var(--fs-md);
   margin: 0 0 12px 4px; 
   color: var(--text-heading); 
 }
@@ -1590,7 +1589,7 @@
 }
 
 .schedule-date {
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   color: var(--text-heading);
 }
 
@@ -1602,13 +1601,13 @@
 }
 
 .schedule-vs {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
 }
 
 .schedule-opponent-name {
-  font-size: 1.1rem;
+  font-size: var(--fs-md);
   color: var(--text-heading);
 }
 
@@ -1641,9 +1640,9 @@
 }
 
 .same-day-tabs-label {
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
+  color: var(--text-muted);
   margin-bottom: 6px;
 }
 
@@ -1657,8 +1656,8 @@
   background: #ffffff;
   border: 1px solid #cbd5e1;
   color: var(--text-main);
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   padding: 5px 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -1769,7 +1768,7 @@
 }
 .schedule-agenda-card.card-maybe .schedule-agenda-title,
 .schedule-agenda-card.card-maybe .schedule-agenda-date {
-  color: #334155;
+  color: var(--text-main);
 }
 
 /* 未入力 (Unanswered) - 白 (デフォルトと同じ) */
@@ -1792,7 +1791,7 @@
 
 .schedule-agenda-badge {
   font-size: 0.70rem;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   padding: 3px 8px;
   border-radius: 4px;
   white-space: nowrap;
@@ -1923,14 +1922,14 @@
 }
 
 .schedule-agenda-date {
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--text-muted);
 }
 
 .schedule-agenda-title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
   margin: 0 0 8px 0;
   color: var(--text-heading);
 }
@@ -1946,7 +1945,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -1961,11 +1960,11 @@
 }
 
 .schedule-agenda-count-text {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
 }
 .schedule-agenda-count {
-  font-weight: 700;
+  font-weight: var(--fw-bold);
 }
 
 .schedule-agenda-buttons-container {
@@ -1980,8 +1979,8 @@
 .btn-inline-attend {
   flex: 1;
   padding: 7px 0;
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: 0;
   border: none;
   background: transparent;
@@ -2020,7 +2019,7 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: var(--radius);
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   border: 1px solid var(--border-color);
   background: #f8fafc;
   color: var(--text-main);
@@ -2036,29 +2035,29 @@
   background: #f0fdf4;
   border-color: #bbf7d0;
   color: #15803d;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .edm-gear-chip.gear-alert-red {
   background: #fef2f2;
   border-color: #fca5a5;
   color: #b91c1c;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .edm-gear-chip.gear-alert-yellow {
   background: #fffbeb;
   border-color: #fde68a;
   color: #92400e;
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .gear-chip-title {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .gear-chip-holder {
-  font-weight: 500;
+  font-weight: var(--fw-medium);
 }
 
 .btn-edm-resolve {
@@ -2066,8 +2065,8 @@
   align-items: center;
   gap: 3px;
   padding: 3px 9px;
-  font-size: 0.76rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   border-radius: var(--radius);
   border: 1px solid #b91c1c;
   cursor: pointer;

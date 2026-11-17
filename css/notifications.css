@@ -13,7 +13,7 @@
   position: relative;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
-  color: var(--text-heading, #1e293b);
+  color: var(--text-heading);
   border-radius: 50%;
   width: 36px;
   height: 36px;
@@ -87,7 +87,7 @@
 
 .announcements-unread-pill {
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   padding: 2px 8px;
   border-radius: 999px;
   background: #dbeafe;
@@ -104,9 +104,9 @@
 .btn-mark-all-read {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
-  font-size: 0.75rem;
-  font-weight: 600;
+  color: var(--text-main);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 4px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -160,7 +160,7 @@
   height: 34px;
   border-radius: 50%;
   background: #f1f5f9;
-  color: #475569;
+  color: var(--text-main);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,27 +190,27 @@
 }
 
 .announcement-item-title {
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
   line-height: 1.35;
 }
 
 .announcement-item.is-unread .announcement-item-title {
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: var(--fw-bold);
+  color: var(--text-main);
 }
 
 .announcement-item-time {
-  font-size: 0.72rem;
-  color: #94a3b8;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .announcement-item-body {
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin-top: 3px;
   line-height: 1.45;
   word-break: break-word;
@@ -228,8 +228,8 @@
 .announcements-empty {
   padding: 36px 16px;
   text-align: center;
-  color: #94a3b8;
-  font-size: 0.85rem;
+  color: var(--text-subtle);
+  font-size: var(--fs-sm);
 }
 
 /* 代表専用：通知管理画面 */
@@ -245,19 +245,19 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-heading, #0f172a);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .notif-admin-title .material-symbols-outlined {
-  color: var(--text-heading, #64748b);
+  color: var(--text-heading);
   font-size: 22px;
 }
 
 .notif-admin-subtitle {
-  font-size: 0.78rem;
-  color: var(--text-muted, #64748b);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin: 6px 0 0;
   line-height: 1.5;
 }
@@ -272,7 +272,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 7px 12px;
 }
 
@@ -282,7 +282,7 @@
 
 .notif-admin-status-msg {
   margin-top: 10px;
-  font-size: 0.8rem;
+  font-size: var(--fs-xs);
   padding: 7px 10px;
   border-radius: 6px;
 }
@@ -319,9 +319,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: var(--text-heading, #0f172a);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
   padding-bottom: 10px;
   margin-bottom: 6px;
   border-bottom: 1px solid #e2e8f0;
@@ -329,7 +329,7 @@
 
 .notif-admin-group-header .material-symbols-outlined {
   font-size: 19px;
-  color: var(--text-heading, #64748b);
+  color: var(--text-heading);
 }
 
 .notif-rule-row {
@@ -353,14 +353,14 @@
 }
 
 .notif-rule-name {
-  font-size: 0.86rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-bold);
+  color: var(--text-heading);
 }
 
 .notif-rule-desc {
-  font-size: 0.74rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
   margin-top: 2px;
   line-height: 1.4;
 }
@@ -379,12 +379,12 @@
 }
 
 .notif-timing-select {
-  font-size: 0.78rem;
+  font-size: var(--fs-xs);
   padding: 4px 8px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   background: #ffffff;
-  color: #1e293b;
+  color: var(--text-main);
 }
 
 .notif-switch-group {
@@ -397,9 +397,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #334155;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
   cursor: pointer;
   user-select: none;
 }

@@ -10,7 +10,7 @@
 .stats-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--fs-sm);
   white-space: nowrap;
   color: var(--text-heading);
 }
@@ -23,8 +23,8 @@
 
 .stats-table th {
   color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.82rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-xs);
   text-transform: uppercase;
   letter-spacing: 0;
   padding: 12px 8px;
@@ -40,24 +40,24 @@
 }
 
 .stats-table th.th-number {
-  font-size: 0.84rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table th.th-name {
-  font-size: 0.88rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table td {
   padding: 12px 8px;
   text-align: center;
   border-bottom: 1px solid var(--border-color);
-  font-weight: 500;
+  font-weight: var(--fw-normal);
 }
 
 .stats-table td.col-number {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
   color: var(--text-heading);
-  font-size: 0.95rem;
+  font-size: var(--fs-sm);
 }
 
 .stats-table tbody tr {
@@ -119,7 +119,7 @@
   padding: 1px 5px;
   border-radius: 4px;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   letter-spacing: 0.3px;
   line-height: 1.2;
   flex-shrink: 0;
@@ -172,8 +172,8 @@
 }
 
 .rate-text {
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-bold);
   color: var(--text-heading);
   min-width: 32px;
   text-align: left;
@@ -190,7 +190,7 @@
   justify-content: center;
   min-width: 24px;
   height: 24px;
-  font-weight: 700;
+  font-weight: var(--fw-bold);
   box-sizing: border-box;
 }
 
@@ -207,7 +207,7 @@
   border-radius: 999px;
   background: radial-gradient(circle, rgba(254, 243, 199, 0.95) 0%, rgba(254, 243, 199, 0) 75%) !important;
   color: #b45309 !important;
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1.05;
 }
 
@@ -227,7 +227,7 @@
 }
 
 .stat-top-value {
-  font-weight: 800;
+  font-weight: var(--fw-bold);
   line-height: 1;
 }
 
@@ -240,8 +240,8 @@
 .player-link {
   color: var(--text-heading) !important;
   text-decoration: none !important;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-sm);
 }
 
 /* 行全体をタップ可能にして詳細モーダルを開くスタイル */
@@ -265,7 +265,7 @@
 }
 
 .stats-table .font-semibold {
-  font-weight: 600;
+  font-weight: var(--fw-medium);
 }
 
 .stats-table-header {
@@ -280,8 +280,8 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.78rem;
-  color: #64748b;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
 }
 
 .stats-tap-hint-inline .material-symbols-outlined {
@@ -295,8 +295,8 @@
 
 .stats-table-title {
   display: block;
-  font-weight: 700;
-  font-size: 1rem;
+  font-weight: var(--fw-bold);
+  font-size: var(--fs-md);
   color: var(--text-heading);
   letter-spacing: normal;
   line-height: 1.4;
@@ -374,8 +374,8 @@ th.sort-active .sort-icon {
     gap: 5px !important;
     padding: 6px 10px !important;
     font-size: 0.72rem !important;
-    font-weight: 500 !important;
-    color: #475569 !important;
+    font-weight: var(--fw-medium) !important;
+    color: var(--text-main) !important;
     background: #f8fafc !important;
     border-bottom: 1px solid #e2e8f0 !important;
   }
@@ -476,7 +476,7 @@ th.sort-active .sort-icon {
     text-align: center !important;
     padding: 10px 1px !important;
     font-size: 0.82rem !important;
-    font-weight: 600 !important;
+    font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-number {
     width: 34px !important;
@@ -484,7 +484,7 @@ th.sort-active .sort-icon {
     text-align: center !important;
     padding: 7px 1px !important;
     font-size: 0.84rem !important;
-    font-weight: 600 !important;
+    font-weight: var(--fw-medium) !important;
     color: var(--text-heading) !important;
   }
 
@@ -493,8 +493,8 @@ th.sort-active .sort-icon {
     width: auto !important;
     text-align: left !important;
     padding: 10px 3px 10px 6px !important;
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-medium) !important;
   }
   .stats-table td.col-name-cell {
     width: auto !important;
@@ -530,8 +530,8 @@ th.sort-active .sort-icon {
 
   .player-name,
   .player-link {
-    font-size: 0.85rem !important;
-    font-weight: 600 !important;
+    font-size: var(--fs-sm) !important;
+    font-weight: var(--fw-medium) !important;
     white-space: normal !important;
     word-break: break-word !important;
     overflow-wrap: anywhere !important;
@@ -641,7 +641,7 @@ th.sort-active .sort-icon {
 
   .stat-top-value {
     font-size: 0.8rem !important;
-    font-weight: 800 !important;
+    font-weight: var(--fw-bold) !important;
   }
 
   .stats-table th.th-stat .th-icon {
@@ -757,9 +757,9 @@ th.sort-active .sort-icon {
 }
 
 .modal-player-name {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: #475569 !important;
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--text-main) !important;
 }
 
 #playerModalOverlay #pm-badges {
@@ -787,16 +787,16 @@ th.sort-active .sort-icon {
 }
 
 .summary-grid-5 .stat-label {
-  font-size: 0.75rem !important;
-  color: #64748b !important;
+  font-size: var(--fs-xs) !important;
+  color: var(--text-muted) !important;
   margin-bottom: 4px !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
   white-space: nowrap;
 }
 
 .summary-grid-5 .stat-value {
-  font-size: 1.25rem !important;
-  font-weight: 600 !important;
+  font-size: var(--fs-lg) !important;
+  font-weight: var(--fw-medium) !important;
   color: #2563eb !important;
   white-space: nowrap;
   line-height: 1.2;
@@ -804,7 +804,7 @@ th.sort-active .sort-icon {
 
 .summary-grid-5 .rate-unit {
   font-size: 0.72rem !important;
-  font-weight: 500 !important;
+  font-weight: var(--fw-medium) !important;
   margin-left: 1px;
   color: #2563eb !important;
 }
@@ -826,9 +826,9 @@ th.sort-active .sort-icon {
 
 /* 勝敗ブロック */
 #playerModalOverlay .modal-section-title {
-  font-size: 0.82rem !important;
-  font-weight: 600 !important;
-  color: #475569 !important;
+  font-size: var(--fs-sm) !important;
+  font-weight: var(--fw-medium) !important;
+  color: var(--text-main) !important;
   margin-bottom: 8px !important;
 }
 
@@ -843,15 +843,15 @@ th.sort-active .sort-icon {
   text-align: center;
   padding: 8px 4px;
   border-radius: 6px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
   background: #ffffff !important;
   border: 1px solid #e2e8f0 !important;
 }
 
 .box-win { color: #16a34a !important; border-color: #86efac !important; background: #f0fdf4 !important; }
 .box-lose { color: #dc2626 !important; border-color: #fca5a5 !important; background: #fef2f2 !important; }
-.box-draw { color: #475569 !important; border-color: #cbd5e1 !important; background: #f8fafc !important; }
+.box-draw { color: var(--text-main) !important; border-color: #cbd5e1 !important; background: #f8fafc !important; }
 
 /* 参加履歴（タイムライン）の箱 */
 .history-container {
@@ -892,32 +892,32 @@ th.sort-active .sort-icon {
 }
 
 .pm-match-header-left .category-badge {
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 2px 7px;
   border-radius: 4px;
 }
 
 /* 日付 */
 .pm-match-date {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   letter-spacing: -0.2px;
   white-space: nowrap;
 }
 
 /* vs と 対戦相手名 */
 .pm-match-vs {
-  font-size: 0.75rem;
-  color: #94a3b8;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-subtle);
+  font-weight: var(--fw-normal);
 }
 
 .pm-match-opp {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #475569;
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-main);
   white-space: nowrap;
 }
 
@@ -933,8 +933,8 @@ th.sort-active .sort-icon {
   padding: 2px 10px;
   min-width: 54px;
   border-radius: 4px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.5px;
 }
 
@@ -968,8 +968,8 @@ th.sort-active .sort-icon {
   background: #fefce8;
   border: 1px solid #fef08a;
   color: #b45309;
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -989,9 +989,9 @@ th.sort-active .sort-icon {
 
 .pm-event-time {
   min-width: 60px;
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
 }
 
@@ -1002,12 +1002,12 @@ th.sort-active .sort-icon {
   justify-content: center;
   padding: 2px 8px;
   border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   white-space: nowrap;
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .pm-action-goal,
@@ -1016,23 +1016,23 @@ th.sort-active .sort-icon {
 .pm-action-red {
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .pm-action-none {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
-  color: #64748b !important;
-  font-size: 0.78rem !important;
-  font-weight: 400 !important;
+  color: var(--text-muted) !important;
+  font-size: var(--fs-xs) !important;
+  font-weight: var(--fw-normal) !important;
 }
 
 /* 詳細テキスト（アシスト元・ゴール者等） */
 .pm-event-detail {
-  font-size: 0.78rem;
-  color: #64748b;
-  font-weight: 400;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  font-weight: var(--fw-normal);
   white-space: nowrap;
   margin-left: 2px;
 }
