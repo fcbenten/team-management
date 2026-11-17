@@ -812,7 +812,7 @@ TABLES_DATA = [
             ("機能カテゴリ", "category", "VARCHAR(30)", "カテゴリ", "-", "NOT NULL", "なし", "-", "'schedule' | 'bulletin' | 'bulletin_comment' | 'results' | 'equipment' | 'reminder' | 'system'。"),
             ("操作・種別ラベル", "action_label", "VARCHAR(100)", "操作ラベル", "-", "NOT NULL", "なし", "-", "例: 新規作成, 編集・更新, 備品当番リマインド。"),
             ("ルール説明", "description", "TEXT", "説明文", "-", "NULL", "なし", "-", "管理画面および仕様上のトリガー説明文。"),
-            ("お知らせ機能対応可否", "supports_announcement", "BOOLEAN", "お知らせ対応フラグ", "-", "NOT NULL", "TRUE", "-", "FALSEの場合はアプリ内お知らせ列を持たず外部通知のみ（system_error_alert等）。"),
+            ("お知らせ機能対応可否", "supports_announcement", "BOOLEAN", "お知らせ対応フラグ", "-", "NOT NULL", "TRUE", "-", "FALSEの場合はアプリ内お知らせ列を持たず外部通知のみを表示する制御用。"),
             ("お知らせ有効フラグ", "announcement_enabled", "BOOLEAN", "お知らせON/OFF", "-", "NOT NULL", "TRUE", "-", "TRUE時のみアプリ内announcementsへ登録。FALSE時はexternal_enabledも強制FALSE。"),
             ("外部通知有効フラグ", "external_enabled", "BOOLEAN", "外部通知ON/OFF", "-", "NOT NULL", "FALSE", "-", "TRUE時のみLINE・Web Push統一通知を配信（supports_announcement=TRUE時はお知らせON時のみ有効化可能）。"),
             ("リマインド前日数", "days_before", "INTEGER", "何日前設定", "-", "NULL", "NULL", "-", "リマインド系ルール専用（例: 0=当日, 1=前日）。非リマインドはNULL。"),

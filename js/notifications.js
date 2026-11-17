@@ -20,6 +20,7 @@
     bulletin: 'article',
     results: 'sports_soccer',
     equipment: 'inventory_2',
+    notifications: 'admin_panel_settings',
     home: 'notifications'
   };
 

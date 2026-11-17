@@ -2878,63 +2878,121 @@
     };
 
     // =========================================
-    // 8. システムエラー自動記録 & 代表者への LINE 通知
+    // 8. システムエラー自動記録 & 代表者への通知（管理ルール・個人通知設定準拠）
     // =========================================
     async function reportSystemErrorAndNotify(entry) {
       const sb = getClient();
       if (!sb || !entry) return { logged: false, notified: false };
 
       let notified = false;
-      let ruleAllowsLine = true;
-      if (entry.notifyLine) {
-        try {
-          const { data: ruleRows } = await sb
-            .from('notification_rules')
-            .select('external_enabled')
-            .eq('rule_key', 'system_error_alert')
-            .limit(1);
-          if (ruleRows && ruleRows[0] && ruleRows[0].external_enabled === false) {
-            ruleAllowsLine = false;
+      let ruleAllowsAnnouncement = true;
+      let ruleAllowsExternal = true;
+      try {
+        const { data: ruleRows } = await sb
+          .from('notification_rules')
+          .select('announcement_enabled, external_enabled')
+          .eq('rule_key', 'system_error_alert')
+          .limit(1);
+        if (ruleRows && ruleRows[0]) {
+          if (ruleRows[0].announcement_enabled === false) {
+            ruleAllowsAnnouncement = false;
           }
-        } catch (e) {}
-      }
+          if (ruleRows[0].external_enabled === false) {
+            ruleAllowsExternal = false;
+          }
+        }
+      } catch (e) {}
 
-      const shouldNotifyLine = Boolean(entry.notifyLine) && ruleAllowsLine &&
-        (entry.forceLineNotify || (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.protocol)));
+      const isHttpsEnv = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.protocol));
+      const shouldNotifyExternal = Boolean(entry.notifyLine) && ruleAllowsAnnouncement && ruleAllowsExternal &&
+        (entry.forceLineNotify || isHttpsEnv);
 
-      if (shouldNotifyLine) {
+      if (ruleAllowsAnnouncement || shouldNotifyExternal) {
         try {
           const { data: reps, error: repErr } = await sb
             .from('members')
-            .select('member_id, line_user_id')
+            .select('member_id, notification_type, line_user_id, push_subscription')
             .eq('role', '代表')
-            .eq('is_past', false)
-            .not('line_user_id', 'is', null)
-            .neq('line_user_id', '');
+            .eq('is_past', false);
 
           if (!repErr && Array.isArray(reps) && reps.length > 0) {
-            const repIds = reps.map(r => r.member_id).filter(Boolean);
-            if (repIds.length > 0) {
-              const title = `【システムエラー】${entry.screen || '画面不明'}`;
-              const actorText = entry.memberName || '未ログイン/不明';
-              const shortErr = String(entry.errorMessage || '').slice(0, 180);
-              const body = `操作者: ${actorText}\n処理: ${entry.actionName || '-'}\n内容: ${shortErr}`;
+            const title = `【システムエラー】${entry.screen || '画面不明'}`;
+            const actorText = entry.memberName || '未ログイン/不明';
+            const shortErr = String(entry.errorMessage || '').slice(0, 180);
+            const body = `操作者: ${actorText}\n処理: ${entry.actionName || '-'}\n内容: ${shortErr}`;
+
+            if (ruleAllowsAnnouncement) {
+              const nowTs = Date.now();
+              const annRows = reps
+                .filter(r => Boolean(r.member_id))
+                .map((r, idx) => ({
+                  announcement_id: `ANN-ERR-${nowTs}-${idx}-${Math.floor(100 + Math.random() * 900)}`,
+                  rule_key: 'system_error_alert',
+                  title: String(title).slice(0, 200),
+                  body: String(body).slice(0, 1000),
+                  target_tab: 'notifications',
+                  target_member_id: r.member_id,
+                  actor_member_id: null
+                }));
+              if (annRows.length > 0) {
+                const { error: annErr } = await sb.from('announcements').insert(annRows);
+                if (!annErr && typeof window !== 'undefined' && typeof window.refreshAnnouncementBell === 'function') {
+                  window.refreshAnnouncementBell();
+                }
+              }
+            }
+
+            if (shouldNotifyExternal) {
+              const lineTargets = [];
+              const pushTargets = [];
+              reps.forEach(r => {
+                if (!r.member_id) return;
+                const nType = String(r.notification_type || 'none').toLowerCase();
+                if (nType === 'none') return;
+                if ((nType === 'line' || nType === 'both') && r.line_user_id) {
+                  lineTargets.push(r.member_id);
+                }
+                if ((nType === 'push' || nType === 'both') && r.push_subscription) {
+                  pushTargets.push(r.member_id);
+                }
+              });
+
               const rawAppUrl = (typeof window !== 'undefined' && window.location && /^https:/i.test(window.location.href))
                 ? window.location.href.split('#')[0]
                 : undefined;
               const appUrl = toExternalBrowserLineUrl(rawAppUrl);
 
-              const pushRes = await invokeEdgeFunction('send-line-push', {
-                memberIds: repIds,
-                title,
-                body,
-                appUrl
-              });
-              notified = Boolean(pushRes && pushRes.success);
+              if (lineTargets.length > 0) {
+                try {
+                  const lineRes = await invokeEdgeFunction('send-line-push', {
+                    memberIds: lineTargets,
+                    title,
+                    body,
+                    appUrl
+                  });
+                  if (lineRes && lineRes.success) notified = true;
+                } catch (lineErr) {
+                  console.warn('[SystemErrorLogger] LINE notification skipped:', lineErr);
+                }
+              }
+              if (pushTargets.length > 0) {
+                try {
+                  const pushRes = await invokeEdgeFunction('send-web-push', {
+                    memberIds: pushTargets,
+                    title,
+                    body,
+                    url: './#notifications',
+                    tag: 'fcb-system-error-alert'
+                  });
+                  if (pushRes && pushRes.success) notified = true;
+                } catch (pushErr) {
+                  console.warn('[SystemErrorLogger] WebPush notification skipped:', pushErr);
+                }
+              }
             }
           }
         } catch (notifyErr) {
-          console.warn('[SystemErrorLogger] LINE notification skipped:', notifyErr);
+          console.warn('[SystemErrorLogger] Notification dispatch skipped:', notifyErr);
         }
       }
 

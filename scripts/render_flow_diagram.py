@@ -199,8 +199,8 @@ def build_html():
   <!-- GAS ⇄ DB 間の注記 -->
   <div class="arrow-label" style="top: 200px; left: 1058px;">OAuthトークン保存 / 名簿照合</div>
 
-  <!-- GAS ➔ LINE API 間の注記 -->
-  <div class="arrow-label" style="top: 498px; left: 888px;">システムエラー通知 (代表LINE)</div>
+  <!-- GAS ➔ 通知API間の注記 -->
+  <div class="arrow-label" style="top: 498px; left: 888px;">システムエラー通知 (代表)</div>
 
   <!-- 統合通知・定時リマインド (Edge Functions) の注記 -->
   <div class="arrow-label-vertical" style="top: 295px; left: 1496px;">定期・イベント通知 (Functions)</div>

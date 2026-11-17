@@ -251,9 +251,10 @@ class CalendarService {
    * @param {string} eventId 
    * @param {string} userEmail
    * @param {string} status 'yes' | 'no' | 'maybe'
+   * @param {boolean} [waitForInvite=false] 招待追加直後の反映遅延に備え404時に1回リトライするか
    * @returns {boolean}
    */
-  static updateMemberCalendarAttendanceViaToken(refreshToken, eventId, userEmail, status) {
+  static updateMemberCalendarAttendanceViaToken(refreshToken, eventId, userEmail, status, waitForInvite = false) {
     if (!refreshToken || !eventId || !userEmail) return false;
 
     try {
@@ -270,13 +271,22 @@ class CalendarService {
         muteHttpExceptions: true
       };
       
-      const getResp = UrlFetchApp.fetch(url, getOptions);
+      let getResp = UrlFetchApp.fetch(url, getOptions);
+      if (getResp.getResponseCode() === 404 && waitForInvite) {
+        // チームカレンダー側でゲスト追加した直後は個人カレンダーへの招待反映が遅れるため1回だけ待機リトライ
+        Utilities.sleep(1200);
+        getResp = UrlFetchApp.fetch(url, getOptions);
+      }
       if (getResp.getResponseCode() !== 200) {
         this._logPersonalSyncHttpFailure('GET', cleanId, getResp);
         return false;
       }
       
       const eventData = JSON.parse(getResp.getContentText());
+      if (eventData.status === 'cancelled') {
+        SystemLogger.info(`[CalendarSync] Personal event ${cleanId} is cancelled for ${userEmail}; skipping patch.`);
+        return false;
+      }
       let attendees = eventData.attendees || [];
       let found = false;
       

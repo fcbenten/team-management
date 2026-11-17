@@ -259,7 +259,7 @@ VALUES
     ('equipment_delete', 'equipment', '備品削除', '備品が台帳から削除された時（現役全員）', TRUE, TRUE, FALSE, NULL, NULL, 130),
     ('reminder_attendance', 'reminder', '出欠未回答リマインド', '開催前の指定タイミングに出欠未入力のメンバーへ通知', TRUE, TRUE, TRUE, 1, 9, 140),
     ('reminder_equipment_duty', 'reminder', '備品当番リマインド', '開催前日の指定時刻に当番メンバーへ持参通知', TRUE, TRUE, TRUE, 1, 9, 150),
-    ('system_error_alert', 'system', 'システムエラー通知（代表LINE）', '想定外システムエラー検知時に代表へLINE通知', FALSE, FALSE, TRUE, NULL, NULL, 160)
+    ('system_error_alert', 'system', 'システムエラー通知', '想定外システムエラー検知時に代表へ通知', TRUE, TRUE, TRUE, NULL, NULL, 160)
 ON CONFLICT (rule_key) DO NOTHING;
 
 -- 全テーブルに対して anon / authenticated ロールへの全権限ポリシーを設定

@@ -834,10 +834,11 @@ function updateEventAttendance(payload) {
     }
 
     // 3. ユーザーの個人カレンダーへの非同期同期（トークンがある場合のみ確実に実施）
+    const wasNewlyInvited = !guestObj && Boolean(userEmail);
     try {
       const refreshToken = GasSupabaseService.getMemberToken(userEmail);
       if (refreshToken) {
-        CalendarService.updateMemberCalendarAttendanceViaToken(refreshToken, actualEventId, userEmail, status);
+        CalendarService.updateMemberCalendarAttendanceViaToken(refreshToken, actualEventId, userEmail, status, wasNewlyInvited);
       }
     } catch (tokenErr) {
       SystemLogger.warn(`[CalendarSync] Personal calendar sync skipped or failed for ${userEmail}: ` + tokenErr.toString());

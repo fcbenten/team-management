@@ -159,29 +159,39 @@ class GasSupabaseService {
   }
 
   /**
-   * LINE通知連携済みの「代表」メンバーID一覧を取得する
-   * @returns {Array<string>}
+   * 現役の「代表」メンバー一覧と通知設定を取得する
+   * @returns {Array<Object>}
    */
-  static getRepresentativeMemberIds() {
+  static getRepresentatives() {
     try {
-      const url = `${Config.SUPABASE.URL}/rest/v1/members?role=eq.${encodeURIComponent('代表')}&is_past=eq.false&line_user_id=not.is.null&line_user_id=neq.&select=member_id`;
+      const url = `${Config.SUPABASE.URL}/rest/v1/members?role=eq.${encodeURIComponent('代表')}&is_past=eq.false&select=member_id,notification_type,line_user_id,push_subscription`;
       const res = UrlFetchApp.fetch(url, {
         method: 'get',
         headers: this.getHeaders(),
         muteHttpExceptions: true
       });
       if (res.getResponseCode() === 200) {
-        const rows = JSON.parse(res.getContentText()) || [];
-        return rows.map(r => r.member_id).filter(Boolean);
+        return JSON.parse(res.getContentText()) || [];
       }
     } catch (e) {
-      console.warn('[SupabaseService] Failed to fetch representative memberIds:', e);
+      console.warn('[SupabaseService] Failed to fetch representatives:', e);
     }
     return [];
   }
 
   /**
-   * GAS 側システムエラーを Supabase (system_error_logs) へ記録し、代表へ LINE 通知する
+   * LINE通知連携済みの「代表」メンバーID一覧を取得する
+   * @returns {Array<string>}
+   */
+  static getRepresentativeMemberIds() {
+    return this.getRepresentatives()
+      .filter(r => r.line_user_id && String(r.line_user_id).trim() !== '')
+      .map(r => r.member_id)
+      .filter(Boolean);
+  }
+
+  /**
+   * GAS 側システムエラーを Supabase (system_error_logs) へ記録し、管理ルールと個人通知設定に従って代表へ通知する
    * @param {string} message
    * @param {Error|null} errObj
    */
@@ -193,7 +203,7 @@ class GasSupabaseService {
       const rawMsg = String(message || 'GAS システムエラー');
       const stackText = errObj ? `${errObj.toString()}\n${errObj.stack || ''}` : '';
 
-      // 同一エラーの5分間クールダウン（LINE連投防止）
+      // 同一エラーの5分間クールダウン（通知連投防止）
       let onCooldown = false;
       try {
         const cache = CacheService.getScriptCache();
@@ -207,9 +217,10 @@ class GasSupabaseService {
       } catch (cacheErr) {}
 
       let notified = false;
-      let ruleAllowsLine = true;
+      let ruleAllowsAnnouncement = true;
+      let ruleAllowsExternal = true;
       try {
-        const ruleUrl = `${Config.SUPABASE.URL}/rest/v1/notification_rules?rule_key=eq.system_error_alert&select=external_enabled`;
+        const ruleUrl = `${Config.SUPABASE.URL}/rest/v1/notification_rules?rule_key=eq.system_error_alert&select=announcement_enabled,external_enabled`;
         const ruleRes = UrlFetchApp.fetch(ruleUrl, {
           method: 'get',
           headers: this.getHeaders(),
@@ -217,37 +228,118 @@ class GasSupabaseService {
         });
         if (ruleRes.getResponseCode() === 200) {
           const rRows = JSON.parse(ruleRes.getContentText()) || [];
-          if (rRows[0] && rRows[0].external_enabled === false) {
-            ruleAllowsLine = false;
+          if (rRows[0]) {
+            if (rRows[0].announcement_enabled === false) {
+              ruleAllowsAnnouncement = false;
+            }
+            if (rRows[0].external_enabled === false) {
+              ruleAllowsExternal = false;
+            }
           }
         }
       } catch (ruleErr) {}
 
-      if (!onCooldown && ruleAllowsLine) {
-        const repIds = this.getRepresentativeMemberIds();
-        if (repIds.length > 0) {
-          const edgeUrl = `${Config.SUPABASE.URL}/functions/v1/send-line-push`;
-          const basePwaUrl = String(Config.PWA_URL || '');
-          const extAppUrl = basePwaUrl.includes('openExternalBrowser=1')
-            ? basePwaUrl
-            : basePwaUrl + (basePwaUrl.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
-          const pushPayload = {
-            memberIds: repIds,
-            title: '【システムエラー (GAS)】',
-            body: `内容: ${rawMsg.slice(0, 180)}`,
-            appUrl: extAppUrl
-          };
-          const pushRes = UrlFetchApp.fetch(edgeUrl, {
-            method: 'post',
-            headers: {
+      if (!onCooldown && (ruleAllowsAnnouncement || ruleAllowsExternal)) {
+        const reps = this.getRepresentatives();
+        if (reps.length > 0) {
+          const title = '【システムエラー (GAS)】';
+          const body = `内容: ${rawMsg.slice(0, 180)}`;
+
+          if (ruleAllowsAnnouncement) {
+            const nowTs = Date.now();
+            const annRows = reps
+              .filter(r => Boolean(r.member_id))
+              .map((r, idx) => ({
+                announcement_id: `ANN-GASERR-${nowTs}-${idx}-${Math.floor(100 + Math.random() * 900)}`,
+                rule_key: 'system_error_alert',
+                title: title,
+                body: body,
+                target_tab: 'notifications',
+                target_member_id: r.member_id,
+                actor_member_id: null
+              }));
+            if (annRows.length > 0) {
+              try {
+                UrlFetchApp.fetch(`${Config.SUPABASE.URL}/rest/v1/announcements`, {
+                  method: 'post',
+                  headers: this.getHeaders(),
+                  payload: JSON.stringify(annRows),
+                  muteHttpExceptions: true
+                });
+              } catch (annErr) {
+                console.warn('[SupabaseService] Announcement insert failed:', annErr);
+              }
+            }
+          }
+
+          if (ruleAllowsAnnouncement && ruleAllowsExternal) {
+            const lineTargets = [];
+            const pushTargets = [];
+            reps.forEach(r => {
+              if (!r.member_id) return;
+              const nType = String(r.notification_type || 'none').toLowerCase();
+              if (nType === 'none') return;
+              if ((nType === 'line' || nType === 'both') && r.line_user_id) {
+                lineTargets.push(r.member_id);
+              }
+              if ((nType === 'push' || nType === 'both') && r.push_subscription) {
+                pushTargets.push(r.member_id);
+              }
+            });
+
+            const edgeHeaders = {
               'Content-Type': 'application/json',
               'apikey': Config.SUPABASE.ANON_KEY,
               'Authorization': 'Bearer ' + Config.SUPABASE.ANON_KEY
-            },
-            payload: JSON.stringify(pushPayload),
-            muteHttpExceptions: true
-          });
-          notified = pushRes.getResponseCode() >= 200 && pushRes.getResponseCode() < 300;
+            };
+
+            if (lineTargets.length > 0) {
+              try {
+                const basePwaUrl = String(Config.PWA_URL || '');
+                const extAppUrl = basePwaUrl.includes('openExternalBrowser=1')
+                  ? basePwaUrl
+                  : basePwaUrl + (basePwaUrl.includes('?') ? '&' : '?') + 'openExternalBrowser=1';
+                const lineRes = UrlFetchApp.fetch(`${Config.SUPABASE.URL}/functions/v1/send-line-push`, {
+                  method: 'post',
+                  headers: edgeHeaders,
+                  payload: JSON.stringify({
+                    memberIds: lineTargets,
+                    title: title,
+                    body: body,
+                    appUrl: extAppUrl
+                  }),
+                  muteHttpExceptions: true
+                });
+                if (lineRes.getResponseCode() >= 200 && lineRes.getResponseCode() < 300) {
+                  notified = true;
+                }
+              } catch (lineErr) {
+                console.warn('[SupabaseService] LINE push failed:', lineErr);
+              }
+            }
+
+            if (pushTargets.length > 0) {
+              try {
+                const pushRes = UrlFetchApp.fetch(`${Config.SUPABASE.URL}/functions/v1/send-web-push`, {
+                  method: 'post',
+                  headers: edgeHeaders,
+                  payload: JSON.stringify({
+                    memberIds: pushTargets,
+                    title: title,
+                    body: body,
+                    url: './#notifications',
+                    tag: 'fcb-system-error-alert'
+                  }),
+                  muteHttpExceptions: true
+                });
+                if (pushRes.getResponseCode() >= 200 && pushRes.getResponseCode() < 300) {
+                  notified = true;
+                }
+              } catch (pushErr) {
+                console.warn('[SupabaseService] Web push failed:', pushErr);
+              }
+            }
+          }
         }
       }
 
