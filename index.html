@@ -43,7 +43,7 @@
   --bg-body: #f8fafc;        /* 全体の背景（洗練されたスレートグレー） */
   --bg-header: #ffffff;      /* ヘッダー・トップバー背景（清潔感のある白） */
   --bg-card: #ffffff;        /* カード背景（白） */
-  --text-main: #475569;      /* 濃いめの強調グレー（本文説明・主要データ値・チーム名など） */
+  --text-main: #64748b;      /* 基本テキスト（基準スレートグレー統一） */
   --text-heading: #64748b;   /* 基準グレー（標準見出し・ナビゲーション・ラベル・一覧項目名） */
   --text-muted: #64748b;     /* 補助テキスト（説明文など・基準グレーと同系） */
   --text-subtle: #94a3b8;    /* 薄い補助グレー（順位・背番号・プレースホルダー系） */
@@ -1338,7 +1338,7 @@ select:focus, input:focus, textarea:focus {
 .category-badge.badge-event,
 .category-badge.badge-other {
   background: rgba(100, 116, 139, 0.1) !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border-color: rgba(100, 116, 139, 0.25) !important;
 }
 
@@ -4357,7 +4357,7 @@ html.no-scroll {
 .match-card-score-box.draw {
   background: #f8fafc !important;
   border: 1px solid #cbd5e1 !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
 }
 
 .modal-score-box {
@@ -6267,7 +6267,7 @@ th.sort-active .sort-icon {
 .pm-score-draw {
   background: #f8fafc;
   border: 1px solid #cbd5e1;
-  color: #475569;
+  color: var(--text-main);
 }
 
 /* MVP選出バッジ (MVPはそのまま) */
@@ -8179,7 +8179,7 @@ th.sort-active .sort-icon {
   line-height: 1.2;
   letter-spacing: 0.3px;
   background-color: #f1f5f9;
-  color: #475569;
+  color: var(--text-main);
   border: 1px solid #cbd5e1;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
@@ -8211,7 +8211,7 @@ th.sort-active .sort-icon {
 
 .schedule-agenda-badge.badge-other {
   background-color: #f8fafc !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border: 1px solid #cbd5e1 !important;
 }
 
@@ -8238,7 +8238,7 @@ th.sort-active .sort-icon {
 }
 .schedule-agenda-card.card-yes .schedule-agenda-badge.badge-other {
   background-color: #ffffff !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border: 1.5px solid #94a3b8 !important;
 }
 
@@ -8268,7 +8268,7 @@ th.sort-active .sort-icon {
 }
 .schedule-agenda-card.card-no .schedule-agenda-badge.badge-other {
   background-color: #ffffff !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border: 1.5px solid #94a3b8 !important;
   text-decoration: none !important;
 }
@@ -8295,7 +8295,7 @@ th.sort-active .sort-icon {
 }
 .schedule-agenda-card.card-maybe .schedule-agenda-badge.badge-other {
   background-color: #ffffff !important;
-  color: #475569 !important;
+  color: var(--text-main) !important;
   border: 1.5px solid #94a3b8 !important;
 }
 
@@ -10097,7 +10097,8 @@ a.btn-member-modal-save:hover {
 /* 2. 備品グループセクション（左寄・幅比率6:4〜7:3レイアウト） */
 .equipment-layout-container {
   display: grid;
-  grid-template-columns: 1.6fr 1fr; /* 左62% : 右38% の黄金バランス */
+  grid-template-columns: 1.6fr 1fr;
+  /* 左62% : 右38% の黄金バランス */
   gap: 16px;
   align-items: start;
 }
@@ -10105,7 +10106,8 @@ a.btn-member-modal-save:hover {
 .equipment-col-left {
   display: flex;
   flex-direction: column;
-  gap: 10px; /* ビブス・審判道具・その他の隙間を綺麗に詰める */
+  gap: 10px;
+  /* ビブス・審判道具・その他の隙間を綺麗に詰める */
 }
 
 .equipment-col-right {
@@ -10245,7 +10247,8 @@ a.btn-member-modal-save:hover {
   min-width: 0;
   flex: 1;
   padding: 0 4px;
-  margin-left: 8px; /* 保管メンバー名と絶対に被らないよう必ず間隔を確保 */
+  margin-left: 8px;
+  /* 保管メンバー名と絶対に被らないよう必ず間隔を確保 */
 }
 
 /* ビブス行での保管メンバー情報（左寄せ・名前が絶対に見切れない幅を確保） */
@@ -10656,6 +10659,7 @@ a.btn-member-modal-save:hover {
    スマホ・タブレット表示最適化 (max-width: 767px)
    ========================================= */
 @media (max-width: 767px) {
+
   /* 1カラム化と横幅100%制御 */
   .equipment-layout-container {
     grid-template-columns: 1fr !important;
@@ -10910,7 +10914,7 @@ a.btn-member-modal-save:hover {
     flex-shrink: 0 !important;
   }
 
-  .equipment-footer-right > button {
+  .equipment-footer-right>button {
     width: auto !important;
     height: 36px !important;
     padding: 0 12px !important;
@@ -10973,7 +10977,6 @@ a.btn-member-modal-save:hover {
   margin-top: 8px;
   line-height: 1.5;
 }
-
 </style>
      <style>
 /* ../css/bulletin.css */
@@ -11592,10 +11595,12 @@ a.btn-member-modal-save:hover {
   color: #92400e !important;
   cursor: pointer;
 }
+
 .bdm-action-btn.bdm-pin-btn:hover {
   background: #fef3c7 !important;
   border-color: #f59e0b !important;
 }
+
 .bdm-action-btn.bdm-pin-btn input[type="checkbox"] {
   accent-color: #d97706;
   width: 16px;
@@ -11604,6 +11609,7 @@ a.btn-member-modal-save:hover {
   margin: 0;
   vertical-align: middle;
 }
+
 .bdm-action-btn.bdm-pin-btn .material-symbols-outlined {
   color: #d97706 !important;
 }
@@ -11617,11 +11623,13 @@ a.btn-member-modal-save:hover {
   padding: 0 8px !important;
   box-shadow: none !important;
 }
+
 .bdm-action-btn.btn-delete-action:hover {
   background: #fef2f2 !important;
   color: #b91c1c !important;
   text-decoration: underline !important;
 }
+
 .bdm-action-btn.btn-delete-action .material-symbols-outlined {
   color: #dc2626 !important;
 }
@@ -11633,11 +11641,13 @@ a.btn-member-modal-save:hover {
   color: var(--text-main) !important;
   box-shadow: none !important;
 }
+
 .bdm-action-btn.btn-edit-action:hover {
   background: #e2e8f0 !important;
   border-color: #94a3b8 !important;
   color: var(--text-main) !important;
 }
+
 .bdm-action-btn.btn-edit-action .material-symbols-outlined {
   color: var(--text-main) !important;
 }
@@ -11983,13 +11993,15 @@ textarea.comment-textarea:active {
   background-color: transparent !important;
   padding: 0 !important;
   margin: 0 !important;
-  resize: none !important; /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
+  resize: none !important;
+  /* 手動リサイズによるはみ出し・スクロール阻害を防止 */
   font-size: var(--fs-sm);
   line-height: 1.4;
   min-height: 44px;
   max-height: 120px;
   box-sizing: border-box;
-  overflow-y: hidden; /* 短文時は親モーダルへマウスホイールを素通し */
+  overflow-y: hidden;
+  /* 短文時は親モーダルへマウスホイールを素通し */
 }
 
 .comment-input-actions {
@@ -12006,10 +12018,12 @@ textarea.comment-textarea:active {
   color: var(--text-muted);
   user-select: none;
 }
+
 .comment-char-counter.warning {
   color: #f59e0b;
   font-weight: var(--fw-bold);
 }
+
 .comment-char-counter.limit {
   color: #ef4444;
   font-weight: var(--fw-bold);
@@ -12044,6 +12058,7 @@ textarea.comment-textarea:active {
   margin-top: 4px;
   text-align: right;
 }
+
 .comment-status-msg.error {
   color: #ef4444;
 }
@@ -12054,9 +12069,11 @@ textarea.comment-textarea:active {
     align-items: stretch;
     gap: 10px;
   }
+
   .bulletin-header-actions {
     width: 100%;
   }
+
   .btn-create-post {
     width: 100%;
     justify-content: center;
@@ -12126,7 +12143,6 @@ textarea.comment-textarea:active {
     font-size: 16px !important;
   }
 }
-
 </style>
      <style>
 /* ../css/notifications.css */
