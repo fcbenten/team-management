@@ -85,104 +85,15 @@ function filterAndRenderRankings() {
     seasonSelect.value = selectedSeason;
   }
   
-  // 選択されたシーズンのカレンダー出欠データが未キャッシュなら非同期で先読み
-  if (selectedSeason && (!window.calendarAttendanceCache || !window.calendarAttendanceCache[selectedSeason])) {
-    window.calendarAttendanceCache = window.calendarAttendanceCache || {};
-    if (window.SupabaseService && typeof window.SupabaseService.getCalendarAttendance === 'function') {
-      window.SupabaseService.getCalendarAttendance(selectedSeason)
-        .then(res => {
-          if (res) {
-            window.calendarAttendanceCache[selectedSeason] = res;
-            filterAndRenderRankings();
-          }
-        })
-        .catch(err => console.warn('getCalendarAttendance warning:', err));
-    }
-  }
-  
   let currentStats = [];
   if (window.allMatchResults && window.allMatchResults.length > 0) {
-    // 試合結果からスタッツ（得点・アシスト・MVP）を集計
+    // 試合結果からスタッツ（得点・アシスト・MVP・参加数）を集計（個人スタッツ画面と基準統一）
     currentStats = aggregateStatsFromMatches(selectedSeason, selectedCategory);
   } else {
     currentStats = window.teamStatsData || [];
   }
-  
-  // カレンダー出欠バッチから参加数を集計
-  const attendanceStats = aggregateAttendanceFromBatch(selectedSeason, selectedCategory);
-  renderRankingsWithData(currentStats, attendanceStats);
-}
 
-/**
- * カレンダー出欠バッチのデータから、指定された条件で全選手の参加数を抽出する
- *
- * @param {string} season - 対象年（例: "2026"）
- * @param {string} category - 対象カテゴリ ("all", "公式戦", "TRM")
- * @returns {Array} [{ name, attended }]
- */
-function aggregateAttendanceFromBatch(season, category) {
-  const attSource = (window.calendarAttendanceCache && season && window.calendarAttendanceCache[season]) 
-    ? window.calendarAttendanceCache[season] 
-    : window.calendarAttendanceData;
-  const pMap = (attSource && attSource.players) ? attSource.players : {};
-
-  // 対象選手一覧（名簿データ、チームスタッツ、カレンダー出欠データ）※OBは完全除外
-  const playerNames = new Set();
-  const checkAndAdd = (name) => {
-    const trimmed = String(name || '').trim();
-    if (trimmed && trimmed !== 'OG' && trimmed !== '助っ人' && trimmed !== '名前' && trimmed !== '氏名') {
-      if (typeof isPastMember === 'function' ? !isPastMember(trimmed) : true) {
-        playerNames.add(trimmed);
-      }
-    }
-  };
-
-  const rosterList = (window.scheduleRoster && window.scheduleRoster.length > 0)
-    ? window.scheduleRoster
-    : (window.adminMemberList || []);
-  if (Array.isArray(rosterList)) {
-    rosterList.forEach(m => { if (m && m.name) checkAndAdd(m.name); });
-  }
-  if (window.playerNumberMap) {
-    Object.keys(window.playerNumberMap).forEach(checkAndAdd);
-  }
-  if (Array.isArray(window.teamStatsData)) {
-    window.teamStatsData.forEach(p => checkAndAdd(p.name));
-  }
-  Object.keys(pMap).forEach(checkAndAdd);
-
-  const resultList = [];
-  playerNames.forEach(pName => {
-    if (typeof isPastMember === 'function' && isPastMember(pName)) return;
-
-    // カレンダー出欠データから選手データを探索（正規化対応）
-    let calPlayerStats = null;
-    if (pMap[pName]) {
-      calPlayerStats = pMap[pName];
-    } else {
-      const cleanTarget = String(pName || '').replace(/[\s\u3000]+/g, '').toLowerCase();
-      for (const k in pMap) {
-        if (String(k).replace(/[\s\u3000]+/g, '').toLowerCase() === cleanTarget) {
-          calPlayerStats = pMap[k];
-          break;
-        }
-      }
-    }
-
-    let attendedCount = 0;
-    if (calPlayerStats) {
-      const catKey = (category && category !== 'all' && calPlayerStats[category]) ? category : 'all';
-      const catStat = calPlayerStats[catKey];
-      attendedCount = (catStat && catStat.attended) ? catStat.attended : 0;
-    }
-
-    resultList.push({
-      name: pName,
-      attended: attendedCount
-    });
-  });
-
-  return resultList;
+  renderRankingsWithData(currentStats);
 }
 
 /**
@@ -221,8 +132,8 @@ function aggregateStatsFromMatches(season, category) {
     if (m.attended) {
       const attendees = m.attended.split(',').map(s => s.trim());
       attendees.forEach(name => {
-        // OG、助っ人、OBは参加にカウントしない
-        if (!name || name === 'OG' || name === '助っ人') return; 
+        // OG、助っ人、OB、プレースホルダ文字列は参加にカウントしない
+        if (!name || name === '-' || name === 'なし' || name === 'OG' || name === '助っ人' || name === '不明' || name === '名前' || name === '氏名') return; 
         if (typeof isPastMember === 'function' && isPastMember(name)) return;
         
         // 名簿にない選手がいた場合は動的に枠を追加
@@ -292,11 +203,9 @@ function setRankEmptyMessage(el, text) {
  * 渡された集計データをもとに、4つのランキングを描画する
  *
  * @param {Array} matchStats - 試合集計の成績配列
- * @param {Array} attendanceStats - カレンダー出欠バッチ集計の参加数配列
  */
-function renderRankingsWithData(matchStats, attendanceStats) {
+function renderRankingsWithData(matchStats) {
   const safeMatches = Array.isArray(matchStats) ? matchStats : [];
-  const safeAttendance = Array.isArray(attendanceStats) ? attendanceStats : [];
   const isPastCheck = (p) => typeof isPastMember === 'function' ? !isPastMember(p.name) : true;
 
   // 得点ランキング
@@ -311,9 +220,9 @@ function renderRankingsWithData(matchStats, attendanceStats) {
   const topMom = safeMatches.filter(p => p.mom > 0 && isPastCheck(p)).sort((a, b) => b.mom - a.mom);
   renderSingleRanking('mom', topMom, 'mom', 'MVP');
   
-  // 参加数ランキング（カレンダー出欠バッチの参加実績より描画）
-  const topGames = safeAttendance.filter(p => (p.attended || 0) > 0 && isPastCheck(p)).sort((a, b) => b.attended - a.attended);
-  renderSingleRanking('games', topGames, 'attended', 'ATTEND');
+  // 参加数ランキング（個人成績画面と同一の試合結果データより描画）
+  const topGames = safeMatches.filter(p => (p.games || 0) > 0 && isPastCheck(p)).sort((a, b) => b.games - a.games);
+  renderSingleRanking('games', topGames, 'games', 'ATTEND');
 }
 
 /**

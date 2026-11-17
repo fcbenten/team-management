@@ -1299,10 +1299,8 @@ SWIMLANE_SPECS = {
                     {
                         "t": {"badge": "初期表示", "title": "タブ表示 ＆ シーズンデータ初期化", "desc": "initStats(data) / populateRankingSeasonFilter()", "is_init": True},
                         "j": {"file": "js/ranking.js", "func": "initStats() → filterAndRenderRankings()", "desc": "OB・退団メンバー除外準備 ＆ 最新シーズン選択肢生成"},
-                        "g": {"file": "server/api_events.js", "func": "apiGetCalendarAttendance(season)", "desc": "Googleカレンダー基準のシーズン別出席数バッチ集計", "bidir": True},
                         "targets": [
-                            {"type": "direct_cache", "to": "d-mem", "label": "試合・名簿参照", "bidir": True},
-                            {"type": "gas_db", "to": "d-gcal", "label": "出席実績取得", "bidir": True}
+                            {"type": "direct_cache", "to": "d-mem", "label": "試合・名簿参照", "bidir": True}
                         ]
                     },
                     {
@@ -1319,8 +1317,7 @@ SWIMLANE_SPECS = {
             }
         ],
         "lane4_nodes": [
-            {"kind": "ext", "id": "d-gcal", "badge": "Google API / GAS", "title": "Google カレンダー出席集計", "desc": "GAS側 apiGetCalendarAttendance による参加日数集計", "anchor_rows": [0]},
-            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "getInitialData() 取得済みの試合結果・現役部員マスタ", "anchor_rows": [1]}
+            {"kind": "storage", "id": "d-mem", "badge": "Client Memory Cache", "title": "matches / score_logs / members", "desc": "getInitialData() 取得済みの試合結果・現役部員マスタ", "anchor_rows": [0, 1]}
         ],
         "lane5_nodes": [
             {"id": "o-ui", "badge": "画面状態更新", "title": "ランキング一覧カード描画", "desc": "得点 / アシスト / MOM / 参加数TOP3＆全件展開", "anchor_rows": [2]}
