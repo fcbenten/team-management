@@ -1042,15 +1042,63 @@
 .map-link-btn {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 10px;
   background: rgba(37, 99, 235, 0.08);
   border: 1px solid rgba(37, 99, 235, 0.3);
   color: var(--primary);
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
+  line-height: 1;
   text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
+}
+
+#edmLocationText.is-empty {
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+}
+
+.edm-bulletin-row-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.edm-bulletin-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.edm-bulletin-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edm-bulletin-meta {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.edm-bulletin-empty {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .map-link-btn:hover {
@@ -1076,7 +1124,7 @@
 }
 
 .attend-group-title {
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-medium);
   font-size: var(--fs-sm);
   margin-bottom: 4px;
   display: flex;
@@ -1798,16 +1846,17 @@
 }
 
 .schedule-agenda-badge {
-  font-size: 0.70rem;
-  font-weight: var(--fw-bold);
-  padding: 3px 8px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 10px;
   border-radius: 4px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.2;
-  letter-spacing: 0.3px;
+  line-height: 1;
   background-color: #f1f5f9;
   color: var(--text-main);
   border: 1px solid #cbd5e1;
@@ -2025,9 +2074,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  min-height: 24px;
+  box-sizing: border-box;
+  padding: 3px 10px;
   border-radius: var(--radius);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
   border: 1px solid var(--border-color);
   background: #f8fafc;
   color: var(--text-main);

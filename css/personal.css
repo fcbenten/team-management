@@ -115,11 +115,13 @@
 }
 
 .player-pos-badge {
-  display: inline-block;
-  padding: 1px 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.3px;
   line-height: 1.2;
   flex-shrink: 0;
@@ -889,13 +891,6 @@ th.sort-active .sort-icon {
   gap: 8px;
   flex-wrap: wrap;
   min-width: 0;
-}
-
-.pm-match-header-left .category-badge {
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-medium);
-  padding: 2px 7px;
-  border-radius: 4px;
 }
 
 /* 日付 */

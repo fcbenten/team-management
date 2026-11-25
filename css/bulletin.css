@@ -132,7 +132,7 @@
   justify-content: center;
   height: 24px;
   box-sizing: border-box;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   line-height: 1;
@@ -750,15 +750,19 @@
 .home-pinned-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  height: 24px;
+  box-sizing: border-box;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: #b45309;
   background-color: #fef3c7;
   border: 1px solid #fde68a;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 4px;
-  line-height: normal;
+  line-height: 1;
+  white-space: nowrap;
   vertical-align: middle;
 }
 

@@ -984,11 +984,13 @@ function openEventDetailModal(ev) {
       if (ev.location) {
         locRow.classList.remove('hidden');
         locText.textContent = ev.location;
+        locText.classList.remove('is-empty');
         mapLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.location);
         mapLink.classList.remove('hidden');
       } else {
         locRow.classList.remove('hidden');
         locText.textContent = '未設定';
+        locText.classList.add('is-empty');
         mapLink.classList.add('hidden');
       }
     }
@@ -1259,16 +1261,16 @@ function renderModalBulletinStatus(ev) {
     const updatedBy = post.updatedByName || post.authorName || 'メンバー';
     const postDate = typeof formatDisplayDateWithDay === 'function' ? formatDisplayDateWithDay(post.createdAt) : (post.createdAt ? String(post.createdAt).split(' ')[0] : '');
     contentEl.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-        <div style="min-width:0; flex:1;">
-          <div style="font-size:0.88rem; font-weight:700; color:var(--text-heading); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      <div class="edm-bulletin-row-inner">
+        <div class="edm-bulletin-info">
+          <div class="edm-bulletin-title">
             ${typeof escapeHtml === 'function' ? escapeHtml(post.title) : post.title}
           </div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+          <div class="edm-bulletin-meta">
             ${typeof escapeHtml === 'function' ? escapeHtml(updatedBy) : updatedBy} ・ ${postDate}
           </div>
         </div>
-        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinDetailModal==='function') openBulletinDetailModal('${post.id}')" style="cursor:pointer; padding:4px 10px; font-size:0.78rem; font-weight:700; white-space:nowrap; border-radius:6px; flex-shrink:0;">
+        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinDetailModal==='function') openBulletinDetailModal('${post.id}')">
           記録を見る
         </button>
       </div>
@@ -1276,9 +1278,9 @@ function renderModalBulletinStatus(ev) {
     rowEl.classList.remove('hidden');
   } else {
     contentEl.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-        <span style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap;">まだ記録はありません</span>
-        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinCreateModalForEvent==='function') { openBulletinCreateModalForEvent('${ev.id}'); } else if(typeof switchTab==='function') { switchTab('bulletin'); }" style="cursor:pointer; padding:4px 10px; font-size:0.78rem; font-weight:700; white-space:nowrap; border-radius:6px; flex-shrink:0;">
+      <div class="edm-bulletin-row-inner">
+        <span class="edm-bulletin-empty">まだ記録はありません</span>
+        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinCreateModalForEvent==='function') { openBulletinCreateModalForEvent('${ev.id}'); } else if(typeof switchTab==='function') { switchTab('bulletin'); }">
           + 記録を書く
         </button>
       </div>

@@ -456,15 +456,21 @@ select:focus, input:focus, textarea:focus {
    🏷️ バッジ・タグ関連
    ========================================= */
 .category-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
   background: #f3f4f6;
   border: 1px solid var(--border-color);
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 4px;
   font-weight: var(--fw-medium);
   color: var(--text-muted);
   font-size: var(--fs-xs);
+  line-height: 1;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 /* カテゴリバッジ共通配色 */

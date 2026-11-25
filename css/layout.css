@@ -220,10 +220,16 @@
   color: var(--text-heading);
 }
 .notif-status-badge {
-  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
-  padding: 2px 6px;
+  padding: 0 10px;
   border-radius: 4px;
+  line-height: 1;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -246,7 +252,7 @@
   padding: 0;
   color: #15803d;
   font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-medium);
 }
 .notif-status-badge.badge-verified .material-symbols-outlined {
   font-size: 16px;

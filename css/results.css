@@ -172,16 +172,6 @@
   font-size: var(--fs-xs);
 }
 
-.category-badge {
-  background: #f3f4f6 !important;
-  border: 1px solid var(--border-color) !important;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-weight: var(--fw-medium);
-  color: var(--text-muted) !important;
-  font-size: var(--fs-xs);
-}
-
 .result-date {
   color: var(--text-muted) !important;
   font-size: var(--fs-sm);
@@ -333,13 +323,6 @@
   align-items: center;
   gap: 8px;
   width: 100%;
-}
-
-.match-card-meta .category-badge {
-  font-size: var(--fs-xs);
-  padding: 2px 8px;
-  font-weight: var(--fw-medium);
-  border-radius: 4px;
 }
 
 .match-card-date-row {
