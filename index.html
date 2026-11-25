@@ -7007,6 +7007,14 @@ th.sort-active .sort-icon {
   margin-top: 4px;
 }
 
+.event-description-box.is-empty {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  margin-top: 0;
+}
+
 /* 蝣ｴ謇縺ｨMAP繝懊ち繝ｳ */
 .event-location-wrapper {
   display: flex;
@@ -13915,14 +13923,6 @@ textarea.comment-textarea:active {
           </div>
         </div>
 
-        <!-- 備品持参予定エリア -->
-        <div class="event-detail-row" id="edmEquipmentRow">
-          <div class="event-detail-label">備品</div>
-          <div class="event-detail-val">
-            <div id="edmEquipmentContent" class="edm-equipment-content"></div>
-          </div>
-        </div>
-
         <!-- 活動記録エリア -->
         <div class="event-detail-row" id="edmBulletinRow">
           <div class="event-detail-label">活動記録</div>
@@ -13969,6 +13969,14 @@ textarea.comment-textarea:active {
                 <div id="edmUnansweredNames" class="attend-names">-</div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- 備品持参予定エリア -->
+        <div class="event-detail-row" id="edmEquipmentRow">
+          <div class="event-detail-label">備品</div>
+          <div class="event-detail-val">
+            <div id="edmEquipmentContent" class="edm-equipment-content"></div>
           </div>
         </div>
 
@@ -27256,16 +27264,18 @@ function openEventDetailModal(ev) {
       }
     }
 
-    // 説明
+    // 説明（場所と同様、未入力時も「未設定」として常時表示）
     const descRow = document.getElementById('edmDescriptionRow');
     const descText = document.getElementById('edmDescriptionText');
     if (descRow && descText) {
       const cleanedDesc = cleanDescriptionText(ev.description);
+      descRow.classList.remove('hidden');
       if (cleanedDesc) {
-        descRow.classList.remove('hidden');
         descText.textContent = cleanedDesc;
+        descText.classList.remove('is-empty');
       } else {
-        descRow.classList.add('hidden');
+        descText.textContent = '未設定';
+        descText.classList.add('is-empty');
       }
     }
 
