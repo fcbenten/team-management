@@ -567,7 +567,17 @@ optgroup {
 .profile-item-row:last-child { border-bottom: none; }
 .profile-label { font-size: var(--fs-sm); font-weight: var(--fw-normal); color: var(--text-muted); }
 .profile-value { font-size: var(--fs-sm); font-weight: var(--fw-medium); color: var(--text-heading); }
-.pos-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: var(--fs-xs); letter-spacing: 0.5px; }
+.pos-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
+  letter-spacing: 0.3px;
+}
 .pos-badge-fp { background: #e0f2fe; color: #0369a1; }
 .pos-badge-gk { background: #fef3c7; color: #92400e; }
 .profile-modal-footer { padding: 12px 20px 16px; border-top: 1px solid var(--border-color); }
@@ -1305,15 +1315,21 @@ select:focus, input:focus, textarea:focus {
    🏷️ バッジ・タグ関連
    ========================================= */
 .category-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
   background: #f3f4f6;
   border: 1px solid var(--border-color);
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 4px;
   font-weight: var(--fw-medium);
   color: var(--text-muted);
   font-size: var(--fs-xs);
+  line-height: 1;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 /* カテゴリバッジ共通配色 */
@@ -2617,10 +2633,16 @@ html.no-scroll {
   color: var(--text-heading);
 }
 .notif-status-badge {
-  font-size: 0.68rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
-  padding: 2px 6px;
+  padding: 0 10px;
   border-radius: 4px;
+  line-height: 1;
   margin-left: auto;
   white-space: nowrap;
 }
@@ -2643,7 +2665,7 @@ html.no-scroll {
   padding: 0;
   color: #15803d;
   font-size: var(--fs-xs);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-medium);
 }
 .notif-status-badge.badge-verified .material-symbols-outlined {
   font-size: 16px;
@@ -3690,16 +3712,6 @@ html.no-scroll {
   font-size: var(--fs-xs);
 }
 
-.category-badge {
-  background: #f3f4f6 !important;
-  border: 1px solid var(--border-color) !important;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-weight: var(--fw-medium);
-  color: var(--text-muted) !important;
-  font-size: var(--fs-xs);
-}
-
 .result-date {
   color: var(--text-muted) !important;
   font-size: var(--fs-sm);
@@ -3851,13 +3863,6 @@ html.no-scroll {
   align-items: center;
   gap: 8px;
   width: 100%;
-}
-
-.match-card-meta .category-badge {
-  font-size: var(--fs-xs);
-  padding: 2px 8px;
-  font-weight: var(--fw-medium);
-  border-radius: 4px;
 }
 
 .match-card-date-row {
@@ -4571,11 +4576,17 @@ html.no-scroll {
 }
 
 .ranking-column-badge {
-  font-size: 0.65rem;
-  font-weight: var(--fw-bold);
-  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  padding: 0 10px;
   border-radius: 4px;
-  letter-spacing: 0.5px;
+  line-height: 1;
+  letter-spacing: 0.3px;
 }
 
 .badge-goals   { background: #e0f2fe; color: #0284c7; }
@@ -5035,11 +5046,13 @@ html.no-scroll {
 }
 
 .player-pos-badge {
-  display: inline-block;
-  padding: 1px 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
   border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: var(--fw-bold);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
   letter-spacing: 0.3px;
   line-height: 1.2;
   flex-shrink: 0;
@@ -5809,13 +5822,6 @@ th.sort-active .sort-icon {
   gap: 8px;
   flex-wrap: wrap;
   min-width: 0;
-}
-
-.pm-match-header-left .category-badge {
-  font-size: var(--fs-xs);
-  font-weight: var(--fw-medium);
-  padding: 2px 7px;
-  border-radius: 4px;
 }
 
 /* 日付 */
@@ -7026,15 +7032,63 @@ th.sort-active .sort-icon {
 .map-link-btn {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
+  justify-content: center;
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 10px;
   background: rgba(37, 99, 235, 0.08);
   border: 1px solid rgba(37, 99, 235, 0.3);
   color: var(--primary);
-  border-radius: 6px;
+  border-radius: 4px;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
+  line-height: 1;
   text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: all 0.15s ease;
+}
+
+#edmLocationText.is-empty {
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+}
+
+.edm-bulletin-row-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.edm-bulletin-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.edm-bulletin-title {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-heading);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edm-bulletin-meta {
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.edm-bulletin-empty {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .map-link-btn:hover {
@@ -7060,7 +7114,7 @@ th.sort-active .sort-icon {
 }
 
 .attend-group-title {
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-medium);
   font-size: var(--fs-sm);
   margin-bottom: 4px;
   display: flex;
@@ -7782,16 +7836,17 @@ th.sort-active .sort-icon {
 }
 
 .schedule-agenda-badge {
-  font-size: 0.70rem;
-  font-weight: var(--fw-bold);
-  padding: 3px 8px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  height: 24px;
+  box-sizing: border-box;
+  padding: 0 10px;
   border-radius: 4px;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  line-height: 1.2;
-  letter-spacing: 0.3px;
+  line-height: 1;
   background-color: #f1f5f9;
   color: var(--text-main);
   border: 1px solid #cbd5e1;
@@ -8009,9 +8064,13 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
+  min-height: 24px;
+  box-sizing: border-box;
+  padding: 3px 10px;
   border-radius: var(--radius);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: 1.2;
   border: 1px solid var(--border-color);
   background: #f8fafc;
   color: var(--text-main);
@@ -8437,12 +8496,12 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 6px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  padding: 2px 8px;
   border-radius: 4px;
   letter-spacing: 0.3px;
-  line-height: 1.3;
+  line-height: 1.2;
   white-space: nowrap;
   box-sizing: border-box;
 }
@@ -8460,12 +8519,12 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 1px 6px;
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  padding: 2px 8px;
   border-radius: 4px;
   letter-spacing: 0.3px;
-  line-height: 1.3;
+  line-height: 1.2;
   white-space: nowrap;
   box-sizing: border-box;
 }
@@ -8635,9 +8694,9 @@ th.sort-active .sort-icon {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 0.65rem;
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
-  padding: 1px 6px;
+  padding: 2px 8px;
   border-radius: 4px;
   line-height: 1.2;
   margin-left: 6px;
@@ -8660,7 +8719,6 @@ th.sort-active .sort-icon {
   background: #fef2f2;
   color: #b91c1c;
   border: 1px solid #fecaca;
-  font-weight: 700;
 }
 
 /* =========================================
@@ -9113,11 +9171,11 @@ th.sort-active .sort-icon {
 }
 
 .badge-required {
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: #ef4444;
   background: #fee2e2;
-  padding: 1px 5px;
+  padding: 1px 6px;
   border-radius: 4px;
   margin-left: 4px;
 }
@@ -10728,7 +10786,7 @@ a.btn-member-modal-save:hover {
   justify-content: center;
   height: 24px;
   box-sizing: border-box;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   line-height: 1;
@@ -11346,15 +11404,19 @@ a.btn-member-modal-save:hover {
 .home-pinned-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  height: 24px;
+  box-sizing: border-box;
   font-size: var(--fs-xs);
   font-weight: var(--fw-medium);
   color: #b45309;
   background-color: #fef3c7;
   border: 1px solid #fde68a;
-  padding: 4px 10px;
+  padding: 0 10px;
   border-radius: 4px;
-  line-height: normal;
+  line-height: 1;
+  white-space: nowrap;
   vertical-align: middle;
 }
 
@@ -13909,7 +13971,7 @@ textarea.comment-textarea:active {
           <div class="event-detail-label">場所</div>
           <div class="event-detail-val">
             <div class="event-location-wrapper">
-              <span id="edmLocationText" class="font-bold"></span>
+              <span id="edmLocationText" class="font-semibold"></span>
               <a id="edmMapLink" href="#" target="_blank" rel="noopener noreferrer" class="map-link-btn">MAPで開く</a>
             </div>
           </div>
@@ -27255,11 +27317,13 @@ function openEventDetailModal(ev) {
       if (ev.location) {
         locRow.classList.remove('hidden');
         locText.textContent = ev.location;
+        locText.classList.remove('is-empty');
         mapLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(ev.location);
         mapLink.classList.remove('hidden');
       } else {
         locRow.classList.remove('hidden');
         locText.textContent = '未設定';
+        locText.classList.add('is-empty');
         mapLink.classList.add('hidden');
       }
     }
@@ -27530,16 +27594,16 @@ function renderModalBulletinStatus(ev) {
     const updatedBy = post.updatedByName || post.authorName || 'メンバー';
     const postDate = typeof formatDisplayDateWithDay === 'function' ? formatDisplayDateWithDay(post.createdAt) : (post.createdAt ? String(post.createdAt).split(' ')[0] : '');
     contentEl.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-        <div style="min-width:0; flex:1;">
-          <div style="font-size:0.88rem; font-weight:700; color:var(--text-heading); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      <div class="edm-bulletin-row-inner">
+        <div class="edm-bulletin-info">
+          <div class="edm-bulletin-title">
             ${typeof escapeHtml === 'function' ? escapeHtml(post.title) : post.title}
           </div>
-          <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">
+          <div class="edm-bulletin-meta">
             ${typeof escapeHtml === 'function' ? escapeHtml(updatedBy) : updatedBy} ・ ${postDate}
           </div>
         </div>
-        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinDetailModal==='function') openBulletinDetailModal('${post.id}')" style="cursor:pointer; padding:4px 10px; font-size:0.78rem; font-weight:700; white-space:nowrap; border-radius:6px; flex-shrink:0;">
+        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinDetailModal==='function') openBulletinDetailModal('${post.id}')">
           記録を見る
         </button>
       </div>
@@ -27547,9 +27611,9 @@ function renderModalBulletinStatus(ev) {
     rowEl.classList.remove('hidden');
   } else {
     contentEl.innerHTML = `
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%;">
-        <span style="font-size:0.82rem; color:var(--text-muted); white-space:nowrap;">まだ記録はありません</span>
-        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinCreateModalForEvent==='function') { openBulletinCreateModalForEvent('${ev.id}'); } else if(typeof switchTab==='function') { switchTab('bulletin'); }" style="cursor:pointer; padding:4px 10px; font-size:0.78rem; font-weight:700; white-space:nowrap; border-radius:6px; flex-shrink:0;">
+      <div class="edm-bulletin-row-inner">
+        <span class="edm-bulletin-empty">まだ記録はありません</span>
+        <button type="button" class="map-link-btn" onclick="closeEventDetailModal(); if(typeof openBulletinCreateModalForEvent==='function') { openBulletinCreateModalForEvent('${ev.id}'); } else if(typeof switchTab==='function') { switchTab('bulletin'); }">
           + 記録を書く
         </button>
       </div>
