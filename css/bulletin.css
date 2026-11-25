@@ -767,7 +767,9 @@
 }
 
 .home-pinned-pill .material-symbols-outlined {
-  font-size: 14px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  color: #b45309 !important;
   vertical-align: middle;
 }
 
