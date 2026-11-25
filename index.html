@@ -11424,7 +11424,9 @@ a.btn-member-modal-save:hover {
 }
 
 .home-pinned-pill .material-symbols-outlined {
-  font-size: 14px !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  color: #b45309 !important;
   vertical-align: middle;
 }
 
@@ -32783,6 +32785,10 @@ function renderHomePinnedAnnouncements() {
       <span class="category-badge ${getBulletinCategoryBadgeClass(post.category)}">
         ${escapeHtml(post.category || 'その他')}
       </span>
+      <span class="home-pinned-pill">
+        <span class="material-symbols-outlined">push_pin</span>
+        <span>ピン留め</span>
+      </span>
     `;
 
     const date = document.createElement('span');
@@ -32831,19 +32837,30 @@ function renderHomeRecentBulletins() {
       openBulletinDetailModal(post);
     };
 
-    // 1段目: カテゴリバッジと日付（曜日付き）
+    // 1段目: カテゴリバッジ（＋ピン留めバッジ）と日付（曜日付き）
     const header = document.createElement('div');
     header.className = 'home-recent-bulletin-header';
+
+    const badgeGroup = document.createElement('div');
+    badgeGroup.className = 'home-pinned-badge-group';
 
     const catBadge = document.createElement('span');
     catBadge.className = 'category-badge ' + getBulletinCategoryBadgeClass(post.category);
     catBadge.textContent = post.category || 'その他';
+    badgeGroup.appendChild(catBadge);
+
+    if (post.isPinned) {
+      const pinPill = document.createElement('span');
+      pinPill.className = 'home-pinned-pill';
+      pinPill.innerHTML = '<span class="material-symbols-outlined">push_pin</span><span>ピン留め</span>';
+      badgeGroup.appendChild(pinPill);
+    }
 
     const dateSpan = document.createElement('span');
     dateSpan.className = 'text-muted text-xs';
     dateSpan.textContent = formatBulletinDateTimeWithDay(post.createdAt);
 
-    header.appendChild(catBadge);
+    header.appendChild(badgeGroup);
     header.appendChild(dateSpan);
     card.appendChild(header);
 
