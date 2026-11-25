@@ -6620,7 +6620,7 @@ th.sort-active .sort-icon {
     margin-bottom: 12px;
   }
   .event-edit-modal .form-control {
-    font-size: 0.9rem !important;
+    font-size: var(--fs-sm) !important;
     padding: 8px 10px !important;
     box-sizing: border-box !important;
     min-width: 0 !important;
@@ -7146,21 +7146,21 @@ th.sort-active .sort-icon {
   gap: 12px;
 }
 .guest-avatar {
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: #f1f5f9;
   color: var(--text-heading);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--fw-bold);
-  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  font-size: var(--fs-xs);
   overflow: hidden;
   flex-shrink: 0;
 }
 .guest-avatar .material-symbols-outlined {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
 }
 .guest-avatar-img {
@@ -7169,7 +7169,7 @@ th.sort-active .sort-icon {
   object-fit: cover;
 }
 .guest-email {
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   color: var(--text-heading);
 }
 .guest-status {
@@ -7240,8 +7240,8 @@ th.sort-active .sort-icon {
   flex-direction: column !important;
   max-height: 85vh !important;
   height: auto !important;
-  max-width: 480px !important;
-  width: 92% !important;
+  max-width: 500px !important;
+  width: 100% !important;
   overflow: hidden !important;
   border-radius: var(--radius) !important;
   padding: 0 !important;
@@ -7270,19 +7270,22 @@ th.sort-active .sort-icon {
 
 .event-edit-modal .form-label {
   display: block;
-  font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
-  color: var(--text-heading);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-normal);
+  color: var(--text-muted);
   margin-bottom: 5px;
+  letter-spacing: 0.3px;
 }
 
 .event-edit-modal .form-control {
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  line-height: 1.5;
   color: var(--text-main);
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -7299,15 +7302,15 @@ th.sort-active .sort-icon {
   align-items: center;
   gap: 8px;
   font-size: var(--fs-sm);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-normal);
   color: var(--text-main);
   cursor: pointer;
   user-select: none;
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
   cursor: pointer;
   accent-color: var(--primary);
 }
@@ -14113,7 +14116,7 @@ textarea.comment-textarea:active {
           <div class="form-group mb-12">
             <div class="flex items-center justify-between mb-4">
               <label class="form-label mb-0">ゲスト</label>
-              <div id="eeGuestSummary" class="text-xs text-muted font-bold hidden">0人のゲスト</div>
+              <div id="eeGuestSummary" class="text-xs text-muted hidden">0人のゲスト</div>
             </div>
             <div class="guest-input-wrapper">
               <input type="text" list="memberListOptions" id="eeGuestInput" class="form-control" placeholder="名前またはメールアドレス" onkeypress="if(event.key==='Enter'){event.preventDefault();addGuestToEditList();}" oninput="clearFieldError('eeGuestInput')">
