@@ -24,6 +24,278 @@
       return String(d).replace(/-/g, '/').trim();
     }
 
+    let _cachedEquipmentContext = {
+      rawMaster: [],
+      rawItems: [],
+      rawEqLogs: [],
+      idToMember: {}
+    };
+
+    function classifyScheduleEventCategory(ev) {
+      if (!ev) return 'その他';
+      const rawTitle = String(ev.title || '').trim();
+      const titleUpper = rawTitle.toUpperCase();
+      if (titleUpper.includes('公式戦') || titleUpper.includes('都リーグ') || titleUpper.includes('リーグ') || titleUpper.includes('選手権') || titleUpper.includes('カップ') || titleUpper.includes('大会')) {
+        return '公式戦';
+      }
+      if (titleUpper.includes('TRM') || titleUpper.includes('練習試合') || titleUpper.includes(' VS ') || titleUpper.startsWith('VS ') || titleUpper.includes('VS')) {
+        return 'TRM';
+      }
+      if (titleUpper === 'TR' || titleUpper.startsWith('TR ') || titleUpper.endsWith(' TR') || titleUpper.includes('トレーニング') || (titleUpper.includes('練習') && !titleUpper.includes('練習試合'))) {
+        return 'TR';
+      }
+      if (titleUpper.includes('飲み会') || titleUpper.includes('懇親会') || titleUpper.includes('打ち上げ') || titleUpper.includes('総会') || titleUpper.includes('イベント') || titleUpper.includes('ミーティング')) {
+        return 'イベント';
+      }
+      return ev.category || 'その他';
+    }
+
+    function normalizePersonKey(val) {
+      return String(val || '').replace(/[\s\u3000]+/g, '').trim().toLowerCase();
+    }
+
+    /**
+     * 今後の活動予定に対する備品持参状況・アラート一覧を組み立てる
+     */
+    function buildUpcomingEquipment(events, rawMaster, rawItems, rawEqLogs, idToMember) {
+      if (!Array.isArray(events) || events.length === 0 || !Array.isArray(rawMaster) || rawMaster.length === 0) {
+        return [];
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayMs = today.getTime();
+
+      const itemById = {};
+      const itemsByCode = {};
+      (rawItems || []).forEach(it => {
+        itemById[it.item_id] = it;
+        const code = it.equipment_code;
+        if (!itemsByCode[code]) itemsByCode[code] = [];
+        itemsByCode[code].push(it);
+      });
+
+      const validLogs = (rawEqLogs || []).filter(l => l && (l.item_id || l.assigned_member_id));
+
+      const sortedUpcoming = events
+        .map(ev => {
+          const dStr = normalizeDateStr(ev && ev.date);
+          const m = dStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})/);
+          if (!m) return null;
+          const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 0, 0, 0, 0);
+          const diffDays = Math.round((dt.getTime() - todayMs) / 86400000);
+          if (diffDays < 0) return null;
+          return { ev, dStr: `${m[1]}/${('0' + m[2]).slice(-2)}/${('0' + m[3]).slice(-2)}`, timeMs: dt.getTime(), diffDays };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.timeMs - b.timeMs);
+
+      return sortedUpcoming.map(({ ev, dStr, diffDays }) => {
+        const cleanEvId = String(ev.id || '').split('@')[0];
+        const category = classifyScheduleEventCategory(ev);
+
+        const details = ev.attendeesDetail || {};
+        const yesNameSet = new Set((details.yes || []).map(normalizePersonKey).filter(Boolean));
+        const noNameSet = new Set((details.no || []).map(normalizePersonKey).filter(Boolean));
+        const yesEmailSet = new Set((details.yesEmails || []).map(e => String(e || '').trim().toLowerCase()).filter(Boolean));
+        const noEmailSet = new Set((details.noEmails || []).map(e => String(e || '').trim().toLowerCase()).filter(Boolean));
+
+        const getMemberAttStatus = (memberId) => {
+          if (!memberId) return 'unknown';
+          const mem = idToMember ? idToMember[memberId] : null;
+          if (!mem) return 'unknown';
+          const email = String(mem.email || '').trim().toLowerCase();
+          const nameKey = normalizePersonKey(mem.name);
+          if ((email && yesEmailSet.has(email)) || (nameKey && yesNameSet.has(nameKey))) return 'yes';
+          if ((email && noEmailSet.has(email)) || (nameKey && noNameSet.has(nameKey))) return 'no';
+          return 'unknown';
+        };
+
+        // このイベントに紐づく解決/割当ログを抽出
+        const resolvedByCode = {};
+        validLogs.forEach(log => {
+          const cleanLogId = String(log.event_id || '').split('@')[0];
+          const logDate = normalizeDateStr(log.event_date);
+          const idMatch = cleanEvId && cleanLogId && cleanEvId === cleanLogId;
+          const dateMatch = dStr && logDate && dStr === logDate;
+          if (!idMatch && !dateMatch) return;
+
+          const linkedItem = log.item_id ? itemById[log.item_id] : null;
+          const eqCode = linkedItem ? linkedItem.equipment_code : '';
+          if (!eqCode) return;
+
+          let assignedName = '代理';
+          if (log.assigned_member_id && log.assigned_member_id !== '代理') {
+            const proxyMem = idToMember ? idToMember[log.assigned_member_id] : null;
+            assignedName = proxyMem ? proxyMem.name : log.assigned_member_id;
+          }
+          if (!resolvedByCode[eqCode]) {
+            resolvedByCode[eqCode] = {
+              assignedMemberId: log.assigned_member_id || null,
+              assignedMemberName: assignedName
+            };
+          }
+        });
+
+        // 必要備品マスタをカテゴリ別に判定
+        const activeEntries = (rawMaster || []).map(master => {
+          const reqLevel = category === '公式戦'
+            ? master.req_official
+            : (category === 'TRM' ? master.req_trm : (category === 'TR' ? master.req_tr : 'NONE'));
+          if (!reqLevel || reqLevel === 'NONE') return null;
+          return { master, reqLevel };
+        }).filter(Boolean);
+
+        // REQUIRED_EITHER（練習時の水色/黄色ビブス等）のグループ充足判定
+        const eitherEntries = activeEntries.filter(e => e.reqLevel === 'REQUIRED_EITHER');
+        const eitherCovered = eitherEntries.length > 0 && eitherEntries.some(({ master }) => {
+          if (resolvedByCode[master.equipment_code]) return true;
+          const codeItems = itemsByCode[master.equipment_code] || [];
+          return codeItems.some(it => getMemberAttStatus(it.member_id) === 'yes');
+        });
+
+        // ボール合算カウント（チーム所有＋個人所有）
+        const ballCodes = ['BALL_TEAM', 'BALL_PERSONAL'];
+        const totalAttendingBalls = ballCodes.reduce((sum, code) => {
+          return sum + (itemsByCode[code] || []).filter(it => getMemberAttStatus(it.member_id) === 'yes').length;
+        }, 0);
+
+        const equipmentStatus = activeEntries.map(({ master, reqLevel }) => {
+          const code = master.equipment_code;
+          const ruleType = master.rule_type || 'ROTATION';
+          const codeItems = itemsByCode[code] || [];
+          const resolved = resolvedByCode[code] || null;
+
+          const attendingNames = [];
+          let hasExplicitNoHolder = false;
+          codeItems.forEach(it => {
+            const st = getMemberAttStatus(it.member_id);
+            const mem = idToMember && it.member_id ? idToMember[it.member_id] : null;
+            if (st === 'yes' && mem && mem.name && !attendingNames.includes(mem.name)) {
+              attendingNames.push(mem.name);
+            } else if (st === 'no') {
+              hasExplicitNoHolder = true;
+            }
+          });
+
+          if (ruleType === 'COUNT') {
+            const count = attendingNames.length;
+            const totalCovered = (code === 'BALL_TEAM' || code === 'BALL_PERSONAL') ? totalAttendingBalls : count;
+            let isAlert = false;
+            let alertLevel = 'NONE';
+            if (reqLevel === 'REQUIRED' && !resolved && totalCovered === 0) {
+              isAlert = true;
+              alertLevel = 'RED';
+            } else if (reqLevel === 'RECOMMENDED' && !resolved && totalCovered === 0) {
+              isAlert = true;
+              alertLevel = 'YELLOW';
+            }
+            return {
+              code,
+              name: master.name,
+              ruleType,
+              count,
+              isAlert,
+              alertLevel,
+              isResolved: Boolean(resolved),
+              assignedMemberId: resolved ? resolved.assignedMemberId : null,
+              assignedMemberName: resolved ? resolved.assignedMemberName : (attendingNames.length > 0 ? attendingNames.join(', ') : null)
+            };
+          }
+
+          if (resolved) {
+            return {
+              code,
+              name: master.name,
+              ruleType,
+              count: 0,
+              isAlert: false,
+              alertLevel: 'NONE',
+              isResolved: true,
+              assignedMemberId: resolved.assignedMemberId,
+              assignedMemberName: resolved.assignedMemberName
+            };
+          }
+
+          if (attendingNames.length > 0) {
+            return {
+              code,
+              name: master.name,
+              ruleType,
+              count: 0,
+              isAlert: false,
+              alertLevel: 'NONE',
+              isResolved: false,
+              assignedMemberId: null,
+              assignedMemberName: attendingNames.join(', ')
+            };
+          }
+
+          let isAlert = false;
+          let alertLevel = 'NONE';
+          if (reqLevel === 'REQUIRED') {
+            isAlert = true;
+            alertLevel = (hasExplicitNoHolder || codeItems.length === 0) ? 'RED' : 'YELLOW';
+          } else if (reqLevel === 'REQUIRED_EITHER' && !eitherCovered) {
+            isAlert = true;
+            alertLevel = hasExplicitNoHolder ? 'RED' : 'YELLOW';
+          } else if (reqLevel === 'RECOMMENDED') {
+            isAlert = true;
+            alertLevel = 'YELLOW';
+          }
+
+          return {
+            code,
+            name: master.name,
+            ruleType,
+            count: 0,
+            isAlert,
+            alertLevel,
+            isResolved: false,
+            assignedMemberId: null,
+            assignedMemberName: '不在'
+          };
+        });
+
+        return {
+          eventId: ev.id || cleanEvId,
+          eventDate: dStr,
+          eventTitle: ev.title || '',
+          eventCategory: category,
+          isWithinOneWeek: diffDays >= 0 && diffDays <= 7,
+          hasAlert: equipmentStatus.some(st => st.isAlert),
+          equipmentStatus
+        };
+      }).filter(item => item.equipmentStatus && item.equipmentStatus.length > 0);
+    }
+
+    function syncUpcomingEquipmentToUI(events) {
+      const targetEvents = Array.isArray(events) ? events : (window.eventsData || []);
+      const upcoming = buildUpcomingEquipment(
+        targetEvents,
+        _cachedEquipmentContext.rawMaster,
+        _cachedEquipmentContext.rawItems,
+        _cachedEquipmentContext.rawEqLogs,
+        _cachedEquipmentContext.idToMember
+      );
+      if (window.equipmentState) {
+        window.equipmentState.upcomingEquipment = upcoming;
+      }
+      if (window.initialFullData && window.initialFullData.equipmentData) {
+        window.initialFullData.equipmentData.upcomingEquipment = upcoming;
+      }
+      if (window.homeInitialData && window.homeInitialData.equipmentData) {
+        window.homeInitialData.equipmentData.upcomingEquipment = upcoming;
+      }
+      if (typeof window.updateHomeEquipmentNotice === 'function') {
+        window.updateHomeEquipmentNotice();
+      }
+      if (typeof window.updateScheduleModalEquipmentStatus === 'function') {
+        window.updateScheduleModalEquipmentStatus();
+      }
+      return upcoming;
+    }
+
     /**
      * カレンダーイベントと Supabase 出欠データを高速マージ
      */
@@ -113,6 +385,7 @@
           try { localStorage.setItem('fcb_cached_events', JSON.stringify(res.events)); } catch (e) { }
           const merged = mergeEventsWithAttendance(res.events, rawAttendance, idToMember);
           window.eventsData = merged;
+          syncUpcomingEquipmentToUI(merged);
           if (typeof renderCalendar === 'function') {
             renderCalendar(window.calYear || new Date().getFullYear(), (window.calMonth !== undefined) ? window.calMonth : new Date().getMonth());
           }
@@ -570,10 +843,15 @@
           }
         });
 
-        // 備品データの構造化
         const rawMaster = resMaster.data || [];
         const rawItems = resItems.data || [];
         const rawEqLogs = resEqLogs.data || [];
+        _cachedEquipmentContext = {
+          rawMaster,
+          rawItems,
+          rawEqLogs,
+          idToMember
+        };
 
         const masterList = rawMaster.map(m => ({
           code: m.equipment_code,
@@ -612,13 +890,23 @@
           };
         });
 
+        // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
+        const mergedEvents = mergeEventsWithAttendance(initialEvents, resAttendance.data || [], idToMember);
+        const upcomingEquipment = buildUpcomingEquipment(
+          mergedEvents,
+          rawMaster,
+          rawItems,
+          rawEqLogs,
+          idToMember
+        );
+
         const equipmentData = {
           success: true,
           masterList: masterList,
           itemsList: items,
           items: items,
           logs: rawEqLogs,
-          upcomingEquipment: [],
+          upcomingEquipment: upcomingEquipment,
           isAdmin: true
         };
 
@@ -630,9 +918,6 @@
           roster,
           idToMember
         );
-
-        // 7. キャッシュイベントと Supabase 出欠を即時同期マージ (0ms で画面描画を即時解放)
-        const mergedEvents = mergeEventsWithAttendance(initialEvents, resAttendance.data || [], idToMember);
 
         // 8. Supabase 集計ビュー (view_player_attendance_stats) からカレンダー出欠オブジェクトをリアルタイム構築 (0ms)
         const currentYearStr = new Date().getFullYear().toString();
@@ -759,6 +1044,7 @@
               }
             }
           }
+          syncUpcomingEquipmentToUI();
         } catch (uiErr) {
           console.warn('[RealtimeUpdate] UI update warning:', uiErr);
         }
@@ -1551,18 +1837,28 @@
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const [resMembers, resMaster, resItems, resEqLogs] = await Promise.all([
-          sb.from('members').select('member_id, name, number, avatar_url'),
+          sb.from('members').select('member_id, name, number, email, avatar_url'),
           sb.from('equipment_master').select('*').order('sort_order', { ascending: true }),
           sb.from('equipment_items').select('*'),
-          sb.from('equipment_event_logs').select('*')
+          sb.from('equipment_event_logs').select('*').order('created_at', { ascending: false })
         ]);
 
         const idToMember = {};
         (resMembers.data || []).forEach(m => {
-          idToMember[m.member_id] = { name: m.name, number: m.number, avatarUrl: m.avatar_url };
+          idToMember[m.member_id] = { name: m.name, number: m.number, email: m.email || '', avatarUrl: m.avatar_url };
         });
 
-        const masterList = (resMaster.data || []).map(m => ({
+        const rawMaster = resMaster.data || [];
+        const rawItems = resItems.data || [];
+        const rawEqLogs = resEqLogs.data || [];
+        _cachedEquipmentContext = {
+          rawMaster,
+          rawItems,
+          rawEqLogs,
+          idToMember
+        };
+
+        const masterList = rawMaster.map(m => ({
           code: m.equipment_code,
           equipmentCode: m.equipment_code,
           name: m.name,
@@ -1574,7 +1870,7 @@
           sortOrder: m.sort_order
         }));
 
-        const items = (resItems.data || []).map(it => {
+        const items = rawItems.map(it => {
           const hMem = idToMember[it.member_id];
           const mName = hMem ? hMem.name : (it.member_id ? '不明な部員' : '未割当');
           const mNum = hMem ? hMem.number : null;
@@ -1599,13 +1895,21 @@
           };
         });
 
+        const upcomingEquipment = buildUpcomingEquipment(
+          window.eventsData || [],
+          rawMaster,
+          rawItems,
+          rawEqLogs,
+          idToMember
+        );
+
         return {
           success: true,
           masterList: masterList,
           itemsList: items,
           items: items,
-          logs: resEqLogs.data || [],
-          upcomingEquipment: [],
+          logs: rawEqLogs,
+          upcomingEquipment: upcomingEquipment,
           isAdmin: true
         };
       },
@@ -1765,7 +2069,9 @@
           evDate = `${match[1]}/${('0' + match[2]).slice(-2)}/${('0' + match[3]).slice(-2)}`;
         }
         const itCode = String(payload.itemCode || '').trim();
-        const mId = String(payload.proxyMemberId || '代理').trim() || '代理';
+        const rawProxyId = String(payload.proxyMemberId || '').trim();
+        const currentActorId = (typeof window !== 'undefined' && window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || '';
+        const mId = (rawProxyId && rawProxyId !== '代理') ? rawProxyId : (currentActorId || null);
 
         if (!itCode) {
           return { success: false, error: 'イベント・品目情報が不足しています。' };
@@ -1785,7 +2091,7 @@
           event_date: evDate,
           item_id: targetItemId,
           assigned_member_id: mId,
-          status: '割当済',
+          status: '代理済',
           created_at: new Date().toISOString()
         };
 
