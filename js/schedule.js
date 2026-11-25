@@ -993,16 +993,18 @@ function openEventDetailModal(ev) {
       }
     }
 
-    // 説明
+    // 説明（場所と同様、未入力時も「未設定」として常時表示）
     const descRow = document.getElementById('edmDescriptionRow');
     const descText = document.getElementById('edmDescriptionText');
     if (descRow && descText) {
       const cleanedDesc = cleanDescriptionText(ev.description);
+      descRow.classList.remove('hidden');
       if (cleanedDesc) {
-        descRow.classList.remove('hidden');
         descText.textContent = cleanedDesc;
+        descText.classList.remove('is-empty');
       } else {
-        descRow.classList.add('hidden');
+        descText.textContent = '未設定';
+        descText.classList.add('is-empty');
       }
     }
 

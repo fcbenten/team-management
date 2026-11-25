@@ -1023,6 +1023,14 @@
   margin-top: 4px;
 }
 
+.event-description-box.is-empty {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--text-muted);
+  margin-top: 0;
+}
+
 /* 蝣ｴ謇縺ｨMAP繝懊ち繝ｳ */
 .event-location-wrapper {
   display: flex;
