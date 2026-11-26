@@ -1393,9 +1393,10 @@
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const commentId = 'CMT-' + Date.now();
+        const createdAt = new Date().toISOString();
+        const u = window.currentUser || {};
         let authorId = memberId;
         if (!authorId || !String(authorId).startsWith('MBR-')) {
-          const u = window.currentUser || {};
           authorId = u.memberId || null;
           if (!authorId && window.scheduleRoster) {
             const searchN = (memberName || u.name || '').trim();
@@ -1409,18 +1410,29 @@
           post_id: postId,
           author_member_id: authorId,
           content: content,
-          created_at: new Date().toISOString(),
+          created_at: createdAt,
           is_deleted: false
         });
 
         if (error) throw error;
+
+        const actorName = memberName || u.name || 'メンバー';
+        const rosterMember = (window.scheduleRoster || []).find(m =>
+          (authorId && (m.memberId === authorId || m.id === authorId)) ||
+          (actorName && m.name && m.name.trim() === actorName.trim())
+        );
+        const actorAvatarUrl = (rosterMember && rosterMember.avatarUrl) ||
+          u.avatarUrl ||
+          u.avatar ||
+          (window.playerAvatarMap && actorName && window.playerAvatarMap[actorName]) ||
+          '';
+
         if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
           let postTitle = '';
           try {
             const { data: pRows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
             if (pRows && pRows[0]) postTitle = pRows[0].title || '';
           } catch (e) {}
-          const actorName = memberName || (window.currentUser && window.currentUser.name) || 'メンバー';
           window.SupabaseNotificationService.emitAppEvent({
             ruleKey: 'bulletin_comment_create',
             title: '活動記録にコメントが追加されました',
@@ -1430,7 +1442,19 @@
             actorMemberId: authorId
           });
         }
-        return { success: true, commentId: commentId };
+        return {
+          success: true,
+          commentId: commentId,
+          comment: {
+            id: commentId,
+            postId: postId,
+            authorId: authorId,
+            authorName: actorName,
+            authorAvatarUrl: actorAvatarUrl,
+            content: content,
+            createdAt: createdAt
+          }
+        };
       },
 
       /**

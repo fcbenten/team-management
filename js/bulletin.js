@@ -1307,12 +1307,21 @@ function handleSubmitBulletinComment() {
     window.SupabaseService.addBulletinComment(current.id, content, myId, myName)
       .then(res => {
         enableBtn();
-        if (res && res.success && res.comment) {
+        if (res && res.success) {
+          const addedComment = res.comment || {
+            id: res.commentId || ('CMT-' + Date.now()),
+            postId: current.id,
+            authorId: myId,
+            authorName: myName,
+            authorAvatarUrl: currentUser.avatarUrl || currentUser.avatar || (window.playerAvatarMap && myName && window.playerAvatarMap[myName]) || '',
+            content: content,
+            createdAt: new Date().toISOString()
+          };
           inputEl.value = '';
           updateCommentInputState(inputEl);
           // メモリ上の投稿データに即時追加して0秒同期描画
           if (!current.comments) current.comments = [];
-          current.comments.push(res.comment);
+          current.comments.push(addedComment);
           current.commentCount = current.comments.length;
           renderBulletinComments(current.comments);
         } else {
