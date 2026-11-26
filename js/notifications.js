@@ -79,7 +79,7 @@
       return cachedAnnouncementsState;
     }
     try {
-      const res = await window.SupabaseNotificationService.getMyAnnouncements(memberId, 50);
+      const res = await window.SupabaseNotificationService.getMyAnnouncements(memberId, 10);
       cachedAnnouncementsState = res || { items: [], unreadCount: 0 };
       updateBellBadgeUI(cachedAnnouncementsState.unreadCount);
       const modal = document.getElementById('announcementsModal');

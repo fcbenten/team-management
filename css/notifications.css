@@ -133,7 +133,7 @@
 
 .announcement-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid #e2e8f0;
@@ -165,6 +165,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .announcement-item.is-unread .announcement-item-icon {
@@ -220,6 +221,7 @@
   height: 8px;
   border-radius: 50%;
   background: #2563eb;
+  margin-top: 7px;
   flex-shrink: 0;
 }
 

@@ -1393,10 +1393,9 @@
         if (!sb) throw new Error('Supabase クライアントが利用できません。');
 
         const commentId = 'CMT-' + Date.now();
-        const createdAt = new Date().toISOString();
-        const u = window.currentUser || {};
         let authorId = memberId;
         if (!authorId || !String(authorId).startsWith('MBR-')) {
+          const u = window.currentUser || {};
           authorId = u.memberId || null;
           if (!authorId && window.scheduleRoster) {
             const searchN = (memberName || u.name || '').trim();
@@ -1410,29 +1409,18 @@
           post_id: postId,
           author_member_id: authorId,
           content: content,
-          created_at: createdAt,
+          created_at: new Date().toISOString(),
           is_deleted: false
         });
 
         if (error) throw error;
-
-        const actorName = memberName || u.name || 'メンバー';
-        const rosterMember = (window.scheduleRoster || []).find(m =>
-          (authorId && (m.memberId === authorId || m.id === authorId)) ||
-          (actorName && m.name && m.name.trim() === actorName.trim())
-        );
-        const actorAvatarUrl = (rosterMember && rosterMember.avatarUrl) ||
-          u.avatarUrl ||
-          u.avatar ||
-          (window.playerAvatarMap && actorName && window.playerAvatarMap[actorName]) ||
-          '';
-
         if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
           let postTitle = '';
           try {
             const { data: pRows } = await sb.from('bulletin_posts').select('title').eq('post_id', postId).limit(1);
             if (pRows && pRows[0]) postTitle = pRows[0].title || '';
           } catch (e) {}
+          const actorName = memberName || (window.currentUser && window.currentUser.name) || 'メンバー';
           window.SupabaseNotificationService.emitAppEvent({
             ruleKey: 'bulletin_comment_create',
             title: '活動記録にコメントが追加されました',
@@ -1442,19 +1430,7 @@
             actorMemberId: authorId
           });
         }
-        return {
-          success: true,
-          commentId: commentId,
-          comment: {
-            id: commentId,
-            postId: postId,
-            authorId: authorId,
-            authorName: actorName,
-            authorAvatarUrl: actorAvatarUrl,
-            content: content,
-            createdAt: createdAt
-          }
-        };
+        return { success: true, commentId: commentId };
       },
 
       /**
@@ -3413,17 +3389,20 @@
       const sb = getClient();
       if (!sb || !memberId) return { items: [], unreadCount: 0 };
 
-      const limit = Number(limitCount || 50);
+      const limit = Number(limitCount || 10);
+      const fetchLimit = Math.min(Math.max(limit * 3, 30), 100);
       const { data: rows, error } = await sb
         .from('announcements')
         .select('*')
         .or(`target_member_id.is.null,target_member_id.eq.${memberId}`)
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .limit(fetchLimit);
       if (error) throw error;
 
       // 自分自身の操作で自動発行された全員宛てお知らせは非表示にする（リマインド等はactorがNULLのため常に表示）
-      const filtered = (rows || []).filter(r => !r.actor_member_id || r.actor_member_id !== memberId);
+      const filtered = (rows || [])
+        .filter(r => !r.actor_member_id || r.actor_member_id !== memberId)
+        .slice(0, limit);
       if (filtered.length === 0) return { items: [], unreadCount: 0 };
 
       const ids = filtered.map(r => r.announcement_id);

@@ -212,7 +212,7 @@ Deno.serve(async (req: Request) => {
         rule_key: "reminder_equipment_duty",
         title: testTitle,
         body: testBody,
-        target_tab: "equipment",
+        target_tab: "schedule",
         target_member_id: target.member_id,
       });
 
@@ -232,7 +232,7 @@ Deno.serve(async (req: Request) => {
             memberIds: [target.member_id],
             title: testTitle,
             body: testBody,
-            appUrl: `${DEFAULT_PWA_URL}?openExternalBrowser=1#equipment`,
+            appUrl: `${DEFAULT_PWA_URL}?openExternalBrowser=1#schedule`,
           }),
         });
         if (r.ok) lineSent = 1;
@@ -250,7 +250,7 @@ Deno.serve(async (req: Request) => {
             memberIds: [target.member_id],
             title: testTitle,
             body: testBody,
-            url: "./#equipment",
+            url: "./#schedule",
             tag: "fcb-reminder-test",
           }),
         });
@@ -462,7 +462,7 @@ Deno.serve(async (req: Request) => {
               rule_key: rule.rule_key,
               title,
               body,
-              target_tab: "equipment",
+              target_tab: "schedule",
               target_member_id: mId,
             });
             totalAnnouncements += 1;
@@ -475,7 +475,7 @@ Deno.serve(async (req: Request) => {
                 "equipment",
                 title,
                 body,
-                "equipment",
+                "schedule",
                 `fcb-eq-${cleanEvId}`,
               );
               totalLine += dRes.lineSent;
