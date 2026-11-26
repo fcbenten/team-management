@@ -90,13 +90,16 @@
 }
 
 /* ピン留めカード（ホーム固定時は淡いハイライト） */
-.bulletin-post-card.is-pinned {
+.bulletin-post-card.is-pinned,
+.home-recent-bulletin-card.is-pinned {
   background: #fffdf8;
   border-color: #fde68a;
 }
 
 .bulletin-post-card.is-pinned:hover,
-.bulletin-post-card.is-pinned.is-touch-active {
+.bulletin-post-card.is-pinned.is-touch-active,
+.home-recent-bulletin-card.is-pinned:hover,
+.home-recent-bulletin-card.is-pinned.is-touch-active {
   background: #fef3c7;
   border-color: #fcd34d;
 }

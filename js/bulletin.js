@@ -1429,6 +1429,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
   // タイムライン一覧・ホーム画面ピン留めカードを即時再描画（モーダル裏の投稿が0秒で最上部に移動）
   renderBulletinTimeline();
   renderHomePinnedAnnouncements();
+  renderHomeRecentBulletins();
 
   if (window.SupabaseService && typeof window.SupabaseService.togglePinBulletinPost === 'function') {
     window.SupabaseService.togglePinBulletinPost(current.id, nextPinned)
@@ -1448,6 +1449,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
         sortBulletinPosts(allPosts);
         renderBulletinTimeline();
         renderHomePinnedAnnouncements();
+        renderHomeRecentBulletins();
       });
   }
 }
@@ -1653,7 +1655,7 @@ function renderHomeRecentBulletins() {
   const recentPosts = posts.slice(0, 3);
   recentPosts.forEach(post => {
     const card = document.createElement('div');
-    card.className = 'home-recent-bulletin-card';
+    card.className = 'home-recent-bulletin-card' + (post.isPinned ? ' is-pinned' : '');
     card.onclick = () => {
       openBulletinDetailModal(post);
     };
