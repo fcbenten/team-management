@@ -10751,13 +10751,16 @@ a.btn-member-modal-save:hover {
 }
 
 /* ピン留めカード（ホーム固定時は淡いハイライト） */
-.bulletin-post-card.is-pinned {
+.bulletin-post-card.is-pinned,
+.home-recent-bulletin-card.is-pinned {
   background: #fffdf8;
   border-color: #fde68a;
 }
 
 .bulletin-post-card.is-pinned:hover,
-.bulletin-post-card.is-pinned.is-touch-active {
+.bulletin-post-card.is-pinned.is-touch-active,
+.home-recent-bulletin-card.is-pinned:hover,
+.home-recent-bulletin-card.is-pinned.is-touch-active {
   background: #fef3c7;
   border-color: #fcd34d;
 }
@@ -32787,6 +32790,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
   // タイムライン一覧・ホーム画面ピン留めカードを即時再描画（モーダル裏の投稿が0秒で最上部に移動）
   renderBulletinTimeline();
   renderHomePinnedAnnouncements();
+  renderHomeRecentBulletins();
 
   if (window.SupabaseService && typeof window.SupabaseService.togglePinBulletinPost === 'function') {
     window.SupabaseService.togglePinBulletinPost(current.id, nextPinned)
@@ -32806,6 +32810,7 @@ function handleBdmTogglePinCheckbox(isChecked) {
         sortBulletinPosts(allPosts);
         renderBulletinTimeline();
         renderHomePinnedAnnouncements();
+        renderHomeRecentBulletins();
       });
   }
 }
@@ -33011,7 +33016,7 @@ function renderHomeRecentBulletins() {
   const recentPosts = posts.slice(0, 3);
   recentPosts.forEach(post => {
     const card = document.createElement('div');
-    card.className = 'home-recent-bulletin-card';
+    card.className = 'home-recent-bulletin-card' + (post.isPinned ? ' is-pinned' : '');
     card.onclick = () => {
       openBulletinDetailModal(post);
     };
