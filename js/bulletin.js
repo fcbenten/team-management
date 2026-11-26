@@ -271,10 +271,10 @@ function renderBulletinTimeline() {
       badgesWrap.appendChild(eventPill);
     }
 
-    // 日付（曜日・時分付きフォーマット: YYYY/MM/DD (曜) HH:mm）
+    // 日付（曜日付きフォーマット: YYYY/MM/DD (曜)）
     const dateSpan = document.createElement('div');
     dateSpan.className = 'bulletin-card-date';
-    dateSpan.textContent = formatBulletinDateTimeWithDay(post.createdAt);
+    dateSpan.textContent = formatDisplayDateWithDay(post.createdAt);
 
     topRow.appendChild(badgesWrap);
     topRow.appendChild(dateSpan);
@@ -1551,6 +1551,26 @@ function closeBulletinDetailModalForce() {
  * 🏠 ホーム画面用 ピン留めアナウンスカード描画
  * =========================================
  */
+/**
+ * ホーム画面の活動記録タイトルにピン留めアイコンを並べて描画
+ * @param {HTMLElement} titleEl
+ * @param {string} titleText
+ * @param {boolean} isPinned
+ */
+function populateHomeBulletinTitle(titleEl, titleText, isPinned) {
+  titleEl.replaceChildren();
+  if (isPinned) {
+    const pinIcon = document.createElement('span');
+    pinIcon.className = 'material-symbols-outlined home-title-pin-icon';
+    pinIcon.setAttribute('aria-label', 'ピン留め');
+    pinIcon.textContent = 'push_pin';
+    titleEl.appendChild(pinIcon);
+  }
+  const textSpan = document.createElement('span');
+  textSpan.textContent = titleText || '';
+  titleEl.appendChild(textSpan);
+}
+
 function renderHomePinnedAnnouncements() {
   const container = document.getElementById('homePinnedAnnounceArea');
   if (!container) return;
@@ -1581,15 +1601,11 @@ function renderHomePinnedAnnouncements() {
       <span class="category-badge ${getBulletinCategoryBadgeClass(post.category)}">
         ${escapeHtml(post.category || 'その他')}
       </span>
-      <span class="home-pinned-pill">
-        <span class="material-symbols-outlined">push_pin</span>
-        <span>ピン留め</span>
-      </span>
     `;
 
     const date = document.createElement('span');
     date.className = 'text-muted text-xs';
-    date.textContent = formatBulletinDateTimeWithDay(post.createdAt);
+    date.textContent = formatDisplayDateWithDay(post.createdAt);
 
     header.appendChild(badges);
     header.appendChild(date);
@@ -1597,7 +1613,7 @@ function renderHomePinnedAnnouncements() {
 
     const titleH4 = document.createElement('h4');
     titleH4.className = 'home-pinned-title';
-    titleH4.textContent = post.title;
+    populateHomeBulletinTitle(titleH4, post.title, true);
     card.appendChild(titleH4);
 
     container.appendChild(card);
@@ -1633,7 +1649,7 @@ function renderHomeRecentBulletins() {
       openBulletinDetailModal(post);
     };
 
-    // 1段目: カテゴリバッジ（＋ピン留めバッジ）と日付（曜日付き）
+    // 1段目: カテゴリバッジと日付（曜日付き）
     const header = document.createElement('div');
     header.className = 'home-recent-bulletin-header';
 
@@ -1645,16 +1661,9 @@ function renderHomeRecentBulletins() {
     catBadge.textContent = post.category || 'その他';
     badgeGroup.appendChild(catBadge);
 
-    if (post.isPinned) {
-      const pinPill = document.createElement('span');
-      pinPill.className = 'home-pinned-pill';
-      pinPill.innerHTML = '<span class="material-symbols-outlined">push_pin</span><span>ピン留め</span>';
-      badgeGroup.appendChild(pinPill);
-    }
-
     const dateSpan = document.createElement('span');
     dateSpan.className = 'text-muted text-xs';
-    dateSpan.textContent = formatBulletinDateTimeWithDay(post.createdAt);
+    dateSpan.textContent = formatDisplayDateWithDay(post.createdAt);
 
     header.appendChild(badgeGroup);
     header.appendChild(dateSpan);
@@ -1666,7 +1675,7 @@ function renderHomeRecentBulletins() {
 
     const titleH4 = document.createElement('h4');
     titleH4.className = 'home-recent-bulletin-title';
-    titleH4.textContent = post.title;
+    populateHomeBulletinTitle(titleH4, post.title, Boolean(post.isPinned));
 
     const readSpan = document.createElement('span');
     readSpan.className = 'home-recent-bulletin-read';
