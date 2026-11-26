@@ -415,13 +415,9 @@ function resolveEventCategory(ev) {
     return { category: 'TR', isMatch: false, opponent: '', catClass: 'tr' };
   }
   
-  // 4. イベント・飲み会等
-  if (titleUpper.includes('飲み会') || titleUpper.includes('懇親会') || titleUpper.includes('打ち上げ') || titleUpper.includes('総会') || titleUpper.includes('イベント') || titleUpper.includes('ミーティング')) {
-    return { category: 'イベント', isMatch: false, opponent: '', catClass: 'event' };
-  }
-
-  // 5. その他
-  return { category: ev.category || 'その他', isMatch: Boolean(ev.isMatch), opponent: ev.opponent || '', catClass: 'other' };
+  // 4. その他（「イベント」区分は廃止し、すべて「その他」に統一）
+  const fallbackCat = (ev.category && ev.category !== 'イベント') ? ev.category : 'その他';
+  return { category: fallbackCat, isMatch: Boolean(ev.isMatch), opponent: ev.opponent || '', catClass: 'other' };
 }
 
 /**
@@ -564,8 +560,8 @@ function getDisplayTitle(ev, catInfo) {
 
   // プレフィックス候補（カッコ付き・なし両方）
   const prefixes = [
-    '【TRM】', '【TR】', '【都リーグ】', '【公式戦】', '【練習試合】', '【練習】', '【イベント】',
-    'TRM', 'TR', '都リーグ', '公式戦', '練習試合', '練習', 'イベント'
+    '【TRM】', '【TR】', '【都リーグ】', '【公式戦】', '【練習試合】', '【練習】',
+    'TRM', 'TR', '都リーグ', '公式戦', '練習試合', '練習'
   ];
 
   for (const p of prefixes) {

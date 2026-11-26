@@ -44,10 +44,7 @@
     if (titleUpper === 'TR' || titleUpper.startsWith('TR ') || titleUpper.endsWith(' TR') || titleUpper.includes('トレーニング') || (titleUpper.includes('練習') && !titleUpper.includes('練習試合'))) {
       return 'TR';
     }
-    if (titleUpper.includes('飲み会') || titleUpper.includes('懇親会') || titleUpper.includes('打ち上げ') || titleUpper.includes('総会') || titleUpper.includes('イベント') || titleUpper.includes('ミーティング')) {
-      return 'イベント';
-    }
-    return ev.category || 'その他';
+    return (ev.category && ev.category !== 'イベント') ? ev.category : 'その他';
   }
 
   function normalizePersonKey(val) {

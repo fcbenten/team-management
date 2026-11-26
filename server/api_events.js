@@ -103,10 +103,6 @@ function parseEventItemDetails(item, memberMap, teamCalEmail) {
     category = 'TR';
     isMatch = false;
     opponent = '';
-  } else if (titleUpper.includes('飲み会') || titleUpper.includes('懇親会') || titleUpper.includes('打ち上げ') || titleUpper.includes('総会') || titleUpper.includes('イベント') || titleUpper.includes('ミーティング')) {
-    category = 'イベント';
-    isMatch = false;
-    opponent = '';
   } else {
     category = 'その他';
     isMatch = false;
@@ -291,10 +287,6 @@ function getCalendarEvents(memberMap) {
         opponent = rawTitle.replace(/(TRM|練習試合|vs|VS|\/)/gi, '').trim();
       } else if (titleUpper === 'TR' || titleUpper.startsWith('TR ') || titleUpper.endsWith(' TR') || titleUpper.includes('トレーニング') || (titleUpper.includes('練習') && !titleUpper.includes('練習試合'))) {
         category = 'TR';
-        isMatch = false;
-        opponent = '';
-      } else if (titleUpper.includes('飲み会') || titleUpper.includes('懇親会') || titleUpper.includes('打ち上げ') || titleUpper.includes('総会') || titleUpper.includes('イベント') || titleUpper.includes('ミーティング')) {
-        category = 'イベント';
         isMatch = false;
         opponent = '';
       } else {
@@ -640,8 +632,6 @@ function saveCalendarEvent(payload) {
       opponent = title.replace(/(TRM|練習試合|vs|VS|\/)/gi, '').trim();
     } else if (catCheck === 'TR' || catCheck.startsWith('TR ') || catCheck.endsWith(' TR') || catCheck.includes('トレーニング') || (catCheck.includes('練習') && !catCheck.includes('練習試合'))) {
       category = 'TR';
-    } else if (catCheck.includes('飲み会') || catCheck.includes('懇親会') || catCheck.includes('打ち上げ') || catCheck.includes('総会') || catCheck.includes('イベント')) {
-      category = 'イベント';
     }
 
     const memberMap = GasSupabaseService.getMemberMap();
