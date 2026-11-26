@@ -176,6 +176,7 @@ CREATE TABLE IF NOT EXISTS public.announcements (
     title VARCHAR(200) NOT NULL,
     body TEXT,
     target_tab VARCHAR(30) DEFAULT 'home',
+    target_id VARCHAR(255) DEFAULT NULL,
     target_member_id VARCHAR(50) REFERENCES public.members(member_id) ON DELETE CASCADE, -- NULL = 現役全員宛て
     actor_member_id VARCHAR(50) REFERENCES public.members(member_id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()

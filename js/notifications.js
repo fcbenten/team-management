@@ -182,6 +182,115 @@
   }
   window.closeAnnouncementsModal = closeAnnouncementsModal;
 
+  function findScheduleEventById(targetId) {
+    const cleanTarget = String(targetId || '').split('@')[0].trim();
+    if (!cleanTarget || !Array.isArray(window.eventsData)) return null;
+    return window.eventsData.find(ev => {
+      if (!ev || !ev.id) return false;
+      const evId = String(ev.id).trim();
+      return evId === String(targetId).trim() || evId.split('@')[0] === cleanTarget;
+    }) || null;
+  }
+
+  function findEquipmentRowElement(itemId) {
+    const rows = document.querySelectorAll('#tab-equipment .equipment-item-row[data-item-id]');
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].dataset.itemId === itemId) return rows[i];
+    }
+    return null;
+  }
+
+  async function navigateToAnnouncementTarget({ targetTab, targetId, ruleKey }) {
+    const tab = targetTab || 'home';
+    const cleanId = String(targetId || '').trim();
+
+    if (typeof window.switchTab === 'function') {
+      window.switchTab(tab);
+    }
+    if (!cleanId) return;
+
+    if (tab === 'schedule') {
+      let ev = findScheduleEventById(cleanId);
+      if (!ev && typeof window.refreshOnResume === 'function') {
+        try { await window.refreshOnResume(true); } catch (e) {}
+        ev = findScheduleEventById(cleanId);
+      }
+      if (ev) {
+        if (ev.date && typeof window.renderCalendar === 'function') {
+          const m = String(ev.date).match(/(\d{4})[-/](\d{1,2})/);
+          if (m) {
+            window.calYear = parseInt(m[1], 10);
+            window.calMonth = parseInt(m[2], 10) - 1;
+            window.renderCalendar(window.calYear, window.calMonth);
+          }
+        }
+        if (typeof window.openEventDetailModal === 'function') {
+          window.openEventDetailModal(ev);
+        }
+      }
+      return;
+    }
+
+    if (tab === 'results') {
+      let match = (window.allMatchResults || []).find(m => m && m.matchId === cleanId);
+      if (!match && window.SupabaseService && typeof window.SupabaseService.getMatchHistoryData === 'function') {
+        try {
+          const hist = await window.SupabaseService.getMatchHistoryData();
+          if (hist && typeof window.initMatchHistory === 'function') {
+            window.initMatchHistory(hist);
+          } else if (hist && hist.matches) {
+            window.allMatchResults = hist.matches;
+          }
+          match = (window.allMatchResults || []).find(m => m && m.matchId === cleanId);
+        } catch (e) {}
+      }
+      if (match && typeof window.openMatchDetail === 'function') {
+        window.openMatchDetail(match.matchId);
+      }
+      return;
+    }
+
+    if (tab === 'bulletin') {
+      const needsCommentRefresh = ruleKey === 'bulletin_comment_create' || ruleKey === 'bulletin_comment_delete';
+      let post = ((window.bulletinState && window.bulletinState.posts) || []).find(p => p && p.id === cleanId);
+      if ((!post || needsCommentRefresh) && window.SupabaseService && typeof window.SupabaseService.getBulletinData === 'function') {
+        try {
+          const bRes = await window.SupabaseService.getBulletinData();
+          if (bRes && bRes.success && typeof window.applyBulletinPayload === 'function') {
+            window.applyBulletinPayload(bRes);
+          }
+          post = ((window.bulletinState && window.bulletinState.posts) || []).find(p => p && p.id === cleanId);
+        } catch (e) {}
+      }
+      if (post && typeof window.openBulletinDetailModal === 'function') {
+        window.openBulletinDetailModal(post);
+      }
+      return;
+    }
+
+    if (tab === 'equipment') {
+      let rowEl = findEquipmentRowElement(cleanId);
+      if (!rowEl && window.SupabaseService && typeof window.SupabaseService.getEquipmentData === 'function') {
+        try {
+          const eqRes = await window.SupabaseService.getEquipmentData();
+          if (eqRes && eqRes.success && typeof window.applyEquipmentPayload === 'function') {
+            window.applyEquipmentPayload(eqRes);
+            if (typeof window.renderEquipmentUI === 'function') window.renderEquipmentUI();
+          }
+          rowEl = findEquipmentRowElement(cleanId);
+        } catch (e) {}
+      }
+      if (rowEl) {
+        rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        rowEl.classList.remove('is-deep-link-highlight');
+        void rowEl.offsetWidth;
+        rowEl.classList.add('is-deep-link-highlight');
+        setTimeout(() => rowEl.classList.remove('is-deep-link-highlight'), 2600);
+      }
+    }
+  }
+  window.navigateToAnnouncementTarget = navigateToAnnouncementTarget;
+
   async function handleAnnouncementItemClick(item) {
     if (!item) return;
     const memberId = getCurrentActorMemberId();
@@ -195,9 +304,11 @@
       }
     }
     closeAnnouncementsModal();
-    if (item.target_tab && typeof window.switchTab === 'function') {
-      window.switchTab(item.target_tab);
-    }
+    await navigateToAnnouncementTarget({
+      targetTab: item.target_tab || 'home',
+      targetId: item.target_id || '',
+      ruleKey: item.rule_key || ''
+    });
   }
 
   async function handleMarkAllAnnouncementsRead() {

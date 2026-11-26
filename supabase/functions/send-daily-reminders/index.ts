@@ -104,6 +104,7 @@ async function dispatchToRecipients(
   body: string,
   targetTab: string,
   tag: string,
+  targetId = "",
 ) {
   const lineMemberIds: string[] = [];
   const pushMemberIds: string[] = [];
@@ -124,9 +125,10 @@ async function dispatchToRecipients(
 
   let lineSent = 0;
   let pushSent = 0;
+  const tabHash = targetTab + (targetId ? `?id=${encodeURIComponent(targetId)}` : "");
 
   if (lineMemberIds.length > 0) {
-    const lineUrl = `${DEFAULT_PWA_URL}?openExternalBrowser=1#${targetTab}`;
+    const lineUrl = `${DEFAULT_PWA_URL}?openExternalBrowser=1#${tabHash}`;
     const res = await fetch(`${supabaseUrl}/functions/v1/send-line-push`, {
       method: "POST",
       headers: {
@@ -159,7 +161,7 @@ async function dispatchToRecipients(
         memberIds: pushMemberIds,
         title,
         body,
-        url: `./#${targetTab}`,
+        url: `./#${tabHash}`,
         tag,
       }),
     });
@@ -388,6 +390,7 @@ Deno.serve(async (req: Request) => {
             title,
             body,
             target_tab: "schedule",
+            target_id: cleanEvId,
             target_member_id: m.member_id,
           }));
           await supabaseAdmin.from("announcements").insert(annInserts);
@@ -403,6 +406,7 @@ Deno.serve(async (req: Request) => {
               body,
               "schedule",
               `fcb-att-${cleanEvId}`,
+              cleanEvId,
             );
             totalLine += dRes.lineSent;
             totalPush += dRes.pushSent;
@@ -463,6 +467,7 @@ Deno.serve(async (req: Request) => {
               title,
               body,
               target_tab: "schedule",
+              target_id: cleanEvId,
               target_member_id: mId,
             });
             totalAnnouncements += 1;
@@ -477,6 +482,7 @@ Deno.serve(async (req: Request) => {
                 body,
                 "schedule",
                 `fcb-eq-${cleanEvId}`,
+                cleanEvId,
               );
               totalLine += dRes.lineSent;
               totalPush += dRes.pushSent;

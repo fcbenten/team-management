@@ -1978,11 +1978,13 @@ window.currentEditRemovedGuests = [];
         if (window.SupabaseNotificationService && typeof window.SupabaseNotificationService.emitAppEvent === 'function') {
           const actorId = (window.currentUser && (window.currentUser.memberId || window.currentUser.id)) || null;
           const isNewEv = Boolean(res.isNew || payload.isDuplicate);
+          const resolvedEvId = (res.event && res.event.id) ? res.event.id : (payload.eventId || null);
           window.SupabaseNotificationService.emitAppEvent({
             ruleKey: isNewEv ? 'schedule_create' : 'schedule_update',
             title: isNewEv ? '新しい予定が作成されました' : '予定が更新されました',
             body: `${res.event ? res.event.date : date} ${title} (${isAllDay ? '終日' : startTime + ' - ' + endTime})`,
             targetTab: 'schedule',
+            targetId: resolvedEvId,
             targetMemberId: null,
             actorMemberId: actorId
           });

@@ -121,6 +121,20 @@
     updateNavScrollIndicators();
   });
 
+  function parseHashRoute(rawHash) {
+    const clean = String(rawHash || '').replace(/^#/, '').trim();
+    if (!clean) return { tab: '', targetId: '' };
+    const qIdx = clean.indexOf('?');
+    if (qIdx === -1) return { tab: clean, targetId: '' };
+    const tab = clean.slice(0, qIdx).trim();
+    const queryStr = clean.slice(qIdx + 1);
+    let targetId = '';
+    try {
+      targetId = new URLSearchParams(queryStr).get('id') || '';
+    } catch (e) {}
+    return { tab, targetId };
+  }
+
   /**
    * 保存されているアクティブタブ名を取得（URLハッシュまたはsessionStorage）
    * @returns {string} 有効なタブ名（デフォルト: 'home'）
@@ -128,8 +142,8 @@
   function getSavedActiveTab() {
     let tab = '';
     try {
-      const hash = (window.location.hash || '').replace(/^#/, '').trim();
-      if (hash) tab = hash;
+      const route = parseHashRoute(window.location.hash || '');
+      if (route.tab) tab = route.tab;
     } catch (e) {}
     if (!tab) {
       try {
@@ -981,9 +995,12 @@
 
         revealAllTabContents();
 
-        // 画面更新前のタブを復元（描画初期化を含む）
+        // 画面更新前のタブを復元（ディープリンク時は詳細モーダルまで展開）
+        const initialRoute = parseHashRoute(window.location.hash || '');
         const restoredTab = getSavedActiveTab();
-        if (restoredTab && restoredTab !== 'home') {
+        if (initialRoute && initialRoute.targetId && typeof window.navigateToAnnouncementTarget === 'function') {
+          window.navigateToAnnouncementTarget({ targetTab: restoredTab, targetId: initialRoute.targetId });
+        } else if (restoredTab && restoredTab !== 'home') {
           switchTab(restoredTab);
         } else {
           scrollActiveNavItemIntoView(false);
@@ -2377,12 +2394,30 @@
 
   // ブラウザの戻る/進む操作（ハッシュ変更）時のタブ連動
   window.addEventListener('hashchange', function() {
+    const route = parseHashRoute(window.location.hash || '');
     const target = getSavedActiveTab();
+    if (route && route.targetId && typeof window.navigateToAnnouncementTarget === 'function') {
+      window.navigateToAnnouncementTarget({ targetTab: target, targetId: route.targetId });
+      return;
+    }
     const current = getCurrentActiveTabName();
     if (target && target !== current) {
       switchTab(target);
     }
   });
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', function(event) {
+      if (event && event.data && event.data.type === 'NOTIFICATION_NAVIGATE' && event.data.url) {
+        const rawUrl = String(event.data.url);
+        const hashIdx = rawUrl.indexOf('#');
+        const route = parseHashRoute(hashIdx >= 0 ? rawUrl.slice(hashIdx) : '');
+        if (route && route.tab && typeof window.navigateToAnnouncementTarget === 'function') {
+          window.navigateToAnnouncementTarget({ targetTab: route.tab, targetId: route.targetId || '' });
+        }
+      }
+    });
+  }
 
   /**
    * スワイプ操作可能なメインタブ一覧を取得（権限に応じて動的構築）

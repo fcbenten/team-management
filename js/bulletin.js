@@ -1368,7 +1368,7 @@ function handleDeleteBulletinComment(commentId) {
   }
 
   if (window.SupabaseService && typeof window.SupabaseService.deleteBulletinComment === 'function') {
-    window.SupabaseService.deleteBulletinComment(commentId, actorName)
+    window.SupabaseService.deleteBulletinComment(commentId, actorName, current ? current.id : null)
       .then(res => {
         if (!res || !res.success) {
           console.error('コメント削除の同期に失敗しました:', res ? res.error : '');

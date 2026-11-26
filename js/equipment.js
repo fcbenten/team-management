@@ -540,6 +540,7 @@ function createSectionItemRow(item, isAdmin, options) {
 
   const row = document.createElement('div');
   row.className = 'equipment-item-row' + (isBall ? ' equipment-ball-row' : (showLabel ? ' equipment-labeled-row' : ' equipment-bibs-row'));
+  if (item && item.itemId) row.dataset.itemId = item.itemId;
 
   const master = (window.equipmentState.masterList || []).find(m => m.code === item.itemCode) || { name: item.itemCode };
 
