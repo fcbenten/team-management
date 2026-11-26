@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fc-benten-pwa-v80';
+const CACHE_NAME = 'fc-benten-pwa-v81';
 const ASSETS = [
   './manifest.json',
   './icon-192.png',
@@ -102,6 +102,9 @@ self.addEventListener('notificationclick', event => {
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
       for (const client of clientList) {
         if ('focus' in client) {
+          try {
+            client.postMessage({ type: 'NOTIFICATION_NAVIGATE', url: targetUrl });
+          } catch (e) {}
           return client.focus();
         }
       }
